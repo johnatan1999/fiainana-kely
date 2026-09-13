@@ -1,0 +1,41 @@
+[gd_scene load_steps=8 format=3 uid="uid://cpkdov7tq8fwl"]
+
+[ext_resource type="Script" path="res://scenes/game/Game.gd" id="1_game"]
+[ext_resource type="PackedScene" path="res://scenes/farm/FarmView.tscn" id="2_farmview"]
+[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/gameplay/FarmingController.gd" id="4_farming"]
+[ext_resource type="Script" path="res://scripts/gameplay/ShopController.gd" id="5_shop"]
+[ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="6_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ShopUI.tscn" id="7_shopui"]
+[ext_resource type="Script" path="res://scripts/gameplay/SaveController.gd" id="8_save"]
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1_game")
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="FarmView" parent="World" instance=ExtResource("2_farmview")]
+
+[node name="Player" parent="World" instance=ExtResource("3_player")]
+position = Vector2(96, 260)
+
+[node name="Gameplay" type="Node" parent="."]
+
+[node name="FarmingController" type="Node" parent="Gameplay"]
+script = ExtResource("4_farming")
+
+[node name="ShopController" type="Node" parent="Gameplay"]
+script = ExtResource("5_shop")
+
+[node name="SaveController" type="Node" parent="Gameplay"]
+script = ExtResource("8_save")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="HUD" parent="UI" instance=ExtResource("6_hud")]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="ShopUI" parent="UI" instance=ExtResource("7_shopui")]
+layout_mode = 3
+anchors_preset = 1

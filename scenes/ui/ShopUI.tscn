@@ -1,0 +1,41 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/ShopUI.gd" id="1_shopui"]
+
+[node name="ShopUI" type="Control"]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -260.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 160.0
+script = ExtResource("1_shopui")
+
+[node name="Panel" type="Panel" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = -8.0
+
+[node name="TitleLabel" type="Label" parent="Panel/VBoxContainer"]
+text = "Boutique (B pour ouvrir/fermer)"
+
+[node name="SeedPriceLabel" type="Label" parent="Panel/VBoxContainer"]
+text = "Graine de navet: 10"
+
+[node name="BuyButton" type="Button" parent="Panel/VBoxContainer"]
+focus_mode = 0
+text = "Acheter 1 graine de navet"
+
+[node name="SellPriceLabel" type="Label" parent="Panel/VBoxContainer"]
+text = "Vente navet: 30"
+
+[node name="SellButton" type="Button" parent="Panel/VBoxContainer"]
+focus_mode = 0
+text = "Vendre 1 navet"
