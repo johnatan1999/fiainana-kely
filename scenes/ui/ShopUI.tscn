@@ -8,7 +8,7 @@ anchor_right = 1.0
 offset_left = -260.0
 offset_top = 16.0
 offset_right = -16.0
-offset_bottom = 160.0
+offset_bottom = 280.0
 script = ExtResource("1_shopui")
 
 [node name="Panel" type="Panel" parent="."]
@@ -24,18 +24,29 @@ offset_right = -8.0
 offset_bottom = -8.0
 
 [node name="TitleLabel" type="Label" parent="Panel/VBoxContainer"]
-text = "Boutique (B pour ouvrir/fermer)"
+text = "MAGASIN"
 
 [node name="SeedPriceLabel" type="Label" parent="Panel/VBoxContainer"]
-text = "Graine de navet: 10"
+text = "Graine de navet: 10 $"
 
 [node name="BuyButton" type="Button" parent="Panel/VBoxContainer"]
 focus_mode = 0
-text = "Acheter 1 graine de navet"
+text = "Acheter"
 
 [node name="SellPriceLabel" type="Label" parent="Panel/VBoxContainer"]
-text = "Vente navet: 30"
+text = "Prix navet: 30 $"
 
 [node name="SellButton" type="Button" parent="Panel/VBoxContainer"]
 focus_mode = 0
-text = "Vendre 1 navet"
+text = "Vendre 1"
+
+[node name="SellAllButton" type="Button" parent="Panel/VBoxContainer"]
+focus_mode = 0
+text = "Vendre tout"
+
+[node name="MoneyLabel" type="Label" parent="Panel/VBoxContainer"]
+text = "Argent: 100 $"
+
+[node name="CloseButton" type="Button" parent="Panel/VBoxContainer"]
+focus_mode = 0
+text = "Fermer"

@@ -74,11 +74,11 @@ func harvest(plot_id: int) -> bool:
 func advance_day() -> void:
 	for plot_id in state.plots:
 		var plot: PlotState = state.plots[plot_id]
-		if plot.crop != null:
+		if plot.crop != null and plot.watered:
 			plot.crop.age += 1
 		plot.watered = false
 		plot_changed.emit(plot_id)
-	state.day += 1
+	state.clock.advance_day()
 	day_changed.emit(state.day)
 
 func buy_seed(crop_id: String, quantity: int = 1) -> bool:

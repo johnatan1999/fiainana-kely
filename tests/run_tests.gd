@@ -13,7 +13,7 @@ func _initialize() -> void:
 
 func _make_sim() -> FarmSimulation:
 	var turnip: CropData = load("res://data/crops/turnip.tres")
-	return FarmSimulation.new(3, 3, {"turnip": turnip})
+	return FarmSimulation.new(4, 4, {"turnip": turnip})
 
 func _check(condition: bool, description: String) -> void:
 	if condition:
@@ -35,6 +35,8 @@ func _run_all() -> void:
 	test_cannot_harvest_immature_crop()
 	test_cannot_buy_without_enough_money()
 	test_save_load_roundtrip()
+	test_no_progress_without_watering()
+	test_watering_is_consumed_each_day()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -53,8 +55,27 @@ func test_crop_progresses_on_day_advance() -> void:
 	sim.till(0)
 	sim.state.add_inventory("turnip_seed", 1)
 	sim.plant(0, "turnip")
+	sim.water(0)
 	sim.advance_day()
-	_check(sim.get_plot(0).crop.age == 1, "advance_day() ages the planted crop")
+	_check(sim.get_plot(0).crop.age == 1, "advance_day() ages a watered crop")
+
+func test_no_progress_without_watering() -> void:
+	var sim := _make_sim()
+	sim.till(0)
+	sim.state.add_inventory("turnip_seed", 1)
+	sim.plant(0, "turnip")
+	sim.advance_day() # not watered
+	_check(sim.get_plot(0).crop.age == 0, "advance_day() does not age an unwatered crop")
+
+func test_watering_is_consumed_each_day() -> void:
+	var sim := _make_sim()
+	sim.till(0)
+	sim.state.add_inventory("turnip_seed", 1)
+	sim.plant(0, "turnip")
+	sim.water(0)
+	sim.advance_day()
+	sim.advance_day() # second day, not re-watered
+	_check(sim.get_plot(0).crop.age == 1, "watering only carries the crop through a single day")
 
 func test_harvest_mature_crop() -> void:
 	var sim := _make_sim()
@@ -62,6 +83,7 @@ func test_harvest_mature_crop() -> void:
 	sim.state.add_inventory("turnip_seed", 1)
 	sim.plant(0, "turnip")
 	for i in range(3):
+		sim.water(0)
 		sim.advance_day()
 	var ok := sim.harvest(0)
 	_check(ok and sim.get_plot(0).crop == null, "harvest() succeeds once the crop is mature")
@@ -72,6 +94,7 @@ func test_harvest_increases_inventory() -> void:
 	sim.state.add_inventory("turnip_seed", 1)
 	sim.plant(0, "turnip")
 	for i in range(3):
+		sim.water(0)
 		sim.advance_day()
 	sim.harvest(0)
 	_check(sim.state.get_inventory_count("turnip") == 1, "harvest() adds the crop to inventory")

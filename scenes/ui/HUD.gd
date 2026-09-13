@@ -1,10 +1,6 @@
 class_name HUD
 extends Control
 
-signal sleep_requested
-signal save_requested
-signal load_requested
-
 const TOOL_NAMES := {
 	PlayerController.Tool.HOE: "Houe",
 	PlayerController.Tool.WATERING_CAN: "Arrosoir",
@@ -17,9 +13,6 @@ const TOOL_NAMES := {
 @onready var seeds_label: Label = $VBoxContainer/SeedsLabel
 @onready var crops_label: Label = $VBoxContainer/CropsLabel
 @onready var tool_label: Label = $VBoxContainer/ToolLabel
-@onready var sleep_button: Button = $VBoxContainer/SleepButton
-@onready var save_button: Button = $VBoxContainer/SaveButton
-@onready var load_button: Button = $VBoxContainer/LoadButton
 
 var _simulation: FarmSimulation
 var _player: PlayerController
@@ -31,9 +24,6 @@ func setup(simulation: FarmSimulation, player: PlayerController) -> void:
 	simulation.day_changed.connect(_on_day_changed)
 	simulation.inventory_changed.connect(_on_inventory_changed)
 	player.tool_changed.connect(_on_tool_changed)
-	sleep_button.pressed.connect(func(): sleep_requested.emit())
-	save_button.pressed.connect(func(): save_requested.emit())
-	load_button.pressed.connect(func(): load_requested.emit())
 	_refresh_all()
 
 func _refresh_all() -> void:
@@ -47,11 +37,11 @@ func _on_day_changed(day: int) -> void:
 	day_label.text = "Jour %d" % day
 
 func _on_money_changed(money: int) -> void:
-	money_label.text = "Argent: %d" % money
+	money_label.text = "Argent: %d $" % money
 
 func _on_inventory_changed(item_id: String, amount: int) -> void:
 	if item_id == "turnip_seed":
-		seeds_label.text = "Graines de navet: %d" % amount
+		seeds_label.text = "Graines: %d" % amount
 	elif item_id == "turnip":
 		crops_label.text = "Navets: %d" % amount
 

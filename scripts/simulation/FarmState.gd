@@ -2,9 +2,14 @@ class_name FarmState
 extends RefCounted
 
 var money: int = 100
-var day: int = 1
+var clock := GameClock.new()
 var plots: Dictionary = {} # plot_id: int -> PlotState
 var inventory: Dictionary = {} # item_id: String -> int
+
+## Convenience read access - the clock is the single source of truth for the day.
+var day: int:
+	get:
+		return clock.current_day
 
 func _init(plot_count: int) -> void:
 	for i in range(plot_count):
@@ -43,7 +48,7 @@ func to_dict() -> Dictionary:
 ## Unknown/missing plot_ids are ignored - the grid shape always comes from the current run.
 func load_dict(data: Dictionary) -> void:
 	money = int(data.get("money", money))
-	day = int(data.get("day", day))
+	clock.current_day = int(data.get("day", clock.current_day))
 
 	inventory.clear()
 	var saved_inventory: Dictionary = data.get("inventory", {})

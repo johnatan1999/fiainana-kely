@@ -20,4 +20,4 @@ mouse_filter = 2
 color = Color(0.2, 0.4, 0.9, 1)
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.6, 0.6)
+zoom = Vector2(2.2, 2.2)
