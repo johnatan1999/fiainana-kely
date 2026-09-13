@@ -1,7 +1,7 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=10 format=3 uid="uid://fdjfwhhhgssy"]
 
 [ext_resource type="Script" path="res://scenes/world/World.gd" id="1_world"]
-[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://bf1stuuqjofir" path="res://scenes/player/Player.tscn" id="2_player"]
 [ext_resource type="Script" path="res://scripts/gameplay/FarmingController.gd" id="3_farming"]
 [ext_resource type="Script" path="res://scripts/gameplay/ShopController.gd" id="4_shop"]
 [ext_resource type="Script" path="res://scripts/gameplay/SaveController.gd" id="5_save"]
@@ -34,7 +34,24 @@ script = ExtResource("6_worldmanager")
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="HUD" parent="UI" instance=ExtResource("7_hud")]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 204.0
+offset_bottom = 164.0
 
 [node name="ShopUI" parent="UI" instance=ExtResource("8_shopui")]
+layout_mode = 3
+anchors_preset = 1
+offset_left = -244.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 264.0
+grow_horizontal = 0
 
 [node name="PauseMenu" parent="UI" instance=ExtResource("9_pausemenu")]
+layout_mode = 3
+anchors_preset = 8
+grow_horizontal = 2
+grow_vertical = 2

@@ -1,9 +1,10 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://scripts/world/ZoneRoot.gd" id="1_zoneroot"]
 [ext_resource type="PackedScene" path="res://scenes/farm/FarmView.tscn" id="2_farmview"]
 [ext_resource type="Script" path="res://scripts/gameplay/ZoneTransition.gd" id="3_transition"]
 [ext_resource type="Script" path="res://scripts/gameplay/ShopTrigger.gd" id="4_shoptrigger"]
+[ext_resource type="PackedScene" uid="uid://bhnm7ccttiisy" path="res://scenes/areas/exterior/House.tscn" id="5_70k58"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_house_top"]
 size = Vector2(220, 140)
@@ -53,7 +54,6 @@ offset_left = 100.0
 offset_top = -10.0
 offset_right = 320.0
 offset_bottom = 10.0
-mouse_filter = 2
 text = "Maison (E)"
 horizontal_alignment = 1
 
@@ -101,7 +101,7 @@ target_spawn = "SpawnFromExterior"
 shape = SubResource("RectangleShape2D_door")
 
 [node name="SpawnFromHouse" type="Marker2D" parent="."]
-position = Vector2(210, 230)
+position = Vector2(210, 235)
 
 [node name="FarmView" parent="." instance=ExtResource("2_farmview")]
 position = Vector2(600, 350)
@@ -119,7 +119,6 @@ offset_left = 950.0
 offset_top = 450.0
 offset_right = 1170.0
 offset_bottom = 470.0
-mouse_filter = 2
 text = "Magasin (E)"
 horizontal_alignment = 1
 
@@ -167,3 +166,6 @@ position = Vector2(700, 905)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallBottom"]
 shape = SubResource("RectangleShape2D_wall_h_placeholder")
+
+[node name="House" parent="." instance=ExtResource("5_70k58")]
+position = Vector2(747, 156)

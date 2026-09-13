@@ -1,0 +1,55 @@
+[gd_scene load_steps=8 format=3 uid="uid://bhnm7ccttiisy"]
+
+[ext_resource type="Script" path="res://scenes/areas/exterior/house.gd" id="1_ijqnj"]
+[ext_resource type="Texture2D" uid="uid://dccivx4n13501" path="res://assets/sprites/houses/house-2.png" id="1_ityit"]
+[ext_resource type="Script" path="res://scripts/gameplay/ZoneTransition.gd" id="2_7bhy7"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fmy4l"]
+size = Vector2(459, 173)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_osx3c"]
+size = Vector2(162, 71)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_k6ofe"]
+size = Vector2(204, 77.25)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_g64y0"]
+size = Vector2(69, 29)
+
+[node name="House" type="Node2D"]
+script = ExtResource("1_ijqnj")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_ityit")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(1.5, -3.5)
+shape = SubResource("RectangleShape2D_fmy4l")
+
+[node name="WallBottomLeft" type="StaticBody2D" parent="."]
+position = Vector2(-147, 139)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallBottomLeft"]
+position = Vector2(0, -19.5)
+shape = SubResource("RectangleShape2D_osx3c")
+
+[node name="WallBottomRight" type="StaticBody2D" parent="."]
+position = Vector2(134, 144)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallBottomRight"]
+position = Vector2(-5, -21.375)
+shape = SubResource("RectangleShape2D_k6ofe")
+
+[node name="ZoneTransition" type="Area2D" parent="."]
+script = ExtResource("2_7bhy7")
+target_zone = "house"
+target_spawn = "SpawnFromExterior"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ZoneTransition"]
+position = Vector2(-30.5, 98.5)
+shape = SubResource("RectangleShape2D_g64y0")
+
+[node name="SpawnFromHouse" type="Marker2D" parent="."]
+position = Vector2(-32, 208)
