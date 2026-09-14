@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" path="res://scenes/farm/FarmView.tscn" id="2_farmview"]
 [ext_resource type="Script" path="res://scripts/gameplay/ZoneTransition.gd" id="3_transition"]
 [ext_resource type="Script" path="res://scripts/gameplay/ShopTrigger.gd" id="4_shoptrigger"]
-[ext_resource type="PackedScene" uid="uid://bhnm7ccttiisy" path="res://scenes/areas/exterior/House.tscn" id="5_70k58"]
+[ext_resource type="PackedScene" uid="uid://bhnm7ccttiisy" path="res://scenes/areas/houses/House.tscn" id="5_70k58"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_house_top"]
 size = Vector2(220, 140)
@@ -101,7 +101,7 @@ target_spawn = "SpawnFromExterior"
 shape = SubResource("RectangleShape2D_door")
 
 [node name="SpawnFromHouse" type="Marker2D" parent="."]
-position = Vector2(210, 235)
+position = Vector2(721, 329)
 
 [node name="FarmView" parent="." instance=ExtResource("2_farmview")]
 position = Vector2(600, 350)

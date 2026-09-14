@@ -1,0 +1,99 @@
+[gd_scene load_steps=11 format=3 uid="uid://1vf3wl4rr8gi"]
+
+[ext_resource type="Script" path="res://scripts/world/ZoneRoot.gd" id="1_r400i"]
+[ext_resource type="Texture2D" uid="uid://br46ejog1t0na" path="res://assets/sprites/houses/interior/interior_1.png" id="2_6wlfw"]
+[ext_resource type="Script" path="res://scripts/gameplay/ZoneTransition.gd" id="3_40t3b"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_jt5yt"]
+size = Vector2(69, 8)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_i3mls"]
+size = Vector2(179, 13)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_4wmug"]
+size = Vector2(16, 335)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yxb67"]
+size = Vector2(14, 335)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_w826t"]
+size = Vector2(178, 13)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_a27ay"]
+size = Vector2(455, 76)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ndt5c"]
+size = Vector2(90, 131)
+
+[node name="InteriorHouse" type="Node2D"]
+script = ExtResource("1_r400i")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_6wlfw")
+
+[node name="HouseSpawnEntry" type="Marker2D" parent="."]
+position = Vector2(2, 193)
+
+[node name="DoorTransition" type="Area2D" parent="."]
+position = Vector2(1, -218)
+script = ExtResource("3_40t3b")
+target_zone = "exterior"
+target_spawn = "SpawnFromHouse"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorTransition"]
+position = Vector2(-2, 439)
+shape = SubResource("RectangleShape2D_jt5yt")
+
+[node name="WallBottomLeft" type="StaticBody2D" parent="."]
+position = Vector2(-122, 218)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallBottomLeft"]
+position = Vector2(-3, 1)
+shape = SubResource("RectangleShape2D_i3mls")
+
+[node name="WallRight" type="StaticBody2D" parent="."]
+position = Vector2(216, -4)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallRight"]
+position = Vector2(3, 62.5)
+shape = SubResource("RectangleShape2D_4wmug")
+
+[node name="WallLeft" type="StaticBody2D" parent="."]
+position = Vector2(-216, -19)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallLeft"]
+position = Vector2(-5, 76.5)
+shape = SubResource("RectangleShape2D_yxb67")
+
+[node name="WallBottomRight" type="StaticBody2D" parent="."]
+position = Vector2(136, 220)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallBottomRight"]
+position = Vector2(-13, -0.5)
+shape = SubResource("RectangleShape2D_w826t")
+
+[node name="WallTop" type="StaticBody2D" parent="."]
+position = Vector2(-2, -143)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallTop"]
+position = Vector2(1.5, -5)
+shape = SubResource("RectangleShape2D_a27ay")
+
+[node name="Bed" type="StaticBody2D" parent="."]
+position = Vector2(-160, 127)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Bed"]
+position = Vector2(-2, 4)
+shape = SubResource("RectangleShape2D_ndt5c")
+
+[node name="Table" type="StaticBody2D" parent="."]
+position = Vector2(175, 5)
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Table"]
+position = Vector2(-116.351, -21.0518)
+scale = Vector2(3.09867, 3.70844)
+polygon = PackedVector2Array(3.98584, -8.88465, 2.69496, -4.57017, -2.79127, -4.03086, -2.79127, -0.525347, -12.1501, -0.525347, -13.441, 1.63189, -13.1183, 18.0808, -1.50039, 18.0808, -0.854954, 21.5863, 0.113205, 24.8222, 13.022, 25.3615, 17.2173, 23.2043, 18.8309, 19.1595, 19.4764, 16.7326, 29.4807, 17.0022, 29.158, 9.72154, 19.1537, 9.72154, 18.8309, -4.03086, 13.3447, -3.49155, 12.6993, -8.07568, 8.18119, -9.96327)
+
+[node name="SpawnDefault" type="Marker2D" parent="."]
+position = Vector2(-47, -23)

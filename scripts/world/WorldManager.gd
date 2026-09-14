@@ -5,7 +5,8 @@ extends Node
 ## zone changes - only the zone scene (background, plots, triggers) is swapped.
 
 const ZONES := {
-	"house": preload("res://scenes/areas/house/House.tscn"),
+	"house": preload("res://scenes/areas/interiors/Interior_House.tscn"),
+	"house2": preload("res://scenes/areas/house/House.tscn"),
 	"exterior": preload("res://scenes/areas/exterior/Exterior.tscn"),
 }
 
