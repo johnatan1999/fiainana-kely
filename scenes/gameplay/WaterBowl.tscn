@@ -1,0 +1,28 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/WaterBowl.gd" id="1_waterbowl"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bowl"]
+size = Vector2(28, 28)
+
+[node name="WaterBowl" type="Area2D"]
+script = ExtResource("1_waterbowl")
+
+[node name="Visual" type="ColorRect" parent="."]
+offset_left = -14.0
+offset_top = -14.0
+offset_right = 14.0
+offset_bottom = 14.0
+mouse_filter = 2
+color = Color(0.3, 0.55, 0.75, 1)
+
+[node name="Label" type="Label" parent="."]
+offset_left = -30.0
+offset_top = -34.0
+offset_right = 30.0
+offset_bottom = -14.0
+text = "Abreuvoir (E)"
+horizontal_alignment = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_bowl")

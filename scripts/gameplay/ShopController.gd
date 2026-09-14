@@ -16,3 +16,9 @@ func buy_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
 
 func sell(item_id: String, quantity: int = 1) -> bool:
 	return simulation.sell(item_id, quantity)
+
+func sell_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
+	return simulation.sell_item(item_id, unit_price, quantity)
+
+func buy_chicken(quantity: int = 1) -> bool:
+	return simulation.buy_chicken(quantity)

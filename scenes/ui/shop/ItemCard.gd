@@ -19,6 +19,7 @@ const CATEGORY_PLACEHOLDER_COLORS := {
 }
 
 signal add_requested(item: ShopItemData, quantity: int)
+signal sell_requested(item: ShopItemData, quantity: int)
 
 @onready var icon_rect: TextureRect = %IconRect
 @onready var icon_placeholder: ColorRect = %IconPlaceholder
@@ -30,6 +31,9 @@ signal add_requested(item: ShopItemData, quantity: int)
 @onready var quantity_label: Label = %QuantityLabel
 @onready var plus_button: Button = %PlusButton
 @onready var add_button: Button = %AddButton
+@onready var owned_label: Label = %OwnedLabel
+@onready var sell_button: Button = %SellButton
+@onready var qty_row: HBoxContainer = %QtyRow
 
 var _item: ShopItemData
 var _quantity: int = 1
@@ -42,18 +46,20 @@ func _ready() -> void:
 	minus_button.pressed.connect(_on_minus_pressed)
 	plus_button.pressed.connect(_on_plus_pressed)
 	add_button.pressed.connect(_on_add_pressed)
+	sell_button.pressed.connect(_on_sell_pressed)
 
 ## locked = true when the item's unlock_day hasn't been reached yet: shown,
 ## greyed out, and non-interactive rather than hidden, so the player knows
-## it exists and can plan for it.
-func setup(item: ShopItemData, locked: bool = false) -> void:
+## it exists and can plan for it. owned_count drives the "Tu as: N" label and
+## whether the Sell button is enabled.
+func setup(item: ShopItemData, locked: bool = false, owned_count: int = 0) -> void:
 	_item = item
 	_quantity = 1
 
 	name_label.text = item.display_name
 	malagasy_label.text = item.malagasy_name
 	description_label.text = item.description
-	price_label.text = "%d $" % item.price
+	owned_label.text = "Tu as: %d" % owned_count
 
 	if item.icon:
 		icon_rect.texture = item.icon
@@ -63,6 +69,18 @@ func setup(item: ShopItemData, locked: bool = false) -> void:
 		icon_rect.visible = false
 		icon_placeholder.visible = true
 		icon_placeholder.color = CATEGORY_PLACEHOLDER_COLORS.get(item.category, Color.GRAY)
+
+	# price <= 0 marks a sell-only entry (e.g. eggs): hide the buy controls
+	# entirely instead of showing a misleading "Acheter" for 0 $.
+	var buyable := item.price > 0
+	price_label.visible = buyable
+	price_label.text = "%d $" % item.price
+	qty_row.visible = buyable
+	add_button.visible = buyable
+
+	sell_button.visible = item.sell_price > 0
+	sell_button.text = "Vendre 1 (%d $)" % item.sell_price
+	sell_button.disabled = owned_count <= 0
 
 	_refresh_quantity_label()
 	_set_locked(locked)
@@ -95,6 +113,11 @@ func _on_add_pressed() -> void:
 	AudioManager.play_click_menu_sfx()
 	_play_pop()
 	add_requested.emit(_item, _quantity)
+
+func _on_sell_pressed() -> void:
+	AudioManager.play_click_menu_sfx()
+	_play_pop()
+	sell_requested.emit(_item, 1)
 
 func _on_mouse_entered() -> void:
 	if add_button.disabled:

@@ -67,6 +67,7 @@ text = "0 $"
 horizontal_alignment = 1
 
 [node name="QtyRow" type="HBoxContainer" parent="Margin/VBox"]
+unique_name_in_owner = true
 layout_mode = 2
 alignment = 1
 
@@ -94,3 +95,17 @@ unique_name_in_owner = true
 layout_mode = 2
 focus_mode = 0
 text = "Ajouter"
+
+[node name="OwnedLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Tu as: 0"
+horizontal_alignment = 1
+modulate = Color(1, 1, 1, 0.7)
+
+[node name="SellButton" type="Button" parent="Margin/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+focus_mode = 0
+text = "Vendre 1"

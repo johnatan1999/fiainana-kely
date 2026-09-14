@@ -1,10 +1,14 @@
-[gd_scene load_steps=13 format=3 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=14 format=3 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://scripts/world/ZoneRoot.gd" id="1_zoneroot"]
-[ext_resource type="PackedScene" path="res://scenes/farm/FarmView.tscn" id="2_farmview"]
+[ext_resource type="PackedScene" uid="uid://dd2hvqpppgxdw" path="res://scenes/farm/FarmView.tscn" id="2_farmview"]
 [ext_resource type="Script" path="res://scripts/gameplay/ZoneTransition.gd" id="3_transition"]
 [ext_resource type="Script" path="res://scripts/gameplay/ShopTrigger.gd" id="4_shoptrigger"]
 [ext_resource type="PackedScene" uid="uid://bhnm7ccttiisy" path="res://scenes/areas/houses/House.tscn" id="5_70k58"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/Coop.tscn" id="6_coop"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/FeedingBowl.tscn" id="7_feedingbowl"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/WaterBowl.tscn" id="8_waterbowl"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/Chicken.tscn" id="9_chicken"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_house_top"]
 size = Vector2(220, 140)
@@ -170,3 +174,42 @@ shape = SubResource("RectangleShape2D_wall_h_placeholder")
 
 [node name="House" parent="." instance=ExtResource("5_70k58")]
 position = Vector2(747, 156)
+
+[node name="FarmPenLabel" type="Label" parent="."]
+offset_left = 90.0
+offset_top = 375.0
+offset_right = 330.0
+offset_bottom = 395.0
+text = "Enclos des poules"
+horizontal_alignment = 1
+
+[node name="FarmPenFenceVisual" type="ColorRect" parent="."]
+offset_left = 90.0
+offset_top = 400.0
+offset_right = 330.0
+offset_bottom = 560.0
+mouse_filter = 2
+color = Color(0.5, 0.4, 0.25, 1)
+
+[node name="Coop" parent="." instance=ExtResource("6_coop")]
+position = Vector2(150, 480)
+
+[node name="FeedingBowl" parent="." instance=ExtResource("7_feedingbowl")]
+position = Vector2(250, 450)
+
+[node name="WaterBowl" parent="." instance=ExtResource("8_waterbowl")]
+position = Vector2(250, 510)
+
+[node name="AnimalContainer" type="Node2D" parent="."]
+
+[node name="WildChicken1" parent="." instance=ExtResource("9_chicken")]
+position = Vector2(480, 470)
+start_wild = true
+
+[node name="WildChicken2" parent="." instance=ExtResource("9_chicken")]
+position = Vector2(150, 700)
+start_wild = true
+
+[node name="WildChicken3" parent="." instance=ExtResource("9_chicken")]
+position = Vector2(700, 750)
+start_wild = true

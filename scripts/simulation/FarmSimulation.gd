@@ -9,16 +9,27 @@ signal day_changed(day: int)
 signal plot_changed(plot_id: int)
 signal inventory_changed(item_id: String, amount: int)
 
+signal animal_added(animal_id: String)
+signal animal_changed(animal_id: String)
+## Fired once an animal's product is ready - the presentation layer spawns
+## the actual pickup (e.g. Egg.tscn) in response; FarmSimulation never touches
+## Node2D itself, so it doesn't put the product directly into inventory here.
+signal product_ready(animal_id: String, product_id: String)
+
+const COOP_COST := 60
+
 var state: FarmState
 var grid_width: int
 var grid_height: int
 
 var _crop_registry: Dictionary = {} # crop_id: String -> CropData
+var _animal_registry: Dictionary = {} # AnimalData.Species -> AnimalData
 
-func _init(p_grid_width: int, p_grid_height: int, crop_registry: Dictionary) -> void:
+func _init(p_grid_width: int, p_grid_height: int, crop_registry: Dictionary, animal_registry: Dictionary = {}) -> void:
 	grid_width = p_grid_width
 	grid_height = p_grid_height
 	_crop_registry = crop_registry
+	_animal_registry = animal_registry
 	state = FarmState.new(p_grid_width * p_grid_height)
 
 func get_plot(plot_id: int) -> PlotState:
@@ -29,6 +40,15 @@ func get_crop_data(crop_id: String) -> CropData:
 
 func get_all_crop_ids() -> Array:
 	return _crop_registry.keys()
+
+func get_animal_data(species: AnimalData.Species) -> AnimalData:
+	return _animal_registry.get(species)
+
+func get_animal(animal_id: String) -> AnimalState:
+	return state.animals.get(animal_id)
+
+func get_all_animal_ids() -> Array:
+	return state.animals.keys()
 
 func till(plot_id: int) -> bool:
 	var plot := get_plot(plot_id)
@@ -99,8 +119,129 @@ func advance_day() -> void:
 				plot.crop.age += 1
 		plot.watered = false
 		plot_changed.emit(plot_id)
+	_advance_animals()
 	state.clock.advance_day()
 	day_changed.emit(state.day)
+
+## Ticks hunger/thirst decay, the product cycle, and breeding for every
+## animal. Called once per advance_day() - fed_today/watered_today (set
+## throughout the day by feed_animal()/water_animal()) are consumed here and
+## reset for the next day, exactly like PlotState.watered.
+func _advance_animals() -> void:
+	var qualifying_by_species: Dictionary = {} # AnimalData.Species -> count
+	for animal_id in state.animals.keys():
+		var animal: AnimalState = state.animals[animal_id]
+		var animal_data := get_animal_data(animal.species)
+		if animal_data == null:
+			continue
+
+		if animal.is_well_cared_today():
+			animal.days_well_cared += 1
+			animal.days_since_product += 1
+		else:
+			animal.days_well_cared = 0
+
+		if not animal.fed_today:
+			animal.hunger = max(0.0, animal.hunger - animal_data.hunger_decay_per_day)
+		if not animal.watered_today:
+			animal.thirst = max(0.0, animal.thirst - animal_data.thirst_decay_per_day)
+
+		animal.fed_today = false
+		animal.watered_today = false
+
+		if animal_data.product_id != "" and animal.days_since_product >= animal_data.product_cycle_days:
+			animal.days_since_product = 0
+			product_ready.emit(animal_id, animal_data.product_id)
+
+		if animal.days_well_cared >= animal_data.breeding_days_required:
+			qualifying_by_species[animal.species] = qualifying_by_species.get(animal.species, 0) + 1
+
+		animal_changed.emit(animal_id)
+
+	for species in qualifying_by_species:
+		if qualifying_by_species[species] >= 2:
+			_attempt_breeding(species)
+
+## One roll per species per day (not per pair) once at least 2 adults qualify,
+## so a full coop doesn't produce multiple babies from a single day's care.
+func _attempt_breeding(species: AnimalData.Species) -> void:
+	if state.animals.size() >= state.coop_capacity:
+		return
+	var animal_data := get_animal_data(species)
+	if randf() > animal_data.breeding_chance:
+		return
+	var baby_id := state.generate_animal_id(species)
+	state.animals[baby_id] = AnimalState.new(baby_id, species)
+	for animal in state.animals.values():
+		if animal.species == species and animal.days_well_cared >= animal_data.breeding_days_required:
+			animal.days_well_cared = 0
+	animal_added.emit(baby_id)
+
+func build_coop() -> bool:
+	if state.has_coop or state.money < COOP_COST:
+		return false
+	state.money -= COOP_COST
+	money_changed.emit(state.money)
+	state.has_coop = true
+	return true
+
+## Pure economy transaction - buying doesn't materialize an animal in the
+## world. place_chicken() does that and requires the coop to exist.
+func buy_chicken(quantity: int = 1) -> bool:
+	if quantity <= 0:
+		return false
+	var animal_data := get_animal_data(AnimalData.Species.CHICKEN)
+	if animal_data == null:
+		return false
+	var cost := animal_data.purchase_price * quantity
+	if state.money < cost:
+		return false
+	state.money -= cost
+	money_changed.emit(state.money)
+	state.add_inventory("chicken_unplaced", quantity)
+	inventory_changed.emit("chicken_unplaced", state.get_inventory_count("chicken_unplaced"))
+	return true
+
+## Converts one purchased-but-unplaced chicken into a real animal in the
+## coop. Returns the new animal's id, or "" if it couldn't be placed.
+func place_chicken() -> String:
+	if not state.has_coop:
+		return ""
+	if state.animals.size() >= state.coop_capacity:
+		return ""
+	if state.get_inventory_count("chicken_unplaced") <= 0:
+		return ""
+	state.add_inventory("chicken_unplaced", -1)
+	inventory_changed.emit("chicken_unplaced", state.get_inventory_count("chicken_unplaced"))
+	var animal_id := state.generate_animal_id(AnimalData.Species.CHICKEN)
+	state.animals[animal_id] = AnimalState.new(animal_id, AnimalData.Species.CHICKEN)
+	animal_added.emit(animal_id)
+	return animal_id
+
+## Called by the world-layer Egg pickup once the player actually walks over
+## it - product_ready only announces that an egg is ready to spawn, it never
+## touches inventory itself (FarmSimulation never touches Node2D/pickups).
+func collect_product(product_id: String, quantity: int = 1) -> void:
+	state.add_inventory(product_id, quantity)
+	inventory_changed.emit(product_id, state.get_inventory_count(product_id))
+
+func feed_animal(animal_id: String) -> bool:
+	var animal: AnimalState = state.animals.get(animal_id)
+	if animal == null or animal.fed_today:
+		return false
+	animal.hunger = 100.0
+	animal.fed_today = true
+	animal_changed.emit(animal_id)
+	return true
+
+func water_animal(animal_id: String) -> bool:
+	var animal: AnimalState = state.animals.get(animal_id)
+	if animal == null or animal.watered_today:
+		return false
+	animal.thirst = 100.0
+	animal.watered_today = true
+	animal_changed.emit(animal_id)
+	return true
 
 func buy_seed(crop_id: String, quantity: int = 1) -> bool:
 	if quantity <= 0:
@@ -146,6 +287,20 @@ func sell(item_id: String, quantity: int = 1) -> bool:
 	state.add_inventory(item_id, -quantity)
 	inventory_changed.emit(item_id, state.get_inventory_count(item_id))
 	state.money += crop_data.sell_price * quantity
+	money_changed.emit(state.money)
+	return true
+
+## Generic sell path for non-crop products (eggs, and future animal
+## products): symmetric to buy_item() - the caller supplies the unit price
+## since these items have no entry in _crop_registry.
+func sell_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
+	if quantity <= 0 or unit_price < 0:
+		return false
+	if state.get_inventory_count(item_id) < quantity:
+		return false
+	state.add_inventory(item_id, -quantity)
+	inventory_changed.emit(item_id, state.get_inventory_count(item_id))
+	state.money += unit_price * quantity
 	money_changed.emit(state.money)
 	return true
 

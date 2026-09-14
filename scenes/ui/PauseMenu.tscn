@@ -13,6 +13,8 @@ offset_left = -90.0
 offset_top = -80.0
 offset_right = 90.0
 offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_pause")
 
 [node name="Panel" type="Panel" parent="."]

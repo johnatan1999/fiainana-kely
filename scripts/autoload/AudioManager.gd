@@ -26,6 +26,9 @@ const SFX_POOL_SIZE := 8
 @export var sfx_harvest: AudioStream
 @export var sfx_interact: AudioStream
 @export var sfx_menu_click: AudioStream
+@export var sfx_chicken: AudioStream
+@export var sfx_egg_pickup: AudioStream
+@export var sfx_coop_build: AudioStream
 
 @onready var _bgm_players: Array[AudioStreamPlayer] = [$BGMPlayerA, $BGMPlayerB]
 
@@ -48,6 +51,19 @@ func _ready() -> void:
 		player.process_mode = Node.PROCESS_MODE_ALWAYS
 
 	_build_sfx_pool()
+
+## An actively-looping AudioStreamMP3/OggVorbis still playing when the engine
+## tears down the scene tree doesn't get a chance to release its playback
+## cleanly, which Godot reports as a leaked resource at exit. Stopping every
+## player here (called for every shutdown path: window close, --quit, or
+## get_tree().quit() from the pause menu) avoids that.
+func _exit_tree() -> void:
+	for player in _bgm_players:
+		player.stop()
+		player.stream = null
+	for player in _sfx_pool:
+		player.stop()
+		player.stream = null
 
 
 func _ensure_bus(bus_name: String) -> void:
@@ -147,6 +163,18 @@ func play_interact_sfx() -> void:
 	
 func play_click_menu_sfx() -> void:
 	play_sfx(sfx_menu_click)
+
+
+func play_chicken_sfx() -> void:
+	play_sfx(sfx_chicken)
+
+
+func play_egg_pickup_sfx() -> void:
+	play_sfx(sfx_egg_pickup)
+
+
+func play_coop_build_sfx() -> void:
+	play_sfx(sfx_coop_build)
 
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0, pitch_scale: float = 1.0) -> void:

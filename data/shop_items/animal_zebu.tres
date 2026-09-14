@@ -10,3 +10,4 @@ malagasy_name = "Omby"
 description = "Le zébu, symbole de richesse et de statut dans la culture malgache."
 category = 3
 price = 200
+animal_species = 4

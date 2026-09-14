@@ -9,6 +9,7 @@ signal quit_requested
 @onready var quit_button: Button = $Panel/VBoxContainer/QuitButton
 
 var _shop_ui: ShopUI
+var _inventory_ui: InventoryUI
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -29,14 +30,17 @@ func _ready() -> void:
 	)
 	visible = false
 
-func setup(shop_ui: ShopUI) -> void:
+func setup(shop_ui: ShopUI, inventory_ui: InventoryUI) -> void:
 	_shop_ui = shop_ui
+	_inventory_ui = inventory_ui
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
 		return
 	if not visible and _shop_ui != null and _shop_ui.visible:
 		return # let the shop handle Escape first
+	if not visible and _inventory_ui != null and _inventory_ui.visible:
+		return # let the inventory handle Escape first
 	if visible:
 		_close()
 	else:

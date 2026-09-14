@@ -15,6 +15,15 @@ func _make_sim() -> FarmSimulation:
 	var corn: CropData = load("res://data/crops/corn.tres")
 	return FarmSimulation.new(4, 4, {"corn": corn})
 
+## duplicate() so each test gets its own AnimalData instance - mutating
+## breeding_chance for one test must never leak into another via the
+## shared ResourceLoader cache.
+func _make_sim_with_chicken(breeding_chance: float = 0.25) -> FarmSimulation:
+	var corn: CropData = load("res://data/crops/corn.tres")
+	var chicken: AnimalData = load("res://data/animals/chicken.tres").duplicate()
+	chicken.breeding_chance = breeding_chance
+	return FarmSimulation.new(4, 4, {"corn": corn}, {AnimalData.Species.CHICKEN: chicken})
+
 func _check(condition: bool, description: String) -> void:
 	if condition:
 		_pass_count += 1
@@ -40,6 +49,20 @@ func _run_all() -> void:
 	test_watering_is_consumed_each_day()
 	test_low_watering_caps_harvest_below_max_yield()
 	test_season_boundaries()
+	test_build_coop_deducts_money()
+	test_cannot_build_coop_twice()
+	test_buy_chicken_adds_unplaced_inventory()
+	test_cannot_place_chicken_without_coop()
+	test_place_chicken_creates_animal()
+	test_place_chicken_respects_coop_capacity()
+	test_feed_and_water_reset_hunger_and_thirst()
+	test_unfed_animal_loses_hunger_on_advance_day()
+	test_fed_animal_keeps_care_streak()
+	test_product_ready_signal_fires_after_cycle()
+	test_breeding_creates_offspring_when_guaranteed()
+	test_no_breeding_when_chance_is_zero()
+	test_sell_item_generic_path()
+	test_animal_save_load_roundtrip()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -215,3 +238,177 @@ func test_season_boundaries() -> void:
 	_check(clock.get_season() == GameClock.Season.ASOTRY, "day 60 is still Asotry")
 	clock.current_day = 61
 	_check(clock.get_season() == GameClock.Season.ASARA, "day 61 returns to Asara")
+
+func test_build_coop_deducts_money() -> void:
+	var sim := _make_sim_with_chicken()
+	var money_before := sim.state.money
+	var ok := sim.build_coop()
+	_check(
+		ok and sim.state.money == money_before - FarmSimulation.COOP_COST and sim.state.has_coop,
+		"build_coop() succeeds and deducts money"
+	)
+
+func test_cannot_build_coop_twice() -> void:
+	var sim := _make_sim_with_chicken()
+	sim.build_coop()
+	var money_after_first := sim.state.money
+	var ok := sim.build_coop()
+	_check(not ok and sim.state.money == money_after_first, "build_coop() fails once a coop already exists")
+
+func test_buy_chicken_adds_unplaced_inventory() -> void:
+	var sim := _make_sim_with_chicken()
+	var money_before := sim.state.money
+	var chicken_data := sim.get_animal_data(AnimalData.Species.CHICKEN)
+	var ok := sim.buy_chicken(1)
+	_check(
+		ok and sim.state.money == money_before - chicken_data.purchase_price
+		and sim.state.get_inventory_count("chicken_unplaced") == 1,
+		"buy_chicken() deducts money and adds an unplaced chicken"
+	)
+
+func test_cannot_place_chicken_without_coop() -> void:
+	var sim := _make_sim_with_chicken()
+	sim.buy_chicken(1)
+	var id := sim.place_chicken()
+	_check(id == "" and sim.get_all_animal_ids().is_empty(), "place_chicken() fails without a coop")
+
+func test_place_chicken_creates_animal() -> void:
+	var sim := _make_sim_with_chicken()
+	sim.build_coop()
+	sim.buy_chicken(1)
+	var id := sim.place_chicken()
+	_check(
+		id != "" and sim.get_animal(id) != null and sim.get_animal(id).species == AnimalData.Species.CHICKEN
+		and sim.state.get_inventory_count("chicken_unplaced") == 0,
+		"place_chicken() creates a real animal from an unplaced chicken"
+	)
+
+func test_place_chicken_respects_coop_capacity() -> void:
+	var sim := _make_sim_with_chicken()
+	sim.build_coop()
+	sim.state.coop_capacity = 1
+	sim.state.money = 1000
+	sim.buy_chicken(2)
+	var first_id := sim.place_chicken()
+	var second_id := sim.place_chicken()
+	_check(
+		first_id != "" and second_id == "" and sim.get_all_animal_ids().size() == 1,
+		"place_chicken() refuses once the coop is at capacity"
+	)
+
+func test_feed_and_water_reset_hunger_and_thirst() -> void:
+	var sim := _make_sim_with_chicken()
+	sim.build_coop()
+	sim.buy_chicken(1)
+	var id := sim.place_chicken()
+	sim.get_animal(id).hunger = 10.0
+	sim.get_animal(id).thirst = 10.0
+	sim.feed_animal(id)
+	sim.water_animal(id)
+	var animal := sim.get_animal(id)
+	_check(
+		animal.hunger == 100.0 and animal.thirst == 100.0 and animal.fed_today and animal.watered_today,
+		"feed_animal()/water_animal() reset hunger/thirst and mark the day as cared-for"
+	)
+
+func test_unfed_animal_loses_hunger_on_advance_day() -> void:
+	var sim := _make_sim_with_chicken()
+	sim.build_coop()
+	sim.buy_chicken(1)
+	var id := sim.place_chicken()
+	var chicken_data := sim.get_animal_data(AnimalData.Species.CHICKEN)
+	sim.advance_day() # not fed/watered today
+	_check(
+		sim.get_animal(id).hunger == 100.0 - chicken_data.hunger_decay_per_day,
+		"advance_day() decays hunger for an animal that wasn't fed"
+	)
+
+func test_fed_animal_keeps_care_streak() -> void:
+	var sim := _make_sim_with_chicken()
+	sim.build_coop()
+	sim.buy_chicken(1)
+	var id := sim.place_chicken()
+	sim.feed_animal(id)
+	sim.water_animal(id)
+	sim.advance_day()
+	_check(sim.get_animal(id).days_well_cared == 1, "advance_day() extends the well-cared streak when fed and watered")
+
+func test_product_ready_signal_fires_after_cycle() -> void:
+	var sim := _make_sim_with_chicken()
+	sim.build_coop()
+	sim.buy_chicken(1)
+	var id := sim.place_chicken()
+	var chicken_data := sim.get_animal_data(AnimalData.Species.CHICKEN)
+	var received: Array = []
+	sim.product_ready.connect(func(animal_id, product_id): received.append([animal_id, product_id]))
+	for i in chicken_data.product_cycle_days:
+		sim.feed_animal(id)
+		sim.water_animal(id)
+		sim.advance_day()
+	_check(
+		received.size() == 1 and received[0][0] == id and received[0][1] == "egg",
+		"product_ready fires once an animal has been cared for through its product cycle"
+	)
+
+func test_breeding_creates_offspring_when_guaranteed() -> void:
+	var sim := _make_sim_with_chicken(1.0) # force the roll to always succeed
+	sim.build_coop()
+	sim.state.money = 1000
+	sim.buy_chicken(2)
+	sim.place_chicken()
+	sim.place_chicken()
+	var chicken_data := sim.get_animal_data(AnimalData.Species.CHICKEN)
+	for i in chicken_data.breeding_days_required:
+		for id in sim.get_all_animal_ids():
+			sim.feed_animal(id)
+			sim.water_animal(id)
+		sim.advance_day()
+	_check(sim.get_all_animal_ids().size() == 3, "two well-cared adults breed a third chicken when the roll always succeeds")
+
+func test_no_breeding_when_chance_is_zero() -> void:
+	var sim := _make_sim_with_chicken(0.0)
+	sim.build_coop()
+	sim.state.money = 1000
+	sim.buy_chicken(2)
+	sim.place_chicken()
+	sim.place_chicken()
+	var chicken_data := sim.get_animal_data(AnimalData.Species.CHICKEN)
+	for i in chicken_data.breeding_days_required:
+		for id in sim.get_all_animal_ids():
+			sim.feed_animal(id)
+			sim.water_animal(id)
+		sim.advance_day()
+	_check(sim.get_all_animal_ids().size() == 2, "no breeding happens when breeding_chance is 0")
+
+func test_sell_item_generic_path() -> void:
+	var sim := _make_sim_with_chicken()
+	sim.state.add_inventory("egg", 3)
+	var money_before := sim.state.money
+	var ok := sim.sell_item("egg", 6, 2)
+	_check(
+		ok and sim.state.money == money_before + 12 and sim.state.get_inventory_count("egg") == 1,
+		"sell_item() sells a non-crop product at the given unit price"
+	)
+
+func test_animal_save_load_roundtrip() -> void:
+	var sim := _make_sim_with_chicken()
+	sim.build_coop()
+	sim.buy_chicken(1)
+	var id := sim.place_chicken()
+	sim.feed_animal(id)
+	sim.advance_day()
+
+	var data := sim.to_save_data()
+	data = JSON.parse_string(JSON.stringify(data))
+
+	var fresh_sim := _make_sim_with_chicken()
+	fresh_sim.load_save_data(data)
+
+	var animal := fresh_sim.get_animal(id)
+	_check(
+		fresh_sim.state.has_coop
+		and animal != null
+		and animal.species == AnimalData.Species.CHICKEN
+		and animal.thirst < 100.0, # was not watered that day
+		"load_save_data() restores coop status and animal state"
+	)

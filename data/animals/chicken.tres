@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AnimalData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/AnimalData.gd" id="1_chicken"]
+
+[resource]
+script = ExtResource("1_chicken")
+species = 0
+display_name = "Poule"
+malagasy_name = "Akoho vavy"
+purchase_price = 35
+product_id = "egg"
+product_sell_price = 6
+product_cycle_days = 2
+hunger_decay_per_day = 25.0
+thirst_decay_per_day = 30.0
+breeding_days_required = 5
+breeding_chance = 0.25

@@ -14,6 +14,7 @@ const TOOLS_FOOD_ANIMALS_RESOURCES: Array[ShopItemData] = [
 	preload("res://data/shop_items/food_vary_amin_anana.tres"),
 	preload("res://data/shop_items/animal_chicken.tres"),
 	preload("res://data/shop_items/animal_zebu.tres"),
+	preload("res://data/shop_items/egg.tres"),
 ]
 
 const ItemCardScene := preload("res://scenes/ui/shop/ItemCard.tscn")
@@ -45,6 +46,7 @@ func setup(shop_controller: ShopController, simulation: FarmSimulation) -> void:
 	cart_panel.checkout_requested.connect(_on_checkout_requested)
 	simulation.money_changed.connect(_on_money_changed)
 	simulation.day_changed.connect(_on_day_changed)
+	simulation.inventory_changed.connect(_on_inventory_changed)
 
 	_on_money_changed(simulation.state.money)
 
@@ -77,7 +79,11 @@ func _setup_category_buttons() -> void:
 			child.category_chosen.connect(_on_category_chosen)
 	var first_button := category_row.get_child(0)
 	if first_button is CategoryButton:
-		first_button.button_pressed = true # triggers _on_category_chosen -> first grid build
+		# set_pressed_no_signal: the initial category is a silent default, not
+		# a real click - button_pressed = true would fire toggled() and play
+		# the click SFX/pop animation at game launch, before the shop ever opens.
+		first_button.set_pressed_no_signal(true)
+	_rebuild_item_grid() # _selected_category already defaults to SEEDS
 
 func _on_category_chosen(category: ShopItemData.Category) -> void:
 	_selected_category = category
@@ -89,8 +95,10 @@ func _rebuild_item_grid() -> void:
 	for item: ShopItemData in _catalog.get(_selected_category, []):
 		var card: ItemCard = ItemCardScene.instantiate()
 		item_grid.add_child(card)
-		card.setup(item, _is_locked(item))
+		var owned_id := item.crop_id if item.category == ShopItemData.Category.SEEDS else item.id
+		card.setup(item, _is_locked(item), _simulation.state.get_inventory_count(owned_id))
 		card.add_requested.connect(_on_add_requested)
+		card.sell_requested.connect(_on_sell_requested)
 
 ## Only SEEDS carry an unlock_day (via their backing CropData) - the other
 ## categories have no progression gate yet.
@@ -102,6 +110,14 @@ func _is_locked(item: ShopItemData) -> bool:
 
 func _on_add_requested(item: ShopItemData, quantity: int) -> void:
 	cart_panel.add_item(item, quantity)
+
+## Selling is instant (no cart step) - symmetric to the old per-crop "Vendre"
+## button, just generalized to any category via FarmSimulation.sell_item().
+func _on_sell_requested(item: ShopItemData, quantity: int) -> void:
+	if item.category == ShopItemData.Category.SEEDS:
+		_shop_controller.sell(item.crop_id, quantity)
+	else:
+		_shop_controller.sell_item(item.id, item.sell_price, quantity)
 
 ## All-or-nothing checkout: the whole cart must be affordable up front, so a
 ## purchase never runs out of money halfway through.
@@ -117,6 +133,8 @@ func _on_checkout_requested() -> void:
 func _purchase(item: ShopItemData, quantity: int) -> void:
 	if item.category == ShopItemData.Category.SEEDS:
 		_shop_controller.buy_seed(item.crop_id, quantity)
+	elif item.category == ShopItemData.Category.ANIMALS and item.animal_species == AnimalData.Species.CHICKEN:
+		_shop_controller.buy_chicken(quantity)
 	else:
 		_shop_controller.buy_item(item.id, item.price, quantity)
 
@@ -126,6 +144,11 @@ func _on_money_changed(money: int) -> void:
 ## Crop unlock_day gates can flip while the shop happens to be open; cheapest
 ## correct fix is to just re-lock/unlock the currently visible grid.
 func _on_day_changed(_day: int) -> void:
+	_rebuild_item_grid()
+
+## Keeps "Tu as: N" and the Sell button's enabled state live while the shop
+## is open (e.g. selling one egg should immediately grey out Sell at 0 left).
+func _on_inventory_changed(_item_id: String, _amount: int) -> void:
 	_rebuild_item_grid()
 
 func open() -> void:

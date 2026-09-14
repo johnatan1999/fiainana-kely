@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ShopItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ShopItemData.gd" id="1_egg"]
+
+[resource]
+script = ExtResource("1_egg")
+id = "egg"
+display_name = "Œuf"
+malagasy_name = "Atody"
+description = "Récolté au poulailler. Ne s'achète pas, seulement à vendre."
+category = 3
+price = 0
+sell_price = 6

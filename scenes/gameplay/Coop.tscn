@@ -1,0 +1,29 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/Coop.gd" id="1_coop"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_coop"]
+size = Vector2(90, 70)
+
+[node name="Coop" type="Area2D"]
+script = ExtResource("1_coop")
+
+[node name="Visual" type="ColorRect" parent="."]
+offset_left = -45.0
+offset_top = -35.0
+offset_right = 45.0
+offset_bottom = 35.0
+mouse_filter = 2
+color = Color(0.45, 0.45, 0.45, 1)
+
+[node name="Label" type="Label" parent="."]
+offset_left = -70.0
+offset_top = -58.0
+offset_right = 70.0
+offset_bottom = -35.0
+text = "Construire le poulailler (E)"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_coop")

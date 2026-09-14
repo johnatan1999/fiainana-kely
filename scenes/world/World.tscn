@@ -6,9 +6,11 @@
 [ext_resource type="Script" path="res://scripts/gameplay/ShopController.gd" id="4_shop"]
 [ext_resource type="Script" path="res://scripts/gameplay/SaveController.gd" id="5_save"]
 [ext_resource type="Script" path="res://scripts/world/WorldManager.gd" id="6_worldmanager"]
+[ext_resource type="Script" path="res://scripts/gameplay/AnimalManager.gd" id="10_animalmanager"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="7_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ShopUI.tscn" id="8_shopui"]
 [ext_resource type="PackedScene" path="res://scenes/ui/PauseMenu.tscn" id="9_pausemenu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/InventoryUI.tscn" id="11_inventoryui"]
 
 [node name="World" type="Node2D"]
 script = ExtResource("1_world")
@@ -31,6 +33,9 @@ script = ExtResource("5_save")
 [node name="WorldManager" type="Node" parent="Gameplay"]
 script = ExtResource("6_worldmanager")
 
+[node name="AnimalManager" type="Node" parent="Gameplay"]
+script = ExtResource("10_animalmanager")
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="HUD" parent="UI" instance=ExtResource("7_hud")]
@@ -42,6 +47,9 @@ offset_right = 204.0
 offset_bottom = 184.0
 
 [node name="ShopUI" parent="UI" instance=ExtResource("8_shopui")]
+layout_mode = 3
+
+[node name="InventoryUI" parent="UI" instance=ExtResource("11_inventoryui")]
 layout_mode = 3
 
 [node name="PauseMenu" parent="UI" instance=ExtResource("9_pausemenu")]
