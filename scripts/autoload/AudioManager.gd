@@ -25,6 +25,7 @@ const SFX_POOL_SIZE := 8
 @export var sfx_watering: AudioStream
 @export var sfx_harvest: AudioStream
 @export var sfx_interact: AudioStream
+@export var sfx_menu_click: AudioStream
 
 @onready var _bgm_players: Array[AudioStreamPlayer] = [$BGMPlayerA, $BGMPlayerB]
 
@@ -143,6 +144,9 @@ func play_harvest_sfx() -> void:
 
 func play_interact_sfx() -> void:
 	play_sfx(sfx_interact)
+	
+func play_click_menu_sfx() -> void:
+	play_sfx(sfx_menu_click)
 
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0, pitch_scale: float = 1.0) -> void:

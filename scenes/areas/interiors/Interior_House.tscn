@@ -1,14 +1,15 @@
-[gd_scene load_steps=11 format=3 uid="uid://1vf3wl4rr8gi"]
+[gd_scene load_steps=12 format=3 uid="uid://1vf3wl4rr8gi"]
 
 [ext_resource type="Script" path="res://scripts/world/ZoneRoot.gd" id="1_r400i"]
 [ext_resource type="Texture2D" uid="uid://br46ejog1t0na" path="res://assets/sprites/houses/interior/interior_1.png" id="2_6wlfw"]
 [ext_resource type="Script" path="res://scripts/gameplay/ZoneTransition.gd" id="3_40t3b"]
+[ext_resource type="Script" path="res://scripts/gameplay/SleepSpot.gd" id="4_45pqr"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_jt5yt"]
 size = Vector2(69, 8)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_i3mls"]
-size = Vector2(179, 13)
+size = Vector2(179, 13.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4wmug"]
 size = Vector2(16, 335)
@@ -17,13 +18,13 @@ size = Vector2(16, 335)
 size = Vector2(14, 335)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_w826t"]
-size = Vector2(178, 13)
+size = Vector2(178, 14)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_a27ay"]
-size = Vector2(455, 76)
+size = Vector2(455, 95)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ndt5c"]
-size = Vector2(90, 131)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_iisxe"]
+size = Vector2(82, 106)
 
 [node name="InteriorHouse" type="Node2D"]
 script = ExtResource("1_r400i")
@@ -34,7 +35,7 @@ scale = Vector2(0.5, 0.5)
 texture = ExtResource("2_6wlfw")
 
 [node name="HouseSpawnEntry" type="Marker2D" parent="."]
-position = Vector2(2, 193)
+position = Vector2(2, 169)
 
 [node name="DoorTransition" type="Area2D" parent="."]
 position = Vector2(1, -218)
@@ -50,7 +51,7 @@ shape = SubResource("RectangleShape2D_jt5yt")
 position = Vector2(-122, 218)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallBottomLeft"]
-position = Vector2(-3, 1)
+position = Vector2(-3, 0.75)
 shape = SubResource("RectangleShape2D_i3mls")
 
 [node name="WallRight" type="StaticBody2D" parent="."]
@@ -71,22 +72,15 @@ shape = SubResource("RectangleShape2D_yxb67")
 position = Vector2(136, 220)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallBottomRight"]
-position = Vector2(-13, -0.5)
+position = Vector2(-13, -1)
 shape = SubResource("RectangleShape2D_w826t")
 
 [node name="WallTop" type="StaticBody2D" parent="."]
 position = Vector2(-2, -143)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallTop"]
-position = Vector2(1.5, -5)
+position = Vector2(1.5, 4.5)
 shape = SubResource("RectangleShape2D_a27ay")
-
-[node name="Bed" type="StaticBody2D" parent="."]
-position = Vector2(-160, 127)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Bed"]
-position = Vector2(-2, 4)
-shape = SubResource("RectangleShape2D_ndt5c")
 
 [node name="Table" type="StaticBody2D" parent="."]
 position = Vector2(175, 5)
@@ -98,3 +92,11 @@ polygon = PackedVector2Array(3.98584, -8.88465, 2.69496, -4.57017, -2.79127, -4.
 
 [node name="SpawnDefault" type="Marker2D" parent="."]
 position = Vector2(-47, -23)
+
+[node name="SleepSpot" type="Area2D" parent="."]
+position = Vector2(-162, 124)
+script = ExtResource("4_45pqr")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SleepSpot"]
+position = Vector2(0, -1)
+shape = SubResource("RectangleShape2D_iisxe")

@@ -10,6 +10,8 @@ signal tool_changed(tool: Tool)
 @export var run_speed: float = 400.0
 
 @onready var camera: Camera2D = $Camera2D
+@onready var anim: AnimatedSprite2D = $AnimatedSprite2D
+
 
 var current_tool: Tool = Tool.HOE
 
@@ -18,6 +20,27 @@ func _physics_process(_delta: float) -> void:
 	var speed := run_speed if Input.is_action_pressed("sprint") else walk_speed
 	velocity = input_vector * speed
 	move_and_slide()
+	
+	_update_animation(input_vector)
+
+func _update_animation(dir: Vector2):
+	if dir == Vector2.ZERO:
+		_play_idle()
+	else:
+		_play_walk(dir)
+
+func _play_idle():
+	if anim.animation.begins_with("walk"):
+		anim.animation = anim.animation.replace("walk", "idle")
+
+func _play_walk(dir: Vector2):
+	if abs(dir.x) > abs(dir.y):
+		anim.animation = "walk_right" if dir.x > 0 else "walk_left"
+	else:
+		anim.animation = "walk_down" if dir.y > 0 else "walk_up"
+	anim.play()
+
+
 
 ## 1=Houe 2=Graines 3=Arrosoir 4=Récolte - direct raw keycodes, kept out of the
 ## project's custom InputMap since it has repeatedly lost entries there.

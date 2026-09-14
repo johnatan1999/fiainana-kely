@@ -12,9 +12,21 @@ var _shop_ui: ShopUI
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	continue_button.pressed.connect(_close)
-	save_button.pressed.connect(func(): save_requested.emit())
-	quit_button.pressed.connect(func(): quit_requested.emit())
+	continue_button.pressed.connect(func():
+		AudioManager.play_click_menu_sfx()
+		_close()
+	)
+
+	save_button.pressed.connect(func():
+		AudioManager.play_click_menu_sfx()
+		save_requested.emit()
+		_close()
+	)
+
+	quit_button.pressed.connect(func():
+		AudioManager.play_click_menu_sfx()
+		quit_requested.emit()
+	)
 	visible = false
 
 func setup(shop_ui: ShopUI) -> void:
