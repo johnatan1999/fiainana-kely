@@ -27,6 +27,7 @@ size = Vector2(90, 131)
 
 [node name="InteriorHouse" type="Node2D"]
 script = ExtResource("1_r400i")
+bgm = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.5, 0.5)

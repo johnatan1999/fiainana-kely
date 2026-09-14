@@ -24,4 +24,5 @@ func _on_body_exited(body: Node) -> void:
 
 func _on_interact_requested(_tool) -> void:
 	if _player_inside:
+		AudioManager.play_interact_sfx()
 		_shop_ui.open()

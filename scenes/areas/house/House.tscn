@@ -26,6 +26,7 @@ camera_limit_top = -10
 camera_limit_right = 330
 camera_limit_bottom = 210
 camera_zoom = 2.2
+bgm = 2
 
 [node name="Floor" type="ColorRect" parent="."]
 offset_right = 320.0

@@ -30,10 +30,14 @@ func _on_interact_requested(tool: PlayerController.Tool) -> void:
 		return
 	match tool:
 		PlayerController.Tool.HOE:
-			simulation.till(plot_id)
+			if simulation.till(plot_id):
+				AudioManager.play_till_sfx()
 		PlayerController.Tool.WATERING_CAN:
-			simulation.water(plot_id)
+			if simulation.water(plot_id):
+				AudioManager.play_watering_sfx()
 		PlayerController.Tool.SEEDS:
-			simulation.plant(plot_id, SELECTED_CROP_ID)
+			if simulation.plant(plot_id, SELECTED_CROP_ID):
+				AudioManager.play_plant_sfx()
 		PlayerController.Tool.HARVEST:
-			simulation.harvest(plot_id)
+			if simulation.harvest(plot_id):
+				AudioManager.play_harvest_sfx()

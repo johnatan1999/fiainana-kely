@@ -49,7 +49,17 @@ func change_zone(zone_id: String, spawn_name: String) -> void:
 	player.camera.limit_bottom = zone.camera_limit_bottom
 	player.camera.zoom = Vector2(zone.camera_zoom, zone.camera_zoom)
 
+	_apply_zone_bgm(zone)
 	_wire_zone_content(zone)
+
+func _apply_zone_bgm(zone: ZoneRoot) -> void:
+	match zone.bgm:
+		ZoneRoot.BGM.EXTERIOR:
+			AudioManager.play_exterior_bgm()
+		ZoneRoot.BGM.INTERIOR:
+			AudioManager.play_interior_bgm()
+		ZoneRoot.BGM.NONE:
+			pass
 
 func _wire_zone_content(zone: ZoneRoot) -> void:
 	var farm_view: FarmView = zone.get_node_or_null("FarmView")
