@@ -9,9 +9,12 @@ const BUS_MUSIC := "Music"
 const BUS_SFX := "SFX"
 
 const BGM_EXTERIOR: AudioStream = preload("res://assets/audio/BGM/Audio_BGM_Exterieur_Vorona_Kely.mp3")
-const BGM_INTERIOR: AudioStream = preload("res://assets/audio/BGM/fletchpike-daytime-farm-ambience-409990.mp3")
+const BGM_INTERIOR: AudioStream = preload("res://assets/audio/BGM/Audio_BGM_vorona-o-barijaona.ogg")
 
 const DEFAULT_CROSSFADE_TIME := 1.5
+const BGM_EXTERIOR_VOLUME := -3.0
+const BGM_INTERIOR_VOLUME := -20.0
+
 const SILENT_DB := -80.0
 const SFX_POOL_SIZE := 8
 
@@ -98,8 +101,8 @@ func play_bgm(stream: AudioStream, fade_time: float = DEFAULT_CROSSFADE_TIME) ->
 	if _bgm_tween:
 		_bgm_tween.kill()
 	_bgm_tween = create_tween().set_parallel(true)
-	_bgm_tween.tween_property(incoming, "volume_db", 0.0, fade_time)
-
+	var target_volume := BGM_INTERIOR_VOLUME if stream == BGM_INTERIOR else BGM_EXTERIOR_VOLUME
+	_bgm_tween.tween_property(incoming, "volume_db", target_volume, fade_time)
 	if outgoing.playing:
 		_bgm_tween.tween_property(outgoing, "volume_db", SILENT_DB, fade_time)
 		_bgm_tween.chain().tween_callback(outgoing.stop)

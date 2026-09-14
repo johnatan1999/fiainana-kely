@@ -17,6 +17,7 @@ var shop_ui: ShopUI
 var zone_container: Node2D
 
 var current_zone: ZoneRoot
+var current_zone_id: String = ""
 
 func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_farming_controller: FarmingController, p_shop_ui: ShopUI, p_zone_container: Node2D) -> void:
 	simulation = p_simulation
@@ -38,6 +39,7 @@ func change_zone(zone_id: String, spawn_name: String) -> void:
 	var zone: ZoneRoot = ZONES[zone_id].instantiate()
 	zone_container.add_child(zone)
 	current_zone = zone
+	current_zone_id = zone_id
 
 	var spawn := zone.get_node_or_null(spawn_name)
 	if spawn:

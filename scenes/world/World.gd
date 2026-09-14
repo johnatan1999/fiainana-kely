@@ -22,16 +22,16 @@ func _ready() -> void:
 
 	farming_controller.setup(simulation, player)
 	shop_controller.setup(simulation)
-	save_controller.setup(simulation)
 	hud.setup(simulation, player)
 	shop_ui.setup(shop_controller, simulation)
 	pause_menu.setup(shop_ui)
 	world_manager.setup(simulation, player, farming_controller, shop_ui, zone_container)
+	save_controller.setup(simulation, world_manager, player)
 
 	pause_menu.save_requested.connect(save_controller.save_game)
 	pause_menu.quit_requested.connect(get_tree().quit)
 
 	if save_controller.has_save():
 		save_controller.load_game()
-
-	world_manager.change_zone("house", "SpawnDefault")
+	else:
+		world_manager.change_zone("house", "SpawnDefault")
