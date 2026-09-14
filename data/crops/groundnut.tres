@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CropData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/CropData.gd" id="1_groundnut"]
+
+[resource]
+script = ExtResource("1_groundnut")
+id = "groundnut"
+display_name = "Arachide"
+malagasy_name = "Voanjo"
+category = 1
+tier = 2
+seed_price = 12
+sell_price = 28
+growth_days = 7
+yield_min = 3
+yield_max = 3
+ideal_season = 1
+off_season_yield_multiplier = 0.6
+water_need = 0
+min_watered_ratio_for_quality = 0.5
+is_perennial = false
+unlock_day = 15

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CropData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/CropData.gd" id="1_bean"]
+
+[resource]
+script = ExtResource("1_bean")
+id = "bean"
+display_name = "Haricot"
+malagasy_name = "Tsaramaso"
+category = 1
+tier = 2
+seed_price = 10
+sell_price = 25
+growth_days = 6
+yield_min = 3
+yield_max = 3
+ideal_season = 0
+off_season_yield_multiplier = 0.6
+water_need = 1
+min_watered_ratio_for_quality = 0.75
+is_perennial = false
+unlock_day = 10

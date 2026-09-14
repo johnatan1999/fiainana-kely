@@ -4,11 +4,15 @@ extends Node
 ## Translates player interactions into FarmSimulation commands.
 ## Holds no farming rules itself - it only decides *which* simulation call to make.
 
-const SELECTED_CROP_ID := "turnip" # single-crop prototype; revisit once a seed-selection UI exists
+const DEFAULT_CROP_ID := "corn"
+
+## Fired whenever the crop the SEEDS tool will plant changes, so HUD can relabel itself.
+signal crop_selected(crop_id: String)
 
 var simulation: FarmSimulation
 var player: PlayerController
 var farm_view: FarmView # null while the player is outside the farm zone
+var selected_crop_id: String = DEFAULT_CROP_ID
 
 func setup(p_simulation: FarmSimulation, p_player: PlayerController) -> void:
 	simulation = p_simulation
@@ -21,6 +25,32 @@ func set_farm_view(p_farm_view: FarmView) -> void:
 
 func advance_day() -> void:
 	simulation.advance_day()
+
+## Kept out of the project's InputMap - see PlayerController.NUMBER_KEY_TOOLS
+## for why raw keycodes are used here instead.
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_TAB:
+		_cycle_selected_crop()
+		get_viewport().set_input_as_handled()
+
+## Cycles through the crops the player currently holds seeds for. Crops with
+## zero seeds in inventory are skipped since planting them would just fail.
+func _cycle_selected_crop() -> void:
+	var owned_ids := _get_ownable_crop_ids()
+	if owned_ids.is_empty():
+		return
+	var current_index := owned_ids.find(selected_crop_id)
+	var next_index := (current_index + 1) % owned_ids.size()
+	selected_crop_id = owned_ids[next_index]
+	AudioManager.play_interact_sfx()
+	crop_selected.emit(selected_crop_id)
+
+func _get_ownable_crop_ids() -> Array:
+	var result: Array = []
+	for crop_id in simulation.get_all_crop_ids():
+		if simulation.state.get_inventory_count(crop_id + "_seed") > 0:
+			result.append(crop_id)
+	return result
 
 func _on_interact_requested(tool: PlayerController.Tool) -> void:
 	if farm_view == null:
@@ -36,7 +66,7 @@ func _on_interact_requested(tool: PlayerController.Tool) -> void:
 			if simulation.water(plot_id):
 				AudioManager.play_watering_sfx()
 		PlayerController.Tool.SEEDS:
-			if simulation.plant(plot_id, SELECTED_CROP_ID):
+			if simulation.plant(plot_id, selected_crop_id):
 				AudioManager.play_plant_sfx()
 		PlayerController.Tool.HARVEST:
 			if simulation.harvest(plot_id):

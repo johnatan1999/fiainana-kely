@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CropData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/CropData.gd" id="1_cassava"]
+
+[resource]
+script = ExtResource("1_cassava")
+id = "cassava"
+display_name = "Manioc"
+malagasy_name = "Mangahazo"
+category = 0
+tier = 1
+seed_price = 8
+sell_price = 10
+growth_days = 8
+yield_min = 4
+yield_max = 5
+ideal_season = 2
+off_season_yield_multiplier = 0.6
+water_need = 0
+min_watered_ratio_for_quality = 0.4
+is_perennial = false
+unlock_day = 0

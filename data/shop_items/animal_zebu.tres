@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ShopItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ShopItemData.gd" id="1_zebu"]
+
+[resource]
+script = ExtResource("1_zebu")
+id = "animal_zebu"
+display_name = "Zébu"
+malagasy_name = "Omby"
+description = "Le zébu, symbole de richesse et de statut dans la culture malgache."
+category = 3
+price = 200

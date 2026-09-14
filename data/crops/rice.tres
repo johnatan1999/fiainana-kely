@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CropData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/CropData.gd" id="1_rice"]
+
+[resource]
+script = ExtResource("1_rice")
+id = "rice"
+display_name = "Riz"
+malagasy_name = "Vary"
+category = 1
+tier = 2
+seed_price = 15
+sell_price = 40
+growth_days = 10
+yield_min = 5
+yield_max = 5
+ideal_season = 0
+off_season_yield_multiplier = 0.6
+water_need = 2
+min_watered_ratio_for_quality = 0.9
+is_perennial = false
+unlock_day = 12

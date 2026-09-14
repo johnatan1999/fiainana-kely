@@ -17,14 +17,17 @@ anchor_bottom = 1.0
 [node name="DayLabel" type="Label" parent="VBoxContainer"]
 text = "Jour 1"
 
+[node name="SeasonLabel" type="Label" parent="VBoxContainer"]
+text = "Saison: Asara"
+
 [node name="MoneyLabel" type="Label" parent="VBoxContainer"]
 text = "Argent: 100 $"
 
 [node name="SeedsLabel" type="Label" parent="VBoxContainer"]
-text = "Graines: 0"
+text = "Graines (Maïs): 3"
 
 [node name="CropsLabel" type="Label" parent="VBoxContainer"]
-text = "Navets: 0"
+text = "Récolte (Maïs): 0"
 
 [node name="ToolLabel" type="Label" parent="VBoxContainer"]
 text = "Outil: Houe"

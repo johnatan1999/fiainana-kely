@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CropData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/CropData.gd" id="1_coffee"]
+
+[resource]
+script = ExtResource("1_coffee")
+id = "coffee"
+display_name = "Café"
+malagasy_name = "Kafe"
+category = 2
+tier = 4
+seed_price = 40
+sell_price = 120
+growth_days = 20
+yield_min = 2
+yield_max = 2
+ideal_season = 0
+off_season_yield_multiplier = 0.6
+water_need = 1
+min_watered_ratio_for_quality = 0.75
+is_perennial = true
+unlock_day = 45

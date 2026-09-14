@@ -31,6 +31,8 @@ func to_dict() -> Dictionary:
 				"crop_id": plot.crop.crop_id,
 				"age": plot.crop.age,
 				"growth_days": plot.crop.growth_days,
+				"days_watered": plot.crop.days_watered,
+				"days_total": plot.crop.days_total,
 			}
 		plots_data[str(plot_id)] = {
 			"tilled": plot.tilled,
@@ -68,6 +70,8 @@ func load_dict(data: Dictionary) -> void:
 		if crop_data != null:
 			var crop := CropState.new(str(crop_data["crop_id"]), int(crop_data["growth_days"]))
 			crop.age = int(crop_data["age"])
+			crop.days_watered = int(crop_data.get("days_watered", crop.age))
+			crop.days_total = int(crop_data.get("days_total", crop.age))
 			plot.crop = crop
 		else:
 			plot.crop = null

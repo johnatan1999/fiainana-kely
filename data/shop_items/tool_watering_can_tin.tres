@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ShopItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ShopItemData.gd" id="1_can"]
+
+[resource]
+script = ExtResource("1_can")
+id = "tool_watering_can_tin"
+display_name = "Arrosoir en fer-blanc"
+malagasy_name = "Fitondran-drano"
+description = "Un arrosoir robuste fait par le forgeron du village."
+category = 1
+price = 20

@@ -2,7 +2,20 @@ extends Node2D
 
 const GRID_WIDTH := 4
 const GRID_HEIGHT := 4
-const TurnipData := preload("res://data/crops/turnip.tres")
+
+const CROP_RESOURCES: Array[CropData] = [
+	preload("res://data/crops/corn.tres"),
+	preload("res://data/crops/cassava.tres"),
+	preload("res://data/crops/sweet_potato.tres"),
+	preload("res://data/crops/rice.tres"),
+	preload("res://data/crops/bean.tres"),
+	preload("res://data/crops/groundnut.tres"),
+	preload("res://data/crops/tomato.tres"),
+	preload("res://data/crops/potato.tres"),
+	preload("res://data/crops/coffee.tres"),
+	preload("res://data/crops/clove.tres"),
+	preload("res://data/crops/vanilla.tres"),
+]
 
 @onready var zone_container: Node2D = $ZoneContainer
 @onready var player: PlayerController = $Player
@@ -17,12 +30,16 @@ const TurnipData := preload("res://data/crops/turnip.tres")
 var simulation: FarmSimulation
 
 func _ready() -> void:
-	simulation = FarmSimulation.new(GRID_WIDTH, GRID_HEIGHT, {"turnip": TurnipData})
-	simulation.state.add_inventory("turnip_seed", 3)
+	var crop_registry := {}
+	for crop_data in CROP_RESOURCES:
+		crop_registry[crop_data.id] = crop_data
+
+	simulation = FarmSimulation.new(GRID_WIDTH, GRID_HEIGHT, crop_registry)
+	simulation.state.add_inventory("corn_seed", 3)
 
 	farming_controller.setup(simulation, player)
 	shop_controller.setup(simulation)
-	hud.setup(simulation, player)
+	hud.setup(simulation, player, farming_controller)
 	shop_ui.setup(shop_controller, simulation)
 	pause_menu.setup(shop_ui)
 	world_manager.setup(simulation, player, farming_controller, shop_ui, zone_container)

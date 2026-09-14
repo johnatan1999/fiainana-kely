@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CropData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/CropData.gd" id="1_tomato"]
+
+[resource]
+script = ExtResource("1_tomato")
+id = "tomato"
+display_name = "Tomate"
+malagasy_name = "Voatabia"
+category = 1
+tier = 3
+seed_price = 18
+sell_price = 45
+growth_days = 6
+yield_min = 4
+yield_max = 4
+ideal_season = 0
+off_season_yield_multiplier = 0.6
+water_need = 2
+min_watered_ratio_for_quality = 0.9
+is_perennial = false
+unlock_day = 25

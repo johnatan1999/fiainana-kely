@@ -39,16 +39,10 @@ anchors_preset = 0
 offset_left = 0.0
 offset_top = 0.0
 offset_right = 204.0
-offset_bottom = 164.0
+offset_bottom = 184.0
 
 [node name="ShopUI" parent="UI" instance=ExtResource("8_shopui")]
 layout_mode = 3
-anchors_preset = 1
-offset_left = -244.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 264.0
-grow_horizontal = 0
 
 [node name="PauseMenu" parent="UI" instance=ExtResource("9_pausemenu")]
 layout_mode = 3

@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/ui/shop/CategoryButton.gd" id="1_categorybutton"]
+
+[node name="CategoryButton" type="Button"]
+custom_minimum_size = Vector2(90, 36)
+toggle_mode = true
+text = "Catégorie"
+script = ExtResource("1_categorybutton")

@@ -11,5 +11,8 @@ func setup(p_simulation: FarmSimulation) -> void:
 func buy_seed(crop_id: String, quantity: int = 1) -> bool:
 	return simulation.buy_seed(crop_id, quantity)
 
+func buy_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
+	return simulation.buy_item(item_id, unit_price, quantity)
+
 func sell(item_id: String, quantity: int = 1) -> bool:
 	return simulation.sell(item_id, quantity)
