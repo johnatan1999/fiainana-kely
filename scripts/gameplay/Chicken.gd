@@ -22,9 +22,14 @@ const ARRIVE_DISTANCE := 6.0
 ## AnimalManager - it then never needs a FarmSimulation-backed AnimalState.
 @export var start_wild: bool = false
 @export var wild_wander_radius: float = WILD_WANDER_RADIUS
+@export var sprite_frames: SpriteFrames
+@export var tint_color: Color = Color.WHITE
+@export var size_multiplier: float = 0.5
+
 
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
-@onready var placeholder: ColorRect = $Placeholder
+@onready var animator: CharacterAnimator = $CharacterAnimator
+@onready var collistion := $CollisionShape2D
 
 var _animal_manager: AnimalManager
 var _animal_id: String
@@ -38,6 +43,11 @@ var _state_timer: float = 0.0
 var _wander_cooldown: float = 0.0
 
 func _ready() -> void:
+	anim.scale = Vector2(size_multiplier, size_multiplier)
+	collistion.scale = Vector2(size_multiplier, size_multiplier)
+	anim.modulate = tint_color
+	if sprite_frames != null:
+		anim.sprite_frames = sprite_frames
 	if start_wild:
 		setup_wild(wild_wander_radius)
 
@@ -47,8 +57,6 @@ func setup(animal_manager: AnimalManager, animal_id: String) -> void:
 	_home_position = global_position
 	_target_position = global_position
 	_wander_radius = WANDER_RADIUS
-	# Only needed until a real chicken SpriteFrames resource exists.
-	placeholder.visible = anim.sprite_frames == null
 
 ## Purely decorative: no FarmSimulation-backed AnimalState, so it never gets
 ## hungry/thirsty and never lays eggs - it just wanders and occasionally
@@ -58,7 +66,6 @@ func setup_wild(wander_radius: float = WILD_WANDER_RADIUS) -> void:
 	_home_position = global_position
 	_target_position = global_position
 	_wander_radius = wander_radius
-	placeholder.visible = anim.sprite_frames == null
 
 func _physics_process(delta: float) -> void:
 	if _is_wild:
@@ -174,6 +181,7 @@ func _play_animation() -> void:
 		State.DRINK: anim_name = "drink"
 		State.SLEEP: anim_name = "sleep"
 		_: anim_name = "idle"
+	animator.play(velocity, anim_name)
 	if anim.sprite_frames.has_animation(anim_name) and anim.animation != anim_name:
 		anim.animation = anim_name
 		anim.play()

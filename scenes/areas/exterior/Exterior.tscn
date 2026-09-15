@@ -2,22 +2,13 @@
 
 [ext_resource type="Script" path="res://scripts/world/ZoneRoot.gd" id="1_zoneroot"]
 [ext_resource type="PackedScene" uid="uid://dd2hvqpppgxdw" path="res://scenes/farm/FarmView.tscn" id="2_farmview"]
-[ext_resource type="Script" path="res://scripts/gameplay/ZoneTransition.gd" id="3_transition"]
 [ext_resource type="Script" path="res://scripts/gameplay/ShopTrigger.gd" id="4_shoptrigger"]
 [ext_resource type="PackedScene" uid="uid://bhnm7ccttiisy" path="res://scenes/areas/houses/House.tscn" id="5_70k58"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/Coop.tscn" id="6_coop"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/FeedingBowl.tscn" id="7_feedingbowl"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay/WaterBowl.tscn" id="8_waterbowl"]
-[ext_resource type="PackedScene" path="res://scenes/gameplay/Chicken.tscn" id="9_chicken"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_top"]
-size = Vector2(220, 140)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_house_stub"]
-size = Vector2(80, 20)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
-size = Vector2(60, 20)
+[ext_resource type="PackedScene" uid="uid://dgak5cew5n3hy" path="res://scenes/gameplay/Chicken.tscn" id="9_chicken"]
+[ext_resource type="SpriteFrames" uid="uid://c8b1vmmb21c3e" path="res://data/rooster.tres" id="10_rs3hx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_shop_building"]
 size = Vector2(220, 160)
@@ -45,65 +36,6 @@ offset_right = 1400.0
 offset_bottom = 900.0
 mouse_filter = 2
 color = Color(0.3, 0.5, 0.2, 1)
-
-[node name="HouseRoof" type="ColorRect" parent="."]
-offset_left = 90.0
-offset_top = 10.0
-offset_right = 330.0
-offset_bottom = 40.0
-mouse_filter = 2
-color = Color(0.35, 0.22, 0.12, 1)
-
-[node name="HouseLabel" type="Label" parent="."]
-offset_left = 100.0
-offset_top = -10.0
-offset_right = 320.0
-offset_bottom = 10.0
-text = "Maison (E)"
-horizontal_alignment = 1
-
-[node name="HouseWallsVisual" type="ColorRect" parent="."]
-offset_left = 100.0
-offset_top = 40.0
-offset_right = 320.0
-offset_bottom = 200.0
-mouse_filter = 2
-color = Color(0.55, 0.4, 0.25, 1)
-
-[node name="HouseDoorVisual" type="ColorRect" parent="."]
-offset_left = 180.0
-offset_top = 180.0
-offset_right = 240.0
-offset_bottom = 200.0
-mouse_filter = 2
-color = Color(0.8, 0.7, 0.5, 1)
-
-[node name="HouseWallTop" type="StaticBody2D" parent="."]
-position = Vector2(210, 110)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseWallTop"]
-shape = SubResource("RectangleShape2D_house_top")
-
-[node name="HouseWallBottomLeft" type="StaticBody2D" parent="."]
-position = Vector2(140, 190)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseWallBottomLeft"]
-shape = SubResource("RectangleShape2D_house_stub")
-
-[node name="HouseWallBottomRight" type="StaticBody2D" parent="."]
-position = Vector2(280, 190)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseWallBottomRight"]
-shape = SubResource("RectangleShape2D_house_stub")
-
-[node name="HouseDoor" type="Area2D" parent="."]
-position = Vector2(210, 190)
-script = ExtResource("3_transition")
-target_zone = "house"
-target_spawn = "SpawnFromExterior"
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="HouseDoor"]
-shape = SubResource("RectangleShape2D_door")
 
 [node name="SpawnFromHouse" type="Marker2D" parent="."]
 position = Vector2(721, 329)
@@ -202,14 +134,17 @@ position = Vector2(250, 510)
 
 [node name="AnimalContainer" type="Node2D" parent="."]
 
-[node name="WildChicken1" parent="." instance=ExtResource("9_chicken")]
+[node name="Hen1" parent="." instance=ExtResource("9_chicken")]
 position = Vector2(480, 470)
 start_wild = true
 
-[node name="WildChicken2" parent="." instance=ExtResource("9_chicken")]
+[node name="NiggaHen" parent="." instance=ExtResource("9_chicken")]
 position = Vector2(150, 700)
 start_wild = true
+tint_color = Color(0.881657, 0.541035, 0.265833, 1)
 
-[node name="WildChicken3" parent="." instance=ExtResource("9_chicken")]
+[node name="Rooster" parent="." instance=ExtResource("9_chicken")]
 position = Vector2(700, 750)
 start_wild = true
+sprite_frames = ExtResource("10_rs3hx")
+size_multiplier = 0.55
