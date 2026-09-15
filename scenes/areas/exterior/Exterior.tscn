@@ -9,6 +9,8 @@
 [ext_resource type="PackedScene" path="res://scenes/gameplay/WaterBowl.tscn" id="8_waterbowl"]
 [ext_resource type="PackedScene" uid="uid://dgak5cew5n3hy" path="res://scenes/gameplay/Chicken.tscn" id="9_chicken"]
 [ext_resource type="SpriteFrames" uid="uid://c8b1vmmb21c3e" path="res://data/rooster.tres" id="10_rs3hx"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/ZoneSign.tscn" id="11_zonesign"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/ModularZoneSign.tscn" id="12_modularzonesign"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_shop_building"]
 size = Vector2(220, 160)
@@ -27,13 +29,13 @@ script = ExtResource("1_zoneroot")
 camera_limit_left = -10
 camera_limit_top = -10
 camera_limit_right = 1410
-camera_limit_bottom = 910
+camera_limit_bottom = 1610
 camera_zoom = 1.4
 bgm = 1
 
 [node name="Floor" type="ColorRect" parent="."]
 offset_right = 1400.0
-offset_bottom = 900.0
+offset_bottom = 1600.0
 mouse_filter = 2
 color = Color(0.3, 0.5, 0.2, 1)
 
@@ -99,7 +101,7 @@ position = Vector2(700, -5)
 shape = SubResource("RectangleShape2D_wall_h_placeholder")
 
 [node name="WallBottom" type="StaticBody2D" parent="."]
-position = Vector2(700, 905)
+position = Vector2(700, 1605)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WallBottom"]
 shape = SubResource("RectangleShape2D_wall_h_placeholder")
@@ -148,3 +150,71 @@ position = Vector2(700, 750)
 start_wild = true
 sprite_frames = ExtResource("10_rs3hx")
 size_multiplier = 0.55
+
+[node name="ProgressiveZoneMarker" type="Node2D" parent="."]
+
+[node name="Rect" type="ColorRect" parent="ProgressiveZoneMarker"]
+offset_left = 600.0
+offset_top = 926.0
+offset_right = 1112.0
+offset_bottom = 1286.0
+mouse_filter = 2
+color = Color(0.3, 0.3, 0.3, 0.55)
+
+[node name="Label" type="Label" parent="ProgressiveZoneMarker"]
+offset_left = 600.0
+offset_top = 1090.0
+offset_right = 1112.0
+offset_bottom = 1130.0
+text = "Zone d'expansion : 0 / 48 parcelles"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ZoneMarker_zone_east" type="Node2D" parent="."]
+
+[node name="Rect" type="ColorRect" parent="ZoneMarker_zone_east"]
+offset_left = 1112.0
+offset_top = 926.0
+offset_right = 1368.0
+offset_bottom = 1286.0
+mouse_filter = 2
+color = Color(0.3, 0.3, 0.3, 0.55)
+
+[node name="Label" type="Label" parent="ZoneMarker_zone_east"]
+offset_left = 1112.0
+offset_top = 1090.0
+offset_right = 1368.0
+offset_bottom = 1130.0
+text = "Terrain de l'Est — 400 $"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ZoneMarker_zone_south" type="Node2D" parent="."]
+
+[node name="Rect" type="ColorRect" parent="ZoneMarker_zone_south"]
+offset_left = 600.0
+offset_top = 1286.0
+offset_right = 1368.0
+offset_bottom = 1566.0
+mouse_filter = 2
+color = Color(0.3, 0.3, 0.3, 0.55)
+
+[node name="Label" type="Label" parent="ZoneMarker_zone_south"]
+offset_left = 600.0
+offset_top = 1410.0
+offset_right = 1368.0
+offset_bottom = 1450.0
+text = "Terrain du Sud — 700 $"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ModularZoneSign" parent="." instance=ExtResource("12_modularzonesign")]
+position = Vector2(650, 960)
+
+[node name="ZoneSign_zone_east" parent="." instance=ExtResource("11_zonesign")]
+position = Vector2(1150, 960)
+zone_id = "zone_east"
+
+[node name="ZoneSign_zone_south" parent="." instance=ExtResource("11_zonesign")]
+position = Vector2(650, 1320)
+zone_id = "zone_south"

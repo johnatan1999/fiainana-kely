@@ -16,17 +16,19 @@ var farming_controller: FarmingController
 var shop_ui: ShopUI
 var zone_container: Node2D
 var animal_manager: AnimalManager
+var zone_manager: ZoneManager
 
 var current_zone: ZoneRoot
 var current_zone_id: String = ""
 
-func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_farming_controller: FarmingController, p_shop_ui: ShopUI, p_zone_container: Node2D, p_animal_manager: AnimalManager) -> void:
+func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_farming_controller: FarmingController, p_shop_ui: ShopUI, p_zone_container: Node2D, p_animal_manager: AnimalManager, p_zone_manager: ZoneManager) -> void:
 	simulation = p_simulation
 	player = p_player
 	farming_controller = p_farming_controller
 	shop_ui = p_shop_ui
 	zone_container = p_zone_container
 	animal_manager = p_animal_manager
+	zone_manager = p_zone_manager
 
 ## ZoneTransition/SleepSpot fire from inside Area2D signals during the physics
 ## step, which forbids reparenting/freeing physics nodes right away - defer it.
@@ -38,6 +40,7 @@ func change_zone(zone_id: String, spawn_name: String) -> void:
 		current_zone.queue_free()
 		farming_controller.set_farm_view(null)
 		animal_manager.set_farm_area(null)
+		zone_manager.set_zone_markers(null)
 
 	var zone: ZoneRoot = ZONES[zone_id].instantiate()
 	zone_container.add_child(zone)
@@ -83,6 +86,10 @@ func _wire_zone_content(zone: ZoneRoot) -> void:
 
 	if zone.get_node_or_null("Coop"):
 		animal_manager.set_farm_area(zone)
+
+	# Safe to call unconditionally - a zone without any ZoneMarker_*/
+	# ProgressiveZoneMarker nodes just leaves ZoneManager's markers empty.
+	zone_manager.set_zone_markers(zone)
 
 	for transition in _find_transitions(zone):
 		transition.triggered.connect(request_zone_change)

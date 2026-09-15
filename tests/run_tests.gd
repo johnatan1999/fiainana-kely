@@ -24,6 +24,16 @@ func _make_sim_with_chicken(breeding_chance: float = 0.25) -> FarmSimulation:
 	chicken.breeding_chance = breeding_chance
 	return FarmSimulation.new(4, 4, {"corn": corn}, {AnimalData.Species.CHICKEN: chicken})
 
+## ZoneManager extends Node but is never added to the tree in these tests -
+## fine, since buy_zone()/buy_progressive_patch() never touch tree-dependent
+## APIs unless set_zone_markers() is called (it isn't here). player is only
+## ever forwarded to ZoneSign/ModularZoneSign.setup() inside
+## set_zone_markers(), so null is safe for these pure-logic tests.
+func _make_zone_manager(simulation: FarmSimulation) -> ZoneManager:
+	var zone_manager := ZoneManager.new()
+	zone_manager.setup(simulation, null)
+	return zone_manager
+
 func _check(condition: bool, description: String) -> void:
 	if condition:
 		_pass_count += 1
@@ -63,6 +73,25 @@ func _run_all() -> void:
 	test_no_breeding_when_chance_is_zero()
 	test_sell_item_generic_path()
 	test_animal_save_load_roundtrip()
+	test_expand_grid_adds_new_plots()
+	test_expand_grid_keeps_existing_plots_intact()
+	test_add_tile_creates_a_plot()
+	test_add_tile_is_noop_if_already_occupied()
+	test_remove_tile_deletes_the_plot()
+	test_remove_tile_discards_growing_crop()
+	test_clear_tile_resets_without_removing()
+	test_plot_added_and_removed_signals_fire()
+	test_grid_survives_resize_and_save_load_roundtrip()
+	test_buy_zone_unlocks_all_its_tiles()
+	test_buy_zone_deducts_price()
+	test_cannot_buy_zone_twice()
+	test_cannot_buy_zone_without_enough_money()
+	test_cannot_buy_unknown_zone()
+	test_buy_progressive_patch_unlocks_next_tiles_in_order()
+	test_buy_progressive_patch_second_purchase_continues_the_sequence()
+	test_buy_progressive_patch_respects_capacity()
+	test_buy_progressive_patch_fails_without_enough_money()
+	test_zone_state_save_load_roundtrip()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -411,4 +440,237 @@ func test_animal_save_load_roundtrip() -> void:
 		and animal.species == AnimalData.Species.CHICKEN
 		and animal.thirst < 100.0, # was not watered that day
 		"load_save_data() restores coop status and animal state"
+	)
+
+func test_expand_grid_adds_new_plots() -> void:
+	var sim := _make_sim() # starts at 4x4 = 16 plots
+	sim.expand_grid(6, 4)
+	_check(
+		sim.grid_width == 6 and sim.grid_height == 4 and sim.get_all_plot_ids().size() == 24,
+		"expand_grid() grows the grid and adds exactly the missing plots"
+	)
+
+func test_expand_grid_keeps_existing_plots_intact() -> void:
+	var sim := _make_sim()
+	sim.till(0)
+	sim.state.add_inventory("corn_seed", 1)
+	sim.plant(0, "corn")
+	sim.expand_grid(6, 6)
+	var plot := sim.get_plot(0)
+	_check(
+		plot.tilled and plot.crop != null and plot.crop.crop_id == "corn",
+		"expand_grid() never touches plots that already existed"
+	)
+
+func test_add_tile_creates_a_plot() -> void:
+	var sim := _make_sim()
+	var plot_id := sim.add_tile(10, 10)
+	_check(
+		plot_id != -1 and sim.get_plot_id_at(10, 10) == plot_id and sim.get_plot_position(plot_id) == Vector2i(10, 10),
+		"add_tile() creates a plot at an arbitrary position, independent of grid_width"
+	)
+
+func test_add_tile_is_noop_if_already_occupied() -> void:
+	var sim := _make_sim()
+	var second_attempt := sim.add_tile(0, 0) # (0,0) already exists from the initial 4x4 grid
+	_check(second_attempt == -1, "add_tile() refuses to overwrite an existing plot")
+
+func test_remove_tile_deletes_the_plot() -> void:
+	var sim := _make_sim()
+	var ok := sim.remove_tile(0, 0)
+	_check(
+		ok and sim.get_plot_id_at(0, 0) == -1 and sim.get_all_plot_ids().size() == 15,
+		"remove_tile() deletes the plot at that position"
+	)
+
+func test_remove_tile_discards_growing_crop() -> void:
+	var sim := _make_sim()
+	sim.till(0)
+	sim.state.add_inventory("corn_seed", 1)
+	sim.plant(0, "corn")
+	var ok := sim.remove_tile(0, 0)
+	_check(ok and sim.get_plot(0) == null, "remove_tile() removes the plot even if a crop is growing on it")
+
+func test_clear_tile_resets_without_removing() -> void:
+	var sim := _make_sim()
+	sim.till(0)
+	sim.state.add_inventory("corn_seed", 1)
+	sim.plant(0, "corn")
+	var ok := sim.clear_tile(0, 0)
+	_check(
+		ok and sim.get_plot(0) != null and not sim.get_plot(0).tilled and sim.get_plot(0).crop == null,
+		"clear_tile() resets a plot to empty without removing it from the grid"
+	)
+
+func test_plot_added_and_removed_signals_fire() -> void:
+	var sim := _make_sim()
+	var added_ids: Array = []
+	var removed_ids: Array = []
+	sim.plot_added.connect(func(plot_id): added_ids.append(plot_id))
+	sim.plot_removed.connect(func(plot_id): removed_ids.append(plot_id))
+
+	var new_id := sim.add_tile(20, 20)
+	sim.remove_tile(0, 0)
+
+	_check(
+		added_ids == [new_id] and removed_ids.size() == 1,
+		"add_tile()/remove_tile() fire plot_added/plot_removed exactly once each"
+	)
+
+## The critical regression case for the old "id = y * width + x" scheme:
+## resize the grid, remove a tile to create a hole, then round-trip through
+## save/load and verify every plot lands back at its real (x, y) - not a
+## position re-derived from a width that may have changed.
+func test_grid_survives_resize_and_save_load_roundtrip() -> void:
+	var sim := _make_sim()
+	sim.expand_grid(6, 4) # 4x4 -> 6x4, adds a new column (valid x: 0-5)
+	sim.remove_tile(1, 1) # punch a hole
+	var far_plot_id := sim.add_tile(6, 0) # one column beyond the expanded grid
+
+	var data := sim.to_save_data()
+	data = JSON.parse_string(JSON.stringify(data))
+
+	var fresh_sim := _make_sim()
+	fresh_sim.load_save_data(data)
+
+	_check(
+		fresh_sim.get_plot_id_at(1, 1) == -1
+		and fresh_sim.get_plot_position(far_plot_id) == Vector2i(6, 0)
+		and fresh_sim.get_all_plot_ids().size() == sim.get_all_plot_ids().size(),
+		"a resized grid with a hole in it round-trips through save/load at the correct positions"
+	)
+
+func test_buy_zone_unlocks_all_its_tiles() -> void:
+	var sim := _make_sim()
+	sim.state.money = 1000
+	var zone_manager := _make_zone_manager(sim)
+	var zone_data := zone_manager.get_zone_data("zone_east")
+
+	var ok := zone_manager.buy_zone("zone_east")
+
+	var all_present := true
+	for coordinates: Vector2i in zone_data.get_tile_coordinates():
+		if sim.get_plot_id_at(coordinates.x, coordinates.y) == -1:
+			all_present = false
+			break
+	_check(
+		ok and all_present and zone_manager.is_zone_unlocked("zone_east"),
+		"buy_zone() unlocks every tile in the zone's rectangle"
+	)
+
+func test_buy_zone_deducts_price() -> void:
+	var sim := _make_sim()
+	sim.state.money = 1000
+	var zone_manager := _make_zone_manager(sim)
+	var zone_data := zone_manager.get_zone_data("zone_east")
+	var money_before := sim.state.money
+
+	zone_manager.buy_zone("zone_east")
+
+	_check(sim.state.money == money_before - zone_data.price, "buy_zone() deducts the zone's price")
+
+func test_cannot_buy_zone_twice() -> void:
+	var sim := _make_sim()
+	sim.state.money = 10000
+	var zone_manager := _make_zone_manager(sim)
+	zone_manager.buy_zone("zone_east")
+	var money_after_first := sim.state.money
+
+	var ok := zone_manager.buy_zone("zone_east")
+
+	_check(not ok and sim.state.money == money_after_first, "buy_zone() refuses to sell the same zone twice")
+
+func test_cannot_buy_zone_without_enough_money() -> void:
+	var sim := _make_sim()
+	sim.state.money = 5
+	var zone_manager := _make_zone_manager(sim)
+
+	var ok := zone_manager.buy_zone("zone_east")
+
+	_check(not ok and not zone_manager.is_zone_unlocked("zone_east"), "buy_zone() fails when money is insufficient")
+
+func test_cannot_buy_unknown_zone() -> void:
+	var sim := _make_sim()
+	sim.state.money = 10000
+	var zone_manager := _make_zone_manager(sim)
+
+	var ok := zone_manager.buy_zone("does_not_exist")
+
+	_check(not ok, "buy_zone() fails for an unknown zone id")
+
+func test_buy_progressive_patch_unlocks_next_tiles_in_order() -> void:
+	var sim := _make_sim()
+	sim.state.money = 1000
+	var zone_manager := _make_zone_manager(sim)
+
+	var ok := zone_manager.buy_progressive_patch(9, 110)
+
+	# PROGRESSIVE_WIDTH is 8, so the 9th tile (index 8) wraps into row y=10.
+	_check(
+		ok and zone_manager.get_progressive_unlocked_count() == 9
+		and sim.get_plot_id_at(7, 9) != -1
+		and sim.get_plot_id_at(0, 10) != -1
+		and sim.get_plot_id_at(1, 10) == -1,
+		"buy_progressive_patch() unlocks exactly patch_size tiles from the cursor, wrapping rows in fixed order"
+	)
+
+func test_buy_progressive_patch_second_purchase_continues_the_sequence() -> void:
+	var sim := _make_sim()
+	sim.state.money = 1000
+	var zone_manager := _make_zone_manager(sim)
+
+	zone_manager.buy_progressive_patch(1, 15)
+	zone_manager.buy_progressive_patch(1, 15)
+
+	_check(
+		zone_manager.get_progressive_unlocked_count() == 2
+		and sim.get_plot_id_at(0, 9) != -1
+		and sim.get_plot_id_at(1, 9) != -1,
+		"buying two single tiles unlocks the next two in sequence, never re-unlocking the same one"
+	)
+
+func test_buy_progressive_patch_respects_capacity() -> void:
+	var sim := _make_sim()
+	sim.state.money = 100000
+	var zone_manager := _make_zone_manager(sim)
+	var capacity := zone_manager.get_progressive_capacity()
+
+	var ok := zone_manager.buy_progressive_patch(capacity + 1, 999999)
+
+	_check(
+		not ok and zone_manager.get_progressive_unlocked_count() == 0,
+		"buy_progressive_patch() refuses a patch bigger than the remaining capacity"
+	)
+
+func test_buy_progressive_patch_fails_without_enough_money() -> void:
+	var sim := _make_sim()
+	sim.state.money = 5
+	var zone_manager := _make_zone_manager(sim)
+
+	var ok := zone_manager.buy_progressive_patch(1, 15)
+
+	_check(
+		not ok and zone_manager.get_progressive_unlocked_count() == 0,
+		"buy_progressive_patch() fails when money is insufficient"
+	)
+
+func test_zone_state_save_load_roundtrip() -> void:
+	var sim := _make_sim()
+	sim.state.money = 10000
+	var zone_manager := _make_zone_manager(sim)
+	zone_manager.buy_zone("zone_east")
+	zone_manager.buy_progressive_patch(9, 110)
+
+	var data := sim.to_save_data()
+	data = JSON.parse_string(JSON.stringify(data))
+
+	var fresh_sim := _make_sim()
+	fresh_sim.load_save_data(data)
+	var fresh_zone_manager := _make_zone_manager(fresh_sim)
+
+	_check(
+		fresh_zone_manager.is_zone_unlocked("zone_east")
+		and fresh_zone_manager.get_progressive_unlocked_count() == 9
+		and fresh_sim.get_plot_id_at(0, 9) != -1,
+		"zone unlock state and progressive tile count survive a save/load roundtrip"
 	)

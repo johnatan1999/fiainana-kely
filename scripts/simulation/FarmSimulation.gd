@@ -7,6 +7,13 @@ extends RefCounted
 signal money_changed(money: int)
 signal day_changed(day: int)
 signal plot_changed(plot_id: int)
+## A new plot came into existence (grid expansion, or a loaded save) - the
+## presentation layer should create a PlotView for it. Distinct from
+## plot_changed, which only updates a PlotView that already exists.
+signal plot_added(plot_id: int)
+## A plot was permanently removed - the presentation layer should free its
+## PlotView.
+signal plot_removed(plot_id: int)
 signal inventory_changed(item_id: String, amount: int)
 
 signal animal_added(animal_id: String)
@@ -30,10 +37,60 @@ func _init(p_grid_width: int, p_grid_height: int, crop_registry: Dictionary, ani
 	grid_height = p_grid_height
 	_crop_registry = crop_registry
 	_animal_registry = animal_registry
-	state = FarmState.new(p_grid_width * p_grid_height)
+	state = FarmState.new(p_grid_width, p_grid_height)
 
 func get_plot(plot_id: int) -> PlotState:
 	return state.plots.get(plot_id)
+
+func get_plot_id_at(x: int, y: int) -> int:
+	return state.get_plot_id_at(x, y)
+
+func get_plot_position(plot_id: int) -> Vector2i:
+	return state.plot_positions.get(plot_id, Vector2i(-1, -1))
+
+func get_all_plot_ids() -> Array:
+	return state.plots.keys()
+
+## Grows the farm to at least new_width x new_height, filling in any missing
+## plot inside that rectangle with a fresh empty one. Never shrinks or
+## removes anything - use remove_tile()/clear_tile() for that.
+func expand_grid(new_width: int, new_height: int) -> void:
+	var target_width: int = max(new_width, grid_width)
+	var target_height: int = max(new_height, grid_height)
+	for y in range(target_height):
+		for x in range(target_width):
+			add_tile(x, y) # no-op if a plot is already there
+	grid_width = target_width
+	grid_height = target_height
+
+## Adds a single empty, untilled plot at (x, y). Returns the new plot_id, or
+## -1 if a plot already exists there.
+func add_tile(x: int, y: int) -> int:
+	var plot_id := state.add_plot(x, y)
+	if plot_id != -1:
+		plot_added.emit(plot_id)
+	return plot_id
+
+## Permanently removes the plot at (x, y), including whatever crop was
+## growing on it. Returns false if there was no plot there.
+func remove_tile(x: int, y: int) -> bool:
+	var plot_id := state.get_plot_id_at(x, y)
+	if plot_id == -1:
+		return false
+	state.remove_plot(plot_id)
+	plot_removed.emit(plot_id)
+	return true
+
+## Resets the plot at (x, y) to empty/untilled without removing it from the
+## grid - for reorganizing without changing the grid's shape.
+func clear_tile(x: int, y: int) -> bool:
+	var plot_id := state.get_plot_id_at(x, y)
+	var plot := get_plot(plot_id)
+	if plot == null:
+		return false
+	plot.reset()
+	plot_changed.emit(plot_id)
+	return true
 
 func get_crop_data(crop_id: String) -> CropData:
 	return _crop_registry.get(crop_id)
@@ -304,15 +361,33 @@ func sell_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
 	money_changed.emit(state.money)
 	return true
 
+## Generic money-spending primitive for systems (like ZoneManager) that need
+## to charge the player without being a crop/animal/shop-item purchase.
+## Centralizing it here keeps FarmSimulation the single place that mutates
+## money and emits money_changed.
+func spend_money(amount: int) -> bool:
+	if amount < 0 or state.money < amount:
+		return false
+	state.money -= amount
+	money_changed.emit(state.money)
+	return true
+
 func to_save_data() -> Dictionary:
 	return state.to_dict()
 
 ## Restores state in-place and re-emits every signal so the presentation layer redraws itself.
 func load_save_data(data: Dictionary) -> void:
 	state.load_dict(data)
+
+	var bounds := state.get_grid_bounds()
+	grid_width = bounds.size.x
+	grid_height = bounds.size.y
+
 	money_changed.emit(state.money)
 	day_changed.emit(state.day)
+	# plot_added, not plot_changed: load_dict() rebuilt the plot set from
+	# scratch, so as far as any listener is concerned every plot is new.
 	for plot_id in state.plots:
-		plot_changed.emit(plot_id)
+		plot_added.emit(plot_id)
 	for item_id in state.inventory:
 		inventory_changed.emit(item_id, state.inventory[item_id])

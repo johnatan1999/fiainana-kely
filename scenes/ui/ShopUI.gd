@@ -101,7 +101,7 @@ func _rebuild_item_grid() -> void:
 		card.sell_requested.connect(_on_sell_requested)
 
 ## Only SEEDS carry an unlock_day (via their backing CropData) - the other
-## categories have no progression gate yet.
+## categories have no progression gate.
 func _is_locked(item: ShopItemData) -> bool:
 	if item.category != ShopItemData.Category.SEEDS:
 		return false
