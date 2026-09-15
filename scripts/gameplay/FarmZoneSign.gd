@@ -1,11 +1,11 @@
-class_name ZoneSign
+class_name FarmZoneSign
 extends Area2D
 
-## Physical, self-contained purchase panel for one predefined (macro) land
-## zone. Player interacts (E) to open its own popup dialog - "Acheter" calls
-## the exact same ZoneManager.buy_zone() the old Shop integration used, so
-## nothing about the underlying economy rules changes, only where the
-## player triggers them from.
+## Physical, self-contained purchase panel for one predefined (macro)
+## farmable land zone. Player interacts (E) to open its own popup dialog -
+## "Acheter" calls the exact same ZoneManager.buy_zone() the old Shop
+## integration used, so nothing about the underlying economy rules changes,
+## only where the player triggers them from.
 
 @export var zone_id: String = ""
 

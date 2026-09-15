@@ -36,4 +36,15 @@ enum WaterNeed { LOW, MEDIUM, HIGH }
 ## Day (FarmState.day) from which this crop can be bought in the shop. 0 = always available.
 @export var unlock_day: int = 0
 
+## Shown in the Shop/Inventory. Also used as a generic in-field sprite
+## (scaled by growth stage) for crops that don't have dedicated per-stage art.
 @export var icon: Texture2D
+
+## Optional dedicated in-field sprites for PlotView, one per CropState.Stage.
+## Any left unset falls back to `icon` for that stage; if `icon` is also
+## unset, PlotView falls back to its placeholder colored square. So a crop
+## with zero art still renders exactly as before.
+@export var sprite_seed: Texture2D
+@export var sprite_sprout: Texture2D
+@export var sprite_growing: Texture2D
+@export var sprite_mature: Texture2D

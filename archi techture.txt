@@ -1,0 +1,134 @@
+L'idée centrale de l'architecture
+
+Tout repose sur une séparation stricte entre simulation et présentation :
+
+- scripts/simulation/ — la logique du jeu (argent, parcelles, animaux, jours). Ce sont des classes RefCounted (pas des Node) : elles ne touchent jamais un sprite, une couleur, une position à l'écran. Elles se contentent d'émettre des signaux ("l'argent a changé", "une parcelle a été ajoutée"...).
+- Tout le reste (scènes, Node2D, UI) écoute ces signaux et se met à jour en réaction. Il ne décide jamais des règles lui-même.
+
+C'est ce qui m'a permis d'écrire 53 tests qui vérifient toute l'économie du jeu sans jamais ouvrir l'éditeur Godot — juste en manipulant des objets en mémoire.
+
+Carte des dossiers
+
+scripts/
+├─ simulation/   → les RÈGLES DU JEU, pures, sans Node2D
+├─ data/         → les définitions statiques (Resource), ex: "qu'est-ce qu'un maïs"
+├─ gameplay/     → les "managers" Node qui relient simulation ↔ monde
+├─ world/        → gestion des zones (changement de scène)
+├─ characters/   → animation générique des personnages/animaux
+└─ autoload/     → AudioManager (singleton global)
+
+scenes/
+├─ world/        → World.tscn, la scène principale, jamais déchargée
+├─ areas/        → les zones qu'on peut visiter (maison, extérieur)
+├─ farm/         → la grille de culture (affichage)
+├─ gameplay/     → objets du monde (poulailler, gamelles, panneaux, poules, œufs)
+├─ ui/           → Shop, Inventaire, HUD, Pause
+└─ player/       → le personnage jouable
+
+data/
+├─ crops/        → 11 cultures (maïs, riz, vanille...)
+├─ animals/      → définition de la poule
+├─ zones/        → les 2 terrains achetables
+└─ shop_items/   → outils, nourriture, œuf, poule/zébu (catalogue boutique)
+
+La couche simulation (le cœur, jamais touché par l'affichage)
+
+┌───────────────────┬────────────────────────────────────────────────────────────────────────────────────────┐
+│      Fichier      │                                          Rôle                                          │
+├───────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│                   │ Le chef d'orchestre. Toutes les règles : bêcher, planter, arroser, récolter,           │
+│ FarmSimulation.gd │ acheter/vendre, construire le poulailler, nourrir les animaux, débloquer du terrain.   │
+│                   │ Émet tous les signaux (money_changed, plot_changed, animal_added, zone_unlocked...).   │
+├───────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│                   │ Les données brutes : argent, jour, parcelles (dictionnaire id→position, pas une grille │
+│ FarmState.gd      │  fixe), inventaire, animaux, zones débloquées. Sait se transformer en JSON             │
+│                   │ (to_dict/load_dict) pour la sauvegarde.                                                │
+├───────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ PlotState.gd      │ Une parcelle : bêchée ? arrosée ? quelle culture dessus ?                              │
+├───────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ CropState.gd      │ Une culture plantée : son âge, son historique d'arrosage, son stade                    │
+│                   │ (graine/pousse/croissance/mature).                                                     │
+├───────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ AnimalState.gd    │ Un animal : faim, soif, jours bien soigné d'affilée, cycle de ponte.                   │
+├───────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+│ GameClock.gd      │ Le jour actuel + la saison (Asara/Asotry, calculée à partir du jour).                  │
+└───────────────────┴────────────────────────────────────────────────────────────────────────────────────────┘
+
+La couche données (Resources — "les fiches techniques")
+
+┌─────────────────┬──────────────────────────────────────────────────────────────────────────────────────────┐
+│     Fichier     │                                         Contenu                                          │
+├─────────────────┼──────────────────────────────────────────────────────────────────────────────────────────┤
+│ CropData.gd     │ Prix, temps de pousse, rendement, saison idéale, sprites par stade de croissance (le     │
+│                 │ maïs vient d'en avoir).                                                                  │
+├─────────────────┼──────────────────────────────────────────────────────────────────────────────────────────┤
+│ AnimalData.gd   │ Prix d'achat, ce que produit l'animal (œuf), vitesse de faim/soif, chance de             │
+│                 │ reproduction.                                                                            │
+├─────────────────┼──────────────────────────────────────────────────────────────────────────────────────────┤
+│ ShopItemData.gd │ Une entrée vendable en boutique (outil, nourriture, animal). Les graines sont générées   │
+│                 │ automatiquement à partir de CropData — jamais dupliquées.                                │
+├─────────────────┼──────────────────────────────────────────────────────────────────────────────────────────┤
+│ FarmZoneData.gd │ Un terrain achetable en un bloc (nom, prix, rectangle de tuiles).                        │
+└─────────────────┴──────────────────────────────────────────────────────────────────────────────────────────┘
+
+La couche "managers" (le pont entre règles et monde visible)
+
+Ce sont des Node placés dans World.tscn, chacun spécialisé :
+
+┌──────────────────────┬─────────────────────────────────────────────────────────────────────────────────────┐
+│       Manager        │                                        Relie                                        │
+├──────────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ FarmingController.gd │ Touches du joueur (houe/graines/arrosoir/récolte) ↔ FarmSimulation                  │
+├──────────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ ShopController.gd    │ Boutique ↔ FarmSimulation (achat/vente)                                             │
+├──────────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ AnimalManager.gd     │ AnimalState ↔ vrais nœuds Chicken/Egg dans le monde (les fait                       │
+│                      │ apparaître/disparaître)                                                             │
+├──────────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ ZoneManager.gd       │ Achat de terrain ↔ FarmSimulation.add_tile(), pilote aussi les panneaux/marqueurs   │
+│                      │ visuels                                                                             │
+├──────────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│ SaveController.gd    │ Sauvegarde/charge tout via FarmState.to_dict()/load_dict()                          │
+├──────────────────────┼─────────────────────────────────────────────────────────────────────────────────────┤
+│                      │ Change de zone (Maison ↔ Extérieur), et détecte automatiquement ce qu'une zone      │
+│ WorldManager.gd      │ contient (un "Coop" ? → prévient AnimalManager. Des marqueurs de zone ? → prévient  │
+│                      │ ZoneManager.)                                                                       │
+└──────────────────────┴─────────────────────────────────────────────────────────────────────────────────────┘
+
+Comment ça démarre (World.gd)
+
+1. Construit le registre des 11 cultures et de l'animal (poule) à partir des fichiers .tres.
+2. Crée une seule instance de FarmSimulation (la vérité unique du jeu).
+3. Appelle setup() sur chaque manager, dans l'ordre, en leur donnant les références dont ils ont besoin.
+4. Charge la sauvegarde si elle existe, sinon place le joueur dans la maison.
+
+Le système de zones
+
+WorldManager.ZONES est un dictionnaire "house" → Interior_House.tscn, "exterior" → Exterior.tscn. Changer de zone = décharger l'ancienne scène, charger la nouvelle, replacer le joueur sur un Marker2D. Une ZoneTransition (porte) déclenche ce changement quand le joueur marche dessus.
+
+Exterior.tscn est la zone la plus riche : maison, magasin, champ (FarmView), enclos à poules (Coop/gamelles/poules libres), et les 2 terrains achetables avec leurs panneaux.
+
+Les objets du monde (scenes/gameplay/)
+
+Tous suivent le même patron : Area2D + setup(joueur, manager) + écoute interact_requested du joueur.
+
+- Coop/FeedingBowl/WaterBowl → élevage
+- Chicken (+ CharacterAnimator.gd pour l'animation) → IA simple (erre, mange, boit), avec un mode "libre" pour les poules décoratives
+- Egg → à ramasser en marchant dessus
+- ZoneSign/ModularZoneSign → panneaux d'achat de terrain, chacun avec son propre petit dialogue autonome
+
+L'UI (scenes/ui/)
+
+- ShopUI : 4 catégories (graines/outils/nourriture/animaux), panier, achat/vente
+- InventoryUI : tout ce que tu possèdes, réutilise les mêmes données que le Shop
+- HUD, PauseMenu : classiques
+
+Audio
+
+AudioManager.gd est un autoload (singleton global, déclaré dans project.godot) : deux lecteurs de musique en fondu-enchaîné + une réserve de lecteurs pour les sons, accessible depuis n'importe quel script via AudioManager.play_xxx().
+
+Tests (tests/)
+
+- run_tests.gd — 53 tests unitaires sur la simulation pure
+- smoke_test_world.gd — charge chaque scène pour détecter les erreurs de câblage
+- integration_test_farm.gd — fait tourner le vrai World.tscn de bout en bout (achat, poule, terrain...)

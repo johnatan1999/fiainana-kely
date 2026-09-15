@@ -6,7 +6,6 @@ extends Node
 
 const ZONES := {
 	"house": preload("res://scenes/areas/interiors/Interior_House.tscn"),
-	"house2": preload("res://scenes/areas/house/House.tscn"),
 	"exterior": preload("res://scenes/areas/exterior/Exterior.tscn"),
 }
 

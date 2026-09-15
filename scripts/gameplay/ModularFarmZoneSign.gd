@@ -1,9 +1,9 @@
-class_name ModularZoneSign
+class_name ModularFarmZoneSign
 extends Area2D
 
-## Physical, self-contained purchase panel for the modulable expansion zone
-## (micro progression). Player interacts (E) to open a menu of fixed patch
-## sizes - buying always calls the exact same
+## Physical, self-contained purchase panel for the modulable farmland
+## expansion zone (micro progression). Player interacts (E) to open a menu
+## of fixed patch sizes - buying always calls the exact same
 ## ZoneManager.buy_progressive_patch() the old Shop integration used, which
 ## unlocks the next tiles in automatic order. The player never picks where.
 

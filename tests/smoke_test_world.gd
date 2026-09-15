@@ -5,7 +5,7 @@ extends SceneTree
 
 const SCENES := [
 	"res://scenes/world/World.tscn",
-	"res://scenes/areas/house/House.tscn",
+	"res://scenes/areas/interiors/Interior_House.tscn",
 	"res://scenes/areas/exterior/Exterior.tscn",
 ]
 

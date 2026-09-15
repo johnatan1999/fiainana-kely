@@ -13,9 +13,13 @@ const COLOR_GROWING := Color(0.3, 0.6, 0.25)
 const COLOR_MATURE := Color(0.95, 0.75, 0.1)
 
 @onready var soil: ColorRect = $Soil
-@onready var crop: ColorRect = $Crop
+@onready var crop_placeholder: ColorRect = $Crop
+@onready var crop_sprite: TextureRect = $CropSprite
 
-func update_view(plot: PlotState) -> void:
+## crop_data is null when the plot is empty, or briefly while a crop_id
+## isn't in the registry (shouldn't happen, but PlotView stays defensive
+## rather than crash the whole farm view over one bad plot).
+func update_view(plot: PlotState, crop_data: CropData) -> void:
 	if plot.watered:
 		soil.color = COLOR_WATERED
 	elif plot.tilled:
@@ -24,21 +28,77 @@ func update_view(plot: PlotState) -> void:
 		soil.color = COLOR_UNTILLED
 
 	if plot.crop == null:
-		crop.visible = false
+		crop_placeholder.visible = false
+		crop_sprite.visible = false
 		return
 
-	crop.visible = true
-	match plot.crop.get_stage():
-		CropState.Stage.MATURE:
-			crop.color = COLOR_MATURE
-			crop.size = Vector2(44, 44)
-		CropState.Stage.GROWING:
-			crop.color = COLOR_GROWING
-			crop.size = Vector2(34, 34)
-		CropState.Stage.SPROUT:
-			crop.color = COLOR_SPROUT
-			crop.size = Vector2(24, 24)
+	var stage := plot.crop.get_stage()
+	var stage_texture := _get_stage_specific_texture(crop_data, stage)
+
+	if stage_texture != null:
+		# Dedicated art for this exact stage already encodes its own size
+		# progression (e.g. a tiny seedling vs. a tall mature stalk) - show
+		# it filling the cell, aspect preserved, with no artificial scaling.
+		crop_sprite.texture = stage_texture
+		crop_sprite.visible = true
+		crop_placeholder.visible = false
+		_layout_sprite(1.0)
+	elif crop_data != null and crop_data.icon != null:
+		# Only one generic sprite for the whole crop - fake growth by scaling
+		# it up as the stage advances.
+		crop_sprite.texture = crop_data.icon
+		crop_sprite.visible = true
+		crop_placeholder.visible = false
+		_layout_sprite(_stage_scale(stage))
+	else:
+		# No art at all yet for this crop - original placeholder behavior,
+		# unchanged.
+		crop_sprite.visible = false
+		crop_placeholder.visible = true
+		_layout_placeholder(stage)
+
+func _get_stage_specific_texture(crop_data: CropData, stage: CropState.Stage) -> Texture2D:
+	if crop_data == null:
+		return null
+	match stage:
 		CropState.Stage.SEED:
-			crop.color = COLOR_SEED
-			crop.size = Vector2(14, 14)
-	crop.position = (Vector2(CELL_SIZE, CELL_SIZE) - crop.size) / 2.0
+			return crop_data.sprite_seed
+		CropState.Stage.SPROUT:
+			return crop_data.sprite_sprout
+		CropState.Stage.GROWING:
+			return crop_data.sprite_growing
+		CropState.Stage.MATURE:
+			return crop_data.sprite_mature
+	return null
+
+func _stage_scale(stage: CropState.Stage) -> float:
+	match stage:
+		CropState.Stage.MATURE:
+			return 1.0
+		CropState.Stage.GROWING:
+			return 0.75
+		CropState.Stage.SPROUT:
+			return 0.5
+		_:
+			return 0.3
+
+func _layout_sprite(scale_factor: float) -> void:
+	var size := Vector2(CELL_SIZE, CELL_SIZE) * scale_factor
+	crop_sprite.size = size
+	crop_sprite.position = (Vector2(CELL_SIZE, CELL_SIZE) - size) / 2.0
+
+func _layout_placeholder(stage: CropState.Stage) -> void:
+	match stage:
+		CropState.Stage.MATURE:
+			crop_placeholder.color = COLOR_MATURE
+			crop_placeholder.size = Vector2(44, 44)
+		CropState.Stage.GROWING:
+			crop_placeholder.color = COLOR_GROWING
+			crop_placeholder.size = Vector2(34, 34)
+		CropState.Stage.SPROUT:
+			crop_placeholder.color = COLOR_SPROUT
+			crop_placeholder.size = Vector2(24, 24)
+		CropState.Stage.SEED:
+			crop_placeholder.color = COLOR_SEED
+			crop_placeholder.size = Vector2(14, 14)
+	crop_placeholder.position = (Vector2(CELL_SIZE, CELL_SIZE) - crop_placeholder.size) / 2.0

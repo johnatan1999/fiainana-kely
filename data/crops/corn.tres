@@ -1,6 +1,23 @@
-[gd_resource type="Resource" script_class="CropData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="CropData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/CropData.gd" id="1_corn"]
+[ext_resource type="Texture2D" uid="uid://caqbhel04kf4x" path="res://assets/sprites/voly.png" id="2_voly"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_corn_seed"]
+atlas = ExtResource("2_voly")
+region = Rect2(22, 47, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_corn_sprout"]
+atlas = ExtResource("2_voly")
+region = Rect2(17, 81, 30, 46)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_corn_growing"]
+atlas = ExtResource("2_voly")
+region = Rect2(71, 43, 51, 85)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_corn_mature"]
+atlas = ExtResource("2_voly")
+region = Rect2(130, 24, 60, 104)
 
 [resource]
 script = ExtResource("1_corn")
@@ -20,3 +37,8 @@ water_need = 1
 min_watered_ratio_for_quality = 0.75
 is_perennial = false
 unlock_day = 0
+icon = SubResource("AtlasTexture_corn_mature")
+sprite_seed = SubResource("AtlasTexture_corn_seed")
+sprite_sprout = SubResource("AtlasTexture_corn_sprout")
+sprite_growing = SubResource("AtlasTexture_corn_growing")
+sprite_mature = SubResource("AtlasTexture_corn_mature")

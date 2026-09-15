@@ -31,12 +31,17 @@ func _create_plot_view(plot_id: int) -> void:
 	var pos := _simulation.get_plot_position(plot_id)
 	plot_view.position = Vector2(pos.x, pos.y) * CELL_SIZE
 	_plot_views[plot_id] = plot_view
-	plot_view.update_view(_simulation.get_plot(plot_id))
+	_refresh_plot_view(plot_view, plot_id)
 
 func _on_plot_changed(plot_id: int) -> void:
 	var plot_view: PlotView = _plot_views.get(plot_id)
 	if plot_view:
-		plot_view.update_view(_simulation.get_plot(plot_id))
+		_refresh_plot_view(plot_view, plot_id)
+
+func _refresh_plot_view(plot_view: PlotView, plot_id: int) -> void:
+	var plot := _simulation.get_plot(plot_id)
+	var crop_data: CropData = _simulation.get_crop_data(plot.crop.crop_id) if plot.crop != null else null
+	plot_view.update_view(plot, crop_data)
 
 ## Fired for grid expansion (expand_grid()/add_tile()) and for every plot
 ## restored by a save load - either way, a PlotView needs to be created.

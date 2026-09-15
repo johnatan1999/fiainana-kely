@@ -123,44 +123,44 @@ func _run_zone_manager_checks() -> void:
 
 	_run_zone_sign_checks(zone_manager, simulation)
 
-## The Shop no longer sells land - ZoneSign/ModularZoneSign in Exterior.tscn
-## are now the only purchase path. This drives them exactly like a real
-## interaction would (mark the player "inside", fire interact, click the
-## dialog's button) to prove the panels are wired end-to-end, not just that
-## ZoneManager's own logic works in isolation.
+## The Shop no longer sells land - FarmZoneSign/ModularFarmZoneSign in
+## Exterior.tscn are now the only purchase path. This drives them exactly
+## like a real interaction would (mark the player "inside", fire interact,
+## click the dialog's button) to prove the panels are wired end-to-end, not
+## just that ZoneManager's own logic works in isolation.
 func _run_zone_sign_checks(zone_manager, simulation) -> void:
 	var zone = _world.get_node("ZoneContainer").get_child(0)
-	var modular_sign = zone.get_node_or_null("ModularZoneSign")
-	var zone_sign_south = zone.get_node_or_null("ZoneSign_zone_south")
+	var modular_sign = zone.get_node_or_null("ModularFarmZoneSign")
+	var zone_sign_south = zone.get_node_or_null("FarmZoneSign_zone_south")
 
 	_check(
 		modular_sign != null and zone_sign_south != null,
-		"ZoneSign_zone_south and ModularZoneSign both exist in the loaded Exterior scene"
+		"FarmZoneSign_zone_south and ModularFarmZoneSign both exist in the loaded Exterior scene"
 	)
 	if modular_sign == null or zone_sign_south == null:
 		return
 
 	modular_sign._player_inside = true
 	modular_sign._on_interact_requested(null)
-	_check(modular_sign.dialog.visible, "interacting with ModularZoneSign opens its own dialog")
+	_check(modular_sign.dialog.visible, "interacting with ModularFarmZoneSign opens its own dialog")
 
 	var progressive_before = zone_manager.get_progressive_unlocked_count()
 	modular_sign._on_patch_pressed(modular_sign.PATCH_OPTIONS[0]) # "Acheter 1 parcelle" - via the instance, not the bare class name (see file header)
 	_check(
 		zone_manager.get_progressive_unlocked_count() == progressive_before + 1,
-		"clicking a patch option on ModularZoneSign's dialog buys it via ZoneManager"
+		"clicking a patch option on ModularFarmZoneSign's dialog buys it via ZoneManager"
 	)
 
 	simulation.state.money = 10000
 	zone_sign_south._player_inside = true
 	zone_sign_south._on_interact_requested(null)
-	_check(zone_sign_south.dialog.visible, "interacting with ZoneSign opens its own dialog")
+	_check(zone_sign_south.dialog.visible, "interacting with FarmZoneSign opens its own dialog")
 
 	var zone_south_unlocked_before = zone_manager.is_zone_unlocked("zone_south")
 	zone_sign_south._on_buy_pressed()
 	_check(
 		not zone_south_unlocked_before and zone_manager.is_zone_unlocked("zone_south"),
-		"clicking Acheter on ZoneSign's dialog buys the zone via ZoneManager"
+		"clicking Acheter on FarmZoneSign's dialog buys the zone via ZoneManager"
 	)
 
 func _count_eggs(animal_container) -> int:

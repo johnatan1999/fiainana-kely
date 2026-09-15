@@ -1,7 +1,7 @@
 class_name ZoneManager
 extends Node
 
-## Bridges on-site land purchase panels (ZoneSign/ModularZoneSign) to
+## Bridges on-site land purchase panels (FarmZoneSign/ModularFarmZoneSign) to
 ## FarmSimulation's dynamic tile grid (FarmSimulation.add_tile/expand_grid).
 ## Land is no longer sold through the Shop - the player buys it by walking
 ## up to a physical panel in the world.
@@ -154,14 +154,14 @@ func set_zone_markers(zone: Node) -> void:
 
 	_setup_signs(zone)
 
-## Purchases now happen exclusively through on-site ZoneSign/ModularZoneSign
-## panels (no more Shop integration) - wire up whichever of them exist in
-## the freshly-loaded zone.
+## Purchases now happen exclusively through on-site FarmZoneSign/
+## ModularFarmZoneSign panels (no more Shop integration) - wire up whichever
+## of them exist in the freshly-loaded zone.
 func _setup_signs(zone: Node) -> void:
 	for child in zone.get_children():
-		if child is ZoneSign:
+		if child is FarmZoneSign:
 			child.setup(player, self)
-		elif child is ModularZoneSign:
+		elif child is ModularFarmZoneSign:
 			child.setup(player, self)
 
 func _refresh_predefined_marker(zone_id: String) -> void:

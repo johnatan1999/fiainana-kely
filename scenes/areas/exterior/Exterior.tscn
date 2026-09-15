@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=16 format=3 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://scripts/world/ZoneRoot.gd" id="1_zoneroot"]
 [ext_resource type="PackedScene" uid="uid://dd2hvqpppgxdw" path="res://scenes/farm/FarmView.tscn" id="2_farmview"]
@@ -9,8 +9,8 @@
 [ext_resource type="PackedScene" path="res://scenes/gameplay/WaterBowl.tscn" id="8_waterbowl"]
 [ext_resource type="PackedScene" uid="uid://dgak5cew5n3hy" path="res://scenes/gameplay/Chicken.tscn" id="9_chicken"]
 [ext_resource type="SpriteFrames" uid="uid://c8b1vmmb21c3e" path="res://data/rooster.tres" id="10_rs3hx"]
-[ext_resource type="PackedScene" path="res://scenes/gameplay/ZoneSign.tscn" id="11_zonesign"]
-[ext_resource type="PackedScene" path="res://scenes/gameplay/ModularZoneSign.tscn" id="12_modularzonesign"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/FarmZoneSign.tscn" id="11_farmzonesign"]
+[ext_resource type="PackedScene" path="res://scenes/gameplay/ModularFarmZoneSign.tscn" id="12_modularfarmzonesign"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_shop_building"]
 size = Vector2(220, 160)
@@ -37,7 +37,7 @@ bgm = 1
 offset_right = 1400.0
 offset_bottom = 1600.0
 mouse_filter = 2
-color = Color(0.3, 0.5, 0.2, 1)
+color = Color(0.524719, 0.41311, 0.326535, 1)
 
 [node name="SpawnFromHouse" type="Marker2D" parent="."]
 position = Vector2(721, 329)
@@ -208,13 +208,13 @@ text = "Terrain du Sud — 700 $"
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="ModularZoneSign" parent="." instance=ExtResource("12_modularzonesign")]
+[node name="ModularFarmZoneSign" parent="." instance=ExtResource("12_modularfarmzonesign")]
 position = Vector2(650, 960)
 
-[node name="ZoneSign_zone_east" parent="." instance=ExtResource("11_zonesign")]
+[node name="FarmZoneSign_zone_east" parent="." instance=ExtResource("11_farmzonesign")]
 position = Vector2(1150, 960)
 zone_id = "zone_east"
 
-[node name="ZoneSign_zone_south" parent="." instance=ExtResource("11_zonesign")]
+[node name="FarmZoneSign_zone_south" parent="." instance=ExtResource("11_farmzonesign")]
 position = Vector2(650, 1320)
 zone_id = "zone_south"
