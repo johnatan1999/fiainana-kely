@@ -48,3 +48,12 @@ enum WaterNeed { LOW, MEDIUM, HIGH }
 @export var sprite_sprout: Texture2D
 @export var sprite_growing: Texture2D
 @export var sprite_mature: Texture2D
+
+## How much of the plot cell each dedicated stage sprite fills (aspect
+## preserved, centered). 1.0 = fills the cell. Tune per crop from the
+## Inspector - a wide sprite sheet crop like corn's tiny seedling can look
+## oversized at 1.0, so these default smaller for the early stages.
+@export_range(0.1, 1.5, 0.05) var sprite_seed_scale: float = 0.4
+@export_range(0.1, 1.5, 0.05) var sprite_sprout_scale: float = 0.55
+@export_range(0.1, 1.5, 0.05) var sprite_growing_scale: float = 0.8
+@export_range(0.1, 1.5, 0.05) var sprite_mature_scale: float = 1.0

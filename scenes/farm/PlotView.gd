@@ -36,13 +36,10 @@ func update_view(plot: PlotState, crop_data: CropData) -> void:
 	var stage_texture := _get_stage_specific_texture(crop_data, stage)
 
 	if stage_texture != null:
-		# Dedicated art for this exact stage already encodes its own size
-		# progression (e.g. a tiny seedling vs. a tall mature stalk) - show
-		# it filling the cell, aspect preserved, with no artificial scaling.
 		crop_sprite.texture = stage_texture
 		crop_sprite.visible = true
 		crop_placeholder.visible = false
-		_layout_sprite(1.0)
+		_layout_sprite(_get_stage_specific_scale(crop_data, stage))
 	elif crop_data != null and crop_data.icon != null:
 		# Only one generic sprite for the whole crop - fake growth by scaling
 		# it up as the stage advances.
@@ -71,6 +68,20 @@ func _get_stage_specific_texture(crop_data: CropData, stage: CropState.Stage) ->
 			return crop_data.sprite_mature
 	return null
 
+func _get_stage_specific_scale(crop_data: CropData, stage: CropState.Stage) -> float:
+	match stage:
+		CropState.Stage.SEED:
+			return crop_data.sprite_seed_scale
+		CropState.Stage.SPROUT:
+			return crop_data.sprite_sprout_scale
+		CropState.Stage.GROWING:
+			return crop_data.sprite_growing_scale
+		CropState.Stage.MATURE:
+			return crop_data.sprite_mature_scale
+	return 1.0
+
+## Fallback scaling used only when a crop has no dedicated per-stage art -
+## _get_stage_specific_scale() above is used instead once art exists.
 func _stage_scale(stage: CropState.Stage) -> float:
 	match stage:
 		CropState.Stage.MATURE:
