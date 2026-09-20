@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://c5uquiu1lrlve"]
 
-[ext_resource type="Script" path="res://scripts/autoload/AudioManager.gd" id="1_script"]
+[ext_resource type="Script" path="res://core/autoloads/AudioManager.gd" id="1_script"]
 [ext_resource type="AudioStream" uid="uid://cp003iw21hanl" path="res://assets/audio/SFX/Audio_SFX_Shovel.mp3" id="2_4gcxf"]
 [ext_resource type="AudioStream" uid="uid://dyijxv75xw06a" path="res://assets/audio/SFX/Audio_SFX_Plant.mp3" id="3_e08pc"]
 [ext_resource type="AudioStream" uid="uid://ds3jt34brurlc" path="res://assets/audio/SFX/Audio_SFX_Watering.mp3" id="4_07ebb"]

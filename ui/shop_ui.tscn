@@ -1,0 +1,122 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://ui/shop_ui.gd" id="1_shopui"]
+[ext_resource type="PackedScene" path="res://ui/shop/category_button.tscn" id="2_categorybutton"]
+[ext_resource type="PackedScene" path="res://ui/shop/cart_panel.tscn" id="3_cartpanel"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wood"]
+bg_color = Color(0.36, 0.24, 0.14, 1)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(0.22, 0.14, 0.08, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="ShopUI" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 60.0
+offset_top = 40.0
+offset_right = -60.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_shopui")
+
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_wood")
+
+[node name="Margin" type="MarginContainer" parent="Background"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="Background/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderRow" type="HBoxContainer" parent="Background/Margin/VBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Background/Margin/VBox/HeaderRow"]
+layout_mode = 2
+text = "Tsena — Marché du village"
+theme_override_font_sizes/font_size = 20
+
+[node name="HeaderSpacer" type="Control" parent="Background/Margin/VBox/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MoneyLabel" type="Label" parent="Background/Margin/VBox/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Argent: 100 $"
+
+[node name="CloseButton" type="Button" parent="Background/Margin/VBox/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+text = "Fermer"
+
+[node name="CategoryRow" type="HBoxContainer" parent="Background/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SeedsButton" parent="Background/Margin/VBox/CategoryRow" instance=ExtResource("2_categorybutton")]
+layout_mode = 2
+text = "🌱 Graines"
+category = 0
+
+[node name="ToolsButton" parent="Background/Margin/VBox/CategoryRow" instance=ExtResource("2_categorybutton")]
+layout_mode = 2
+text = "🔨 Outils"
+category = 1
+
+[node name="FoodButton" parent="Background/Margin/VBox/CategoryRow" instance=ExtResource("2_categorybutton")]
+layout_mode = 2
+text = "🍚 Nourriture"
+category = 2
+
+[node name="AnimalsButton" parent="Background/Margin/VBox/CategoryRow" instance=ExtResource("2_categorybutton")]
+layout_mode = 2
+text = "🐓 Animaux"
+category = 3
+
+[node name="ContentRow" type="HBoxContainer" parent="Background/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="ItemScroll" type="ScrollContainer" parent="Background/Margin/VBox/ContentRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ItemGrid" type="GridContainer" parent="Background/Margin/VBox/ContentRow/ItemScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 3
+
+[node name="CartPanel" parent="Background/Margin/VBox/ContentRow" instance=ExtResource("3_cartpanel")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
