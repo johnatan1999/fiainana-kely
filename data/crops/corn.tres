@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="CropData" load_steps=7 format=3 uid="uid://b7w7hs1oyp3ef"]
 
-[ext_resource type="Script" path="res://scripts/data/CropData.gd" id="1_corn"]
+[ext_resource type="Script" path="res://core/data/crop_data.gd" id="1_corn"]
 [ext_resource type="Texture2D" uid="uid://caqbhel04kf4x" path="res://assets/sprites/voly.png" id="2_voly"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_corn_mature"]
