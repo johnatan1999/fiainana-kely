@@ -174,7 +174,11 @@ func _refresh_predefined_marker(zone_id: String) -> void:
 	var label: Label = marker["label"]
 
 	if unlocked:
-		rect.color = Color(0.45, 0.65, 0.25, 0.35)
+		# Fully transparent once owned - the real farm tiles show through
+		# instead of a permanent color wash. _play_unlock_flash still gives a
+		# brief pulse of feedback at the moment of purchase, fading back to
+		# this same transparent color.
+		rect.color = Color(0.45, 0.65, 0.25, 0.0)
 		label.text = "%s (débloqué)" % zone_data.display_name
 		_play_unlock_flash(rect)
 	else:

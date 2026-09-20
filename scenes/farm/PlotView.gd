@@ -3,30 +3,19 @@ extends Node2D
 
 const CELL_SIZE := 64.0
 
-const COLOR_UNTILLED := Color(0.35, 0.55, 0.25)
-const COLOR_TILLED := Color(0.45, 0.3, 0.15)
-const COLOR_WATERED := Color(0.25, 0.18, 0.1)
-
 const COLOR_SEED := Color(0.6, 0.5, 0.2)
 const COLOR_SPROUT := Color(0.55, 0.8, 0.35)
 const COLOR_GROWING := Color(0.3, 0.6, 0.25)
 const COLOR_MATURE := Color(0.95, 0.75, 0.1)
 
-@onready var soil: ColorRect = $Soil
 @onready var crop_placeholder: ColorRect = $Crop
 @onready var crop_sprite: TextureRect = $CropSprite
 
 ## crop_data is null when the plot is empty, or briefly while a crop_id
 ## isn't in the registry (shouldn't happen, but PlotView stays defensive
-## rather than crash the whole farm view over one bad plot).
+## rather than crash the whole farm view over one bad plot). Soil itself is
+## drawn by FarmView's shared TileMapLayer, not here.
 func update_view(plot: PlotState, crop_data: CropData) -> void:
-	if plot.watered:
-		soil.color = COLOR_WATERED
-	elif plot.tilled:
-		soil.color = COLOR_TILLED
-	else:
-		soil.color = COLOR_UNTILLED
-
 	if plot.crop == null:
 		crop_placeholder.visible = false
 		crop_sprite.visible = false

@@ -174,4 +174,4 @@ zoom = Vector2(2.2, 2.2)
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 scale = Vector2(0.5, 0.5)
 sprite_frames = SubResource("SpriteFrames_huppk")
-animation = &"walk_left"
+animation = &"walk_right"

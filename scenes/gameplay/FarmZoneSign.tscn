@@ -1,6 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3 uid="uid://yyodnuua7d7i"]
 
 [ext_resource type="Script" path="res://scripts/gameplay/FarmZoneSign.gd" id="1_farmzonesign"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sign"]
+size = Vector2(48, 48)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialog"]
 bg_color = Color(0.36, 0.24, 0.14, 1)
@@ -13,9 +16,6 @@ corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_sign"]
-size = Vector2(48, 48)
 
 [node name="FarmZoneSign" type="Area2D"]
 script = ExtResource("1_farmzonesign")
@@ -33,9 +33,9 @@ offset_left = -70.0
 offset_top = -52.0
 offset_right = 70.0
 offset_bottom = -30.0
+text = "Zone (E)"
 horizontal_alignment = 1
 autowrap_mode = 2
-text = "Zone (E)"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_sign")
@@ -61,6 +61,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 14
 theme_override_constants/margin_right = 16
@@ -72,32 +74,31 @@ theme_override_constants/separation = 8
 
 [node name="NameLabel" type="Label" parent="Dialog/Panel/Margin/VBox"]
 layout_mode = 2
-horizontal_alignment = 1
 theme_override_font_sizes/font_size = 18
 text = "Nom de la zone"
+horizontal_alignment = 1
 
 [node name="PriceLabel" type="Label" parent="Dialog/Panel/Margin/VBox"]
 layout_mode = 2
-horizontal_alignment = 1
 text = "0 $"
+horizontal_alignment = 1
 
 [node name="DescriptionLabel" type="Label" parent="Dialog/Panel/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
+text = "Description"
 horizontal_alignment = 1
 autowrap_mode = 3
-text = "Description"
 
 [node name="StatusLabel" type="Label" parent="Dialog/Panel/Margin/VBox"]
+modulate = Color(1, 0.9, 0.6, 1)
 layout_mode = 2
 horizontal_alignment = 1
-modulate = Color(1, 0.9, 0.6, 1)
-text = ""
 
 [node name="ButtonRow" type="HBoxContainer" parent="Dialog/Panel/Margin/VBox"]
 layout_mode = 2
-alignment = 1
 theme_override_constants/separation = 12
+alignment = 1
 
 [node name="BuyButton" type="Button" parent="Dialog/Panel/Margin/VBox/ButtonRow"]
 layout_mode = 2
