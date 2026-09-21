@@ -44,7 +44,7 @@ func set_farm_area(p_zone: Node) -> void:
 		_animal_container = null
 		return
 
-	_coop = farm_area.get_node("Coop")
+	_coop = farm_area.get_node("ChickenCoop")
 	_feeding_bowl = farm_area.get_node("FeedingBowl")
 	_water_bowl = farm_area.get_node("WaterBowl")
 	_animal_container = farm_area.get_node("AnimalContainer")

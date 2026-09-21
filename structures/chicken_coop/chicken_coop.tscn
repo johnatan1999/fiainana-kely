@@ -12,6 +12,7 @@ atlas = ExtResource("2_881k2")
 region = Rect2(0, 384, 224, 64)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_j6mld"]
+size = Vector2(280, 180)
 
 [node name="ChickenCoop" type="Node2D"]
 y_sort_enabled = true
@@ -35,6 +36,7 @@ offset = Vector2(0, -172)
 visible = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(100, -35)
 shape = SubResource("RectangleShape2D_j6mld")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]

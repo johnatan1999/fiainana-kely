@@ -4,9 +4,10 @@ extends Node
 ## Owns zone loading/unloading. The player, camera and simulation persist across
 ## zone changes - only the zone scene (background, plots, triggers) is swapped.
 
-const ZONES := {
-	"house": preload("res://world/areas/interior/player_interior_house.tscn"),
-	"exterior": preload("res://world/areas/exterior/exterior.tscn"),
+const ZONE_PATHS := {
+	Zone.ID.PLAYER_HOUSE: "res://world/areas/interior/player_interior_house.tscn",
+	Zone.ID.VILLAGE: "res://world/areas/exterior/exterior.tscn",
+	Zone.ID.CHICKEN_COOP: "res://world/areas/interior/farm/chicken_coop_interior.tscn",
 }
 
 var simulation: FarmSimulation
@@ -18,7 +19,7 @@ var animal_manager: AnimalManager
 var farm_land_manager: FarmLandManager
 
 var current_zone: ZoneRoot
-var current_zone_id: String = ""
+var current_zone_id: Zone.ID
 
 func _ready() -> void:
 	StructureEvents.shop_spawned.connect(_on_shop_spawned)
@@ -34,22 +35,39 @@ func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_farming_c
 
 ## ZoneTransition/SleepSpot fire from inside Area2D signals during the physics
 ## step, which forbids reparenting/freeing physics nodes right away - defer it.
-func request_zone_change(zone_id: String, spawn_name: String) -> void:
+func request_zone_change(zone_id: Zone.ID, spawn_name: String) -> void:
 	call_deferred("change_zone", zone_id, spawn_name)
 
-func change_zone(zone_id: String, spawn_name: String) -> void:
+func change_zone(zone_id: Zone.ID, override_spawn_name: String = "") -> void:
+	var previous_zone_id = current_zone_id
 	if current_zone != null:
 		current_zone.queue_free()
 		farming_controller.set_farm_view(null)
 		animal_manager.set_farm_area(null)
 		farm_land_manager.set_zone_markers(null)
 
-	var zone: ZoneRoot = ZONES[zone_id].instantiate()
+	# Chargement dynamique de la scène à la demande
+	var zone_scene := load(ZONE_PATHS[zone_id]) as PackedScene
+	var zone: ZoneRoot = zone_scene.instantiate()
 	zone_container.add_child(zone)
 	current_zone = zone
 	current_zone_id = zone_id
 
-	var spawn := zone.get_node_or_null(spawn_name)
+	var spawn: Marker2D = null
+	
+	# Cas A : Spawn forcé (ex: chargement de sauvegarde "SpawnDefault")
+	if not override_spawn_name.is_empty():
+		spawn = _find_spawn(zone, override_spawn_name)
+	
+	# Cas B : Convention automatique "SpawnFrom_VILLAGE"
+	if spawn == null:
+		var expected_spawn = "SpawnFrom_"+Zone.ID.keys()[previous_zone_id]
+		spawn = zone.get_node_or_null(expected_spawn)
+	
+	# Cas C : Fallback de sécurité
+	if spawn == null:
+		spawn = _find_spawn(zone, "SpawnDefault")
+		
 	if spawn:
 		player.global_position = spawn.global_position
 
@@ -62,6 +80,14 @@ func change_zone(zone_id: String, spawn_name: String) -> void:
 	_apply_zone_bgm(zone)
 	_wire_zone_content(zone)
 
+# Fonction utilitaire pour chercher dans /Spawns ou à la racine
+func _find_spawn(zone: ZoneRoot, spawn_name: String) -> Marker2D:
+	var spawns_container := zone.get_node_or_null("Spawns")
+	if spawns_container:
+		var marker := spawns_container.get_node_or_null(spawn_name) as Marker2D
+		if marker: return marker
+	return zone.get_node_or_null(spawn_name) as Marker2D
+	
 func _apply_zone_bgm(zone: ZoneRoot) -> void:
 	match zone.bgm:
 		ZoneRoot.BGM.EXTERIOR:
@@ -82,7 +108,7 @@ func _wire_zone_content(zone: ZoneRoot) -> void:
 		sleep_spot.setup(player)
 		sleep_spot.sleep_requested.connect(_on_sleep_requested)
 
-	if zone.get_node_or_null("Coop"):
+	if zone.get_node_or_null("ChickenCoop"):
 		animal_manager.set_farm_area(zone)
 
 	# Safe to call unconditionally - a zone without any ZoneMarker_*/

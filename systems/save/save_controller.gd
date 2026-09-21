@@ -5,7 +5,7 @@ extends Node
 ## position, to a single JSON save file.
 
 const SAVE_PATH := "user://savegame.json"
-const DEFAULT_ZONE_ID := "house"
+const DEFAULT_ZONE_ID := "VILLAGE"
 
 var simulation: FarmSimulation
 var world_manager: WorldManager
@@ -37,9 +37,13 @@ func load_game() -> bool:
 		return false
 	simulation.load_save_data(data)
 
-	var zone_id: String = data.get("zone_id", DEFAULT_ZONE_ID)
-	world_manager.change_zone(zone_id, "SpawnDefault")
-
+	var zone_id_str: String = data.get("zone_id", DEFAULT_ZONE_ID)
+	if Zone.ID.has(zone_id_str):
+		var zone_id: Zone.ID = Zone.ID[zone_id_str]
+		world_manager.change_zone(zone_id, "SpawnDefault")
+	else: 
+		push_error("Unknown zone: " + zone_id_str)
+		
 	var pos_data = data.get("player_position")
 	if pos_data is Dictionary:
 		player.global_position = Vector2(pos_data.get("x", 0.0), pos_data.get("y", 0.0))

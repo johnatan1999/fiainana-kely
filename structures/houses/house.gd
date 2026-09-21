@@ -15,7 +15,6 @@ extends Node2D
 
 @onready var wall_sprite: Sprite2D = $WallSprite
 @onready var roof_sprite: Sprite2D = $RoofSprite
-@onready var collision_node: CollisionShape2D = $StaticBody2D/CollisionShape2D
 
 func _ready() -> void:
 	_update_house()
@@ -36,10 +35,3 @@ func _update_house() -> void:
 		if data.roof_region != Rect2():
 			roof_sprite.region_enabled = true
 			roof_sprite.region_rect = data.roof_region
-
-	# 2. Adaptation dynamique de la forme de collision
-	if collision_node and data.collision_shape:
-		# Important : duplicate() évite que modifier la collision d'une maison
-		# n'impacte toutes les autres maisons partageant la même Resource
-		collision_node.shape = data.collision_shape.duplicate()
-		collision_node.position = data.collision_offset

@@ -3,9 +3,9 @@ extends Area2D
 
 ## Placed at doors/exits. Walking into it asks WorldManager to switch zones.
 
-signal triggered(target_zone: String, target_spawn: String)
+signal triggered(target_zone: Zone.ID, target_spawn: String)
 
-@export var target_zone: String
+@export var target_zone: Zone.ID
 @export var target_spawn: String
 
 func _ready() -> void:

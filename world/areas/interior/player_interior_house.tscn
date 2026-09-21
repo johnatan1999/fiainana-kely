@@ -40,7 +40,6 @@ position = Vector2(2, 169)
 [node name="DoorTransition" type="Area2D" parent="."]
 position = Vector2(1, -218)
 script = ExtResource("3_40t3b")
-target_zone = "exterior"
 target_spawn = "SpawnFromHouse"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorTransition"]
