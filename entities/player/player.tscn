@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cbsngksevqumt" path="res://assets/sprites/characters/player/player2_walk.png" id="2_0v3gh"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
-size = Vector2(29, 31)
+size = Vector2(26.5, 17.5)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_t6k0p"]
 atlas = ExtResource("2_0v3gh")
@@ -162,10 +162,11 @@ animations = [{
 }]
 
 [node name="Player" type="CharacterBody2D"]
+y_sort_enabled = true
 script = ExtResource("1_piccd")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0.5, 14.5)
+position = Vector2(1.25, -10.25)
 shape = SubResource("RectangleShape2D_player")
 
 [node name="Camera2D" type="Camera2D" parent="."]
@@ -175,3 +176,5 @@ zoom = Vector2(2.2, 2.2)
 scale = Vector2(0.5, 0.5)
 sprite_frames = SubResource("SpriteFrames_huppk")
 animation = &"walk_right"
+frame_progress = 0.696398
+offset = Vector2(0, -64)

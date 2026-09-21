@@ -1,6 +1,6 @@
 [gd_scene load_steps=12 format=3 uid="uid://1vf3wl4rr8gi"]
 
-[ext_resource type="Script" path="res://scripts/world/ZoneRoot.gd" id="1_r400i"]
+[ext_resource type="Script" path="res://world/zone_root.gd" id="1_r400i"]
 [ext_resource type="Texture2D" uid="uid://br46ejog1t0na" path="res://assets/sprites/houses/interior/interior_1.png" id="2_6wlfw"]
 [ext_resource type="Script" path="res://scripts/gameplay/ZoneTransition.gd" id="3_40t3b"]
 [ext_resource type="Script" path="res://scripts/gameplay/SleepSpot.gd" id="4_45pqr"]

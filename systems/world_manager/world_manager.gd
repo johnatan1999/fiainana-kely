@@ -5,8 +5,8 @@ extends Node
 ## zone changes - only the zone scene (background, plots, triggers) is swapped.
 
 const ZONES := {
-	"house": preload("res://scenes/areas/interiors/Interior_House.tscn"),
-	"exterior": preload("res://scenes/areas/exterior/Exterior.tscn"),
+	"house": preload("res://world/areas/interior/player_interior_house.tscn"),
+	"exterior": preload("res://world/areas/exterior/exterior.tscn"),
 }
 
 var simulation: FarmSimulation
@@ -19,6 +19,9 @@ var zone_manager: ZoneManager
 
 var current_zone: ZoneRoot
 var current_zone_id: String = ""
+
+func _ready() -> void:
+	StructureEvents.shop_spawned.connect(_on_shop_spawned)
 
 func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_farming_controller: FarmingController, p_shop_ui: ShopUI, p_zone_container: Node2D, p_animal_manager: AnimalManager, p_zone_manager: ZoneManager) -> void:
 	simulation = p_simulation
@@ -79,10 +82,6 @@ func _wire_zone_content(zone: ZoneRoot) -> void:
 		sleep_spot.setup(player)
 		sleep_spot.sleep_requested.connect(_on_sleep_requested)
 
-	var shop_trigger: ShopTrigger = zone.get_node_or_null("ShopTrigger")
-	if shop_trigger:
-		shop_trigger.setup(player, shop_ui)
-
 	if zone.get_node_or_null("Coop"):
 		animal_manager.set_farm_area(zone)
 
@@ -92,6 +91,9 @@ func _wire_zone_content(zone: ZoneRoot) -> void:
 
 	for transition in _find_transitions(zone):
 		transition.triggered.connect(request_zone_change)
+
+func _on_shop_spawned(shop: Shop) -> void:
+	shop.setup(player, shop_ui)
 
 func _find_transitions(node: Node) -> Array:
 	var result: Array = []

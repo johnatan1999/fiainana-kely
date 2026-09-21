@@ -1,0 +1,46 @@
+[gd_scene load_steps=8 format=3 uid="uid://dv8rtwpbrtee0"]
+
+[ext_resource type="Script" path="res://structures/shop/shop.gd" id="1_4onli"]
+[ext_resource type="Texture2D" uid="uid://kkk5vjbjryep" path="res://assets/tileset/exterior.png" id="2_pqhcg"]
+[ext_resource type="Script" path="res://structures/shop/shop_trigger.gd" id="3_voha7"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rvwm7"]
+atlas = ExtResource("2_pqhcg")
+region = Rect2(0, 0, 160, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bo6vu"]
+atlas = ExtResource("2_pqhcg")
+region = Rect2(0, 64, 160, 64)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1tw7g"]
+size = Vector2(176, 90)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_xjqn6"]
+size = Vector2(129, 36)
+
+[node name="Shop" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_4onli")
+
+[node name="RoofSprite" type="Sprite2D" parent="."]
+texture = SubResource("AtlasTexture_rvwm7")
+centered = false
+offset = Vector2(0, -128)
+
+[node name="MerchandiseSprite" type="Sprite2D" parent="."]
+texture = SubResource("AtlasTexture_bo6vu")
+centered = false
+offset = Vector2(0, -64)
+
+[node name="ShopTrigger" type="Area2D" parent="."]
+script = ExtResource("3_voha7")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShopTrigger"]
+position = Vector2(83, -28)
+shape = SubResource("RectangleShape2D_1tw7g")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(85.5, -29)
+shape = SubResource("RectangleShape2D_xjqn6")
