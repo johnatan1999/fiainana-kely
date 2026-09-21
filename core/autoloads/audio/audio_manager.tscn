@@ -1,0 +1,22 @@
+[gd_scene load_steps=8 format=3 uid="uid://c5uquiu1lrlve"]
+
+[ext_resource type="Script" path="res://core/autoloads/audio/audio_manager.gd" id="1_al1b8"]
+[ext_resource type="AudioStream" uid="uid://cp003iw21hanl" path="res://assets/audio/SFX/Audio_SFX_Shovel.mp3" id="2_i6wbt"]
+[ext_resource type="AudioStream" uid="uid://dyijxv75xw06a" path="res://assets/audio/SFX/Audio_SFX_Plant.mp3" id="3_nfbn2"]
+[ext_resource type="AudioStream" uid="uid://ds3jt34brurlc" path="res://assets/audio/SFX/Audio_SFX_Watering.mp3" id="4_trv6b"]
+[ext_resource type="AudioStream" uid="uid://duy5vb87jvraj" path="res://assets/audio/SFX/Audio_SFX_Harvest.mp3" id="5_ll4ma"]
+[ext_resource type="AudioStream" uid="uid://b5wrc0cmpfm7q" path="res://assets/audio/SFX/Audio_SFX_Interact.mp3" id="6_n5fsn"]
+[ext_resource type="AudioStream" uid="uid://dsr4vwi2ewm5l" path="res://assets/audio/SFX/Audio_SFX_Menu_Click.mp3" id="7_3ss70"]
+
+[node name="AudioManager" type="Node"]
+script = ExtResource("1_al1b8")
+sfx_till = ExtResource("2_i6wbt")
+sfx_plant = ExtResource("3_nfbn2")
+sfx_watering = ExtResource("4_trv6b")
+sfx_harvest = ExtResource("5_ll4ma")
+sfx_interact = ExtResource("6_n5fsn")
+sfx_menu_click = ExtResource("7_3ss70")
+
+[node name="BGMPlayerA" type="AudioStreamPlayer" parent="."]
+
+[node name="BGMPlayerB" type="AudioStreamPlayer" parent="."]

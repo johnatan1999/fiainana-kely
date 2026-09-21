@@ -361,7 +361,7 @@ func sell_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
 	money_changed.emit(state.money)
 	return true
 
-## Generic money-spending primitive for systems (like ZoneManager) that need
+## Generic money-spending primitive for systems (like FarmLandManager) that need
 ## to charge the player without being a crop/animal/shop-item purchase.
 ## Centralizing it here keeps FarmSimulation the single place that mutates
 ## money and emits money_changed.

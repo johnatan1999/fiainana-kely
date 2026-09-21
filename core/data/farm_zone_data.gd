@@ -3,7 +3,7 @@ extends Resource
 
 ## Static definition of one predefined, buy-in-one-shot land zone (macro
 ## progression). Authored as a rectangle (origin + size) for convenience -
-## get_tile_coordinates() expands it into the explicit tile list ZoneManager
+## get_tile_coordinates() expands it into the explicit tile list FarmLandManager
 ## actually unlocks.
 
 @export var id: String

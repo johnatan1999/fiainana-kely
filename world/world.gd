@@ -28,7 +28,7 @@ const ANIMAL_RESOURCES: Array[AnimalData] = [
 @onready var save_controller: SaveController = $Gameplay/SaveController
 @onready var world_manager: WorldManager = $Gameplay/WorldManager
 @onready var animal_manager: AnimalManager = $Gameplay/AnimalManager
-@onready var zone_manager: ZoneManager = $Gameplay/ZoneManager
+@onready var farm_land_manager: FarmLandManager = $Gameplay/FarmLandManager
 @onready var hud: HUD = $UI/HUD
 @onready var shop_ui: ShopUI = $UI/ShopUI
 @onready var inventory_ui: InventoryUI = $UI/InventoryUI
@@ -48,15 +48,15 @@ func _ready() -> void:
 	simulation = FarmSimulation.new(GRID_WIDTH, GRID_HEIGHT, crop_registry, animal_registry)
 	simulation.state.add_inventory("corn_seed", 3)
 
-	zone_manager.setup(simulation, player)
+	farm_land_manager.setup(simulation, player)
 	farming_controller.setup(simulation, player)
-	shop_controller.setup(simulation, zone_manager)
+	shop_controller.setup(simulation, farm_land_manager)
 	hud.setup(simulation, player, farming_controller)
 	shop_ui.setup(shop_controller, simulation)
 	inventory_ui.setup(simulation, shop_ui)
 	pause_menu.setup(shop_ui, inventory_ui)
 	animal_manager.setup(simulation, player)
-	world_manager.setup(simulation, player, farming_controller, shop_ui, zone_container, animal_manager, zone_manager)
+	world_manager.setup(simulation, player, farming_controller, shop_ui, zone_container, animal_manager, farm_land_manager)
 	save_controller.setup(simulation, world_manager, player)
 
 	pause_menu.save_requested.connect(save_controller.save_game)

@@ -1,4 +1,4 @@
-class_name ZoneManager
+class_name FarmLandManager
 extends Node
 
 ## Bridges on-site land purchase panels (FarmZoneSign/ModularFarmZoneSign) to

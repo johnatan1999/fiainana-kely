@@ -15,7 +15,7 @@ var farming_controller: FarmingController
 var shop_ui: ShopUI
 var zone_container: Node2D
 var animal_manager: AnimalManager
-var zone_manager: ZoneManager
+var farm_land_manager: FarmLandManager
 
 var current_zone: ZoneRoot
 var current_zone_id: String = ""
@@ -23,14 +23,14 @@ var current_zone_id: String = ""
 func _ready() -> void:
 	StructureEvents.shop_spawned.connect(_on_shop_spawned)
 
-func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_farming_controller: FarmingController, p_shop_ui: ShopUI, p_zone_container: Node2D, p_animal_manager: AnimalManager, p_zone_manager: ZoneManager) -> void:
+func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_farming_controller: FarmingController, p_shop_ui: ShopUI, p_zone_container: Node2D, p_animal_manager: AnimalManager, p_farm_land_manager: FarmLandManager) -> void:
 	simulation = p_simulation
 	player = p_player
 	farming_controller = p_farming_controller
 	shop_ui = p_shop_ui
 	zone_container = p_zone_container
 	animal_manager = p_animal_manager
-	zone_manager = p_zone_manager
+	farm_land_manager = p_farm_land_manager
 
 ## ZoneTransition/SleepSpot fire from inside Area2D signals during the physics
 ## step, which forbids reparenting/freeing physics nodes right away - defer it.
@@ -42,7 +42,7 @@ func change_zone(zone_id: String, spawn_name: String) -> void:
 		current_zone.queue_free()
 		farming_controller.set_farm_view(null)
 		animal_manager.set_farm_area(null)
-		zone_manager.set_zone_markers(null)
+		farm_land_manager.set_zone_markers(null)
 
 	var zone: ZoneRoot = ZONES[zone_id].instantiate()
 	zone_container.add_child(zone)
@@ -86,8 +86,8 @@ func _wire_zone_content(zone: ZoneRoot) -> void:
 		animal_manager.set_farm_area(zone)
 
 	# Safe to call unconditionally - a zone without any ZoneMarker_*/
-	# ProgressiveZoneMarker nodes just leaves ZoneManager's markers empty.
-	zone_manager.set_zone_markers(zone)
+	# ProgressiveZoneMarker nodes just leaves FarmLandManager's markers empty.
+	farm_land_manager.set_zone_markers(zone)
 
 	for transition in _find_transitions(zone):
 		transition.triggered.connect(request_zone_change)

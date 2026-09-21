@@ -21,7 +21,7 @@ var has_coop: bool = false
 var coop_capacity: int = 4
 var _next_animal_index: int = 0
 
-## Land management (ZoneManager). unlocked_zone_ids is used as a set - only
+## Land management (FarmLandManager). unlocked_zone_ids is used as a set - only
 ## the keys matter. progressive_tiles_unlocked is how many tiles of the
 ## modulable expansion zone have been bought, in its fixed unlock order.
 var unlocked_zone_ids: Dictionary = {} # zone_id: String -> true

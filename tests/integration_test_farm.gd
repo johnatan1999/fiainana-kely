@@ -86,22 +86,22 @@ func _run_flow() -> void:
 
 	print("\n%s" % ("SOME CHECKS FAILED" if root.has_meta("failed") else "all integration checks passed"))
 
-## Verifies ZoneManager actually found the ZoneMarker_*/ProgressiveZoneMarker
+## Verifies FarmLandManager actually found the ZoneMarker_*/ProgressiveZoneMarker
 ## nodes authored in Exterior.tscn - a typo'd node name would pass every
 ## unit test (which never touches real scene nodes) but silently show no
 ## feedback in game, so it needs its own dedicated check here.
 func _run_zone_manager_checks() -> void:
 	var shop_controller = _world.get_node("Gameplay/ShopController")
-	var zone_manager = _world.get_node("Gameplay/ZoneManager")
+	var zone_manager = _world.get_node("Gameplay/FarmLandManager")
 	var simulation = _world.simulation
 
 	_check(
 		zone_manager._predefined_markers.size() == 2,
-		"Exterior.tscn's two ZoneMarker_* nodes are both found by ZoneManager.set_zone_markers()"
+		"Exterior.tscn's two ZoneMarker_* nodes are both found by FarmLandManager.set_zone_markers()"
 	)
 	_check(
 		zone_manager._progressive_marker_label != null,
-		"Exterior.tscn's ProgressiveZoneMarker is found by ZoneManager.set_zone_markers()"
+		"Exterior.tscn's ProgressiveZoneMarker is found by FarmLandManager.set_zone_markers()"
 	)
 
 	simulation.state.money = 10000
@@ -127,7 +127,7 @@ func _run_zone_manager_checks() -> void:
 ## Exterior.tscn are now the only purchase path. This drives them exactly
 ## like a real interaction would (mark the player "inside", fire interact,
 ## click the dialog's button) to prove the panels are wired end-to-end, not
-## just that ZoneManager's own logic works in isolation.
+## just that FarmLandManager's own logic works in isolation.
 func _run_zone_sign_checks(zone_manager, simulation) -> void:
 	var zone = _world.get_node("ZoneContainer").get_child(0)
 	var modular_sign = zone.get_node_or_null("ModularFarmZoneSign")
@@ -148,7 +148,7 @@ func _run_zone_sign_checks(zone_manager, simulation) -> void:
 	modular_sign._on_patch_pressed(modular_sign.PATCH_OPTIONS[0]) # "Acheter 1 parcelle" - via the instance, not the bare class name (see file header)
 	_check(
 		zone_manager.get_progressive_unlocked_count() == progressive_before + 1,
-		"clicking a patch option on ModularFarmZoneSign's dialog buys it via ZoneManager"
+		"clicking a patch option on ModularFarmZoneSign's dialog buys it via FarmLandManager"
 	)
 
 	simulation.state.money = 10000
@@ -160,7 +160,7 @@ func _run_zone_sign_checks(zone_manager, simulation) -> void:
 	zone_sign_south._on_buy_pressed()
 	_check(
 		not zone_south_unlocked_before and zone_manager.is_zone_unlocked("zone_south"),
-		"clicking Acheter on FarmZoneSign's dialog buys the zone via ZoneManager"
+		"clicking Acheter on FarmZoneSign's dialog buys the zone via FarmLandManager"
 	)
 
 func _count_eggs(animal_container) -> int:

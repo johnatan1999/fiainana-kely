@@ -3,7 +3,7 @@ extends Area2D
 
 ## Physical, self-contained purchase panel for one predefined (macro)
 ## farmable land zone. Player interacts (E) to open its own popup dialog -
-## "Acheter" calls the exact same ZoneManager.buy_zone() the old Shop
+## "Acheter" calls the exact same FarmLandManager.buy_zone() the old Shop
 ## integration used, so nothing about the underlying economy rules changes,
 ## only where the player triggers them from.
 
@@ -19,29 +19,29 @@ extends Area2D
 @onready var cancel_button: Button = $Dialog/Panel/Margin/VBox/ButtonRow/CancelButton
 
 var _player: PlayerController
-var _zone_manager: ZoneManager
+var _farm_land_manager: FarmLandManager
 var _player_inside := false
 
-func setup(player: PlayerController, zone_manager: ZoneManager) -> void:
+func setup(player: PlayerController, zone_manager: FarmLandManager) -> void:
 	_player = player
-	_zone_manager = zone_manager
+	_farm_land_manager = zone_manager
 
 	_player.interact_requested.connect(_on_interact_requested)
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	buy_button.pressed.connect(_on_buy_pressed)
 	cancel_button.pressed.connect(_close_dialog)
-	_zone_manager.zone_unlocked.connect(_on_zone_unlocked)
+	_farm_land_manager.zone_unlocked.connect(_on_zone_unlocked)
 
 	dialog.visible = false
 	_refresh_world_label()
 
 func _refresh_world_label() -> void:
-	var zone_data := _zone_manager.get_zone_data(zone_id)
+	var zone_data := _farm_land_manager.get_zone_data(zone_id)
 	if zone_data == null:
 		world_label.text = "?"
 		return
-	world_label.text = ("%s (débloqué)" % zone_data.display_name) if _zone_manager.is_zone_unlocked(zone_id) else "%s (E)" % zone_data.display_name
+	world_label.text = ("%s (débloqué)" % zone_data.display_name) if _farm_land_manager.is_zone_unlocked(zone_id) else "%s (E)" % zone_data.display_name
 
 func _on_zone_unlocked(unlocked_zone_id: String) -> void:
 	if unlocked_zone_id == zone_id:
@@ -61,7 +61,7 @@ func _on_interact_requested(_tool) -> void:
 		_open_dialog()
 
 func _open_dialog() -> void:
-	var zone_data := _zone_manager.get_zone_data(zone_id)
+	var zone_data := _farm_land_manager.get_zone_data(zone_id)
 	if zone_data == null:
 		return
 
@@ -69,7 +69,7 @@ func _open_dialog() -> void:
 	price_label.text = "%d $" % zone_data.price
 	description_label.text = "%s (%d parcelles)" % [zone_data.description, zone_data.get_tile_count()]
 
-	var already_unlocked := _zone_manager.is_zone_unlocked(zone_id)
+	var already_unlocked := _farm_land_manager.is_zone_unlocked(zone_id)
 	status_label.text = "Déjà débloqué." if already_unlocked else ""
 	buy_button.disabled = already_unlocked
 	buy_button.text = "Déjà acheté" if already_unlocked else "Acheter"
@@ -81,11 +81,11 @@ func _close_dialog() -> void:
 	dialog.visible = false
 
 func _on_buy_pressed() -> void:
-	var zone_data := _zone_manager.get_zone_data(zone_id)
+	var zone_data := _farm_land_manager.get_zone_data(zone_id)
 	if zone_data == null:
 		return
 
-	if _zone_manager.buy_zone(zone_id):
+	if _farm_land_manager.buy_zone(zone_id):
 		status_label.text = "%s débloqué !" % zone_data.display_name
 		buy_button.disabled = true
 		buy_button.text = "Déjà acheté"

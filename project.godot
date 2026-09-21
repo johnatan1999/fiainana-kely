@@ -17,7 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-AudioManager="*res://scenes/autoload/AudioManager.tscn"
+AudioManager="*res://core/autoloads/audio/audio_manager.tscn"
 StructureEvents="*res://core/autoloads/structure_events.gd"
 
 [input]

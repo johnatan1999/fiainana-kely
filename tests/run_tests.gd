@@ -24,15 +24,15 @@ func _make_sim_with_chicken(breeding_chance: float = 0.25) -> FarmSimulation:
 	chicken.breeding_chance = breeding_chance
 	return FarmSimulation.new(4, 4, {"corn": corn}, {AnimalData.Species.CHICKEN: chicken})
 
-## ZoneManager extends Node but is never added to the tree in these tests -
+## FarmLandManager extends Node but is never added to the tree in these tests -
 ## fine, since buy_zone()/buy_progressive_patch() never touch tree-dependent
 ## APIs unless set_zone_markers() is called (it isn't here). player is only
 ## ever forwarded to FarmZoneSign/ModularFarmZoneSign.setup() inside
 ## set_zone_markers(), so null is safe for these pure-logic tests.
-func _make_zone_manager(simulation: FarmSimulation) -> ZoneManager:
-	var zone_manager := ZoneManager.new()
-	zone_manager.setup(simulation, null)
-	return zone_manager
+func _make_farm_land_manager(simulation: FarmSimulation) -> FarmLandManager:
+	var farm_land_manager := FarmLandManager.new()
+	farm_land_manager.setup(simulation, null)
+	return farm_land_manager
 
 func _check(condition: bool, description: String) -> void:
 	if condition:
@@ -543,10 +543,10 @@ func test_grid_survives_resize_and_save_load_roundtrip() -> void:
 func test_buy_zone_unlocks_all_its_tiles() -> void:
 	var sim := _make_sim()
 	sim.state.money = 1000
-	var zone_manager := _make_zone_manager(sim)
-	var zone_data := zone_manager.get_zone_data("zone_east")
+	var farm_land_manager := _make_farm_land_manager(sim)
+	var zone_data := farm_land_manager.get_zone_data("zone_east")
 
-	var ok := zone_manager.buy_zone("zone_east")
+	var ok := farm_land_manager.buy_zone("zone_east")
 
 	var all_present := true
 	for coordinates: Vector2i in zone_data.get_tile_coordinates():
@@ -554,60 +554,60 @@ func test_buy_zone_unlocks_all_its_tiles() -> void:
 			all_present = false
 			break
 	_check(
-		ok and all_present and zone_manager.is_zone_unlocked("zone_east"),
+		ok and all_present and farm_land_manager.is_zone_unlocked("zone_east"),
 		"buy_zone() unlocks every tile in the zone's rectangle"
 	)
 
 func test_buy_zone_deducts_price() -> void:
 	var sim := _make_sim()
 	sim.state.money = 1000
-	var zone_manager := _make_zone_manager(sim)
-	var zone_data := zone_manager.get_zone_data("zone_east")
+	var farm_land_manager := _make_farm_land_manager(sim)
+	var zone_data := farm_land_manager.get_zone_data("zone_east")
 	var money_before := sim.state.money
 
-	zone_manager.buy_zone("zone_east")
+	farm_land_manager.buy_zone("zone_east")
 
 	_check(sim.state.money == money_before - zone_data.price, "buy_zone() deducts the zone's price")
 
 func test_cannot_buy_zone_twice() -> void:
 	var sim := _make_sim()
 	sim.state.money = 10000
-	var zone_manager := _make_zone_manager(sim)
-	zone_manager.buy_zone("zone_east")
+	var farm_land_manager := _make_farm_land_manager(sim)
+	farm_land_manager.buy_zone("zone_east")
 	var money_after_first := sim.state.money
 
-	var ok := zone_manager.buy_zone("zone_east")
+	var ok := farm_land_manager.buy_zone("zone_east")
 
 	_check(not ok and sim.state.money == money_after_first, "buy_zone() refuses to sell the same zone twice")
 
 func test_cannot_buy_zone_without_enough_money() -> void:
 	var sim := _make_sim()
 	sim.state.money = 5
-	var zone_manager := _make_zone_manager(sim)
+	var farm_land_manager := _make_farm_land_manager(sim)
 
-	var ok := zone_manager.buy_zone("zone_east")
+	var ok := farm_land_manager.buy_zone("zone_east")
 
-	_check(not ok and not zone_manager.is_zone_unlocked("zone_east"), "buy_zone() fails when money is insufficient")
+	_check(not ok and not farm_land_manager.is_zone_unlocked("zone_east"), "buy_zone() fails when money is insufficient")
 
 func test_cannot_buy_unknown_zone() -> void:
 	var sim := _make_sim()
 	sim.state.money = 10000
-	var zone_manager := _make_zone_manager(sim)
+	var farm_land_manager := _make_farm_land_manager(sim)
 
-	var ok := zone_manager.buy_zone("does_not_exist")
+	var ok := farm_land_manager.buy_zone("does_not_exist")
 
 	_check(not ok, "buy_zone() fails for an unknown zone id")
 
 func test_buy_progressive_patch_unlocks_next_tiles_in_order() -> void:
 	var sim := _make_sim()
 	sim.state.money = 1000
-	var zone_manager := _make_zone_manager(sim)
+	var farm_land_manager := _make_farm_land_manager(sim)
 
-	var ok := zone_manager.buy_progressive_patch(9, 110)
+	var ok := farm_land_manager.buy_progressive_patch(9, 110)
 
 	# PROGRESSIVE_WIDTH is 8, so the 9th tile (index 8) wraps into row y=10.
 	_check(
-		ok and zone_manager.get_progressive_unlocked_count() == 9
+		ok and farm_land_manager.get_progressive_unlocked_count() == 9
 		and sim.get_plot_id_at(7, 9) != -1
 		and sim.get_plot_id_at(0, 10) != -1
 		and sim.get_plot_id_at(1, 10) == -1,
@@ -617,13 +617,13 @@ func test_buy_progressive_patch_unlocks_next_tiles_in_order() -> void:
 func test_buy_progressive_patch_second_purchase_continues_the_sequence() -> void:
 	var sim := _make_sim()
 	sim.state.money = 1000
-	var zone_manager := _make_zone_manager(sim)
+	var farm_land_manager := _make_farm_land_manager(sim)
 
-	zone_manager.buy_progressive_patch(1, 15)
-	zone_manager.buy_progressive_patch(1, 15)
+	farm_land_manager.buy_progressive_patch(1, 15)
+	farm_land_manager.buy_progressive_patch(1, 15)
 
 	_check(
-		zone_manager.get_progressive_unlocked_count() == 2
+		farm_land_manager.get_progressive_unlocked_count() == 2
 		and sim.get_plot_id_at(0, 9) != -1
 		and sim.get_plot_id_at(1, 9) != -1,
 		"buying two single tiles unlocks the next two in sequence, never re-unlocking the same one"
@@ -632,45 +632,45 @@ func test_buy_progressive_patch_second_purchase_continues_the_sequence() -> void
 func test_buy_progressive_patch_respects_capacity() -> void:
 	var sim := _make_sim()
 	sim.state.money = 100000
-	var zone_manager := _make_zone_manager(sim)
-	var capacity := zone_manager.get_progressive_capacity()
+	var farm_land_manager := _make_farm_land_manager(sim)
+	var capacity := farm_land_manager.get_progressive_capacity()
 
-	var ok := zone_manager.buy_progressive_patch(capacity + 1, 999999)
+	var ok := farm_land_manager.buy_progressive_patch(capacity + 1, 999999)
 
 	_check(
-		not ok and zone_manager.get_progressive_unlocked_count() == 0,
+		not ok and farm_land_manager.get_progressive_unlocked_count() == 0,
 		"buy_progressive_patch() refuses a patch bigger than the remaining capacity"
 	)
 
 func test_buy_progressive_patch_fails_without_enough_money() -> void:
 	var sim := _make_sim()
 	sim.state.money = 5
-	var zone_manager := _make_zone_manager(sim)
+	var farm_land_manager := _make_farm_land_manager(sim)
 
-	var ok := zone_manager.buy_progressive_patch(1, 15)
+	var ok := farm_land_manager.buy_progressive_patch(1, 15)
 
 	_check(
-		not ok and zone_manager.get_progressive_unlocked_count() == 0,
+		not ok and farm_land_manager.get_progressive_unlocked_count() == 0,
 		"buy_progressive_patch() fails when money is insufficient"
 	)
 
 func test_zone_state_save_load_roundtrip() -> void:
 	var sim := _make_sim()
 	sim.state.money = 10000
-	var zone_manager := _make_zone_manager(sim)
-	zone_manager.buy_zone("zone_east")
-	zone_manager.buy_progressive_patch(9, 110)
+	var farm_land_manager := _make_farm_land_manager(sim)
+	farm_land_manager.buy_zone("zone_east")
+	farm_land_manager.buy_progressive_patch(9, 110)
 
 	var data := sim.to_save_data()
 	data = JSON.parse_string(JSON.stringify(data))
 
 	var fresh_sim := _make_sim()
 	fresh_sim.load_save_data(data)
-	var fresh_zone_manager := _make_zone_manager(fresh_sim)
+	var fresh_farm_land_manager := _make_farm_land_manager(fresh_sim)
 
 	_check(
-		fresh_zone_manager.is_zone_unlocked("zone_east")
-		and fresh_zone_manager.get_progressive_unlocked_count() == 9
+		fresh_farm_land_manager.is_zone_unlocked("zone_east")
+		and fresh_farm_land_manager.get_progressive_unlocked_count() == 9
 		and fresh_sim.get_plot_id_at(0, 9) != -1,
 		"zone unlock state and progressive tile count survive a save/load roundtrip"
 	)

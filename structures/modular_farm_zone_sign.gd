@@ -4,7 +4,7 @@ extends Area2D
 ## Physical, self-contained purchase panel for the modulable farmland
 ## expansion zone (micro progression). Player interacts (E) to open a menu
 ## of fixed patch sizes - buying always calls the exact same
-## ZoneManager.buy_progressive_patch() the old Shop integration used, which
+## FarmLandManager.buy_progressive_patch() the old Shop integration used, which
 ## unlocks the next tiles in automatic order. The player never picks where.
 
 const PATCH_OPTIONS := [
@@ -21,19 +21,19 @@ const PATCH_OPTIONS := [
 @onready var cancel_button: Button = $Dialog/Panel/Margin/VBox/CancelButton
 
 var _player: PlayerController
-var _zone_manager: ZoneManager
+var _farm_land_manager: FarmLandManager
 var _player_inside := false
 var _option_buttons: Array = []
 
-func setup(player: PlayerController, zone_manager: ZoneManager) -> void:
+func setup(player: PlayerController, zone_manager: FarmLandManager) -> void:
 	_player = player
-	_zone_manager = zone_manager
+	_farm_land_manager = zone_manager
 
 	_player.interact_requested.connect(_on_interact_requested)
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	cancel_button.pressed.connect(_close_dialog)
-	_zone_manager.progressive_tiles_changed.connect(_on_progressive_tiles_changed)
+	_farm_land_manager.progressive_tiles_changed.connect(_on_progressive_tiles_changed)
 
 	_build_option_buttons()
 	dialog.visible = false
@@ -50,7 +50,7 @@ func _build_option_buttons() -> void:
 
 func _refresh_world_label() -> void:
 	world_label.text = "Zone d'expansion : %d/%d (E)" % [
-		_zone_manager.get_progressive_unlocked_count(), _zone_manager.get_progressive_capacity(),
+		_farm_land_manager.get_progressive_unlocked_count(), _farm_land_manager.get_progressive_capacity(),
 	]
 
 func _on_progressive_tiles_changed(_count: int) -> void:
@@ -78,13 +78,13 @@ func _open_dialog() -> void:
 
 func _refresh_progress_label() -> void:
 	progress_label.text = "Zone d'expansion : %d / %d parcelles" % [
-		_zone_manager.get_progressive_unlocked_count(), _zone_manager.get_progressive_capacity(),
+		_farm_land_manager.get_progressive_unlocked_count(), _farm_land_manager.get_progressive_capacity(),
 	]
 
 ## Greys out any patch bigger than what's actually left in the zone - the
 ## player can still see it exists, they just can't afford the tiles to fit it.
 func _refresh_option_buttons() -> void:
-	var remaining := _zone_manager.get_progressive_capacity() - _zone_manager.get_progressive_unlocked_count()
+	var remaining := _farm_land_manager.get_progressive_capacity() - _farm_land_manager.get_progressive_unlocked_count()
 	for i in _option_buttons.size():
 		var option: Dictionary = PATCH_OPTIONS[i]
 		_option_buttons[i].disabled = option["size"] > remaining
@@ -93,7 +93,7 @@ func _close_dialog() -> void:
 	dialog.visible = false
 
 func _on_patch_pressed(option: Dictionary) -> void:
-	if _zone_manager.buy_progressive_patch(option["size"], option["price"]):
+	if _farm_land_manager.buy_progressive_patch(option["size"], option["price"]):
 		status_label.text = "%d parcelle(s) débloquée(s) !" % option["size"]
 		AudioManager.play_coop_build_sfx()
 		_play_unlock_animation()
