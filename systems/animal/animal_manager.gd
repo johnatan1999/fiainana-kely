@@ -48,7 +48,6 @@ func set_farm_area(p_zone: Node) -> void:
 	_feeding_bowl = farm_area.get_node("FeedingBowl")
 	_water_bowl = farm_area.get_node("WaterBowl")
 	_animal_container = farm_area.get_node("AnimalContainer")
-
 	_coop.setup(player, self)
 	_feeding_bowl.setup(player)
 	_water_bowl.setup(player)

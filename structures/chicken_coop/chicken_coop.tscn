@@ -1,29 +1,44 @@
-[gd_scene load_steps=3 format=3 uid="uid://41pmy102xlbk"]
+[gd_scene load_steps=6 format=3 uid="uid://41pmy102xlbk"]
 
 [ext_resource type="Script" path="res://structures/chicken_coop/chicken_coop.gd" id="1_k5eme"]
+[ext_resource type="Texture2D" uid="uid://kkk5vjbjryep" path="res://assets/tileset/exterior.png" id="2_881k2"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_coop"]
-size = Vector2(90, 70)
+[sub_resource type="AtlasTexture" id="AtlasTexture_jrj01"]
+atlas = ExtResource("2_881k2")
+region = Rect2(0, 448, 224, 128)
 
-[node name="Coop" type="Area2D"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_itm2b"]
+atlas = ExtResource("2_881k2")
+region = Rect2(0, 384, 224, 64)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_j6mld"]
+
+[node name="ChickenCoop" type="Node2D"]
+y_sort_enabled = true
 script = ExtResource("1_k5eme")
 
-[node name="Visual" type="ColorRect" parent="."]
-offset_left = -45.0
-offset_top = -35.0
-offset_right = 45.0
-offset_bottom = 35.0
-mouse_filter = 2
-color = Color(0.45, 0.45, 0.45, 1)
-
 [node name="Label" type="Label" parent="."]
-offset_left = -70.0
-offset_top = -58.0
-offset_right = 70.0
-offset_bottom = -35.0
-text = "Construire le poulailler (E)"
-horizontal_alignment = 1
-autowrap_mode = 2
+offset_right = 40.0
+offset_bottom = 23.0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_coop")
+[node name="WallSprite" type="Sprite2D" parent="."]
+texture = SubResource("AtlasTexture_jrj01")
+centered = false
+offset = Vector2(0, -109)
+
+[node name="RoofSprite" type="Sprite2D" parent="."]
+texture = SubResource("AtlasTexture_itm2b")
+centered = false
+offset = Vector2(0, -172)
+
+[node name="Area2D" type="Area2D" parent="."]
+visible = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("RectangleShape2D_j6mld")
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
+position = Vector2(18, -29)
+polygon = PackedVector2Array(16, 21, 78, 22, 78, -12, 107, -12, 106, 22, 119, 24, 120, 31, 149, 31, 149, 23, 196, 24, 195, -74, -11, -73, -11, 21)
