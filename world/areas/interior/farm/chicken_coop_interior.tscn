@@ -1,9 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://dq8hgec32i74o"]
+[gd_scene load_steps=6 format=3 uid="uid://dq8hgec32i74o"]
 
 [ext_resource type="Texture2D" uid="uid://wpq6cib7ujm" path="res://assets/tileset/farm-interior01.png" id="1_dcsrc"]
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_gayrm"]
-[ext_resource type="PackedScene" uid="uid://dj08ehqk2868w" path="res://components/exit_door/exit_door.tscn" id="2_3n2be"]
-[ext_resource type="PackedScene" uid="uid://bf1stuuqjofir" path="res://entities/player/player.tscn" id="4_n6nwk"]
+[ext_resource type="PackedScene" uid="uid://dj08ehqk2868w" path="res://components/door/exit_door.tscn" id="2_3n2be"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_465yl"]
 atlas = ExtResource("1_dcsrc")
@@ -23,15 +22,16 @@ texture = SubResource("AtlasTexture_465yl")
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Walls"]
 polygon = PackedVector2Array(-50, 147, -51, 88, -132, 88, -136, -29, -151, -41, -150, -62, -134, -61, -113, -61, 11, -58, 14, -73, 61, -75, 59, -34, 65, -35, 67, -44, 86, -44, 86, -31, 94, -34, 96, -85, 141, -84, 145, -46, 131, -43, 128, 38, 123, 44, 125, 61, 129, 72, 126, 90, 51, 91, 50, 147, 185, 149, 187, -143, -187, -141, -188, 145)
 
-[node name="SpawnPoint" type="Marker2D" parent="."]
-
 [node name="ExitDoor" parent="." instance=ExtResource("2_3n2be")]
 position = Vector2(0, 138)
 
 [node name="CollisionShape2D" parent="ExitDoor" index="0"]
 shape = SubResource("RectangleShape2D_ekeyn")
 
-[node name="Player" parent="." instance=ExtResource("4_n6nwk")]
-position = Vector2(-53, 38)
+[node name="Spawns" type="Node2D" parent="."]
+position = Vector2(1, 88)
+
+[node name="SpawnFrom_VILLAGE" type="Marker2D" parent="Spawns"]
+position = Vector2(-1, 16)
 
 [editable path="ExitDoor"]

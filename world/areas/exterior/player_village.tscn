@@ -30,6 +30,14 @@ camera_limit_bottom = 1610
 camera_zoom = 1.4
 bgm = 1
 
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="SpawnFrom_PLAYER_HOUSE" type="Marker2D" parent="Spawns"]
+position = Vector2(1107, 315)
+
+[node name="SpawnFrom_CHICKEN_COOP" type="Marker2D" parent="Spawns"]
+position = Vector2(791.776, 297.383)
+
 [node name="GroundLayer" type="TileMapLayer" parent="."]
 z_index = -10
 y_sort_enabled = true
@@ -39,11 +47,7 @@ tile_set = ExtResource("2_llnbk")
 script = ExtResource("3_cjp5c")
 grid_width = 25
 
-[node name="SpawnFromHouse" type="Marker2D" parent="."]
-position = Vector2(721, 329)
-
 [node name="FarmView" parent="." instance=ExtResource("4_w2nlg")]
-visible = false
 position = Vector2(600, 350)
 
 [node name="Wall" type="Node" parent="."]
@@ -182,7 +186,7 @@ position = Vector2(1150, 960)
 zone_id = "zone_east"
 
 [node name="FarmZoneSign_zone_south" parent="." instance=ExtResource("12_armmf")]
-position = Vector2(642, 1319)
+position = Vector2(984, 1352)
 zone_id = "zone_south"
 
 [node name="Shop" parent="." instance=ExtResource("13_okjkt")]

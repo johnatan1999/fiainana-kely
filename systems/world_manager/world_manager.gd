@@ -6,7 +6,7 @@ extends Node
 
 const ZONE_PATHS := {
 	Zone.ID.PLAYER_HOUSE: "res://world/areas/interior/player_interior_house.tscn",
-	Zone.ID.VILLAGE: "res://world/areas/exterior/exterior.tscn",
+	Zone.ID.VILLAGE: "res://world/areas/exterior/player_village.tscn",
 	Zone.ID.CHICKEN_COOP: "res://world/areas/interior/farm/chicken_coop_interior.tscn",
 }
 
@@ -62,7 +62,7 @@ func change_zone(zone_id: Zone.ID, override_spawn_name: String = "") -> void:
 	# Cas B : Convention automatique "SpawnFrom_VILLAGE"
 	if spawn == null:
 		var expected_spawn = "SpawnFrom_"+Zone.ID.keys()[previous_zone_id]
-		spawn = zone.get_node_or_null(expected_spawn)
+		spawn = _find_spawn(zone, expected_spawn)
 	
 	# Cas C : Fallback de sécurité
 	if spawn == null:

@@ -28,7 +28,7 @@ offset = Vector2(0, -256)
 
 [node name="EnterHouse" type="Area2D" parent="."]
 script = ExtResource("5_7txgv")
-target_zone = "house"
+target_zone = 1
 target_spawn = "HouseSpawnEntry"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EnterHouse"]
