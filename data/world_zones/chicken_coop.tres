@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/data/zone_data.gd" id="1_zonedata"]
+[ext_resource type="PackedScene" uid="uid://dq8hgec32i74o" path="res://world/areas/interior/farm/chicken_coop_interior.tscn" id="2_scene"]
+
+[resource]
+script = ExtResource("1_zonedata")
+id = "chicken_coop"
+display_name = "Poulailler"
+scene = ExtResource("2_scene")

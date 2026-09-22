@@ -37,6 +37,8 @@ polygon = PackedVector2Array(-50, 147, -51, 88, -132, 88, -136, -29, -151, -41, 
 
 [node name="ExitDoor" parent="." instance=ExtResource("2_3n2be")]
 position = Vector2(0, 138)
+target_zone = "village"
+target_spawn = "SpawnFrom_CHICKEN_COOP"
 
 [node name="CollisionShape2D" parent="ExitDoor" index="0"]
 shape = SubResource("RectangleShape2D_ekeyn")

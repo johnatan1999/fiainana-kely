@@ -47,7 +47,8 @@ polygon = PackedVector2Array(16, 21, 78, 22, 78, -12, 107, -12, 106, 22, 119, 24
 
 [node name="EntranceDoor" parent="." instance=ExtResource("3_5r2ur")]
 position = Vector2(108, -7)
-target_zone = 2
+target_zone = "chicken_coop"
+target_spawn = "SpawnFrom_VILLAGE"
 
 [node name="CollisionShape2D" parent="EntranceDoor" index="0"]
 position = Vector2(3, -16)

@@ -5,14 +5,14 @@ extends Node
 ## position, to a single JSON save file.
 
 const SAVE_PATH := "user://savegame.json"
-const DEFAULT_ZONE_ID := "VILLAGE"
+const DEFAULT_ZONE_ID := "village"
 
 ## Bump this whenever the save format changes, and add a matching
 ## _migrate_to_vN() step below - never rewrite an existing step once it has
 ## shipped, only append new ones. This is the single place format drift gets
 ## fixed, instead of runtime code scattered across load_game() staying
 ## permanently tolerant of every historical format.
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 
 var simulation: FarmSimulation
 var world_manager: WorldManager
@@ -29,7 +29,7 @@ func has_save() -> bool:
 func save_game() -> void:
 	var data := simulation.to_save_data()
 	data["save_version"] = SAVE_VERSION
-	data["zone_id"] = Zone.ID.keys()[world_manager.current_zone_id]
+	data["zone_id"] = world_manager.current_zone_id
 	data["player_position"] = {"x": player.global_position.x, "y": player.global_position.y}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	file.store_string(JSON.stringify(data))
@@ -52,11 +52,11 @@ func load_game() -> bool:
 
 	simulation.load_save_data(data)
 
-	var zone_id_str: String = data.get("zone_id", DEFAULT_ZONE_ID)
-	if Zone.ID.has(zone_id_str):
-		world_manager.change_zone(Zone.ID[zone_id_str], "SpawnDefault")
+	var zone_id: String = data.get("zone_id", DEFAULT_ZONE_ID)
+	if world_manager.has_zone(zone_id):
+		world_manager.change_zone(zone_id, "SpawnDefault")
 	else:
-		push_error("Unknown zone: " + zone_id_str)
+		push_error("Unknown zone: " + zone_id)
 
 	var pos_data = data.get("player_position")
 	if pos_data is Dictionary:
@@ -72,19 +72,38 @@ func load_game() -> bool:
 func _migrate(data: Dictionary, from_version: int) -> Dictionary:
 	if from_version < 1:
 		data = _migrate_to_v1(data)
+	if from_version < 2:
+		data = _migrate_to_v2(data)
 	return data
 
 ## v0 (unversioned save, predates this field entirely) -> v1: zone_id was
 ## briefly written as a raw Zone.ID int by a save_game() bug instead of its
-## string key name - normalize it to the string form v1 (and every version
-## after) expects.
+## string key name - normalize it to the string key name v1 expects.
+## Hardcoded snapshot of the enum as it existed at v1, deliberately NOT
+## referencing the (now-deleted) Zone.ID class - a migration step has to keep
+## meaning exactly what it meant when it shipped, independent of whatever the
+## live code looks like today.
+const _V1_ENUM_KEYS := ["VILLAGE", "PLAYER_HOUSE", "CHICKEN_COOP"]
 func _migrate_to_v1(data: Dictionary) -> Dictionary:
 	var zone_id_data = data.get("zone_id")
 	if zone_id_data is float or zone_id_data is int:
-		var values: Array = Zone.ID.values()
-		var idx: int = values.find(int(zone_id_data))
-		if idx != -1:
-			data["zone_id"] = Zone.ID.keys()[idx]
+		var idx := int(zone_id_data)
+		if idx >= 0 and idx < _V1_ENUM_KEYS.size():
+			data["zone_id"] = _V1_ENUM_KEYS[idx]
+	return data
+
+## v1 -> v2: zone ids moved from Zone.ID enum key names ("VILLAGE") to
+## free-form lowercase ZoneData ids ("village") when WorldManager switched to
+## a data-driven, auto-discovered zone registry (data/world_zones/*.tres).
+const _V2_ZONE_ID_MAP := {
+	"VILLAGE": "village",
+	"PLAYER_HOUSE": "player_house",
+	"CHICKEN_COOP": "chicken_coop",
+}
+func _migrate_to_v2(data: Dictionary) -> Dictionary:
+	var old_id = data.get("zone_id")
+	if old_id is String and _V2_ZONE_ID_MAP.has(old_id):
+		data["zone_id"] = _V2_ZONE_ID_MAP[old_id]
 	return data
 
 func _unhandled_input(event: InputEvent) -> void:

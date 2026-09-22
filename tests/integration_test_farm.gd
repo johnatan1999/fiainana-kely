@@ -50,12 +50,12 @@ func _run_flow() -> void:
 
 	# Land-sign checks (ZoneMarker_*/ModularFarmZoneSign/FarmZoneSign) live in
 	# the Village zone - run those first, then move on to the coop.
-	world_manager.change_zone(Zone.ID.VILLAGE, "SpawnDefault")
+	world_manager.change_zone("village", "SpawnDefault")
 	_run_zone_manager_checks()
 
 	# The real, simulated ChickenCoop/AnimalContainer live in their own
 	# interior zone since the "decorative exterior building" split.
-	world_manager.change_zone(Zone.ID.CHICKEN_COOP, "SpawnDefault")
+	world_manager.change_zone("chicken_coop", "SpawnDefault")
 	_check(animal_manager.farm_area != null, "entering the ChickenCoopInterior zone calls AnimalManager.set_farm_area() (ChickenCoop found)")
 
 	var animal_container = animal_manager.farm_area.get_node("AnimalContainer")

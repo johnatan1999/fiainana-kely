@@ -4,72 +4,87 @@ extends Node
 ## Owns zone loading/unloading. The player, camera and simulation persist across
 ## zone changes - only the zone scene (background, plots, triggers) is swapped.
 ##
-## Never hunts down other managers' structures itself - it only emits
+## Zones are data, not code: every .tres under ZONES_DIR is a ZoneData
+## (id + scene) auto-discovered at startup. Adding a new zone to the game
+## never touches this file - just drop in a new .tres and scene.
+##
+## Never hunts down other managers' structures itself either - it only emits
 ## zone_loaded/zone_unloading, and FarmingController/AnimalManager/
 ## FarmLandManager each listen and wire themselves up to whatever they find in
-## the new zone. This is the only thing WorldManager needs to know about every
-## other system for; adding a new manager/structure type never touches this
-## file.
+## the new zone.
 
 signal zone_loaded(zone: ZoneRoot)
 signal zone_unloading(zone: ZoneRoot)
+
+const ZONES_DIR := "res://data/world_zones/"
 
 const ChickenScene := preload("res://entities/animals/chicken/chicken.tscn")
 ## How many decorative (non-simulated) chickens to show around the coop
 ## building in the village, capped regardless of how many are actually owned.
 const MAX_DECORATIVE_CHICKENS := 4
 
-const ZONE_PATHS := {
-	Zone.ID.PLAYER_HOUSE: "res://world/areas/interior/player_interior_house.tscn",
-	Zone.ID.VILLAGE: "res://world/areas/exterior/player_village.tscn",
-	Zone.ID.CHICKEN_COOP: "res://world/areas/interior/farm/chicken_coop_interior.tscn",
-}
-
 var simulation: FarmSimulation
 var player: PlayerController
 var zone_container: Node2D
 
 var current_zone: ZoneRoot
-var current_zone_id: Zone.ID
+var current_zone_id: String = ""
+
+var _zones: Dictionary = {} # id: String -> ZoneData
 
 func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_zone_container: Node2D) -> void:
 	simulation = p_simulation
 	player = p_player
 	zone_container = p_zone_container
+	_load_zone_registry()
+
+func has_zone(zone_id: String) -> bool:
+	return _zones.has(zone_id)
+
+func _load_zone_registry() -> void:
+	_zones.clear()
+	var dir := DirAccess.open(ZONES_DIR)
+	if dir == null:
+		push_error("WorldManager: cannot open zones directory %s" % ZONES_DIR)
+		return
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if file_name.ends_with(".tres"):
+			var zone_data: ZoneData = load(ZONES_DIR + file_name)
+			if zone_data == null or zone_data.id.is_empty():
+				push_warning("WorldManager: %s has no valid ZoneData.id - skipped." % file_name)
+			elif _zones.has(zone_data.id):
+				push_warning("WorldManager: duplicate zone id '%s' (%s) - keeping the first one found." % [zone_data.id, file_name])
+			else:
+				_zones[zone_data.id] = zone_data
+		file_name = dir.get_next()
+	dir.list_dir_end()
 
 ## ZoneTransition/SleepSpot fire from inside Area2D signals during the physics
 ## step, which forbids reparenting/freeing physics nodes right away - defer it.
-func request_zone_change(zone_id: Zone.ID, spawn_name: String) -> void:
+func request_zone_change(zone_id: String, spawn_name: String) -> void:
 	call_deferred("change_zone", zone_id, spawn_name)
 
-func change_zone(zone_id: Zone.ID, override_spawn_name: String = "") -> void:
-	var previous_zone_id = current_zone_id
+func change_zone(zone_id: String, spawn_name: String = "SpawnDefault") -> void:
+	var zone_data: ZoneData = _zones.get(zone_id)
+	if zone_data == null:
+		push_error("WorldManager: unknown zone id '%s' - is there a matching .tres in %s?" % [zone_id, ZONES_DIR])
+		return
+
 	if current_zone != null:
 		zone_unloading.emit(current_zone)
 		current_zone.queue_free()
 
-	# Chargement dynamique de la scène à la demande
-	var zone_scene := load(ZONE_PATHS[zone_id]) as PackedScene
-	var zone: ZoneRoot = zone_scene.instantiate()
+	var zone: ZoneRoot = zone_data.scene.instantiate()
 	zone_container.add_child(zone)
 	current_zone = zone
 	current_zone_id = zone_id
 
-	var spawn: Marker2D = null
-
-	# Cas A : Spawn forcé (ex: chargement de sauvegarde "SpawnDefault")
-	if not override_spawn_name.is_empty():
-		spawn = _find_spawn(zone, override_spawn_name)
-
-	# Cas B : Convention automatique "SpawnFrom_VILLAGE"
-	if spawn == null:
-		var expected_spawn = "SpawnFrom_"+Zone.ID.keys()[previous_zone_id]
-		spawn = _find_spawn(zone, expected_spawn)
-
-	# Cas C : Fallback de sécurité
-	if spawn == null:
+	var spawn := _find_spawn(zone, spawn_name)
+	if spawn == null and spawn_name != "SpawnDefault":
+		push_warning("WorldManager: spawn '%s' not found in zone '%s' - falling back to SpawnDefault." % [spawn_name, zone_id])
 		spawn = _find_spawn(zone, "SpawnDefault")
-
 	if spawn:
 		player.global_position = spawn.global_position
 

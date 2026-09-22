@@ -2,11 +2,14 @@ class_name ZoneTransition
 extends Area2D
 
 ## Placed at doors/exits. Walking into it asks WorldManager to switch zones.
+## Both fields are meant to always be set explicitly per door instance -
+## there's no implicit fallback here (WorldManager warns loudly if either is
+## missing instead of silently guessing a destination).
 
-signal triggered(target_zone: Zone.ID, target_spawn: String)
+signal triggered(target_zone: String, target_spawn: String)
 
-@export var target_zone: Zone.ID
-@export var target_spawn: String
+@export var target_zone: String = ""
+@export var target_spawn: String = ""
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
