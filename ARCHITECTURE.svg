@@ -1,0 +1,290 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1760 1500" font-family="Verdana, Arial, sans-serif">
+  <defs>
+    <marker id="arrowSolid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <marker id="arrowDash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1760" height="1500" fill="#faf8f3"/>
+
+  <!-- TITLE -->
+  <text x="880" y="34" text-anchor="middle" font-size="26" font-weight="700" fill="#2b2016">Fiainana Kely — Vue d'ensemble de l'architecture</text>
+  <text x="880" y="55" text-anchor="middle" font-size="13" fill="#6b5c46">Godot 4.3 · séparation simulation / présentation · event-driven (signaux)</text>
+
+  <!-- ========== BAND 1: AUTOLOADS ========== -->
+  <rect x="20" y="70" width="1720" height="90" rx="10" fill="#e9e9e9" opacity="0.6"/>
+  <text x="36" y="92" font-size="14" font-weight="700" fill="#555">AUTOLOADS (singletons globaux, accessibles partout)</text>
+  <g>
+    <rect x="650" y="104" width="220" height="46" rx="8" fill="#eeeeee" stroke="#777"/>
+    <text x="760" y="132" text-anchor="middle" font-size="14" font-weight="700" fill="#333">AudioManager</text>
+  </g>
+  <g>
+    <rect x="890" y="104" width="220" height="46" rx="8" fill="#eeeeee" stroke="#777"/>
+    <text x="1000" y="132" text-anchor="middle" font-size="14" font-weight="700" fill="#333">UIEvents</text>
+  </g>
+
+  <!-- GAP 1 arrow -->
+  <line x1="1000" y1="150" x2="1000" y2="196" stroke="#555" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrowDash)"/>
+  <rect x="900" y="162" width="220" height="24" rx="4" fill="#faf8f3"/>
+  <text x="1010" y="179" text-anchor="middle" font-size="11" fill="#444">Shop → UIEvents.shop_requested → ShopUI</text>
+
+  <!-- ========== BAND 2: UI ========== -->
+  <rect x="20" y="200" width="1720" height="180" rx="10" fill="#f3ecf9" opacity="0.6"/>
+  <text x="36" y="222" font-size="14" font-weight="700" fill="#5a3a7a">PRÉSENTATION — UI (Control)</text>
+
+  <g>
+    <rect x="60" y="236" width="380" height="120" rx="8" fill="#ecdcf7" stroke="#7c3fae"/>
+    <text x="250" y="262" text-anchor="middle" font-size="15" font-weight="700" fill="#3d1f5c">HUD</text>
+    <text x="80" y="286" font-size="11" fill="#3d1f5c">écoute: money_changed, day_changed,</text>
+    <text x="80" y="302" font-size="11" fill="#3d1f5c">inventory_changed (simulation),</text>
+    <text x="80" y="318" font-size="11" fill="#3d1f5c">tool_changed (player), crop_selected</text>
+    <text x="80" y="334" font-size="11" fill="#3d1f5c">(farming_controller)</text>
+  </g>
+  <g>
+    <rect x="470" y="236" width="380" height="120" rx="8" fill="#ecdcf7" stroke="#7c3fae"/>
+    <text x="660" y="262" text-anchor="middle" font-size="15" font-weight="700" fill="#3d1f5c">ShopUI</text>
+    <text x="490" y="286" font-size="11" fill="#3d1f5c">écoute: UIEvents.shop_requested,</text>
+    <text x="490" y="302" font-size="11" fill="#3d1f5c">money_changed, day_changed,</text>
+    <text x="490" y="318" font-size="11" fill="#3d1f5c">inventory_changed</text>
+    <text x="490" y="334" font-size="11" fill="#3d1f5c">appelle: ShopController (achats/ventes)</text>
+  </g>
+  <g>
+    <rect x="880" y="236" width="380" height="120" rx="8" fill="#ecdcf7" stroke="#7c3fae"/>
+    <text x="1070" y="262" text-anchor="middle" font-size="15" font-weight="700" fill="#3d1f5c">InventoryUI</text>
+    <text x="900" y="286" font-size="11" fill="#3d1f5c">écoute: money_changed,</text>
+    <text x="900" y="302" font-size="11" fill="#3d1f5c">inventory_changed</text>
+    <text x="900" y="318" font-size="11" fill="#3d1f5c">réutilise le catalogue du Shop</text>
+  </g>
+  <g>
+    <rect x="1290" y="236" width="380" height="120" rx="8" fill="#ecdcf7" stroke="#7c3fae"/>
+    <text x="1480" y="262" text-anchor="middle" font-size="15" font-weight="700" fill="#3d1f5c">PauseMenu</text>
+    <text x="1310" y="286" font-size="11" fill="#3d1f5c">émet: save_requested,</text>
+    <text x="1310" y="302" font-size="11" fill="#3d1f5c">quit_requested</text>
+    <text x="1310" y="318" font-size="11" fill="#3d1f5c">→ écoutés par World.gd</text>
+  </g>
+
+  <!-- annotation: UI listens directly to simulation -->
+  <rect x="60" y="362" width="1610" height="16" rx="4" fill="#fff6e0" stroke="#d8b657" stroke-width="0.7"/>
+  <text x="70" y="374" font-size="10.5" fill="#7a5b12">NB : HUD / ShopUI / InventoryUI s'abonnent aussi DIRECTEMENT aux signaux de FarmSimulation (bande verte) — pas de flèche tracée ici pour la lisibilité, voir légende.</text>
+
+  <!-- GAP 2 arrows -->
+  <line x1="700" y1="380" x2="700" y2="416" stroke="#333" stroke-width="2" marker-end="url(#arrowSolid)"/>
+  <line x1="820" y1="416" x2="820" y2="380" stroke="#555" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrowDash)"/>
+  <rect x="560" y="392" width="380" height="20" rx="4" fill="#faf8f3"/>
+  <text x="750" y="407" text-anchor="middle" font-size="11" fill="#444">interact_requested (down) · interacted / triggered (up, dashed)</text>
+
+  <!-- ========== BAND 3: MONDE ========== -->
+  <rect x="20" y="420" width="1720" height="280" rx="10" fill="#fdf2e3" opacity="0.6"/>
+  <text x="36" y="442" font-size="14" font-weight="700" fill="#9a5c12">MONDE — Zones dynamiques (Node2D) — WorldManager n'en garde qu'UNE chargée à la fois dans ZoneContainer</text>
+
+  <g>
+    <rect x="60" y="456" width="560" height="228" rx="8" fill="#fbe3c9" stroke="#c9761f"/>
+    <text x="340" y="480" text-anchor="middle" font-size="15" font-weight="700" fill="#5c3410">PlayerVillage (extérieur)</text>
+    <g font-size="11.5" fill="#5c3410">
+      <rect x="80" y="490" width="520" height="22" rx="4" fill="#fff3e4"/>
+      <text x="90" y="505">FarmView → SoilLayer (TileMapLayer) + PlotView × N</text>
+      <rect x="80" y="518" width="520" height="22" rx="4" fill="#fff3e4"/>
+      <text x="90" y="533">ChickenCoopBuilding (décoratif, poules visuelles)</text>
+      <rect x="80" y="546" width="520" height="22" rx="4" fill="#fff3e4"/>
+      <text x="90" y="561">Shop</text>
+      <rect x="80" y="574" width="520" height="22" rx="4" fill="#fff3e4"/>
+      <text x="90" y="589">FarmZoneSign × 2 + ModularFarmZoneSign</text>
+      <rect x="80" y="602" width="520" height="22" rx="4" fill="#fff3e4"/>
+      <text x="90" y="617">GroundLayer (sol de base, TileMapLayer)</text>
+      <rect x="80" y="630" width="520" height="22" rx="4" fill="#fff3e4"/>
+      <text x="90" y="645">House (extérieur, décoratif) + Coop, poules libres...</text>
+    </g>
+  </g>
+
+  <g>
+    <rect x="640" y="456" width="380" height="228" rx="8" fill="#fbe3c9" stroke="#c9761f"/>
+    <text x="830" y="480" text-anchor="middle" font-size="15" font-weight="700" fill="#5c3410">PlayerHouse (intérieur)</text>
+    <rect x="660" y="490" width="340" height="22" rx="4" fill="#fff3e4"/>
+    <text x="670" y="505" font-size="11.5" fill="#5c3410">SleepSpot (dormir → advance_day)</text>
+    <rect x="660" y="518" width="340" height="22" rx="4" fill="#fff3e4"/>
+    <text x="670" y="533" font-size="11.5" fill="#5c3410">EnterHouse / ExitDoor (ZoneTransition)</text>
+    <rect x="660" y="546" width="340" height="22" rx="4" fill="#fff3e4"/>
+    <text x="670" y="561" font-size="11.5" fill="#5c3410">Walls (StaticBody2D)</text>
+  </g>
+
+  <g>
+    <rect x="1040" y="456" width="380" height="228" rx="8" fill="#fbe3c9" stroke="#c9761f"/>
+    <text x="1230" y="480" text-anchor="middle" font-size="15" font-weight="700" fill="#5c3410">ChickenCoopInterior</text>
+    <rect x="1060" y="490" width="340" height="22" rx="4" fill="#fff3e4"/>
+    <text x="1070" y="505" font-size="11.5" fill="#5c3410">ChickenCoop (interactif — poules RÉELLES)</text>
+    <rect x="1060" y="518" width="340" height="22" rx="4" fill="#fff3e4"/>
+    <text x="1070" y="533" font-size="11.5" fill="#5c3410">FeedingBowl</text>
+    <rect x="1060" y="546" width="340" height="22" rx="4" fill="#fff3e4"/>
+    <text x="1070" y="561" font-size="11.5" fill="#5c3410">WaterBowl</text>
+    <rect x="1060" y="574" width="340" height="22" rx="4" fill="#fff3e4"/>
+    <text x="1070" y="589" font-size="11.5" fill="#5c3410">AnimalContainer (les vrais nœuds Chicken)</text>
+  </g>
+
+  <g>
+    <rect x="1440" y="456" width="260" height="228" rx="8" fill="#fdeeda" stroke="#c9761f" stroke-dasharray="6,4"/>
+    <text x="1570" y="480" text-anchor="middle" font-size="14" font-weight="700" fill="#5c3410">Player</text>
+    <text x="1460" y="502" font-size="11" fill="#5c3410">persiste entre les zones —</text>
+    <text x="1460" y="516" font-size="11" fill="#5c3410">jamais recréé au changement</text>
+    <text x="1460" y="544" font-size="11" fill="#5c3410">+ Camera2D</text>
+    <text x="1460" y="562" font-size="11" fill="#5c3410">+ InteractionPivot</text>
+    <text x="1460" y="580" font-size="11" fill="#5c3410">  └ InteractionDetector</text>
+    <text x="1460" y="596" font-size="10.5" fill="#8a6a45">     (Area2D, collision_mask=4)</text>
+  </g>
+
+  <!-- GAP 3 arrows -->
+  <line x1="700" y1="700" x2="700" y2="736" stroke="#333" stroke-width="2" marker-end="url(#arrowSolid)"/>
+  <line x1="900" y1="736" x2="900" y2="700" stroke="#555" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrowDash)"/>
+  <rect x="560" y="712" width="480" height="20" rx="4" fill="#faf8f3"/>
+  <text x="800" y="727" text-anchor="middle" font-size="11" fill="#444">setup(), set_farm_area(), farm_view.setup() (down) · signaux des structures (up, dashed)</text>
+
+  <!-- ========== BAND 4: MANAGERS ========== -->
+  <rect x="20" y="740" width="1720" height="160" rx="10" fill="#e7eefb" opacity="0.6"/>
+  <text x="36" y="762" font-size="14" font-weight="700" fill="#1f4e8c">SYSTÈMES — Managers (Node) : traduisent Input ↔ Simulation, jamais de règle ici</text>
+
+  <g font-size="11" fill="#173a66">
+    <rect x="40" y="774" width="260" height="106" rx="8" fill="#d6e4f7" stroke="#2f6fb5"/>
+    <text x="170" y="794" text-anchor="middle" font-size="13" font-weight="700">WorldManager</text>
+    <text x="52" y="814">change_zone(), charge/décharge</text>
+    <text x="52" y="828">la zone active, cale la caméra,</text>
+    <text x="52" y="842">câble FarmView/SleepSpot/Coop</text>
+
+    <rect x="332" y="774" width="260" height="106" rx="8" fill="#d6e4f7" stroke="#2f6fb5"/>
+    <text x="462" y="794" text-anchor="middle" font-size="13" font-weight="700">AnimalManager</text>
+    <text x="344" y="814">FarmSimulation.animals ↔</text>
+    <text x="344" y="828">nœuds Chicken/Egg réels</text>
+    <text x="344" y="842">dans ChickenCoopInterior</text>
+
+    <rect x="624" y="774" width="260" height="106" rx="8" fill="#d6e4f7" stroke="#2f6fb5"/>
+    <text x="754" y="794" text-anchor="middle" font-size="13" font-weight="700">FarmingController</text>
+    <text x="636" y="814">outil équipé (E) → till()/</text>
+    <text x="636" y="828">water()/plant()/harvest()</text>
+    <text x="636" y="842">sur FarmView</text>
+
+    <rect x="916" y="774" width="260" height="106" rx="8" fill="#d6e4f7" stroke="#2f6fb5"/>
+    <text x="1046" y="794" text-anchor="middle" font-size="13" font-weight="700">ShopController</text>
+    <text x="928" y="814">achats/ventes du catalogue</text>
+    <text x="928" y="828">(graines générées depuis</text>
+    <text x="928" y="842">CropData, jamais dupliquées)</text>
+
+    <rect x="1208" y="774" width="260" height="106" rx="8" fill="#d6e4f7" stroke="#2f6fb5"/>
+    <text x="1338" y="794" text-anchor="middle" font-size="13" font-weight="700">FarmLandManager</text>
+    <text x="1220" y="814">achat de terrain (zones fixes</text>
+    <text x="1220" y="828">+ zone progressive), pilote les</text>
+    <text x="1220" y="842">panneaux/marqueurs du monde</text>
+
+    <rect x="1460" y="774" width="260" height="106" rx="8" fill="#d6e4f7" stroke="#2f6fb5"/>
+    <text x="1590" y="794" text-anchor="middle" font-size="13" font-weight="700">SaveController</text>
+    <text x="1472" y="814">save_game()/load_game()</text>
+    <text x="1472" y="828">→ user://savegame.json</text>
+    <text x="1472" y="842">via FarmState.to_dict()</text>
+  </g>
+
+  <!-- GAP 4 arrows -->
+  <line x1="800" y1="900" x2="800" y2="936" stroke="#333" stroke-width="2" marker-end="url(#arrowSolid)"/>
+  <line x1="960" y1="936" x2="960" y2="900" stroke="#555" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrowDash)"/>
+  <rect x="640" y="912" width="480" height="20" rx="4" fill="#faf8f3"/>
+  <text x="880" y="927" text-anchor="middle" font-size="11" fill="#444">appels: till(), buy_zone(), feed_animal()... (down) · signaux (up, dashed)</text>
+
+  <!-- ========== BAND 5: SIMULATION ========== -->
+  <rect x="20" y="940" width="1720" height="200" rx="10" fill="#e5f3e1" opacity="0.6"/>
+  <text x="36" y="962" font-size="14" font-weight="700" fill="#2f6b26">SIMULATION — logique pure (RefCounted) — ne touche JAMAIS un Node2D, n'émet que des signaux</text>
+
+  <g>
+    <rect x="680" y="974" width="400" height="60" rx="8" fill="#c9e8c0" stroke="#4a8f3c" stroke-width="2"/>
+    <text x="880" y="996" text-anchor="middle" font-size="15" font-weight="700" fill="#1f4a19">FarmSimulation</text>
+    <text x="880" y="1014" text-anchor="middle" font-size="10.5" fill="#1f4a19">money_changed · plot_changed · animal_added · product_ready · day_changed...</text>
+    <text x="880" y="1027" text-anchor="middle" font-size="10.5" fill="#1f4a19">till() · plant() · water() · harvest() · buy_zone() · feed_animal()...</text>
+  </g>
+
+  <g font-size="12" fill="#1f4a19">
+    <rect x="40" y="1054" width="320" height="50" rx="8" fill="#d7ead2" stroke="#4a8f3c"/>
+    <text x="200" y="1084" text-anchor="middle" font-weight="700">FarmState</text>
+    <rect x="380" y="1054" width="320" height="50" rx="8" fill="#d7ead2" stroke="#4a8f3c"/>
+    <text x="540" y="1084" text-anchor="middle" font-weight="700">PlotState</text>
+    <rect x="720" y="1054" width="320" height="50" rx="8" fill="#d7ead2" stroke="#4a8f3c"/>
+    <text x="880" y="1084" text-anchor="middle" font-weight="700">CropState</text>
+    <rect x="1060" y="1054" width="320" height="50" rx="8" fill="#d7ead2" stroke="#4a8f3c"/>
+    <text x="1220" y="1084" text-anchor="middle" font-weight="700">AnimalState</text>
+    <rect x="1400" y="1054" width="320" height="50" rx="8" fill="#d7ead2" stroke="#4a8f3c"/>
+    <text x="1560" y="1084" text-anchor="middle" font-weight="700">GameClock</text>
+  </g>
+  <line x1="880" y1="1034" x2="880" y2="1054" stroke="#4a8f3c" stroke-width="1.5"/>
+
+  <!-- GAP 5 arrow -->
+  <line x1="880" y1="1140" x2="880" y2="1176" stroke="#333" stroke-width="2" marker-end="url(#arrowSolid)"/>
+  <rect x="640" y="1152" width="480" height="20" rx="4" fill="#faf8f3"/>
+  <text x="880" y="1167" text-anchor="middle" font-size="11" fill="#444">chargées dans des registries (crop_id/species → Resource) par World.gd au démarrage</text>
+
+  <!-- ========== BAND 6: DATA ========== -->
+  <rect x="20" y="1180" width="1720" height="100" rx="10" fill="#faf3d9" opacity="0.6"/>
+  <text x="36" y="1202" font-size="14" font-weight="700" fill="#8a6a10">DONNÉES — Resources .tres (fiches techniques statiques)</text>
+  <g font-size="12" fill="#5c4708">
+    <rect x="40" y="1214" width="380" height="46" rx="8" fill="#fdf3c7" stroke="#b8960a"/>
+    <text x="230" y="1242" text-anchor="middle" font-weight="700">CropData (× 11 cultures)</text>
+    <rect x="470" y="1214" width="380" height="46" rx="8" fill="#fdf3c7" stroke="#b8960a"/>
+    <text x="660" y="1242" text-anchor="middle" font-weight="700">AnimalData (poule)</text>
+    <rect x="900" y="1214" width="380" height="46" rx="8" fill="#fdf3c7" stroke="#b8960a"/>
+    <text x="1090" y="1242" text-anchor="middle" font-weight="700">ShopItemData (outils/nourriture...)</text>
+    <rect x="1330" y="1214" width="380" height="46" rx="8" fill="#fdf3c7" stroke="#b8960a"/>
+    <text x="1520" y="1242" text-anchor="middle" font-weight="700">FarmZoneData (× 2 terrains)</text>
+  </g>
+
+  <!-- ========== BOTTOM: INSET PATTERN + LEGEND ========== -->
+  <rect x="20" y="1300" width="1000" height="180" rx="10" fill="#ffffff" stroke="#ccc"/>
+  <text x="40" y="1326" font-size="14" font-weight="700" fill="#333">Pattern d'interaction — InteractableComponent</text>
+
+  <g font-size="11" fill="#333">
+    <rect x="40" y="1350" width="210" height="60" rx="8" fill="#fdeeda" stroke="#c9761f"/>
+    <text x="145" y="1372" text-anchor="middle" font-weight="700">Player</text>
+    <text x="145" y="1388" text-anchor="middle" font-size="10">InteractionDetector</text>
+    <text x="145" y="1401" text-anchor="middle" font-size="10">(Area2D, mask=4)</text>
+
+    <rect x="290" y="1350" width="210" height="60" rx="8" fill="#fdeeda" stroke="#c9761f"/>
+    <text x="395" y="1372" text-anchor="middle" font-weight="700">InteractableComponent</text>
+    <text x="395" y="1388" text-anchor="middle" font-size="10">le plus proche en overlap</text>
+    <text x="395" y="1401" text-anchor="middle" font-size="10">(Area2D, layer=4)</text>
+
+    <rect x="540" y="1350" width="210" height="60" rx="8" fill="#fdeeda" stroke="#c9761f"/>
+    <text x="645" y="1372" text-anchor="middle" font-weight="700">.interact()</text>
+    <text x="645" y="1388" text-anchor="middle" font-size="10">joue le SFX, émet</text>
+    <text x="645" y="1401" text-anchor="middle" font-size="10">le signal "interacted"</text>
+
+    <rect x="790" y="1350" width="200" height="60" rx="8" fill="#fdeeda" stroke="#c9761f"/>
+    <text x="890" y="1372" text-anchor="middle" font-weight="700">Script de la structure</text>
+    <text x="890" y="1388" text-anchor="middle" font-size="10">Coop, Shop, FarmZoneSign,</text>
+    <text x="890" y="1401" text-anchor="middle" font-size="10">SleepSpot...</text>
+  </g>
+  <line x1="250" y1="1380" x2="286" y2="1380" stroke="#333" stroke-width="2" marker-end="url(#arrowSolid)"/>
+  <line x1="500" y1="1380" x2="536" y2="1380" stroke="#333" stroke-width="2" marker-end="url(#arrowSolid)"/>
+  <line x1="750" y1="1380" x2="786" y2="1380" stroke="#333" stroke-width="2" marker-end="url(#arrowSolid)"/>
+  <text x="40" y="1465" font-size="10.5" fill="#666">Remplace l'ancien pattern dupliqué 5× (_player_inside + body_entered/exited + player.interact_requested.connect).</text>
+
+  <!-- LEGEND -->
+  <rect x="1040" y="1300" width="700" height="180" rx="10" fill="#ffffff" stroke="#ccc"/>
+  <text x="1060" y="1326" font-size="14" font-weight="700" fill="#333">Légende</text>
+
+  <line x1="1060" y1="1348" x2="1120" y2="1348" stroke="#333" stroke-width="2" marker-end="url(#arrowSolid)"/>
+  <text x="1132" y="1352" font-size="12" fill="#333">Appel direct (méthode)</text>
+
+  <line x1="1060" y1="1372" x2="1120" y2="1372" stroke="#555" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrowDash)"/>
+  <text x="1132" y="1376" font-size="12" fill="#333">Signal (événement, découplé)</text>
+
+  <g font-size="11.5" fill="#333">
+    <rect x="1060" y="1398" width="16" height="16" fill="#d7ead2" stroke="#4a8f3c"/>
+    <text x="1082" y="1411">Simulation (règles, pure)</text>
+    <rect x="1060" y="1420" width="16" height="16" fill="#d6e4f7" stroke="#2f6fb5"/>
+    <text x="1082" y="1433">Managers (le pont)</text>
+    <rect x="1060" y="1442" width="16" height="16" fill="#fbe3c9" stroke="#c9761f"/>
+    <text x="1082" y="1455">Monde (zones/structures)</text>
+
+    <rect x="1400" y="1398" width="16" height="16" fill="#ecdcf7" stroke="#7c3fae"/>
+    <text x="1422" y="1411">UI (Control)</text>
+    <rect x="1400" y="1420" width="16" height="16" fill="#eeeeee" stroke="#777"/>
+    <text x="1422" y="1433">Autoloads (singletons)</text>
+    <rect x="1400" y="1442" width="16" height="16" fill="#fdf3c7" stroke="#b8960a"/>
+    <text x="1422" y="1455">Données (.tres)</text>
+  </g>
+</svg>
