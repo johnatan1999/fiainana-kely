@@ -23,6 +23,9 @@ const ChickenScene := preload("res://entities/animals/chicken/chicken.tscn")
 ## building in the village, capped regardless of how many are actually owned.
 const MAX_DECORATIVE_CHICKENS := 4
 
+## Each direction (to black, back to clear) of a player-triggered transition.
+const FADE_DURATION := 0.25
+
 var simulation: FarmSimulation
 var player: PlayerController
 var zone_container: Node2D
@@ -31,12 +34,30 @@ var current_zone: ZoneRoot
 var current_zone_id: String = ""
 
 var _zones: Dictionary = {} # id: String -> ZoneData
+var _fade_overlay: ColorRect
 
 func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_zone_container: Node2D) -> void:
 	simulation = p_simulation
 	player = p_player
 	zone_container = p_zone_container
 	_load_zone_registry()
+	_create_fade_overlay()
+
+## Built in code rather than as a .tscn node: a plain full-screen ColorRect on
+## its own high-priority CanvasLayer, independent of zone_container's
+## lifecycle (never freed/recreated by change_zone()).
+func _create_fade_overlay() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 100
+	_fade_overlay = ColorRect.new()
+	_fade_overlay.color = Color(0.0, 0.0, 0.0, 0.0)
+	_fade_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fade_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(_fade_overlay)
+	# Deferred: this runs from World.gd's _ready(), while the root viewport is
+	# still mid-setup adding World itself as a child - a synchronous
+	# add_child() here hits "Parent node is busy setting up children".
+	get_tree().root.add_child.call_deferred(layer)
 
 func has_zone(zone_id: String) -> bool:
 	return _zones.has(zone_id)
@@ -64,7 +85,21 @@ func _load_zone_registry() -> void:
 ## ZoneTransition/SleepSpot fire from inside Area2D signals during the physics
 ## step, which forbids reparenting/freeing physics nodes right away - defer it.
 func request_zone_change(zone_id: String, spawn_name: String) -> void:
-	call_deferred("change_zone", zone_id, spawn_name)
+	call_deferred("_change_zone_with_fade", zone_id, spawn_name)
+
+## Player-triggered transitions (walking through a door) fade to black to
+## mask the instant scene swap. Direct callers - World.gd's initial zone
+## load and SaveController.load_game() - call change_zone() straight instead,
+## since there's nothing on screen yet worth hiding behind a fade at boot.
+func _change_zone_with_fade(zone_id: String, spawn_name: String) -> void:
+	await _fade_to(1.0)
+	change_zone(zone_id, spawn_name)
+	await _fade_to(0.0)
+
+func _fade_to(target_alpha: float) -> void:
+	var tween := create_tween()
+	tween.tween_property(_fade_overlay, "color:a", target_alpha, FADE_DURATION)
+	await tween.finished
 
 func change_zone(zone_id: String, spawn_name: String = "SpawnDefault") -> void:
 	var zone_data: ZoneData = _zones.get(zone_id)

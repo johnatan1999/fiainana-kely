@@ -166,6 +166,7 @@ size = Vector2(26, 25.5)
 
 [node name="Player" type="CharacterBody2D" groups=["player"]]
 y_sort_enabled = true
+motion_mode = 1
 script = ExtResource("1_piccd")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
