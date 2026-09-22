@@ -49,13 +49,26 @@ var _predefined_markers: Dictionary = {}
 var _progressive_marker_rect: ColorRect
 var _progressive_marker_label: Label
 
-func setup(p_simulation: FarmSimulation) -> void:
+## p_world_manager is null in unit tests that construct FarmLandManager
+## standalone (it's never added to a tree there, so there's no WorldManager
+## to listen to) - buy_zone()/buy_progressive_patch() work fine without it,
+## only the zone_loaded/zone_unloading wiring below is skipped.
+func setup(p_simulation: FarmSimulation, p_world_manager: WorldManager = null) -> void:
 	simulation = p_simulation
 	for path in PREDEFINED_ZONE_PATHS:
 		var zone_data = load(path)
 		_predefined_zones.append(zone_data)
 		_zone_by_id[zone_data.id] = zone_data
 	_progressive_sequence = _build_progressive_sequence()
+	if p_world_manager:
+		p_world_manager.zone_loaded.connect(_on_zone_loaded)
+		p_world_manager.zone_unloading.connect(_on_zone_unloading)
+
+func _on_zone_loaded(zone: ZoneRoot) -> void:
+	set_zone_markers(zone)
+
+func _on_zone_unloading(_zone: ZoneRoot) -> void:
+	set_zone_markers(null)
 
 func _build_progressive_sequence() -> Array:
 	var sequence: Array = []

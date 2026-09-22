@@ -7,13 +7,19 @@ extends Control
 ## numbers never drift from FarmSimulation; the other categories are
 ## hand-authored ShopItemData resources under data/shop_items/.
 
+## animal_zebu.tres is deliberately NOT listed here yet: FarmSimulation.
+## buy_animal()/place_animal() already support any species, but there's no
+## Zebu scene registered in AnimalManager.SPECIES_SCENES and no structure to
+## place one in (Coop only ever places chickens) - selling it today would
+## just be a purchase with no way to ever use it. Re-add it here once a real
+## Zebu entity + placement structure exist, alongside a data/animals/zebu.tres
+## AnimalData and a ShopUI._purchase() branch for it (see the chicken one).
 const TOOLS_FOOD_ANIMALS_RESOURCES: Array[ShopItemData] = [
 	preload("res://data/shop_items/tool_angady.tres"),
 	preload("res://data/shop_items/tool_watering_can_tin.tres"),
 	preload("res://data/shop_items/food_vary_sy_laoka.tres"),
 	preload("res://data/shop_items/food_vary_amin_anana.tres"),
 	preload("res://data/shop_items/animal_chicken.tres"),
-	preload("res://data/shop_items/animal_zebu.tres"),
 	preload("res://data/shop_items/egg.tres"),
 ]
 

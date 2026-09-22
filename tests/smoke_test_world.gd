@@ -4,9 +4,10 @@ extends SceneTree
 ## running a few frames each, to catch wiring/parse errors before playtesting.
 
 const SCENES := [
-	"res://scenes/world/World.tscn",
-	"res://scenes/areas/interiors/Interior_House.tscn",
-	"res://scenes/areas/exterior/Exterior.tscn",
+	"res://world/world.tscn",
+	"res://world/areas/interior/player_interior_house.tscn",
+	"res://world/areas/exterior/player_village.tscn",
+	"res://world/areas/interior/farm/chicken_coop_interior.tscn",
 ]
 
 var _scene_index := 0

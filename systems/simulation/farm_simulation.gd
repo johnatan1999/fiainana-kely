@@ -243,11 +243,13 @@ func build_coop() -> bool:
 	return true
 
 ## Pure economy transaction - buying doesn't materialize an animal in the
-## world. place_chicken() does that and requires the coop to exist.
-func buy_chicken(quantity: int = 1) -> bool:
+## world. place_animal() does that and requires the coop to exist. Species
+## with no AnimalData registered (nothing passed to FarmSimulation._init()
+## for them) simply can't be bought yet - fails closed rather than crash.
+func buy_animal(species: AnimalData.Species, quantity: int = 1) -> bool:
 	if quantity <= 0:
 		return false
-	var animal_data := get_animal_data(AnimalData.Species.CHICKEN)
+	var animal_data := get_animal_data(species)
 	if animal_data == null:
 		return false
 	var cost := animal_data.purchase_price * quantity
@@ -255,25 +257,40 @@ func buy_chicken(quantity: int = 1) -> bool:
 		return false
 	state.money -= cost
 	money_changed.emit(state.money)
-	state.add_inventory("chicken_unplaced", quantity)
-	inventory_changed.emit("chicken_unplaced", state.get_inventory_count("chicken_unplaced"))
+	var key := _unplaced_key(species)
+	state.add_inventory(key, quantity)
+	inventory_changed.emit(key, state.get_inventory_count(key))
 	return true
 
-## Converts one purchased-but-unplaced chicken into a real animal in the
-## coop. Returns the new animal's id, or "" if it couldn't be placed.
-func place_chicken() -> String:
+## Converts one purchased-but-unplaced animal of this species into a real
+## animal in the coop. Returns the new animal's id, or "" if it couldn't be
+## placed.
+func place_animal(species: AnimalData.Species) -> String:
 	if not state.has_coop:
 		return ""
 	if state.animals.size() >= state.coop_capacity:
 		return ""
-	if state.get_inventory_count("chicken_unplaced") <= 0:
+	var key := _unplaced_key(species)
+	if state.get_inventory_count(key) <= 0:
 		return ""
-	state.add_inventory("chicken_unplaced", -1)
-	inventory_changed.emit("chicken_unplaced", state.get_inventory_count("chicken_unplaced"))
-	var animal_id := state.generate_animal_id(AnimalData.Species.CHICKEN)
-	state.animals[animal_id] = AnimalState.new(animal_id, AnimalData.Species.CHICKEN)
+	state.add_inventory(key, -1)
+	inventory_changed.emit(key, state.get_inventory_count(key))
+	var animal_id := state.generate_animal_id(species)
+	state.animals[animal_id] = AnimalState.new(animal_id, species)
 	animal_added.emit(animal_id)
 	return animal_id
+
+func _unplaced_key(species: AnimalData.Species) -> String:
+	return "%s_unplaced" % FarmState.species_prefix(species)
+
+## Thin chicken-specific wrappers over buy_animal()/place_animal() - every
+## current call site (Coop.gd, the shop) only ever deals in chickens, and
+## these keep that call surface unchanged.
+func buy_chicken(quantity: int = 1) -> bool:
+	return buy_animal(AnimalData.Species.CHICKEN, quantity)
+
+func place_chicken() -> String:
+	return place_animal(AnimalData.Species.CHICKEN)
 
 ## Called by the world-layer Egg pickup once the player actually walks over
 ## it - product_ready only announces that an egg is ready to spawn, it never

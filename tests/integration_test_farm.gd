@@ -1,8 +1,9 @@
 extends SceneTree
 
-## Drives the real World.tscn through WorldManager into the Exterior zone
-## (which now embeds the chicken pen directly - see WorldManager's
-## get_node_or_null("Coop") check) and exercises the full
+## Drives the real World.tscn through WorldManager into the Village zone
+## (for the land-sign checks) and then the ChickenCoopInterior zone (which
+## embeds the real ChickenCoop/AnimalContainer - see WorldManager's
+## get_node_or_null("ChickenCoop") check) to exercise the full
 ## build->buy->place->advance_day->egg chain. The unit tests cover
 ## FarmSimulation in isolation, this covers the wiring between
 ## WorldManager/AnimalManager/Coop/Chicken that only breaks at integration
@@ -21,7 +22,7 @@ var _world
 var _frame := 0
 
 func _initialize() -> void:
-	var packed = load("res://scenes/world/World.tscn")
+	var packed = load("res://world/world.tscn")
 	_world = packed.instantiate()
 	root.add_child(_world)
 
@@ -47,8 +48,15 @@ func _run_flow() -> void:
 	var animal_manager = _world.get_node("Gameplay/AnimalManager")
 	var simulation = _world.simulation
 
-	world_manager.change_zone("exterior", "SpawnDefault")
-	_check(animal_manager.farm_area != null, "entering the Exterior zone calls AnimalManager.set_farm_area() (Coop found)")
+	# Land-sign checks (ZoneMarker_*/ModularFarmZoneSign/FarmZoneSign) live in
+	# the Village zone - run those first, then move on to the coop.
+	world_manager.change_zone(Zone.ID.VILLAGE, "SpawnDefault")
+	_run_zone_manager_checks()
+
+	# The real, simulated ChickenCoop/AnimalContainer live in their own
+	# interior zone since the "decorative exterior building" split.
+	world_manager.change_zone(Zone.ID.CHICKEN_COOP, "SpawnDefault")
+	_check(animal_manager.farm_area != null, "entering the ChickenCoopInterior zone calls AnimalManager.set_farm_area() (ChickenCoop found)")
 
 	var animal_container = animal_manager.farm_area.get_node("AnimalContainer")
 
@@ -81,8 +89,6 @@ func _run_flow() -> void:
 		_count_eggs(animal_container) >= egg_count_before + 1,
 		"a full product cycle spawns at least one new Egg pickup in the world"
 	)
-
-	_run_zone_manager_checks()
 
 	print("\n%s" % ("SOME CHECKS FAILED" if root.has_meta("failed") else "all integration checks passed"))
 
@@ -164,6 +170,6 @@ func _run_zone_sign_checks(zone_manager, simulation) -> void:
 func _count_eggs(animal_container) -> int:
 	var count := 0
 	for child in animal_container.get_children():
-		if child.get_script() != null and child.get_script().resource_path.ends_with("Egg.gd"):
+		if child.get_script() != null and child.get_script().resource_path.ends_with("egg.gd"):
 			count += 1
 	return count

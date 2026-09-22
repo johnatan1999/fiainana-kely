@@ -7,6 +7,13 @@ extends Node
 const SAVE_PATH := "user://savegame.json"
 const DEFAULT_ZONE_ID := "VILLAGE"
 
+## Bump this whenever the save format changes, and add a matching
+## _migrate_to_vN() step below - never rewrite an existing step once it has
+## shipped, only append new ones. This is the single place format drift gets
+## fixed, instead of runtime code scattered across load_game() staying
+## permanently tolerant of every historical format.
+const SAVE_VERSION := 1
+
 var simulation: FarmSimulation
 var world_manager: WorldManager
 var player: PlayerController
@@ -21,6 +28,7 @@ func has_save() -> bool:
 
 func save_game() -> void:
 	var data := simulation.to_save_data()
+	data["save_version"] = SAVE_VERSION
 	data["zone_id"] = Zone.ID.keys()[world_manager.current_zone_id]
 	data["player_position"] = {"x": player.global_position.x, "y": player.global_position.y}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -35,30 +43,49 @@ func load_game() -> bool:
 	var data = JSON.parse_string(file.get_as_text())
 	if typeof(data) != TYPE_DICTIONARY:
 		return false
+
+	var save_version := int(data.get("save_version", 0))
+	if save_version > SAVE_VERSION:
+		push_error("Save file is from a newer game version (v%d) than this build supports (v%d) - refusing to load it to avoid corrupting it." % [save_version, SAVE_VERSION])
+		return false
+	data = _migrate(data, save_version)
+
 	simulation.load_save_data(data)
 
-	var zone_id_data = data.get("zone_id", DEFAULT_ZONE_ID)
-	var zone_id := _parse_zone_id(zone_id_data)
-	if zone_id != -1:
-		world_manager.change_zone(zone_id as Zone.ID, "SpawnDefault")
+	var zone_id_str: String = data.get("zone_id", DEFAULT_ZONE_ID)
+	if Zone.ID.has(zone_id_str):
+		world_manager.change_zone(Zone.ID[zone_id_str], "SpawnDefault")
 	else:
-		push_error("Unknown zone: %s" % [zone_id_data])
-		
+		push_error("Unknown zone: " + zone_id_str)
+
 	var pos_data = data.get("player_position")
 	if pos_data is Dictionary:
 		player.global_position = Vector2(pos_data.get("x", 0.0), pos_data.get("y", 0.0))
 
 	return true
 
-## Accepts the current String-key format ("VILLAGE"), and the raw numeric
-## format a save briefly got corrupted into by an old save_game() bug -
-## returns -1 if neither matches so callers can fall back safely.
-func _parse_zone_id(zone_id_data) -> int:
-	if zone_id_data is String and Zone.ID.has(zone_id_data):
-		return Zone.ID[zone_id_data]
-	if (zone_id_data is float or zone_id_data is int) and int(zone_id_data) in Zone.ID.values():
-		return int(zone_id_data)
-	return -1
+## Applies every migration step between the save's version and SAVE_VERSION,
+## in order. A save from any older version keeps loading correctly as the
+## format evolves - the next format change adds one more `if from_version < N`
+## step here instead of teaching load_game() itself to tolerate old formats
+## forever.
+func _migrate(data: Dictionary, from_version: int) -> Dictionary:
+	if from_version < 1:
+		data = _migrate_to_v1(data)
+	return data
+
+## v0 (unversioned save, predates this field entirely) -> v1: zone_id was
+## briefly written as a raw Zone.ID int by a save_game() bug instead of its
+## string key name - normalize it to the string form v1 (and every version
+## after) expects.
+func _migrate_to_v1(data: Dictionary) -> Dictionary:
+	var zone_id_data = data.get("zone_id")
+	if zone_id_data is float or zone_id_data is int:
+		var values: Array = Zone.ID.values()
+		var idx: int = values.find(int(zone_id_data))
+		if idx != -1:
+			data["zone_id"] = Zone.ID.keys()[idx]
+	return data
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("save_game"):

@@ -14,14 +14,24 @@ var player: PlayerController
 var farm_view: FarmView # null while the player is outside the farm zone
 var selected_crop_id: String = DEFAULT_CROP_ID
 
-func setup(p_simulation: FarmSimulation, p_player: PlayerController) -> void:
+func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_world_manager: WorldManager) -> void:
 	simulation = p_simulation
 	player = p_player
 	player.interact_requested.connect(_on_interact_requested)
+	p_world_manager.zone_loaded.connect(_on_zone_loaded)
+	p_world_manager.zone_unloading.connect(_on_zone_unloading)
 
-## Called by WorldManager each time the farm zone is loaded/unloaded.
 func set_farm_view(p_farm_view: FarmView) -> void:
 	farm_view = p_farm_view
+
+func _on_zone_loaded(zone: ZoneRoot) -> void:
+	var found: FarmView = zone.get_node_or_null("FarmView")
+	if found:
+		found.setup(simulation)
+		set_farm_view(found)
+
+func _on_zone_unloading(_zone: ZoneRoot) -> void:
+	set_farm_view(null)
 
 func advance_day() -> void:
 	simulation.advance_day()
