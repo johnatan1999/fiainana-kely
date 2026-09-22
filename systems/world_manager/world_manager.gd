@@ -21,9 +21,6 @@ var farm_land_manager: FarmLandManager
 var current_zone: ZoneRoot
 var current_zone_id: Zone.ID
 
-func _ready() -> void:
-	StructureEvents.shop_spawned.connect(_on_shop_spawned)
-
 func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_farming_controller: FarmingController, p_shop_ui: ShopUI, p_zone_container: Node2D, p_animal_manager: AnimalManager, p_farm_land_manager: FarmLandManager) -> void:
 	simulation = p_simulation
 	player = p_player
@@ -119,7 +116,7 @@ func _wire_zone_content(zone: ZoneRoot) -> void:
 		transition.triggered.connect(request_zone_change)
 
 func _on_shop_spawned(shop: Shop) -> void:
-	shop.setup(player, shop_ui)
+	shop.setup(shop_ui)
 
 func _find_transitions(node: Node) -> Array:
 	var result: Array = []

@@ -35,6 +35,20 @@ var _catalog: Dictionary = {} # ShopItemData.Category -> Array[ShopItemData]
 var _selected_category: ShopItemData.Category = ShopItemData.Category.SEEDS
 var _open_tween: Tween
 
+func _ready() -> void:
+	# Écoute du signal global émis par le Shop / ShopBuilding
+	UIEvents.shop_requested.connect(_on_shop_requested)
+
+	# Configuration visuelle initiale (masqué par défaut)
+	resized.connect(func(): pivot_offset = size / 2.0)
+	visible = false
+	modulate.a = 0.0
+	scale = CLOSED_SCALE
+
+
+func _on_shop_requested(_shop_data = null) -> void:
+	open()
+	
 func setup(shop_controller: ShopController, simulation: FarmSimulation) -> void:
 	_shop_controller = shop_controller
 	_simulation = simulation
