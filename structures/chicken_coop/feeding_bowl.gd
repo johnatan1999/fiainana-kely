@@ -1,5 +1,5 @@
 class_name FeedingBowl
-extends Area2D
+extends StaticBody2D
 
 ## Player interacts (E) nearby to refill it for free. Chicken.gd's AI walks
 ## here when hungry and self-serves - each visit consumes one serving.
@@ -7,36 +7,43 @@ extends Area2D
 signal refilled
 
 const MAX_SERVINGS := 6
+@export var empty_bowl_texture: Texture2D
+@export var full_bowl_texture: Texture2D
 
-var servings: int = 0
+var servings: int = 0:
+	set(value):
+		servings = clamp(value, 0, MAX_SERVINGS)
+		_update_visual()
 
-var _player_inside := false
-var _player: PlayerController
+@onready var interactable_component: InteractableComponent = $InteractableComponent
+@onready var visual: Sprite2D = $Visual
 
-func setup(player: PlayerController) -> void:
-	_player = player
-	_player.interact_requested.connect(_on_interact_requested)
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
+
+func _ready() -> void:
+	# Connect to the component's interaction signal
+	interactable_component.interacted.connect(_on_interacted)
+	_update_visual()
+
 
 func is_full() -> bool:
 	return servings > 0
+
 
 ## Called by a chicken once it actually reaches the bowl.
 func consume() -> void:
 	servings = max(0, servings - 1)
 
-func _on_body_entered(body: Node) -> void:
-	if body == _player:
-		_player_inside = true
 
-func _on_body_exited(body: Node) -> void:
-	if body == _player:
-		_player_inside = false
-
-func _on_interact_requested(_tool) -> void:
-	if not _player_inside or servings >= MAX_SERVINGS:
+func _on_interacted() -> void:
+	if servings >= MAX_SERVINGS:
 		return
+		
 	servings = MAX_SERVINGS
-	AudioManager.play_click_menu_sfx()
 	refilled.emit()
+
+func _update_visual() -> void:
+	if not is_node_ready():
+		await ready
+
+	if visual and empty_bowl_texture and full_bowl_texture:
+		visual.texture = full_bowl_texture if servings > 0 else empty_bowl_texture

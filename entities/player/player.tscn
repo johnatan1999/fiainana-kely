@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://bf1stuuqjofir"]
+[gd_scene load_steps=22 format=3 uid="uid://bf1stuuqjofir"]
 
 [ext_resource type="Script" path="res://entities/player/player_controller.gd" id="1_piccd"]
 [ext_resource type="Texture2D" uid="uid://cbsngksevqumt" path="res://assets/sprites/characters/player/player2_walk.png" id="2_0v3gh"]
@@ -161,6 +161,9 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_o17cg"]
+size = Vector2(26, 25.5)
+
 [node name="Player" type="CharacterBody2D" groups=["player"]]
 y_sort_enabled = true
 script = ExtResource("1_piccd")
@@ -178,3 +181,13 @@ sprite_frames = SubResource("SpriteFrames_huppk")
 animation = &"walk_right"
 frame_progress = 0.696398
 offset = Vector2(0, -64)
+
+[node name="InteractionPivot" type="Node2D" parent="."]
+
+[node name="InteractionDetector" type="Area2D" parent="InteractionPivot"]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionPivot/InteractionDetector"]
+position = Vector2(13, 0)
+shape = SubResource("RectangleShape2D_o17cg")

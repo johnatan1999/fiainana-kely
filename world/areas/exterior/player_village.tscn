@@ -6,12 +6,12 @@
 [ext_resource type="PackedScene" uid="uid://dd2hvqpppgxdw" path="res://structures/farm/farm/farm_view.tscn" id="4_w2nlg"]
 [ext_resource type="PackedScene" uid="uid://bhnm7ccttiisy" path="res://structures/houses/House.tscn" id="5_bvnba"]
 [ext_resource type="PackedScene" uid="uid://41pmy102xlbk" path="res://structures/chicken_coop/chicken_coop.tscn" id="6_eobbd"]
-[ext_resource type="PackedScene" uid="uid://byhktvnatk5mw" path="res://structures/chicken_coop/feeding_bowl.tscn" id="7_jffgs"]
-[ext_resource type="PackedScene" path="res://structures/chicken_coop/water_bowl.tscn" id="8_p1ha8"]
 [ext_resource type="PackedScene" uid="uid://dgak5cew5n3hy" path="res://entities/animals/chicken/chicken.tscn" id="9_5wie0"]
 [ext_resource type="SpriteFrames" uid="uid://c8b1vmmb21c3e" path="res://data/rooster.tres" id="10_dyv0b"]
 [ext_resource type="PackedScene" path="res://structures/modular_farm_zone_sign.tscn" id="11_vq4vc"]
 [ext_resource type="PackedScene" uid="uid://yyodnuua7d7i" path="res://structures/farm_zone_sign.tscn" id="12_armmf"]
+[ext_resource type="PackedScene" uid="uid://byhktvnatk5mw" path="res://structures/chicken_coop/feeding_bowl.tscn" id="12_b57o8"]
+[ext_resource type="PackedScene" uid="uid://y7jfr7cu2kqf" path="res://structures/chicken_coop/water_bowl.tscn" id="13_7tclo"]
 [ext_resource type="PackedScene" uid="uid://dv8rtwpbrtee0" path="res://structures/shop/shop.tscn" id="13_okjkt"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_v_placeholder"]
@@ -97,12 +97,6 @@ color = Color(0.5, 0.4, 0.25, 1)
 
 [node name="ChickenCoop" parent="." instance=ExtResource("6_eobbd")]
 position = Vector2(684, 278)
-
-[node name="FeedingBowl" parent="." instance=ExtResource("7_jffgs")]
-position = Vector2(228, 447)
-
-[node name="WaterBowl" parent="." instance=ExtResource("8_p1ha8")]
-position = Vector2(250, 510)
 
 [node name="AnimalContainer" type="Node2D" parent="."]
 
@@ -191,3 +185,9 @@ zone_id = "zone_south"
 
 [node name="Shop" parent="." instance=ExtResource("13_okjkt")]
 position = Vector2(1170, 809)
+
+[node name="FeedingBowl" parent="." instance=ExtResource("12_b57o8")]
+position = Vector2(149, 470)
+
+[node name="WaterBowl" parent="." instance=ExtResource("13_7tclo")]
+position = Vector2(250, 502)

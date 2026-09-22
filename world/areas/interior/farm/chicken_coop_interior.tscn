@@ -1,8 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://dq8hgec32i74o"]
+[gd_scene load_steps=8 format=3 uid="uid://dq8hgec32i74o"]
 
 [ext_resource type="Texture2D" uid="uid://wpq6cib7ujm" path="res://assets/tileset/farm-interior01.png" id="1_dcsrc"]
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_gayrm"]
 [ext_resource type="PackedScene" uid="uid://dj08ehqk2868w" path="res://components/door/exit_door.tscn" id="2_3n2be"]
+[ext_resource type="PackedScene" uid="uid://byhktvnatk5mw" path="res://structures/chicken_coop/feeding_bowl.tscn" id="4_4aw65"]
+[ext_resource type="PackedScene" uid="uid://y7jfr7cu2kqf" path="res://structures/chicken_coop/water_bowl.tscn" id="5_wr2mm"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_465yl"]
 atlas = ExtResource("1_dcsrc")
@@ -13,6 +15,12 @@ size = Vector2(100, 20)
 
 [node name="ChickenCoopInterior" type="Node2D"]
 script = ExtResource("1_gayrm")
+
+[node name="Spawns" type="Node2D" parent="."]
+position = Vector2(1, 88)
+
+[node name="SpawnFrom_VILLAGE" type="Marker2D" parent="Spawns"]
+position = Vector2(-1, 16)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = SubResource("AtlasTexture_465yl")
@@ -28,10 +36,10 @@ position = Vector2(0, 138)
 [node name="CollisionShape2D" parent="ExitDoor" index="0"]
 shape = SubResource("RectangleShape2D_ekeyn")
 
-[node name="Spawns" type="Node2D" parent="."]
-position = Vector2(1, 88)
+[node name="FeedingBowl" parent="." instance=ExtResource("4_4aw65")]
+position = Vector2(-49, -5)
 
-[node name="SpawnFrom_VILLAGE" type="Marker2D" parent="Spawns"]
-position = Vector2(-1, 16)
+[node name="WaterBowl" parent="." instance=ExtResource("5_wr2mm")]
+position = Vector2(52, 27)
 
 [editable path="ExitDoor"]
