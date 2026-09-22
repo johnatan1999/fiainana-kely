@@ -38,7 +38,6 @@ const PROGRESSIVE_WIDTH := 8
 const PROGRESSIVE_HEIGHT := 6
 
 var simulation: FarmSimulation
-var player: PlayerController
 
 var _predefined_zones: Array = [] # Array[FarmZoneData], loaded in setup()
 var _zone_by_id: Dictionary = {} # zone_id: String -> FarmZoneData
@@ -50,9 +49,8 @@ var _predefined_markers: Dictionary = {}
 var _progressive_marker_rect: ColorRect
 var _progressive_marker_label: Label
 
-func setup(p_simulation: FarmSimulation, p_player: PlayerController) -> void:
+func setup(p_simulation: FarmSimulation) -> void:
 	simulation = p_simulation
-	player = p_player
 	for path in PREDEFINED_ZONE_PATHS:
 		var zone_data = load(path)
 		_predefined_zones.append(zone_data)
@@ -160,9 +158,9 @@ func set_zone_markers(zone: Node) -> void:
 func _setup_signs(zone: Node) -> void:
 	for child in zone.get_children():
 		if child is FarmZoneSign:
-			child.setup(player, self)
+			child.setup(self)
 		elif child is ModularFarmZoneSign:
-			child.setup(player, self)
+			child.setup(self)
 
 func _refresh_predefined_marker(zone_id: String) -> void:
 	var marker: Dictionary = _predefined_markers.get(zone_id, {})

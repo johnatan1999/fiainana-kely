@@ -1,5 +1,5 @@
 class_name FarmZoneSign
-extends Area2D
+extends Node2D
 
 ## Physical, self-contained purchase panel for one predefined (macro)
 ## farmable land zone. Player interacts (E) to open its own popup dialog -
@@ -9,6 +9,7 @@ extends Area2D
 
 @export var zone_id: String = ""
 
+@onready var interactable_component: InteractableComponent = $InteractableComponent
 @onready var world_label: Label = $WorldLabel
 @onready var dialog: CanvasLayer = $Dialog
 @onready var name_label: Label = $Dialog/Panel/Margin/VBox/NameLabel
@@ -18,17 +19,12 @@ extends Area2D
 @onready var buy_button: Button = $Dialog/Panel/Margin/VBox/ButtonRow/BuyButton
 @onready var cancel_button: Button = $Dialog/Panel/Margin/VBox/ButtonRow/CancelButton
 
-var _player: PlayerController
 var _farm_land_manager: FarmLandManager
-var _player_inside := false
 
-func setup(player: PlayerController, zone_manager: FarmLandManager) -> void:
-	_player = player
+func setup(zone_manager: FarmLandManager) -> void:
 	_farm_land_manager = zone_manager
 
-	_player.interact_requested.connect(_on_interact_requested)
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
+	interactable_component.interacted.connect(_on_interacted)
 	buy_button.pressed.connect(_on_buy_pressed)
 	cancel_button.pressed.connect(_close_dialog)
 	_farm_land_manager.zone_unlocked.connect(_on_zone_unlocked)
@@ -47,17 +43,8 @@ func _on_zone_unlocked(unlocked_zone_id: String) -> void:
 	if unlocked_zone_id == zone_id:
 		_refresh_world_label()
 
-func _on_body_entered(body: Node) -> void:
-	if body == _player:
-		_player_inside = true
-
-func _on_body_exited(body: Node) -> void:
-	if body == _player:
-		_player_inside = false
-		_close_dialog()
-
-func _on_interact_requested(_tool) -> void:
-	if _player_inside and not dialog.visible:
+func _on_interacted() -> void:
+	if not dialog.visible:
 		_open_dialog()
 
 func _open_dialog() -> void:

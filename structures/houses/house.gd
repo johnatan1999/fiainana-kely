@@ -9,10 +9,6 @@ extends Node2D
 		if is_node_ready():
 			_update_house()
 
-@export_group("Zone transition (Teleportation)")
-@export var target_zone: String = "interior_house_01"
-@export var target_spawn: String = "door_inside"
-
 @onready var wall_sprite: Sprite2D = $WallSprite
 @onready var roof_sprite: Sprite2D = $RoofSprite
 

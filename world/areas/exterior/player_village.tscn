@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=14 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -10,8 +10,6 @@
 [ext_resource type="SpriteFrames" uid="uid://c8b1vmmb21c3e" path="res://data/rooster.tres" id="10_dyv0b"]
 [ext_resource type="PackedScene" path="res://structures/modular_farm_zone_sign.tscn" id="11_vq4vc"]
 [ext_resource type="PackedScene" uid="uid://yyodnuua7d7i" path="res://structures/farm_zone_sign.tscn" id="12_armmf"]
-[ext_resource type="PackedScene" uid="uid://byhktvnatk5mw" path="res://structures/chicken_coop/feeding_bowl.tscn" id="12_b57o8"]
-[ext_resource type="PackedScene" uid="uid://y7jfr7cu2kqf" path="res://structures/chicken_coop/water_bowl.tscn" id="13_7tclo"]
 [ext_resource type="PackedScene" uid="uid://dv8rtwpbrtee0" path="res://structures/shop/shop.tscn" id="13_okjkt"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_v_placeholder"]
@@ -95,7 +93,7 @@ offset_bottom = 560.0
 mouse_filter = 2
 color = Color(0.5, 0.4, 0.25, 1)
 
-[node name="ChickenCoop" parent="." instance=ExtResource("6_eobbd")]
+[node name="ChickenCoopBuilding" parent="." instance=ExtResource("6_eobbd")]
 position = Vector2(684, 278)
 
 [node name="AnimalContainer" type="Node2D" parent="."]
@@ -185,9 +183,3 @@ zone_id = "zone_south"
 
 [node name="Shop" parent="." instance=ExtResource("13_okjkt")]
 position = Vector2(1170, 809)
-
-[node name="FeedingBowl" parent="." instance=ExtResource("12_b57o8")]
-position = Vector2(149, 470)
-
-[node name="WaterBowl" parent="." instance=ExtResource("13_7tclo")]
-position = Vector2(250, 502)

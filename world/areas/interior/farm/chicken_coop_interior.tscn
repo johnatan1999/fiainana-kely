@@ -1,10 +1,12 @@
-[gd_scene load_steps=8 format=3 uid="uid://dq8hgec32i74o"]
+[gd_scene load_steps=11 format=3 uid="uid://dq8hgec32i74o"]
 
 [ext_resource type="Texture2D" uid="uid://wpq6cib7ujm" path="res://assets/tileset/farm-interior01.png" id="1_dcsrc"]
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_gayrm"]
 [ext_resource type="PackedScene" uid="uid://dj08ehqk2868w" path="res://components/door/exit_door.tscn" id="2_3n2be"]
 [ext_resource type="PackedScene" uid="uid://byhktvnatk5mw" path="res://structures/chicken_coop/feeding_bowl.tscn" id="4_4aw65"]
 [ext_resource type="PackedScene" uid="uid://y7jfr7cu2kqf" path="res://structures/chicken_coop/water_bowl.tscn" id="5_wr2mm"]
+[ext_resource type="Script" path="res://structures/chicken_coop/chicken_coop.gd" id="6_coopgd"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="7_coopint"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_465yl"]
 atlas = ExtResource("1_dcsrc")
@@ -12,6 +14,9 @@ region = Rect2(0, 0, 384, 320)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ekeyn"]
 size = Vector2(100, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_coop_interact"]
+size = Vector2(220, 160)
 
 [node name="ChickenCoopInterior" type="Node2D"]
 script = ExtResource("1_gayrm")
@@ -42,4 +47,24 @@ position = Vector2(-49, -5)
 [node name="WaterBowl" parent="." instance=ExtResource("5_wr2mm")]
 position = Vector2(52, 27)
 
+[node name="ChickenCoop" type="Node2D" parent="."]
+position = Vector2(0, 10)
+script = ExtResource("6_coopgd")
+
+[node name="Label" type="Label" parent="ChickenCoop"]
+offset_left = -40.0
+offset_top = -60.0
+offset_right = 40.0
+offset_bottom = -37.0
+horizontal_alignment = 1
+
+[node name="InteractableComponent" parent="ChickenCoop" instance=ExtResource("7_coopint")]
+
+[node name="InteractableCollision2D" parent="ChickenCoop/InteractableComponent" index="0"]
+shape = SubResource("RectangleShape2D_coop_interact")
+
+[node name="AnimalContainer" type="Node2D" parent="."]
+
 [editable path="ExitDoor"]
+
+[editable path="ChickenCoop/InteractableComponent"]

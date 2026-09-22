@@ -140,8 +140,7 @@ func _run_zone_sign_checks(zone_manager, simulation) -> void:
 	if modular_sign == null or zone_sign_south == null:
 		return
 
-	modular_sign._player_inside = true
-	modular_sign._on_interact_requested(null)
+	modular_sign.interactable_component.interact()
 	_check(modular_sign.dialog.visible, "interacting with ModularFarmZoneSign opens its own dialog")
 
 	var progressive_before = zone_manager.get_progressive_unlocked_count()
@@ -152,8 +151,7 @@ func _run_zone_sign_checks(zone_manager, simulation) -> void:
 	)
 
 	simulation.state.money = 10000
-	zone_sign_south._player_inside = true
-	zone_sign_south._on_interact_requested(null)
+	zone_sign_south.interactable_component.interact()
 	_check(zone_sign_south.dialog.visible, "interacting with FarmZoneSign opens its own dialog")
 
 	var zone_south_unlocked_before = zone_manager.is_zone_unlocked("zone_south")

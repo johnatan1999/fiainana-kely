@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://structures/modular_farm_zone_sign.gd" id="1_modularfarmzonesign"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="2_msignint"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialog"]
 bg_color = Color(0.36, 0.24, 0.14, 1)
@@ -17,7 +18,7 @@ corner_radius_bottom_left = 8
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sign"]
 size = Vector2(48, 48)
 
-[node name="ModularFarmZoneSign" type="Area2D"]
+[node name="ModularFarmZoneSign" type="Node2D"]
 script = ExtResource("1_modularfarmzonesign")
 
 [node name="Visual" type="ColorRect" parent="."]
@@ -37,8 +38,12 @@ horizontal_alignment = 1
 autowrap_mode = 2
 text = "Zone d'expansion (E)"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="InteractableComponent" parent="." instance=ExtResource("2_msignint")]
+
+[node name="InteractableCollision2D" parent="InteractableComponent" index="0"]
 shape = SubResource("RectangleShape2D_sign")
+
+[editable path="InteractableComponent"]
 
 [node name="Dialog" type="CanvasLayer" parent="."]
 

@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://41pmy102xlbk"]
+[gd_scene load_steps=9 format=3 uid="uid://41pmy102xlbk"]
 
 [ext_resource type="Script" path="res://structures/chicken_coop/chicken_coop.gd" id="1_k5eme"]
 [ext_resource type="Texture2D" uid="uid://kkk5vjbjryep" path="res://assets/tileset/exterior.png" id="2_881k2"]
 [ext_resource type="PackedScene" uid="uid://c8xvpcf2luvjl" path="res://components/door/entrance_door.tscn" id="3_5r2ur"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="4_coopint"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_jrj01"]
 atlas = ExtResource("2_881k2")
@@ -32,11 +33,10 @@ texture = SubResource("AtlasTexture_itm2b")
 centered = false
 offset = Vector2(0, -172)
 
-[node name="Area2D" type="Area2D" parent="."]
-visible = false
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="InteractableComponent" parent="." instance=ExtResource("4_coopint")]
 position = Vector2(100, -35)
+
+[node name="InteractableCollision2D" parent="InteractableComponent" index="0"]
 shape = SubResource("RectangleShape2D_j6mld")
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
@@ -58,3 +58,5 @@ offset_right = 40.0
 offset_bottom = 23.0
 
 [editable path="EntranceDoor"]
+
+[editable path="InteractableComponent"]

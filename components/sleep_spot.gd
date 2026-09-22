@@ -1,28 +1,14 @@
 class_name SleepSpot
-extends Area2D
+extends Node2D
 
 ## Placed on the bed. Player interacts with it (any tool) to end the day.
 
 signal sleep_requested
 
-var _player_inside := false
-var _player: PlayerController
+@onready var interactable_component: InteractableComponent = $InteractableComponent
 
-func setup(player: PlayerController) -> void:
-	_player = player
-	_player.interact_requested.connect(_on_interact_requested)
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
+func _ready() -> void:
+	interactable_component.interacted.connect(_on_interacted)
 
-func _on_body_entered(body: Node) -> void:
-	if body == _player:
-		_player_inside = true
-
-func _on_body_exited(body: Node) -> void:
-	if body == _player:
-		_player_inside = false
-
-func _on_interact_requested(_tool) -> void:
-	if _player_inside:
-		AudioManager.play_interact_sfx()
-		sleep_requested.emit()
+func _on_interacted() -> void:
+	sleep_requested.emit()

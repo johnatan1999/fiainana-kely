@@ -11,7 +11,6 @@ const ChickenScene := preload("res://entities/animals/chicken/chicken.tscn")
 const EggScene := preload("res://entities/animals/chicken/egg.tscn")
 
 var simulation: FarmSimulation
-var player: PlayerController
 var farm_area: Node # the zone currently containing a Coop, or null
 
 var _coop: Coop
@@ -27,9 +26,8 @@ var _chicken_nodes: Dictionary = {} # animal_id: String -> Chicken
 ## revisiting the yard can be lost - accepted as a minor edge case.
 var _pending_products: Array = []
 
-func setup(p_simulation: FarmSimulation, p_player: PlayerController) -> void:
+func setup(p_simulation: FarmSimulation) -> void:
 	simulation = p_simulation
-	player = p_player
 	simulation.animal_added.connect(_on_animal_added)
 	simulation.product_ready.connect(_on_product_ready)
 
@@ -48,9 +46,7 @@ func set_farm_area(p_zone: Node) -> void:
 	_feeding_bowl = farm_area.get_node("FeedingBowl")
 	_water_bowl = farm_area.get_node("WaterBowl")
 	_animal_container = farm_area.get_node("AnimalContainer")
-	_coop.setup(player, self)
-	#_feeding_bowl.setup(player)
-	#_water_bowl.setup(player)
+	_coop.setup(self)
 
 	for animal_id in simulation.get_all_animal_ids():
 		_spawn_chicken(animal_id)

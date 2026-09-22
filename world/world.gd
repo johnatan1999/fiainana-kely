@@ -48,14 +48,14 @@ func _ready() -> void:
 	simulation = FarmSimulation.new(GRID_WIDTH, GRID_HEIGHT, crop_registry, animal_registry)
 	simulation.state.add_inventory("corn_seed", 3)
 
-	farm_land_manager.setup(simulation, player)
+	farm_land_manager.setup(simulation)
 	farming_controller.setup(simulation, player)
 	shop_controller.setup(simulation, farm_land_manager)
 	hud.setup(simulation, player, farming_controller)
 	shop_ui.setup(shop_controller, simulation)
 	inventory_ui.setup(simulation, shop_ui)
 	pause_menu.setup(shop_ui, inventory_ui)
-	animal_manager.setup(simulation, player)
+	animal_manager.setup(simulation)
 	world_manager.setup(simulation, player, farming_controller, shop_ui, zone_container, animal_manager, farm_land_manager)
 	save_controller.setup(simulation, world_manager, player)
 

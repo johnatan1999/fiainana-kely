@@ -26,12 +26,10 @@ func _make_sim_with_chicken(breeding_chance: float = 0.25) -> FarmSimulation:
 
 ## FarmLandManager extends Node but is never added to the tree in these tests -
 ## fine, since buy_zone()/buy_progressive_patch() never touch tree-dependent
-## APIs unless set_zone_markers() is called (it isn't here). player is only
-## ever forwarded to FarmZoneSign/ModularFarmZoneSign.setup() inside
-## set_zone_markers(), so null is safe for these pure-logic tests.
+## APIs unless set_zone_markers() is called (it isn't here).
 func _make_farm_land_manager(simulation: FarmSimulation) -> FarmLandManager:
 	var farm_land_manager := FarmLandManager.new()
-	farm_land_manager.setup(simulation, null)
+	farm_land_manager.setup(simulation)
 	return farm_land_manager
 
 func _check(condition: bool, description: String) -> void:

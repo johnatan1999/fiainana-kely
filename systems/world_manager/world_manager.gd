@@ -4,6 +4,11 @@ extends Node
 ## Owns zone loading/unloading. The player, camera and simulation persist across
 ## zone changes - only the zone scene (background, plots, triggers) is swapped.
 
+const ChickenScene := preload("res://entities/animals/chicken/chicken.tscn")
+## How many decorative (non-simulated) chickens to show around the coop
+## building in the village, capped regardless of how many are actually owned.
+const MAX_DECORATIVE_CHICKENS := 4
+
 const ZONE_PATHS := {
 	Zone.ID.PLAYER_HOUSE: "res://world/areas/interior/player_interior_house.tscn",
 	Zone.ID.VILLAGE: "res://world/areas/exterior/player_village.tscn",
@@ -102,11 +107,14 @@ func _wire_zone_content(zone: ZoneRoot) -> void:
 
 	var sleep_spot: SleepSpot = zone.get_node_or_null("SleepSpot")
 	if sleep_spot:
-		sleep_spot.setup(player)
 		sleep_spot.sleep_requested.connect(_on_sleep_requested)
 
 	if zone.get_node_or_null("ChickenCoop"):
 		animal_manager.set_farm_area(zone)
+
+	var coop_building: Node2D = zone.get_node_or_null("ChickenCoopBuilding")
+	if coop_building:
+		_spawn_decorative_chickens(coop_building, zone.get_node_or_null("AnimalContainer"))
 
 	# Safe to call unconditionally - a zone without any ZoneMarker_*/
 	# ProgressiveZoneMarker nodes just leaves FarmLandManager's markers empty.
@@ -115,8 +123,21 @@ func _wire_zone_content(zone: ZoneRoot) -> void:
 	for transition in _find_transitions(zone):
 		transition.triggered.connect(request_zone_change)
 
-func _on_shop_spawned(shop: Shop) -> void:
-	shop.setup(shop_ui)
+## Purely cosmetic - unlike AnimalManager's chickens, these aren't tied to any
+## AnimalState (no hunger/thirst/eggs). They just give a visual sense, from
+## outside, that the coop isn't empty. The real, simulated chickens only
+## exist inside chicken_coop_interior.tscn.
+func _spawn_decorative_chickens(coop_building: Node2D, container: Node2D) -> void:
+	if container == null:
+		return
+	var count: int = min(simulation.get_all_animal_ids().size(), MAX_DECORATIVE_CHICKENS)
+	for i in range(count):
+		var chicken: Chicken = ChickenScene.instantiate()
+		chicken.start_wild = true
+		# container and coop_building are both direct children of the same
+		# zone root, so their local spaces match - no need for global_position.
+		chicken.position = coop_building.position + Vector2(randf_range(-40.0, 40.0), randf_range(20.0, 50.0))
+		container.add_child(chicken)
 
 func _find_transitions(node: Node) -> Array:
 	var result: Array = []
