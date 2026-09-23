@@ -3,6 +3,7 @@ extends Node2D
 
 const CELL_SIZE := 64.0
 const PlotViewScene := preload("res://structures/farm/farm/plot_view.tscn")
+const PlotHighlightScript := preload("res://structures/farm/farm/plot_highlight.gd")
 
 ## Atlas coordinates in farm_tileset.tres (source id 0) for each soil state.
 const TILE_SOURCE_ID := 0
@@ -16,6 +17,7 @@ var grid_height: int
 var _plot_views: Dictionary = {} # plot_id: int -> PlotView
 var _plot_positions: Dictionary = {} # plot_id: int -> Vector2i
 var _simulation: FarmSimulation
+var _highlight: Node2D
 
 @onready var soil_layer: TileMapLayer = $SoilLayer
 
@@ -27,6 +29,31 @@ func setup(simulation: FarmSimulation) -> void:
 	simulation.plot_changed.connect(_on_plot_changed)
 	simulation.plot_added.connect(_on_plot_added)
 	simulation.plot_removed.connect(_on_plot_removed)
+	_create_highlight()
+
+## Built in code rather than as a .tscn node - see WorldManager's fade
+## overlay for why (avoids scene-file edits getting clobbered by a
+## concurrently open editor).
+func _create_highlight() -> void:
+	_highlight = PlotHighlightScript.new()
+	_highlight.visible = false
+	add_child(_highlight)
+
+## Shows the pulsing outline over whichever plot get_plot_id_at(world_pos)
+## would target right now, or hides it if that position isn't over a plot.
+## Called every frame by FarmingController while the player is in this zone.
+func show_highlight_at_position(world_pos: Vector2) -> void:
+	var plot_id := get_plot_id_at(world_pos)
+	if plot_id == -1:
+		_highlight.visible = false
+		return
+	var grid_pos: Vector2i = _simulation.get_plot_position(plot_id)
+	_highlight.position = Vector2(grid_pos.x, grid_pos.y) * CELL_SIZE
+	_highlight.visible = true
+
+func hide_highlight() -> void:
+	if _highlight:
+		_highlight.visible = false
 
 func _build_grid() -> void:
 	for plot_id in _simulation.get_all_plot_ids():

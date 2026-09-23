@@ -24,6 +24,14 @@ func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_world_man
 func set_farm_view(p_farm_view: FarmView) -> void:
 	farm_view = p_farm_view
 
+## Keeps the "which plot will interact() affect" outline live, matching
+## exactly the tile get_plot_id_at(player.global_position) would target -
+## same rule _on_interact_requested() itself uses below, so the highlight
+## never lies about what pressing E is about to do.
+func _process(_delta: float) -> void:
+	if farm_view:
+		farm_view.show_highlight_at_position(player.global_position)
+
 func _on_zone_loaded(zone: ZoneRoot) -> void:
 	var found: FarmView = zone.get_node_or_null("FarmView")
 	if found:
