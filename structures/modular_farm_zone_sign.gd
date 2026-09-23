@@ -8,9 +8,9 @@ extends Node2D
 ## unlocks the next tiles in automatic order. The player never picks where.
 
 const PATCH_OPTIONS := [
-	{"label": "Acheter 1 parcelle", "size": 1, "price": 15},
-	{"label": "Acheter patch 3x3 (9 parcelles)", "size": 9, "price": 110},
-	{"label": "Acheter patch 5x5 (25 parcelles)", "size": 25, "price": 280},
+	{"label": "Acheter 1 parcelle", "size": 1, "price": 1500},
+	{"label": "Acheter patch 3x3 (9 parcelles)", "size": 9, "price": 11000},
+	{"label": "Acheter patch 5x5 (25 parcelles)", "size": 25, "price": 28000},
 ]
 
 @onready var interactable_component: InteractableComponent = $InteractableComponent
@@ -38,7 +38,7 @@ func setup(zone_manager: FarmLandManager) -> void:
 func _build_option_buttons() -> void:
 	for option in PATCH_OPTIONS:
 		var button := Button.new()
-		button.text = "%s — %d $" % [option["label"], option["price"]]
+		button.text = "%s — %s" % [option["label"], Currency.format(option["price"])]
 		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(_on_patch_pressed.bind(option))
 		option_buttons_container.add_child(button)

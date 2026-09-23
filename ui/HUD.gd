@@ -50,7 +50,7 @@ func _on_day_changed(day: int) -> void:
 	season_label.text = "Saison: %s" % SEASON_NAMES.get(_simulation.state.clock.get_season(), "?")
 
 func _on_money_changed(money: int) -> void:
-	money_label.text = "Argent: %d $" % money
+	money_label.text = "Argent: %s" % Currency.format(money)
 
 func _on_inventory_changed(item_id: String, _amount: int) -> void:
 	if item_id == _selected_crop_id or item_id == _selected_crop_id + "_seed":

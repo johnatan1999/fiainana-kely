@@ -194,7 +194,7 @@ func _refresh_predefined_marker(zone_id: String) -> void:
 		_play_unlock_flash(rect)
 	else:
 		rect.color = Color(0.3, 0.3, 0.3, 0.55)
-		label.text = "%s — %d $ (voir le panneau)" % [zone_data.display_name, zone_data.price]
+		label.text = "%s — %s (voir le panneau)" % [zone_data.display_name, Currency.format(zone_data.price)]
 
 func _refresh_progressive_marker() -> void:
 	if _progressive_marker_label == null:

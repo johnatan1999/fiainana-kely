@@ -10,4 +10,4 @@ malagasy_name = "Atody"
 description = "Récolté au poulailler. Ne s'achète pas, seulement à vendre."
 category = 3
 price = 0
-sell_price = 6
+sell_price = 600

@@ -74,12 +74,12 @@ func setup(item: ShopItemData, locked: bool = false, owned_count: int = 0) -> vo
 	# entirely instead of showing a misleading "Acheter" for 0 $.
 	var buyable := item.price > 0
 	price_label.visible = buyable
-	price_label.text = "%d $" % item.price
+	price_label.text = Currency.format(item.price)
 	qty_row.visible = buyable
 	add_button.visible = buyable
 
 	sell_button.visible = item.sell_price > 0
-	sell_button.text = "Vendre 1 (%d $)" % item.sell_price
+	sell_button.text = "Vendre 1 (%s)" % Currency.format(item.sell_price)
 	sell_button.disabled = owned_count <= 0
 
 	_refresh_quantity_label()

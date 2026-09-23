@@ -37,7 +37,7 @@ func setup(simulation: FarmSimulation, shop_ui: ShopUI) -> void:
 	scale = CLOSED_SCALE
 
 func _on_money_changed(money: int) -> void:
-	money_label.text = "Argent: %d $" % money
+	money_label.text = "Argent: %s" % Currency.format(money)
 
 ## Only rebuilds while actually visible - no point re-resolving every icon
 ## on every purchase/harvest while the player isn't even looking at it.

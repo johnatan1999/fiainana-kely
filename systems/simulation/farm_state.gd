@@ -1,7 +1,7 @@
 class_name FarmState
 extends RefCounted
 
-var money: int = 100
+var money: int = 10000
 var clock := GameClock.new()
 
 ## plot_id: int -> PlotState. Ids are stable and never reused - a plot's

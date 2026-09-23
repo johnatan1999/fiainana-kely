@@ -9,5 +9,5 @@ display_name = "Poulet"
 malagasy_name = "Akoho"
 description = "Un poulet pour commencer le poulailler familial."
 category = 3
-price = 35
+price = 3500
 animal_species = 0

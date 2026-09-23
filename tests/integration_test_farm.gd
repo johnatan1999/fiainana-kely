@@ -60,7 +60,7 @@ func _run_flow() -> void:
 
 	var animal_container = animal_manager.farm_area.get_node("AnimalContainer")
 
-	simulation.state.money = 1000
+	simulation.state.money = 100000
 	simulation.state.has_coop = false
 	simulation.state.coop_capacity = max(simulation.state.coop_capacity, simulation.get_all_animal_ids().size() + 1)
 	var built = simulation.build_coop()
@@ -110,7 +110,7 @@ func _run_zone_manager_checks() -> void:
 		"Exterior.tscn's ProgressiveZoneMarker is found by FarmLandManager.set_zone_markers()"
 	)
 
-	simulation.state.money = 10000
+	simulation.state.money = 100000
 	simulation.state.unlocked_zone_ids.erase("zone_east")
 	var ok = shop_controller.buy_zone("zone_east")
 	var marker: Dictionary = zone_manager._predefined_markers.get("zone_east", {})
@@ -156,7 +156,7 @@ func _run_zone_sign_checks(zone_manager, simulation) -> void:
 		"clicking a patch option on ModularFarmZoneSign's dialog buys it via FarmLandManager"
 	)
 
-	simulation.state.money = 10000
+	simulation.state.money = 100000
 	zone_sign_south.interactable_component.interact()
 	_check(zone_sign_south.dialog.visible, "interacting with FarmZoneSign opens its own dialog")
 

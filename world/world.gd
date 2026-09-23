@@ -15,6 +15,7 @@ const CROP_RESOURCES: Array[CropData] = [
 	preload("res://data/crops/coffee.tres"),
 	preload("res://data/crops/clove.tres"),
 	preload("res://data/crops/vanilla.tres"),
+	preload("res://data/crops/litchi.tres"),
 ]
 
 const ANIMAL_RESOURCES: Array[AnimalData] = [

@@ -23,7 +23,7 @@ signal animal_changed(animal_id: String)
 ## Node2D itself, so it doesn't put the product directly into inventory here.
 signal product_ready(animal_id: String, product_id: String)
 
-const COOP_COST := 60
+const COOP_COST := 6000
 
 var state: FarmState
 var grid_width: int

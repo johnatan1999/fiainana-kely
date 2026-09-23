@@ -159,7 +159,7 @@ func _purchase(item: ShopItemData, quantity: int) -> void:
 		_shop_controller.buy_item(item.id, item.price, quantity)
 
 func _on_money_changed(money: int) -> void:
-	money_label.text = "Argent: %d $" % money
+	money_label.text = "Argent: %s" % Currency.format(money)
 
 ## Crop unlock_day gates can flip while the shop happens to be open; cheapest
 ## correct fix is to just re-lock/unlock the currently visible grid.

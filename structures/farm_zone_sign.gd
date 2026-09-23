@@ -53,7 +53,7 @@ func _open_dialog() -> void:
 		return
 
 	name_label.text = zone_data.display_name
-	price_label.text = "%d $" % zone_data.price
+	price_label.text = Currency.format(zone_data.price)
 	description_label.text = "%s (%d parcelles)" % [zone_data.description, zone_data.get_tile_count()]
 
 	var already_unlocked := _farm_land_manager.is_zone_unlocked(zone_id)
