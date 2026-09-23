@@ -58,6 +58,5 @@ shape = SubResource("RectangleShape2D_b84fs")
 offset_right = 40.0
 offset_bottom = 23.0
 
-[editable path="EntranceDoor"]
-
 [editable path="InteractableComponent"]
+[editable path="EntranceDoor"]

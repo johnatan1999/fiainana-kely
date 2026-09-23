@@ -45,6 +45,10 @@ func _ready() -> void:
 	# Écoute du signal global émis par le Shop / ShopBuilding
 	UIEvents.shop_requested.connect(_on_shop_requested)
 
+	# Reste actif malgré get_tree().paused = true (voir open()/close()) - sinon
+	# ses propres boutons et son tween d'ouverture/fermeture se figeraient aussi.
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
 	# Configuration visuelle initiale (masqué par défaut)
 	resized.connect(func(): pivot_offset = size / 2.0)
 	visible = false
@@ -173,6 +177,7 @@ func _on_inventory_changed(_item_id: String, _amount: int) -> void:
 
 func open() -> void:
 	visible = true
+	get_tree().paused = true
 	AudioManager.play_click_menu_sfx()
 	if _open_tween:
 		_open_tween.kill()
@@ -187,7 +192,10 @@ func close() -> void:
 	_open_tween = create_tween().set_parallel(true)
 	_open_tween.tween_property(self, "modulate:a", 0.0, CLOSE_TIME)
 	_open_tween.tween_property(self, "scale", CLOSED_SCALE, CLOSE_TIME)
-	_open_tween.chain().tween_callback(func(): visible = false)
+	_open_tween.chain().tween_callback(func():
+		visible = false
+		get_tree().paused = false
+	)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):

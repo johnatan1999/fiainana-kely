@@ -1,7 +1,7 @@
 class_name PlayerController
 extends CharacterBody2D
 
-enum Tool { HOE, WATERING_CAN, SEEDS, HARVEST }
+enum Tool {HOE, WATERING_CAN, SEEDS, HARVEST}
 
 signal interact_requested(tool: Tool)
 signal tool_changed(tool: Tool)
@@ -16,13 +16,17 @@ signal tool_changed(tool: Tool)
 
 var current_tool: Tool = Tool.HOE
 var last_facing_direction: Vector2 = Vector2.RIGHT
+## False during a zone transition (see WorldManager) - movement/tool input is
+## ignored and the character smoothly decelerates to a stop via the same
+## friction curve as releasing the movement keys, instead of snapping still.
+var input_enabled := true
 
 func _physics_process(_delta: float) -> void:
 	var input_vector := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	var speed := run_speed if Input.is_action_pressed("sprint") else walk_speed
 	velocity = input_vector * speed
 	move_and_slide()
-	
+
 	_update_animation(input_vector)
 	_update_interaction_pivot(input_vector)
 
@@ -31,7 +35,7 @@ func _update_interaction_pivot(dir: Vector2) -> void:
 	if dir != Vector2.ZERO:
 		last_facing_direction = dir
 		interaction_pivot.rotation = dir.angle()
-		
+
 func _update_animation(dir: Vector2):
 	if dir == Vector2.ZERO:
 		_play_idle()
@@ -50,7 +54,6 @@ func _play_walk(dir: Vector2):
 	anim.play()
 
 
-
 ## 1=Houe 2=Graines 3=Arrosoir 4=Récolte - direct raw keycodes, kept out of the
 ## project's custom InputMap since it has repeatedly lost entries there.
 const NUMBER_KEY_TOOLS := {
@@ -61,6 +64,8 @@ const NUMBER_KEY_TOOLS := {
 }
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not input_enabled:
+		return
 	if event.is_action_pressed("interact"):
 		var interacted := _try_interact()
 		

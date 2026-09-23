@@ -68,5 +68,4 @@ shape = SubResource("RectangleShape2D_coop_interact")
 [node name="AnimalContainer" type="Node2D" parent="."]
 
 [editable path="ExitDoor"]
-
 [editable path="ChickenCoop/InteractableComponent"]

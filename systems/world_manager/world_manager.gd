@@ -92,9 +92,11 @@ func request_zone_change(zone_id: String, spawn_name: String) -> void:
 ## load and SaveController.load_game() - call change_zone() straight instead,
 ## since there's nothing on screen yet worth hiding behind a fade at boot.
 func _change_zone_with_fade(zone_id: String, spawn_name: String) -> void:
+	player.input_enabled = false
 	await _fade_to(1.0)
 	change_zone(zone_id, spawn_name)
 	await _fade_to(0.0)
+	player.input_enabled = true
 
 func _fade_to(target_alpha: float) -> void:
 	var tween := create_tween()

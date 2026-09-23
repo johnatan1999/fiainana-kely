@@ -26,6 +26,10 @@ func setup(simulation: FarmSimulation, shop_ui: ShopUI) -> void:
 	_simulation = simulation
 	_shop_ui = shop_ui
 
+	# Reste actif malgré get_tree().paused = true (voir open()/close()) - sinon
+	# son propre bouton et son tween d'ouverture/fermeture se figeraient aussi.
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
 	close_button.pressed.connect(close)
 	simulation.money_changed.connect(_on_money_changed)
 	simulation.inventory_changed.connect(_on_inventory_changed)
@@ -108,6 +112,7 @@ func _describe_item(item_id: String) -> Dictionary:
 func open() -> void:
 	_rebuild()
 	visible = true
+	get_tree().paused = true
 	AudioManager.play_click_menu_sfx()
 	if _open_tween:
 		_open_tween.kill()
@@ -122,7 +127,10 @@ func close() -> void:
 	_open_tween = create_tween().set_parallel(true)
 	_open_tween.tween_property(self, "modulate:a", 0.0, CLOSE_TIME)
 	_open_tween.tween_property(self, "scale", CLOSED_SCALE, CLOSE_TIME)
-	_open_tween.chain().tween_callback(func(): visible = false)
+	_open_tween.chain().tween_callback(func():
+		visible = false
+		get_tree().paused = false
+	)
 
 ## "I" is a raw keycode, not a project InputMap action - kept out of it for
 ## the same reason PlayerController.NUMBER_KEY_TOOLS is (see its comment).
