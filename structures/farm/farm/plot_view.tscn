@@ -11,11 +11,3 @@ offset_right = 16.0
 offset_bottom = 16.0
 mouse_filter = 2
 color = Color(0.6, 0.5, 0.2, 1)
-
-[node name="CropSprite" type="TextureRect" parent="."]
-visible = false
-offset_right = 48.0
-offset_bottom = 48.0
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
