@@ -1,13 +1,14 @@
-[gd_scene load_steps=9 format=3 uid="uid://c5uquiu1lrlve"]
+[gd_scene load_steps=10 format=3 uid="uid://c5uquiu1lrlve"]
 
 [ext_resource type="Script" path="res://core/autoloads/audio/audio_manager.gd" id="1_al1b8"]
-[ext_resource type="AudioStream" uid="uid://cp003iw21hanl" path="res://assets/audio/SFX/Audio_SFX_Shovel.mp3" id="2_i6wbt"]
+[ext_resource type="AudioStream" path="res://assets/audio/SFX/shovel_randomizer.tres" id="2_i6wbt"]
 [ext_resource type="AudioStream" uid="uid://dyijxv75xw06a" path="res://assets/audio/SFX/Audio_SFX_Plant.mp3" id="3_nfbn2"]
 [ext_resource type="AudioStream" uid="uid://ds3jt34brurlc" path="res://assets/audio/SFX/Audio_SFX_Watering.mp3" id="4_trv6b"]
 [ext_resource type="AudioStream" uid="uid://duy5vb87jvraj" path="res://assets/audio/SFX/Audio_SFX_Harvest.mp3" id="5_ll4ma"]
 [ext_resource type="AudioStream" uid="uid://b5wrc0cmpfm7q" path="res://assets/audio/SFX/Audio_SFX_Interact.mp3" id="6_n5fsn"]
 [ext_resource type="AudioStream" uid="uid://dsr4vwi2ewm5l" path="res://assets/audio/SFX/Audio_SFX_Menu_Click.mp3" id="7_3ss70"]
-[ext_resource type="AudioStream" path="res://assets/audio/SFX/footstep_randomizer.tres" id="8_footstep"]
+[ext_resource type="AudioStream" path="res://assets/audio/SFX/footstep_walk_randomizer.tres" id="8_footstep"]
+[ext_resource type="AudioStream" path="res://assets/audio/SFX/footstep_run_randomizer.tres" id="9_footstep_run"]
 
 [node name="AudioManager" type="Node"]
 script = ExtResource("1_al1b8")
@@ -17,7 +18,8 @@ sfx_watering = ExtResource("4_trv6b")
 sfx_harvest = ExtResource("5_ll4ma")
 sfx_interact = ExtResource("6_n5fsn")
 sfx_menu_click = ExtResource("7_3ss70")
-sfx_footstep = ExtResource("8_footstep")
+sfx_footstep_walk = ExtResource("8_footstep")
+sfx_footstep_run = ExtResource("9_footstep_run")
 
 [node name="BGMPlayerA" type="AudioStreamPlayer" parent="."]
 

@@ -1,0 +1,26 @@
+[gd_resource type="AudioStreamRandomizer" load_steps=7 format=3]
+
+[ext_resource type="AudioStream" uid="uid://cj1f2r8b4o1gp" path="res://assets/audio/SFX/Audio_SFX_Running_01.wav" id="1_run01"]
+[ext_resource type="AudioStream" uid="uid://blfvd8xci2jkl" path="res://assets/audio/SFX/Audio_SFX_Running_02.wav" id="2_run02"]
+[ext_resource type="AudioStream" uid="uid://cpoj0o2nruc5" path="res://assets/audio/SFX/Audio_SFX_Running_03.wav" id="3_run03"]
+[ext_resource type="AudioStream" uid="uid://bylvxovlghhxa" path="res://assets/audio/SFX/Audio_SFX_Running_04.wav" id="4_run04"]
+[ext_resource type="AudioStream" uid="uid://c11yuvwkagdpv" path="res://assets/audio/SFX/Audio_SFX_Running_05.wav" id="5_run05"]
+[ext_resource type="AudioStream" uid="uid://dhkfvktpibr1a" path="res://assets/audio/SFX/Audio_SFX_Running_06.wav" id="6_run06"]
+
+[resource]
+playback_mode = 0
+random_pitch = 1.06
+random_volume_offset_db = 1.5
+streams_count = 6
+stream_0/stream = ExtResource("1_run01")
+stream_0/weight = 1.0
+stream_1/stream = ExtResource("2_run02")
+stream_1/weight = 1.0
+stream_2/stream = ExtResource("3_run03")
+stream_2/weight = 1.0
+stream_3/stream = ExtResource("4_run04")
+stream_3/weight = 1.0
+stream_4/stream = ExtResource("5_run05")
+stream_4/weight = 1.0
+stream_5/stream = ExtResource("6_run06")
+stream_5/weight = 1.0

@@ -1,0 +1,20 @@
+[gd_resource type="AudioStreamRandomizer" load_steps=5 format=3]
+
+[ext_resource type="AudioStream" uid="uid://co07ajgwebqyi" path="res://assets/audio/SFX/Audio_SFX_Shovel_01.wav" id="1_shovel01"]
+[ext_resource type="AudioStream" uid="uid://dm3dfutgledog" path="res://assets/audio/SFX/Audio_SFX_Shovel_02.wav" id="2_shovel02"]
+[ext_resource type="AudioStream" uid="uid://4x55hbqh2gq1" path="res://assets/audio/SFX/Audio_SFX_Shovel_03.wav" id="3_shovel03"]
+[ext_resource type="AudioStream" uid="uid://b72s4nq1a2ybu" path="res://assets/audio/SFX/Audio_SFX_Shovel_04.wav" id="4_shovel04"]
+
+[resource]
+playback_mode = 0
+random_pitch = 1.05
+random_volume_offset_db = 1.5
+streams_count = 4
+stream_0/stream = ExtResource("1_shovel01")
+stream_0/weight = 1.0
+stream_1/stream = ExtResource("2_shovel02")
+stream_1/weight = 1.0
+stream_2/stream = ExtResource("3_shovel03")
+stream_2/weight = 1.0
+stream_3/stream = ExtResource("4_shovel04")
+stream_3/weight = 1.0
