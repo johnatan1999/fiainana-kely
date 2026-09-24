@@ -139,10 +139,17 @@ func water(plot_id: int) -> bool:
 	plot_changed.emit(plot_id)
 	return true
 
-func harvest(plot_id: int) -> bool:
+## Read-only mirror of harvest()'s guard - lets callers (the harvest swing
+## animation) check eligibility before the crop is actually removed, since
+## the animation must play before the mutation, not after.
+func can_harvest(plot_id: int) -> bool:
 	var plot := get_plot(plot_id)
-	if plot == null or plot.crop == null or not plot.crop.is_mature():
+	return plot != null and plot.crop != null and plot.crop.is_mature()
+
+func harvest(plot_id: int) -> bool:
+	if not can_harvest(plot_id):
 		return false
+	var plot := get_plot(plot_id)
 	var crop_id := plot.crop.crop_id
 	var crop_data := get_crop_data(crop_id)
 	var quantity := _compute_harvest_quantity(plot.crop, crop_data)

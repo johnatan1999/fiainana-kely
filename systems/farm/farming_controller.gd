@@ -13,11 +13,15 @@ var simulation: FarmSimulation
 var player: PlayerController
 var farm_view: FarmView # null while the player is outside the farm zone
 var selected_crop_id: String = DEFAULT_CROP_ID
+## Set by _on_interact_requested() for HARVEST, consumed by
+## _on_action_animation_finished() - -1 means no harvest is pending.
+var _pending_harvest_plot_id := -1
 
 func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_world_manager: WorldManager) -> void:
 	simulation = p_simulation
 	player = p_player
 	player.interact_requested.connect(_on_interact_requested)
+	player.action_animation_finished.connect(_on_action_animation_finished)
 	p_world_manager.zone_loaded.connect(_on_zone_loaded)
 	p_world_manager.zone_unloading.connect(_on_zone_unloading)
 
@@ -70,6 +74,9 @@ func _get_ownable_crop_ids() -> Array:
 			result.append(crop_id)
 	return result
 
+## Tool animations only play once the underlying action is confirmed
+## possible - swinging the hoe on unplowable ground, or the sickle on a plot
+## with nothing ready to harvest, does nothing and plays nothing.
 func _on_interact_requested(tool: PlayerController.Tool) -> void:
 	if farm_view == null:
 		return
@@ -80,12 +87,31 @@ func _on_interact_requested(tool: PlayerController.Tool) -> void:
 		PlayerController.Tool.HOE:
 			if simulation.till(plot_id):
 				AudioManager.play_till_sfx()
+				player.play_tool_animation(tool)
 		PlayerController.Tool.WATERING_CAN:
 			if simulation.water(plot_id):
 				AudioManager.play_watering_sfx()
+				player.play_tool_animation(tool)
 		PlayerController.Tool.SEEDS:
 			if simulation.plant(plot_id, selected_crop_id):
 				AudioManager.play_plant_sfx()
+				player.play_tool_animation(tool)
 		PlayerController.Tool.HARVEST:
-			if simulation.harvest(plot_id):
-				AudioManager.play_harvest_sfx()
+			# The actual harvest() call is applied in
+			# _on_action_animation_finished() instead of right here, so the
+			# crop sprite only disappears once the harvest swing animation
+			# actually completes, not the instant E is pressed. can_harvest()
+			# is the read-only check that gates whether the swing plays at all.
+			if simulation.can_harvest(plot_id):
+				_pending_harvest_plot_id = plot_id
+				player.play_tool_animation(tool)
+
+## PlayerController guarantees this fires exactly once per interact press
+## (even with no animation), so this can't soft-lock a pending harvest.
+func _on_action_animation_finished(tool: PlayerController.Tool) -> void:
+	if tool != PlayerController.Tool.HARVEST or _pending_harvest_plot_id == -1:
+		return
+	var plot_id := _pending_harvest_plot_id
+	_pending_harvest_plot_id = -1
+	if simulation.harvest(plot_id):
+		AudioManager.play_harvest_sfx()

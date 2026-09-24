@@ -45,4 +45,4 @@ sprite_mature = SubResource("AtlasTexture_corn_mature")
 sprite_seed_scale = 0.4
 sprite_sprout_scale = 0.55
 sprite_growing_scale = 0.8
-sprite_mature_scale = 1.0
+sprite_mature_scale = 1.35
