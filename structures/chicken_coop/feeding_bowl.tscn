@@ -24,14 +24,15 @@ empty_bowl_texture = SubResource("AtlasTexture_t6ghh")
 full_bowl_texture = SubResource("AtlasTexture_hpc8d")
 
 [node name="Visual" type="Sprite2D" parent="."]
+position = Vector2(0, -16)
 texture = SubResource("AtlasTexture_t6ghh")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-0.5, 5)
+position = Vector2(-0.5, -11)
 shape = SubResource("RectangleShape2D_bowl")
 
 [node name="InteractableComponent" parent="." instance=ExtResource("2_mbvn4")]
-position = Vector2(-29, 17)
+position = Vector2(-29, 1)
 
 [node name="InteractableCollision2D" parent="InteractableComponent" index="0"]
 position = Vector2(28.5, -12.5)

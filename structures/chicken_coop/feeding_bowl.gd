@@ -25,6 +25,13 @@ func _ready() -> void:
 	_update_visual()
 
 
+## Middle of the bowl's solid footprint - where chickens aim and measure
+## their reach from. The node origin itself is the bowl's base (its y-sort
+## point), which sits at the footprint's bottom edge.
+func get_center() -> Vector2:
+	return $CollisionShape2D.global_position
+
+
 func is_full() -> bool:
 	return servings > 0
 

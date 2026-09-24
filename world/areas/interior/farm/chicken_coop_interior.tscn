@@ -19,6 +19,7 @@ size = Vector2(100, 20)
 size = Vector2(220, 160)
 
 [node name="ChickenCoopInterior" type="Node2D"]
+y_sort_enabled = true
 script = ExtResource("1_gayrm")
 
 [node name="Spawns" type="Node2D" parent="."]
@@ -28,6 +29,7 @@ position = Vector2(1, 88)
 position = Vector2(-1, 16)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+z_index = -1
 texture = SubResource("AtlasTexture_465yl")
 
 [node name="Walls" type="StaticBody2D" parent="."]
@@ -44,16 +46,17 @@ target_spawn = "SpawnFrom_CHICKEN_COOP"
 shape = SubResource("RectangleShape2D_ekeyn")
 
 [node name="FeedingBowl" parent="." instance=ExtResource("4_4aw65")]
-position = Vector2(-49, -5)
+position = Vector2(-49, 11)
 
 [node name="WaterBowl" parent="." instance=ExtResource("5_wr2mm")]
-position = Vector2(52, 27)
+position = Vector2(52, 52)
 
 [node name="ChickenCoop" type="Node2D" parent="."]
 position = Vector2(0, 10)
 script = ExtResource("6_coopgd")
 
 [node name="Label" type="Label" parent="ChickenCoop"]
+z_index = 10
 offset_left = -40.0
 offset_top = -60.0
 offset_right = 40.0
@@ -66,6 +69,16 @@ horizontal_alignment = 1
 shape = SubResource("RectangleShape2D_coop_interact")
 
 [node name="AnimalContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="ChickenArea" type="ReferenceRect" parent="."]
+offset_left = -120.0
+offset_top = -25.0
+offset_right = 115.0
+offset_bottom = 75.0
+mouse_filter = 2
+border_color = Color(1, 0.85, 0.2, 1)
+border_width = 2.0
 
 [editable path="ExitDoor"]
 [editable path="ChickenCoop/InteractableComponent"]

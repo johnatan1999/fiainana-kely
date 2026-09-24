@@ -9,6 +9,16 @@ extends Node
 
 const EggScene := preload("res://entities/animals/chicken/egg.tscn")
 
+## Spawn placement inside the zone's ChickenArea: at least this far from
+## every other animal and from the bowls (their origin), so nobody starts
+## stacked or wedged against a bowl. Falls back to the least-crowded
+## candidate if the area is too full to honor it.
+const SPAWN_MIN_SPACING := 20.0
+const SPAWN_BOWL_CLEARANCE := 30.0
+const SPAWN_CANDIDATES := 30
+## Used only if a coop zone has no ChickenArea node.
+const FALLBACK_AREA_HALF_SIZE := Vector2(60, 40)
+
 ## Species -> the scene AnimalManager instantiates for it. Chicken is the only
 ## one with real art/AI today; buy_animal()/place_animal() in FarmSimulation
 ## already work for any species, so supporting a new one here later is just
@@ -24,6 +34,9 @@ var _coop: Coop
 var _feeding_bowl: FeedingBowl
 var _water_bowl: WaterBowl
 var _animal_container: Node2D
+## Global rect animals spawn and wander in - the zone's ChickenArea
+## ReferenceRect (drawn and resizable in the editor, invisible in game).
+var _animal_area: Rect2
 
 var _animal_nodes: Dictionary = {} # animal_id: String -> Node2D
 ## product_ids whose product_ready fired while no Coop-bearing zone was
@@ -55,12 +68,14 @@ func set_farm_area(p_zone: Node) -> void:
 		_feeding_bowl = null
 		_water_bowl = null
 		_animal_container = null
+		_animal_area = Rect2()
 		return
 
 	_coop = farm_area.get_node("ChickenCoop")
 	_feeding_bowl = farm_area.get_node("FeedingBowl")
 	_water_bowl = farm_area.get_node("WaterBowl")
 	_animal_container = farm_area.get_node("AnimalContainer")
+	_animal_area = _find_animal_area(farm_area)
 	_coop.setup(self)
 
 	for animal_id in simulation.get_all_animal_ids():
@@ -108,9 +123,46 @@ func _spawn_animal(animal_id: String) -> void:
 		return
 	var node: Node2D = scene.instantiate()
 	_animal_container.add_child(node)
-	node.global_position = _coop.global_position
-	node.setup(self, animal_id)
+	node.global_position = _pick_spawn_position()
+	node.setup(self, animal_id, _animal_area)
 	_animal_nodes[animal_id] = node
+
+func _find_animal_area(zone: Node) -> Rect2:
+	var area := zone.get_node_or_null("ChickenArea") as Control
+	if area != null:
+		return area.get_global_rect()
+	push_warning("AnimalManager: no ChickenArea in zone %s - animals spawn around the coop instead." % zone.name)
+	return Rect2(_coop.global_position - FALLBACK_AREA_HALF_SIZE, FALLBACK_AREA_HALF_SIZE * 2.0)
+
+## Random point in _animal_area, re-rolled up to SPAWN_CANDIDATES times until
+## it's clear of the other animals and the bowls - a new layout every time
+## the zone is entered.
+func _pick_spawn_position() -> Vector2:
+	var avoid: Array[Vector2] = []
+	for node in _animal_nodes.values():
+		if is_instance_valid(node):
+			avoid.append(node.global_position)
+	var bowls: Array[Vector2] = []
+	for bowl in [_feeding_bowl, _water_bowl]:
+		if bowl != null:
+			bowls.append(bowl.get_center())
+
+	var best := _animal_area.get_center()
+	var best_score := -INF
+	for i in SPAWN_CANDIDATES:
+		var candidate := _animal_area.position + Vector2(randf(), randf()) * _animal_area.size
+		# Score = how much room the candidate has, relative to each minimum.
+		var score := INF
+		for p in avoid:
+			score = minf(score, candidate.distance_to(p) / SPAWN_MIN_SPACING)
+		for p in bowls:
+			score = minf(score, candidate.distance_to(p) / SPAWN_BOWL_CLEARANCE)
+		if score >= 1.0:
+			return candidate
+		if score > best_score:
+			best_score = score
+			best = candidate
+	return best
 
 func _on_product_ready(_animal_id: String, product_id: String) -> void:
 	if farm_area == null:
