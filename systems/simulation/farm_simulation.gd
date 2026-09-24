@@ -107,41 +107,53 @@ func get_animal(animal_id: String) -> AnimalState:
 func get_all_animal_ids() -> Array:
 	return state.animals.keys()
 
-func till(plot_id: int) -> bool:
+## can_till()/can_plant()/can_water()/can_harvest() are read-only mirrors of
+## each action's guard - lets callers (FarmingController walking the player
+## up to the plot, tool animations) check eligibility before mutating.
+func can_till(plot_id: int) -> bool:
 	var plot := get_plot(plot_id)
-	if plot == null or plot.crop != null:
+	return plot != null and plot.crop == null
+
+func till(plot_id: int) -> bool:
+	if not can_till(plot_id):
 		return false
+	var plot := get_plot(plot_id)
 	plot.tilled = true
 	plot_changed.emit(plot_id)
 	return true
 
-func plant(plot_id: int, crop_id: String) -> bool:
+func can_plant(plot_id: int, crop_id: String) -> bool:
 	var plot := get_plot(plot_id)
 	if plot == null or not plot.tilled or plot.crop != null:
 		return false
+	return get_crop_data(crop_id) != null and state.get_inventory_count(crop_id + "_seed") > 0
+
+func plant(plot_id: int, crop_id: String) -> bool:
+	if not can_plant(plot_id, crop_id):
+		return false
+	var plot := get_plot(plot_id)
 	var crop_data := get_crop_data(crop_id)
-	if crop_data == null:
-		return false
 	var seed_key := crop_id + "_seed"
-	if state.get_inventory_count(seed_key) <= 0:
-		return false
 	state.add_inventory(seed_key, -1)
 	inventory_changed.emit(seed_key, state.get_inventory_count(seed_key))
 	plot.crop = CropState.new(crop_id, crop_data.growth_days)
 	plot_changed.emit(plot_id)
 	return true
 
-func water(plot_id: int) -> bool:
+func can_water(plot_id: int) -> bool:
 	var plot := get_plot(plot_id)
-	if plot == null or plot.crop == null:
+	return plot != null and plot.crop != null
+
+func water(plot_id: int) -> bool:
+	if not can_water(plot_id):
 		return false
+	var plot := get_plot(plot_id)
 	plot.watered = true
 	plot_changed.emit(plot_id)
 	return true
 
-## Read-only mirror of harvest()'s guard - lets callers (the harvest swing
-## animation) check eligibility before the crop is actually removed, since
-## the animation must play before the mutation, not after.
+## Also what the harvest swing animation checks, since it must play before
+## the crop is actually removed, not after.
 func can_harvest(plot_id: int) -> bool:
 	var plot := get_plot(plot_id)
 	return plot != null and plot.crop != null and plot.crop.is_mature()

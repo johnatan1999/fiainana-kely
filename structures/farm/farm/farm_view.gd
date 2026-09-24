@@ -2,6 +2,9 @@ class_name FarmView
 extends Node2D
 
 const CELL_SIZE := PlotView.CELL_SIZE
+## See get_plot_id_in_front_of(): 0.75 = "a cell entered by at most 1/4
+## still counts as the target".
+const TARGET_REACH := 0.75
 const PlotViewScene := preload("res://structures/farm/farm/plot_view.tscn")
 const PlotHighlightScript := preload("res://structures/farm/farm/plot_highlight.gd")
 
@@ -118,20 +121,33 @@ func _on_plot_removed(plot_id: int) -> void:
 		soil_layer.erase_cell(_plot_positions[plot_id])
 		_plot_positions.erase(plot_id)
 
-## The plot on the cell adjacent to world_pos's cell in the facing
-## direction, or -1 if there's no plot there (outside the grid, or a hole
-## left by remove_tile()). Diagonals snap to the dominant axis, ties going
-## left/right to match the player's left/right-only tool animations.
-## Targeting the cell in front rather than underfoot is what lets crops be
-## solid: the player never has to stand on a plot to work it.
+## The plot the player at world_pos is facing, or -1 if there's no plot
+## there (outside the grid, or a hole left by remove_tile()). Diagonals snap
+## to the dominant axis, ties going left/right to match the player's
+## left/right-only tool animations.
+##
+## Probes TARGET_REACH of a cell ahead of the feet: while the feet are no
+## more than a quarter of the way into a cell (from the side the player
+## faces away from), the probe stays in that same cell and it's the target;
+## any deeper and the probe lands in the next cell. So a player who just
+## stepped onto a plot still works it, and one standing well inside a cell
+## works the one in front - the player never has to stand on a plot's middle
+## to work it, which is what lets crops be solid.
 func get_plot_id_in_front_of(world_pos: Vector2, facing: Vector2) -> int:
-	var step := Vector2i.ZERO
-	if absf(facing.x) >= absf(facing.y):
-		step.x = int(signf(facing.x))
-	else:
-		step.y = int(signf(facing.y))
-	var grid_pos := world_to_grid(world_pos) + step
+	var probe := world_pos + Vector2(facing_step(facing)) * CELL_SIZE * TARGET_REACH
+	var grid_pos := world_to_grid(probe)
 	return _simulation.get_plot_id_at(grid_pos.x, grid_pos.y)
+
+## `facing` snapped to one grid step: (±1, 0) or (0, ±1).
+static func facing_step(facing: Vector2) -> Vector2i:
+	if absf(facing.x) >= absf(facing.y):
+		return Vector2i(int(signf(facing.x)), 0)
+	return Vector2i(0, int(signf(facing.y)))
+
+## The plot's cell in world coordinates.
+func get_plot_global_rect(plot_id: int) -> Rect2:
+	var grid_pos := _simulation.get_plot_position(plot_id)
+	return Rect2(global_position + Vector2(grid_pos) * CELL_SIZE, Vector2.ONE * CELL_SIZE)
 
 func world_to_grid(world_pos: Vector2) -> Vector2i:
 	var local_pos := world_pos - global_position

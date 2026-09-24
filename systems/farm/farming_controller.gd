@@ -5,6 +5,12 @@ extends Node
 ## Holds no farming rules itself - it only decides *which* simulation call to make.
 
 const DEFAULT_CROP_ID := "corn"
+## Where the player's feet end up when stepping up to a plot: this many
+## pixels outside the plot's edge on their side.
+const APPROACH_GAP := 6.0
+## Gives up stepping up after this long (path blocked, e.g. by a solid crop)
+## and acts from wherever the player got to.
+const APPROACH_MAX_DURATION := 0.5
 
 ## Fired whenever the crop the SEEDS tool will plant changes, so HUD can relabel itself.
 signal crop_selected(crop_id: String)
@@ -79,12 +85,16 @@ func _get_ownable_crop_ids() -> Array:
 
 ## Tool animations only play once the underlying action is confirmed
 ## possible - swinging the hoe on unplowable ground, or the sickle on a plot
-## with nothing ready to harvest, does nothing and plays nothing.
+## with nothing ready to harvest, does nothing and plays nothing (and the
+## player doesn't step up to the plot for nothing either).
 func _on_interact_requested(tool: PlayerController.Tool) -> void:
-	if farm_view == null:
+	if farm_view == null or player.is_auto_walking():
 		return
 	var plot_id := _get_target_plot_id()
-	if plot_id == -1:
+	if plot_id == -1 or not _can_use_tool(tool, plot_id):
+		return
+	await _approach_plot(plot_id)
+	if farm_view == null: # zone changed while walking
 		return
 	match tool:
 		PlayerController.Tool.HOE:
@@ -108,6 +118,36 @@ func _on_interact_requested(tool: PlayerController.Tool) -> void:
 			if simulation.can_harvest(plot_id):
 				_pending_harvest_plot_id = plot_id
 				player.play_tool_animation(tool)
+
+func _can_use_tool(tool: PlayerController.Tool, plot_id: int) -> bool:
+	match tool:
+		PlayerController.Tool.HOE:
+			return simulation.can_till(plot_id)
+		PlayerController.Tool.WATERING_CAN:
+			return simulation.can_water(plot_id)
+		PlayerController.Tool.SEEDS:
+			return simulation.can_plant(plot_id, selected_crop_id)
+		PlayerController.Tool.HARVEST:
+			return simulation.can_harvest(plot_id)
+	return false
+
+## If the player stands at the far side of their own cell, walks them forward
+## (along the facing axis only - never sideways or backwards) until their
+## feet are just outside the plot, so the tool visibly reaches it.
+func _approach_plot(plot_id: int) -> void:
+	var step := FarmView.facing_step(player.last_facing_direction)
+	var rect := farm_view.get_plot_global_rect(plot_id)
+	var stand := player.global_position
+	if step.x > 0:
+		stand.x = maxf(stand.x, rect.position.x - APPROACH_GAP)
+	elif step.x < 0:
+		stand.x = minf(stand.x, rect.end.x + APPROACH_GAP)
+	elif step.y > 0:
+		stand.y = maxf(stand.y, rect.position.y - APPROACH_GAP)
+	else:
+		stand.y = minf(stand.y, rect.end.y + APPROACH_GAP)
+	if stand.distance_to(player.global_position) > PlayerController.AUTO_WALK_ARRIVE_DISTANCE:
+		await player.auto_walk_to(stand, APPROACH_MAX_DURATION, Vector2(step))
 
 ## PlayerController guarantees this fires exactly once per interact press
 ## (even with no animation), so this can't soft-lock a pending harvest.

@@ -14,6 +14,8 @@ signal tool_changed(tool: Tool)
 ## listeners can safely gate an effect on "the swing is done" without risking
 ## a permanent soft-lock if a sprite/animation goes missing later.
 signal action_animation_finished(tool: Tool)
+## Fires when an auto_walk_to() ends - arrived, timed out, or cancelled.
+signal auto_walk_finished
 
 @export var walk_speed: float = 220.0
 @export var run_speed: float = 400.0
@@ -39,17 +41,68 @@ var input_enabled := true
 ## stomping over it every frame.
 var _is_performing_action := false
 
+## Scripted walk state (see auto_walk_to()) - overrides player input while
+## active, so the character steps up to a plot or through a door on its own.
+var _auto_walking := false
+var _auto_walk_target := Vector2.ZERO
+var _auto_walk_time_left := 0.0
+## Close enough to the auto-walk target to call it arrived, in pixels.
+const AUTO_WALK_ARRIVE_DISTANCE := 1.0
+
 func _physics_process(delta: float) -> void:
-	var input_vector := Input.get_vector("move_left", "move_right", "move_up", "move_down") if input_enabled else Vector2.ZERO
-	var speed := run_speed if Input.is_action_pressed("sprint") else walk_speed
-	var target_velocity := input_vector * speed
-	var accel := acceleration if input_vector != Vector2.ZERO else friction
-	velocity = velocity.move_toward(target_velocity, accel * delta)
+	var input_vector: Vector2
+	if _auto_walking:
+		input_vector = _auto_walk_step(delta)
+	else:
+		input_vector = Input.get_vector("move_left", "move_right", "move_up", "move_down") if input_enabled else Vector2.ZERO
+		var speed := run_speed if Input.is_action_pressed("sprint") else walk_speed
+		var target_velocity := input_vector * speed
+		var accel := acceleration if input_vector != Vector2.ZERO else friction
+		velocity = velocity.move_toward(target_velocity, accel * delta)
 	move_and_slide()
 
 	if not _is_performing_action:
 		_update_animation(velocity)
 	_update_interaction_pivot(input_vector)
+
+## Walks the character to `target` at walk speed, ignoring player input
+## until it arrives or `max_duration` runs out (the path may be blocked, e.g.
+## by a solid crop - the walk then just gives up where it got stuck). Await
+## it to know when it's over. A non-zero `face_dir` is applied on arrival, so
+## an approach that isn't perfectly straight doesn't change what the player
+## ends up facing. Starting a new walk cancels the current one.
+func auto_walk_to(target: Vector2, max_duration: float, face_dir := Vector2.ZERO) -> void:
+	cancel_auto_walk()
+	_auto_walking = true
+	_auto_walk_target = target
+	_auto_walk_time_left = max_duration
+	await auto_walk_finished
+	if face_dir != Vector2.ZERO:
+		_update_interaction_pivot(face_dir)
+		if not _is_performing_action:
+			_play_idle()
+
+func cancel_auto_walk() -> void:
+	if _auto_walking:
+		_auto_walking = false
+		velocity = Vector2.ZERO
+		auto_walk_finished.emit()
+
+func is_auto_walking() -> bool:
+	return _auto_walking
+
+## Sets velocity directly (no acceleration ramp) so the walk stops exactly on
+## the target instead of sliding past it. Returns the movement direction,
+## used like player input for facing.
+func _auto_walk_step(delta: float) -> Vector2:
+	var to_target := _auto_walk_target - global_position
+	_auto_walk_time_left -= delta
+	if to_target.length() <= AUTO_WALK_ARRIVE_DISTANCE or _auto_walk_time_left <= 0.0:
+		cancel_auto_walk()
+		return Vector2.ZERO
+	var dir := to_target.normalized()
+	velocity = dir * minf(walk_speed, to_target.length() / delta)
+	return dir
 
 ## Rotates the interaction pivot towards the last movement direction
 func _update_interaction_pivot(dir: Vector2) -> void:
