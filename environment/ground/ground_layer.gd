@@ -9,8 +9,8 @@ const TILE_SOURCE_ID := 0
 const TILE_GRASS := Vector2i(0, 3)
 
 ## Size of the area to fill, in tiles - set to cover the zone's playable rect.
-@export var grid_width: int = 44
-@export var grid_height: int = 50
+@export var grid_width: int = 30
+@export var grid_height: int = 34
 
 #func _ready() -> void:
 	#for y in range(grid_height):

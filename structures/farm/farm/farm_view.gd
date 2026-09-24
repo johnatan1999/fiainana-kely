@@ -22,6 +22,9 @@ var _highlight: Node2D
 @onready var soil_layer: TileMapLayer = $SoilLayer
 
 func _ready() -> void:
+	if soil_layer.tile_set == null:
+		push_error("FarmView: SoilLayer has no tile_set - check that farm_tileset.tres and its texture are imported")
+		return
 	if Vector2(soil_layer.tile_set.tile_size) != Vector2(CELL_SIZE, CELL_SIZE):
 		push_warning("FarmView.CELL_SIZE (%s) != tileset tile_size (%s) - soil and crops will be misaligned" % [CELL_SIZE, soil_layer.tile_set.tile_size])
 

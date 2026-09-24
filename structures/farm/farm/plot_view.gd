@@ -4,7 +4,7 @@ extends Node2D
 ## Plot cell size in pixels - single source of truth, FarmView and
 ## PlotHighlight read it from here. Must match farm_tileset.tres tile_size
 ## (FarmView warns at _ready() if it doesn't).
-const CELL_SIZE := 32.0
+const CELL_SIZE := 48.0
 
 const COLOR_SEED := Color(0.6, 0.5, 0.2)
 const COLOR_SPROUT := Color(0.55, 0.8, 0.35)
