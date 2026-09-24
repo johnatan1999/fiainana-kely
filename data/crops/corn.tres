@@ -47,6 +47,7 @@ sprite_sprout_scale = 0.55
 sprite_growing_scale = 0.8
 sprite_mature_scale = 1.35
 sprite_anchor = 1
+blocks_movement = true
 sprite_seed_offset = Vector2(0, 0)
 sprite_sprout_offset = Vector2(0, 0)
 sprite_growing_offset = Vector2(0, 0)

@@ -74,3 +74,16 @@ enum SpriteAnchor { CENTER, BOTTOM }
 @export var sprite_sprout_offset: Vector2 = Vector2.ZERO
 @export var sprite_growing_offset: Vector2 = Vector2.ZERO
 @export var sprite_mature_offset: Vector2 = Vector2.ZERO
+
+@export_group("Collision")
+## When true, the crop gets a solid box at its base (the "foot" of the drawn
+## sprite) - the part of the art above that box stays walk-through, and the
+## player is y-sorted behind it when standing higher up the screen.
+@export var blocks_movement: bool = false
+## First growth stage that blocks (values match CropState.Stage) - seeds and
+## sprouts usually shouldn't stop the player.
+@export_enum("Seed", "Sprout", "Growing", "Mature") var collision_min_stage: int = 2
+## Solid box size in pixels. Its bottom-center sits on the sprite's foot.
+@export var collision_size: Vector2 = Vector2(16, 8)
+## Extra nudge of the solid box in pixels (positive y = down).
+@export var collision_offset: Vector2 = Vector2.ZERO

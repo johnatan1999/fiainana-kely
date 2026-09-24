@@ -3,7 +3,7 @@ extends Node2D
 
 ## A gently pulsing outline showing which plot a farming action (till/water/
 ## plant/harvest) will affect if the player interacts right now - the tile
-## under the player, matching FarmView.get_plot_id_at()'s own targeting rule.
+## in front of the player, see FarmView.get_plot_id_in_front_of().
 ## Purely visual: FarmView owns and positions it, FarmingController just
 ## drives visibility/position every frame from the player's position.
 

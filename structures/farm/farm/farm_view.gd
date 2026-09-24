@@ -21,7 +21,12 @@ var _highlight: Node2D
 
 @onready var soil_layer: TileMapLayer = $SoilLayer
 
+## y-sorted so the player walks behind a crop's upper part and in front of
+## its base (PlotViews sort by their bottom-center origin). The soil is pushed
+## below everything via z_index since it isn't part of that ordering.
 func _ready() -> void:
+	y_sort_enabled = true
+	soil_layer.z_index = -1
 	if soil_layer.tile_set == null:
 		push_error("FarmView: SoilLayer has no tile_set - check that farm_tileset.tres and its texture are imported")
 		return
@@ -46,11 +51,10 @@ func _create_highlight() -> void:
 	_highlight.visible = false
 	add_child(_highlight)
 
-## Shows the pulsing outline over whichever plot get_plot_id_at(world_pos)
-## would target right now, or hides it if that position isn't over a plot.
-## Called every frame by FarmingController while the player is in this zone.
-func show_highlight_at_position(world_pos: Vector2) -> void:
-	var plot_id := get_plot_id_at(world_pos)
+## Shows the pulsing outline over plot_id, or hides it for -1. Called every
+## frame by FarmingController with the same plot it would act on, so the
+## highlight never lies about what pressing E is about to do.
+func show_highlight_for_plot(plot_id: int) -> void:
 	if plot_id == -1:
 		_highlight.visible = false
 		return
@@ -72,7 +76,8 @@ func _create_plot_view(plot_id: int) -> void:
 	var plot_view: PlotView = PlotViewScene.instantiate()
 	add_child(plot_view)
 	var pos := _simulation.get_plot_position(plot_id)
-	plot_view.position = Vector2(pos.x, pos.y) * CELL_SIZE
+	# PlotView's origin is its cell's bottom-center - see PlotView.CELL_TOP_LEFT.
+	plot_view.position = Vector2(pos.x, pos.y) * CELL_SIZE + Vector2(CELL_SIZE / 2.0, CELL_SIZE)
 	_plot_views[plot_id] = plot_view
 	_plot_positions[plot_id] = pos
 	_refresh_plot_view(plot_view, plot_id)
@@ -113,10 +118,21 @@ func _on_plot_removed(plot_id: int) -> void:
 		soil_layer.erase_cell(_plot_positions[plot_id])
 		_plot_positions.erase(plot_id)
 
-## Returns the plot_id under the given world position, or -1 if there's no
-## plot there (outside the grid, or a hole left by remove_tile()).
-func get_plot_id_at(world_pos: Vector2) -> int:
+## The plot on the cell adjacent to world_pos's cell in the facing
+## direction, or -1 if there's no plot there (outside the grid, or a hole
+## left by remove_tile()). Diagonals snap to the dominant axis, ties going
+## left/right to match the player's left/right-only tool animations.
+## Targeting the cell in front rather than underfoot is what lets crops be
+## solid: the player never has to stand on a plot to work it.
+func get_plot_id_in_front_of(world_pos: Vector2, facing: Vector2) -> int:
+	var step := Vector2i.ZERO
+	if absf(facing.x) >= absf(facing.y):
+		step.x = int(signf(facing.x))
+	else:
+		step.y = int(signf(facing.y))
+	var grid_pos := world_to_grid(world_pos) + step
+	return _simulation.get_plot_id_at(grid_pos.x, grid_pos.y)
+
+func world_to_grid(world_pos: Vector2) -> Vector2i:
 	var local_pos := world_pos - global_position
-	var grid_x := int(floor(local_pos.x / CELL_SIZE))
-	var grid_y := int(floor(local_pos.y / CELL_SIZE))
-	return _simulation.get_plot_id_at(grid_x, grid_y)
+	return Vector2i(floori(local_pos.x / CELL_SIZE), floori(local_pos.y / CELL_SIZE))

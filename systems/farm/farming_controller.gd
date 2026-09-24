@@ -28,13 +28,16 @@ func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_world_man
 func set_farm_view(p_farm_view: FarmView) -> void:
 	farm_view = p_farm_view
 
-## Keeps the "which plot will interact() affect" outline live, matching
-## exactly the tile get_plot_id_at(player.global_position) would target -
-## same rule _on_interact_requested() itself uses below, so the highlight
-## never lies about what pressing E is about to do.
+## Keeps the "which plot will interact() affect" outline live - same
+## _get_target_plot_id() that _on_interact_requested() uses below.
 func _process(_delta: float) -> void:
 	if farm_view:
-		farm_view.show_highlight_at_position(player.global_position)
+		farm_view.show_highlight_for_plot(_get_target_plot_id())
+
+## The plot in the cell right in front of the player (see
+## FarmView.get_plot_id_in_front_of), or -1.
+func _get_target_plot_id() -> int:
+	return farm_view.get_plot_id_in_front_of(player.global_position, player.last_facing_direction)
 
 func _on_zone_loaded(zone: ZoneRoot) -> void:
 	var found: FarmView = zone.get_node_or_null("FarmView")
@@ -80,7 +83,7 @@ func _get_ownable_crop_ids() -> Array:
 func _on_interact_requested(tool: PlayerController.Tool) -> void:
 	if farm_view == null:
 		return
-	var plot_id := farm_view.get_plot_id_at(player.global_position)
+	var plot_id := _get_target_plot_id()
 	if plot_id == -1:
 		return
 	match tool:
