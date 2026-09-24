@@ -18,6 +18,15 @@ const BGM_INTERIOR_VOLUME := -20.0
 const SILENT_DB := -80.0
 const SFX_POOL_SIZE := 8
 
+## Footsteps repeat constantly, so they sit well under the one-off SFX.
+## Running steps are a bit louder and brighter than walking ones. Per-step
+## variety (which sample, pitch and volume jitter, never the same sample
+## twice in a row) comes from sfx_footstep being an AudioStreamRandomizer -
+## see assets/audio/SFX/footstep_randomizer.tres.
+const FOOTSTEP_WALK_VOLUME_DB := -10.0
+const FOOTSTEP_RUN_VOLUME_DB := -6.0
+const FOOTSTEP_RUN_PITCH := 1.1
+
 ## Assign these in the AudioManager.tscn inspector once SFX files exist.
 ## play_*_sfx() is a safe no-op while a slot is empty.
 @export var sfx_till: AudioStream
@@ -29,6 +38,7 @@ const SFX_POOL_SIZE := 8
 @export var sfx_chicken: AudioStream
 @export var sfx_egg_pickup: AudioStream
 @export var sfx_coop_build: AudioStream
+@export var sfx_footstep: AudioStream
 
 @onready var _bgm_players: Array[AudioStreamPlayer] = [$BGMPlayerA, $BGMPlayerB]
 
@@ -175,6 +185,12 @@ func play_egg_pickup_sfx() -> void:
 
 func play_coop_build_sfx() -> void:
 	play_sfx(sfx_coop_build)
+
+
+func play_footstep_sfx(running: bool) -> void:
+	var volume := FOOTSTEP_RUN_VOLUME_DB if running else FOOTSTEP_WALK_VOLUME_DB
+	var pitch := FOOTSTEP_RUN_PITCH if running else 1.0
+	play_sfx(sfx_footstep, volume, pitch)
 
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0, pitch_scale: float = 1.0) -> void:

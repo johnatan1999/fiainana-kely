@@ -23,6 +23,9 @@ signal auto_walk_finished
 ## still feels responsive but starting/stopping isn't an instant snap.
 @export var acceleration: float = 1600.0
 @export var friction: float = 2000.0
+## walk_* animation frames where a foot hits the ground - each plays a
+## footstep, so steps stay in sync with the art whatever the speed.
+@export var footstep_frames: Array[int] = [0, 2]
 
 @onready var camera: Camera2D = $Camera2D
 @onready var anim: AnimatedSprite2D = $AnimatedSprite2D
@@ -48,6 +51,9 @@ var _auto_walk_target := Vector2.ZERO
 var _auto_walk_time_left := 0.0
 ## Close enough to the auto-walk target to call it arrived, in pixels.
 const AUTO_WALK_ARRIVE_DISTANCE := 1.0
+
+func _ready() -> void:
+	anim.frame_changed.connect(_on_anim_frame_changed)
 
 func _physics_process(delta: float) -> void:
 	var input_vector: Vector2
@@ -126,6 +132,7 @@ func _update_animation(vel: Vector2):
 ## character stuck on its last action frame forever.
 func _play_idle():
 	anim.flip_h = false
+	anim.speed_scale = 1.0
 	var idle_name := _idle_animation_for(last_facing_direction)
 	if anim.animation != idle_name:
 		anim.animation = idle_name
@@ -137,13 +144,32 @@ func _idle_animation_for(dir: Vector2) -> String:
 	else:
 		return "idle_down" if dir.y > 0 else "idle_up"
 
+## `dir` is the actual velocity: the walk cycle speeds up with it (up to
+## run_speed), so running visibly - and audibly, see _on_anim_frame_changed()
+## - takes faster steps than walking.
 func _play_walk(dir: Vector2):
+	var was_walking := _is_walk_animation()
 	anim.flip_h = false
 	if abs(dir.x) > abs(dir.y):
 		anim.animation = "walk_right" if dir.x > 0 else "walk_left"
 	else:
 		anim.animation = "walk_down" if dir.y > 0 else "walk_up"
+	anim.speed_scale = clampf(dir.length() / walk_speed, 1.0, run_speed / walk_speed)
 	anim.play()
+	# Starting from idle lands on frame 0 without a frame_changed (idle is
+	# already on frame 0), so the first step is played here.
+	if not was_walking:
+		_play_footstep()
+
+func _is_walk_animation() -> bool:
+	return anim.animation.begins_with("walk_")
+
+func _on_anim_frame_changed() -> void:
+	if _is_walk_animation() and anim.frame in footstep_frames:
+		_play_footstep()
+
+func _play_footstep() -> void:
+	AudioManager.play_footstep_sfx(velocity.length() > walk_speed + 1.0)
 
 
 ## 1=Houe 2=Graines 3=Arrosoir 4=Récolte - direct raw keycodes, kept out of the
@@ -240,6 +266,7 @@ func play_tool_animation(tool: Tool) -> void:
 
 	_is_performing_action = true
 	input_enabled = false
+	anim.speed_scale = 1.0 # duration below assumes normal playback speed
 	anim.flip_h = resolved["flip_h"]
 	anim.animation = resolved["name"]
 	anim.play()
