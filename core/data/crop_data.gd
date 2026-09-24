@@ -8,6 +8,12 @@ enum Category { VIVRIER, RENTE, EXPORT }
 enum Season { ASARA, ASOTRY, TOUTE_SAISON }
 enum WaterNeed { LOW, MEDIUM, HIGH }
 
+## Which point of the plot cell the in-field sprite is pinned to.
+## CENTER = sprite centered in the cell (good for flat/round crops).
+## BOTTOM = sprite's bottom edge sits on the cell's bottom edge and it grows
+## upward, overflowing the tile above (good for tall crops like corn).
+enum SpriteAnchor { CENTER, BOTTOM }
+
 @export var id: String
 @export var display_name: String
 @export var malagasy_name: String = ""
@@ -50,10 +56,21 @@ enum WaterNeed { LOW, MEDIUM, HIGH }
 @export var sprite_mature: Texture2D
 
 ## How much of the plot cell each dedicated stage sprite fills (aspect
-## preserved, centered). 1.0 = fills the cell. Tune per crop from the
-## Inspector - a wide sprite sheet crop like corn's tiny seedling can look
-## oversized at 1.0, so these default smaller for the early stages.
+## preserved, positioned per `sprite_anchor`). 1.0 = fills the cell. Tune
+## per crop from the Inspector - a wide sprite sheet crop like corn's tiny
+## seedling can look oversized at 1.0, so these default smaller for the
+## early stages.
 @export_range(0.1, 1.5, 0.05) var sprite_seed_scale: float = 0.4
 @export_range(0.1, 1.5, 0.05) var sprite_sprout_scale: float = 0.55
 @export_range(0.1, 1.5, 0.05) var sprite_growing_scale: float = 0.8
 @export_range(0.1, 1.5, 0.05) var sprite_mature_scale: float = 1.0
+
+@export_group("Placement")
+## Applies to every stage (and to the `icon` fallback).
+@export var sprite_anchor: SpriteAnchor = SpriteAnchor.CENTER
+## Extra nudge in pixels, applied after the anchor, per stage. Positive x =
+## right, positive y = down (e.g. y = -4 lifts the sprite 4px up).
+@export var sprite_seed_offset: Vector2 = Vector2.ZERO
+@export var sprite_sprout_offset: Vector2 = Vector2.ZERO
+@export var sprite_growing_offset: Vector2 = Vector2.ZERO
+@export var sprite_mature_offset: Vector2 = Vector2.ZERO

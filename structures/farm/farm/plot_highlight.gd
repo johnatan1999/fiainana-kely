@@ -7,9 +7,9 @@ extends Node2D
 ## Purely visual: FarmView owns and positions it, FarmingController just
 ## drives visibility/position every frame from the player's position.
 
-const SIZE := 64.0
-const MARGIN := 2.0
-const BORDER_WIDTH := 3.0
+const SIZE := PlotView.CELL_SIZE
+const MARGIN := 1.0
+const BORDER_WIDTH := 2.0
 const BASE_COLOR := Color(1.0, 1.0, 1.0)
 const PULSE_SPEED := 4.0
 const PULSE_MIN_ALPHA := 0.55

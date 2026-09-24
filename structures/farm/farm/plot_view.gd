@@ -1,7 +1,10 @@
 class_name PlotView
 extends Node2D
 
-const CELL_SIZE := 64.0
+## Plot cell size in pixels - single source of truth, FarmView and
+## PlotHighlight read it from here. Must match farm_tileset.tres tile_size
+## (FarmView warns at _ready() if it doesn't).
+const CELL_SIZE := 32.0
 
 const COLOR_SEED := Color(0.6, 0.5, 0.2)
 const COLOR_SPROUT := Color(0.55, 0.8, 0.35)
@@ -37,7 +40,7 @@ func update_view(plot: PlotState, crop_data: CropData) -> void:
 		crop_sprite.texture = stage_texture
 		crop_sprite.visible = true
 		crop_placeholder.visible = false
-		_layout_sprite(_get_stage_specific_scale(crop_data, stage))
+		_layout_sprite(_get_stage_specific_scale(crop_data, stage), crop_data, stage)
 		if stage_changed:
 			_play_growth_pop(crop_sprite)
 	elif crop_data != null and crop_data.icon != null:
@@ -46,7 +49,7 @@ func update_view(plot: PlotState, crop_data: CropData) -> void:
 		crop_sprite.texture = crop_data.icon
 		crop_sprite.visible = true
 		crop_placeholder.visible = false
-		_layout_sprite(_stage_scale(stage))
+		_layout_sprite(_stage_scale(stage), crop_data, stage)
 		if stage_changed:
 			_play_growth_pop(crop_sprite)
 	else:
@@ -62,8 +65,9 @@ func update_view(plot: PlotState, crop_data: CropData) -> void:
 ## growth stage (including first appearing as a seed) - nothing plays on a
 ## plot_changed that doesn't actually move the stage (e.g. watering, or the
 ## daily tick for an already-mature crop), so it never feels spammy.
+## Scales around node.pivot_offset, which the _layout_*() functions set to the
+## anchor point (so BOTTOM crops sprout up from the ground).
 func _play_growth_pop(node: Control) -> void:
-	node.pivot_offset = node.size / 2.0
 	node.scale = Vector2(0.3, 0.3)
 	var tween := create_tween()
 	tween.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
@@ -108,23 +112,55 @@ func _stage_scale(stage: CropState.Stage) -> float:
 		_:
 			return 0.3
 
-func _layout_sprite(scale_factor: float) -> void:
-	var size := Vector2(CELL_SIZE, CELL_SIZE) * scale_factor
+func _get_stage_specific_offset(crop_data: CropData, stage: CropState.Stage) -> Vector2:
+	match stage:
+		CropState.Stage.SEED:
+			return crop_data.sprite_seed_offset
+		CropState.Stage.SPROUT:
+			return crop_data.sprite_sprout_offset
+		CropState.Stage.GROWING:
+			return crop_data.sprite_growing_offset
+		CropState.Stage.MATURE:
+			return crop_data.sprite_mature_offset
+	return Vector2.ZERO
+
+## Fits the texture (aspect preserved) inside a square of CELL_SIZE *
+## scale_factor, then pins it to the cell per crop_data.sprite_anchor and
+## nudges it by the stage's pixel offset. The rect is sized to the drawn
+## texture exactly, so BOTTOM really means the art touches the cell bottom.
+func _layout_sprite(scale_factor: float, crop_data: CropData, stage: CropState.Stage) -> void:
+	var box := CELL_SIZE * scale_factor
+	var tex_size := crop_sprite.texture.get_size()
+	var size := tex_size * minf(box / tex_size.x, box / tex_size.y)
 	crop_sprite.size = size
-	crop_sprite.position = (Vector2(CELL_SIZE, CELL_SIZE) - size) / 2.0
+	var anchor := crop_data.sprite_anchor
+	crop_sprite.position = _anchored_position(size, anchor) + _get_stage_specific_offset(crop_data, stage)
+	crop_sprite.pivot_offset = _anchor_pivot(size, anchor)
+
+func _anchored_position(size: Vector2, anchor: CropData.SpriteAnchor) -> Vector2:
+	var cell := Vector2(CELL_SIZE, CELL_SIZE)
+	if anchor == CropData.SpriteAnchor.BOTTOM:
+		return Vector2((cell.x - size.x) / 2.0, cell.y - size.y)
+	return (cell - size) / 2.0
+
+func _anchor_pivot(size: Vector2, anchor: CropData.SpriteAnchor) -> Vector2:
+	if anchor == CropData.SpriteAnchor.BOTTOM:
+		return Vector2(size.x / 2.0, size.y)
+	return size / 2.0
 
 func _layout_placeholder(stage: CropState.Stage) -> void:
 	match stage:
 		CropState.Stage.MATURE:
 			crop_placeholder.color = COLOR_MATURE
-			crop_placeholder.size = Vector2(44, 44)
+			crop_placeholder.size = Vector2.ONE * CELL_SIZE * 0.7
 		CropState.Stage.GROWING:
 			crop_placeholder.color = COLOR_GROWING
-			crop_placeholder.size = Vector2(34, 34)
+			crop_placeholder.size = Vector2.ONE * CELL_SIZE * 0.55
 		CropState.Stage.SPROUT:
 			crop_placeholder.color = COLOR_SPROUT
-			crop_placeholder.size = Vector2(24, 24)
+			crop_placeholder.size = Vector2.ONE * CELL_SIZE * 0.375
 		CropState.Stage.SEED:
 			crop_placeholder.color = COLOR_SEED
-			crop_placeholder.size = Vector2(14, 14)
+			crop_placeholder.size = Vector2.ONE * CELL_SIZE * 0.22
 	crop_placeholder.position = (Vector2(CELL_SIZE, CELL_SIZE) - crop_placeholder.size) / 2.0
+	crop_placeholder.pivot_offset = crop_placeholder.size / 2.0

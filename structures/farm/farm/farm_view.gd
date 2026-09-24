@@ -1,7 +1,7 @@
 class_name FarmView
 extends Node2D
 
-const CELL_SIZE := 64.0
+const CELL_SIZE := PlotView.CELL_SIZE
 const PlotViewScene := preload("res://structures/farm/farm/plot_view.tscn")
 const PlotHighlightScript := preload("res://structures/farm/farm/plot_highlight.gd")
 
@@ -20,6 +20,10 @@ var _simulation: FarmSimulation
 var _highlight: Node2D
 
 @onready var soil_layer: TileMapLayer = $SoilLayer
+
+func _ready() -> void:
+	if Vector2(soil_layer.tile_set.tile_size) != Vector2(CELL_SIZE, CELL_SIZE):
+		push_warning("FarmView.CELL_SIZE (%s) != tileset tile_size (%s) - soil and crops will be misaligned" % [CELL_SIZE, soil_layer.tile_set.tile_size])
 
 func setup(simulation: FarmSimulation) -> void:
 	_simulation = simulation
