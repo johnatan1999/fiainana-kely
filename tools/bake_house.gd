@@ -5,7 +5,9 @@ extends SceneTree
 ## and edited by hand (see structures/houses/house.gd).
 ##   godot --headless --path . --script res://tools/bake_house.gd -- <model>
 ## <model> is a JSON in tools/house_models/, rects in master pixels:
-##   master, out_dir
+##   master      the master art - keep masters in art_src/ (ignored by
+##               Godot: never imported, never exported with the game)
+##   out_dir     where the two images go
 ##   crop        building bounds, roof overhang to foundations
 ##   width_tiles in-game width in 48 px tiles - pick it so the door ends up
 ##               about the player's height
