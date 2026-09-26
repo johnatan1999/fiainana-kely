@@ -8,11 +8,6 @@ extends Control
 
 const SlotScene := preload("res://ui/hotbar/hotbar_slot.tscn")
 
-## Tool slots have no inventory entry yet - their names (translation keys).
-const TOOL_NAMES := {
-	Hotbar.HOE: "Houe",
-	Hotbar.WATERING_CAN: "Arrosoir",
-}
 const NAME_SHOW_TIME := 1.2
 const NAME_FADE_TIME := 0.4
 
@@ -27,7 +22,7 @@ var _name_tween: Tween
 func setup(hotbar: Hotbar, item_db: ItemDatabase) -> void:
 	_hotbar = hotbar
 	_item_db = item_db
-	for i in Hotbar.SIZE:
+	for i in FarmState.HOTBAR_SIZE:
 		var slot: HotbarSlot = SlotScene.instantiate()
 		slot.index = i
 		slot_row.add_child(slot)
@@ -44,14 +39,16 @@ func setup(hotbar: Hotbar, item_db: ItemDatabase) -> void:
 func _refresh_slots() -> void:
 	for slot in _slots:
 		var item_id := _hotbar.get_item(slot.index)
-		if item_id == "":
+		var item := _item_db.get_item(item_id) if item_id != "" else null
+		if item == null:
 			slot.show_item(null, "", Color.TRANSPARENT, 0, true)
-		elif Hotbar.is_tool_id(item_id):
-			slot.show_item(null, item_id, Color.TRANSPARENT, 0, false)
-		else:
-			var item := _item_db.get_shop_item(item_id)
-			var color: Color = ShopItemData.CATEGORY_COLORS.get(item.category, Color.GRAY) if item else Color.GRAY
-			slot.show_item(item.icon if item else null, "", color, _hotbar.get_count(slot.index), false)
+			continue
+		var glyph: String = ToolGlyph.glyph_for(item.tool_action) if item.icon == null else ""
+		var color: Color = ItemData.CATEGORY_COLORS.get(item.category, Color.GRAY)
+		# Seed stacks always show their count; a single tool doesn't need "1".
+		var count := _hotbar.get_count(slot.index)
+		var shown_count := count if _item_db.is_seed(item_id) or count > 1 else 0
+		slot.show_item(item.icon, glyph, color, shown_count, false)
 
 func _on_selection_changed(index: int) -> void:
 	for slot in _slots:
@@ -61,9 +58,7 @@ func _on_selection_changed(index: int) -> void:
 func _item_name(item_id: String) -> String:
 	if item_id == "":
 		return ""
-	if TOOL_NAMES.has(item_id):
-		return tr(TOOL_NAMES[item_id])
-	var item := _item_db.get_shop_item(item_id)
+	var item := _item_db.get_item(item_id)
 	return item.get_display_name() if item else item_id
 
 ## Pops the held item's name above the bar, then fades it out.

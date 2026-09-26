@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://ui/inventory/item_info_card.gd" id="1_card"]
 [ext_resource type="Texture2D" path="res://assets/sprites/inventory/cell.png" id="2_cell"]
+[ext_resource type="Script" path="res://ui/hotbar/tool_glyph.gd" id="3_glyph"]
 
 [node name="ItemInfoCard" type="VBoxContainer"]
 offset_right = 215.0
@@ -15,7 +16,7 @@ layout_mode = 2
 mouse_filter = 2
 
 [node name="Frame" type="TextureRect" parent="IconHolder"]
-custom_minimum_size = Vector2(112, 112)
+custom_minimum_size = Vector2(84, 84)
 layout_mode = 2
 mouse_filter = 2
 texture = ExtResource("2_cell")
@@ -28,10 +29,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 34.0
-offset_top = 34.0
-offset_right = -34.0
-offset_bottom = -34.0
+offset_left = 30.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = -30.0
 mouse_filter = 2
 color = Color(0.5, 0.5, 0.5, 1)
 
@@ -42,13 +43,27 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = 24.0
-offset_right = -24.0
-offset_bottom = -24.0
+offset_left = 21.0
+offset_top = 21.0
+offset_right = -21.0
+offset_bottom = -21.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="Glyph" type="Control" parent="IconHolder/Frame"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 21.0
+offset_top = 21.0
+offset_right = -21.0
+offset_bottom = -21.0
+mouse_filter = 2
+script = ExtResource("3_glyph")
 
 [node name="NameLabel" type="Label" parent="."]
 theme_type_variation = &"BookHeading"
@@ -83,3 +98,25 @@ layout_mode = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 2
 columns = 2
+
+[node name="HotbarBox" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 3
+alignment = 1
+
+[node name="SlotButtons" type="HBoxContainer" parent="HotbarBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="RemoveButton" type="Button" parent="HotbarBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+tooltip_text = "Retirer"
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_type_variation = &"BookSlotButton"
+text = "✕"

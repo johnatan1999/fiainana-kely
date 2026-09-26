@@ -114,7 +114,7 @@ func buy_zone(zone_id: String) -> bool:
 ## Unlocks the next `patch_size` tiles of the progressive zone, in their
 ## fixed order. Fails if that would run past the zone's capacity, or the
 ## player can't afford total_price. total_price is supplied by the caller
-## (the ShopItemData's price) rather than computed here, so there's a single
+## (the ItemData's price) rather than computed here, so there's a single
 ## source of truth for pricing - the shop catalog.
 func buy_progressive_patch(patch_size: int, total_price: int) -> bool:
 	if patch_size <= 0:

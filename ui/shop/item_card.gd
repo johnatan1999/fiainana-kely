@@ -11,8 +11,8 @@ const POP_SCALE := Vector2(0.9, 0.9)
 const POP_TIME := 0.08
 const MAX_QUANTITY := 99
 
-signal add_requested(item: ShopItemData, quantity: int)
-signal sell_requested(item: ShopItemData, quantity: int)
+signal add_requested(item: ItemData, quantity: int)
+signal sell_requested(item: ItemData, quantity: int)
 
 @onready var icon_rect: TextureRect = %IconRect
 @onready var icon_placeholder: ColorRect = %IconPlaceholder
@@ -27,7 +27,7 @@ signal sell_requested(item: ShopItemData, quantity: int)
 @onready var sell_button: Button = %SellButton
 @onready var qty_row: HBoxContainer = %QtyRow
 
-var _item: ShopItemData
+var _item: ItemData
 var _quantity: int = 1
 var _hover_tween: Tween
 
@@ -44,7 +44,7 @@ func _ready() -> void:
 ## greyed out, and non-interactive rather than hidden, so the player knows
 ## it exists and can plan for it. owned_count drives the "Tu as : N" label and
 ## whether the Sell button is enabled.
-func setup(item: ShopItemData, locked: bool = false, owned_count: int = 0) -> void:
+func setup(item: ItemData, locked: bool = false, owned_count: int = 0) -> void:
 	_item = item
 	_quantity = 1
 
@@ -59,7 +59,7 @@ func setup(item: ShopItemData, locked: bool = false, owned_count: int = 0) -> vo
 	else:
 		icon_rect.visible = false
 		icon_placeholder.visible = true
-		icon_placeholder.color = ShopItemData.CATEGORY_COLORS.get(item.category, Color.GRAY)
+		icon_placeholder.color = ItemData.CATEGORY_COLORS.get(item.category, Color.GRAY)
 
 	# price <= 0 marks a sell-only entry (e.g. eggs): hide the buy controls
 	# entirely instead of showing a misleading "Acheter" for 0 $.

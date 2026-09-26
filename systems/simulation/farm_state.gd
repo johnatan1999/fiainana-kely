@@ -26,9 +26,11 @@ var _next_animal_index: int = 0
 ## modulable expansion zone have been bought, in its fixed unlock order.
 var unlocked_zone_ids: Dictionary = {} # zone_id: String -> true
 var progressive_tiles_unlocked: int = 0
-## Item id in each hotbar slot ("" = empty), managed by Hotbar - kept here so
-## the player's arrangement survives a save/load. Empty = not initialized
-## yet (new game, or a save from before the hotbar): Hotbar fills defaults.
+const HOTBAR_SIZE := 8
+## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
+## modified through FarmSimulation's hotbar methods, which keep it valid.
+## Empty array = not initialized yet (new game, or a save from before the
+## hotbar) - see FarmSimulation.init_hotbar().
 var hotbar: Array = []
 
 ## Convenience read access - the clock is the single source of truth for the day.

@@ -6,28 +6,34 @@ extends RefCounted
 ## World from the same crop/animal registries FarmSimulation uses, then
 ## handed to every screen that shows items (ShopUI, InventoryUI) - so no UI
 ## ever reads another UI's constants, and economy numbers only live in the
-## CropData/AnimalData/ShopItemData resources themselves.
+## CropData/AnimalData/ItemData resources themselves.
 
 ## What kind of thing an inventory id is - drives how each screen presents it.
-enum Kind { SEED, CROP, SHOP_ITEM, UNPLACED_ANIMAL, UNKNOWN }
+## AUTHORED = a hand-authored ItemData from ITEM_PATHS (tool, food, animal,
+## egg...).
+enum Kind { SEED, CROP, AUTHORED, UNPLACED_ANIMAL, UNKNOWN }
 
-## Hand-authored catalog entries (tools, food, animals, animal products).
+## Hand-authored catalog entries (tools, food, animals, animal products) -
+## including ones the market doesn't sell (sold_in_shop = false, e.g. the
+## starter tools): they still need names, icons and a tool type everywhere.
 ## An explicit list rather than a directory scan: exported builds remap
-## .tres files, so a scan of data/shop_items/ would silently find nothing.
+## .tres files, so a scan of data/items/ would silently find nothing.
 ## Paths loaded in _init() rather than preload()ed: preloading them at
-## compile time could run while shop_item_data.gd itself was still compiling
+## compile time could run while item_data.gd itself was still compiling
 ## (load cycle through the scripts that reference ItemDatabase), leaving the
-## entries as bare Resources with no ShopItemData script.
+## entries as bare Resources with no ItemData script.
 ## animal_zebu.tres is deliberately left out: FarmSimulation already supports
 ## buying any species, but there's no Zebu scene in AnimalManager and no
 ## structure to place one in - add it back here once both exist.
-const SHOP_ITEM_PATHS := [
-	"res://data/shop_items/tool_angady.tres",
-	"res://data/shop_items/tool_watering_can_tin.tres",
-	"res://data/shop_items/food_vary_sy_laoka.tres",
-	"res://data/shop_items/food_vary_amin_anana.tres",
-	"res://data/shop_items/animal_chicken.tres",
-	"res://data/shop_items/egg.tres",
+const ITEM_PATHS := [
+	"res://data/items/tool_hoe.tres",
+	"res://data/items/tool_watering_can.tres",
+	"res://data/items/tool_angady.tres",
+	"res://data/items/tool_watering_can_tin.tres",
+	"res://data/items/food_vary_sy_laoka.tres",
+	"res://data/items/food_vary_amin_anana.tres",
+	"res://data/items/animal_chicken.tres",
+	"res://data/items/egg.tres",
 ]
 
 const SEED_SUFFIX := "_seed"
@@ -35,34 +41,35 @@ const UNPLACED_SUFFIX := "_unplaced"
 
 var _crops: Dictionary # crop_id -> CropData
 var _animals: Dictionary # AnimalData.Species -> AnimalData
-var _shop_items: Dictionary = {} # item_id -> ShopItemData
-var _shop_item_list: Array[ShopItemData] = [] # SHOP_ITEM_PATHS order
-var _seed_items: Dictionary = {} # "<crop_id>_seed" -> ShopItemData (synthesized)
+var _items: Dictionary = {} # item_id -> ItemData
+var _item_list: Array[ItemData] = [] # ITEM_PATHS order
+var _seed_items: Dictionary = {} # "<crop_id>_seed" -> ItemData (synthesized)
 
 func _init(crop_registry: Dictionary, animal_registry: Dictionary) -> void:
 	_crops = crop_registry
 	_animals = animal_registry
-	for path in SHOP_ITEM_PATHS:
-		var item := load(path) as ShopItemData
+	for path in ITEM_PATHS:
+		var item := load(path) as ItemData
 		if item == null:
-			push_error("ItemDatabase: %s is not a ShopItemData." % path)
+			push_error("ItemDatabase: %s is not a ItemData." % path)
 			continue
-		_shop_item_list.append(item)
-		_shop_items[item.id] = item
+		_item_list.append(item)
+		_items[item.id] = item
 	for crop_id in _crops:
-		var seed_item := ShopItemData.from_crop_data(_crops[crop_id])
+		var seed_item := ItemData.from_crop_data(_crops[crop_id])
 		_seed_items[seed_item.id] = seed_item
 
-## Everything the market sells, per ShopItemData.Category, in a stable order:
-## seeds follow the crop registry order, the rest follow SHOP_ITEM_PATHS.
+## Everything the market sells, per ItemData.Category, in a stable order:
+## seeds follow the crop registry order, the rest follow ITEM_PATHS.
 func get_shop_catalog() -> Dictionary:
 	var catalog := {}
-	for category in ShopItemData.Category.values():
+	for category in ItemData.Category.values():
 		catalog[category] = []
 	for seed_item in _seed_items.values():
-		catalog[ShopItemData.Category.SEEDS].append(seed_item)
-	for item in _shop_item_list:
-		catalog[item.category].append(item)
+		catalog[ItemData.Category.SEEDS].append(seed_item)
+	for item in _item_list:
+		if item.sold_in_shop:
+			catalog[item.category].append(item)
 	return catalog
 
 func get_kind(item_id: String) -> Kind:
@@ -70,8 +77,8 @@ func get_kind(item_id: String) -> Kind:
 		return Kind.SEED
 	if _crops.has(item_id):
 		return Kind.CROP
-	if _shop_items.has(item_id):
-		return Kind.SHOP_ITEM
+	if _items.has(item_id):
+		return Kind.AUTHORED
 	if get_unplaced_species(item_id) != null:
 		return Kind.UNPLACED_ANIMAL
 	return Kind.UNKNOWN
@@ -82,11 +89,12 @@ func get_crop(item_id: String) -> CropData:
 		return _crops.get(item_id.trim_suffix(SEED_SUFFIX))
 	return _crops.get(item_id)
 
-## The catalog entry for a seed (synthesized) or hand-authored item, else null.
-func get_shop_item(item_id: String) -> ShopItemData:
+## The ItemData of a seed (synthesized) or hand-authored item, else null.
+## Harvested crops have none - see get_crop().
+func get_item(item_id: String) -> ItemData:
 	if _seed_items.has(item_id):
 		return _seed_items[item_id]
-	return _shop_items.get(item_id)
+	return _items.get(item_id)
 
 ## "<species prefix>_unplaced" is how FarmState counts animals bought but not
 ## yet placed in a structure - resolved against the animal registry, so any
@@ -99,9 +107,45 @@ func get_unplaced_species(item_id: String) -> AnimalData:
 			return _animals[species]
 	return null
 
-## The shop entry that sells animals of this species (for its description).
-func get_shop_item_for_species(species: AnimalData.Species) -> ShopItemData:
-	for item in _shop_item_list:
-		if item.category == ShopItemData.Category.ANIMALS and item.animal_species == species and item.price > 0:
+## The item that sells animals of this species (for its description).
+func get_item_for_species(species: AnimalData.Species) -> ItemData:
+	for item in _item_list:
+		if item.category == ItemData.Category.ANIMALS and item.animal_species == species and item.price > 0:
 			return item
 	return null
+
+## What using an item on a plot does: its tool action, PLANT for a seed
+## stack, NONE for anything else (harvests, food, eggs...).
+func get_use_action(item_id: String) -> FarmAction.Type:
+	if _seed_items.has(item_id):
+		return FarmAction.Type.PLANT
+	var item: ItemData = _items.get(item_id)
+	return item.tool_action if item != null else FarmAction.Type.NONE
+
+func is_seed(item_id: String) -> bool:
+	return _seed_items.has(item_id)
+
+## The crop a seed stack plants, "" if item_id isn't a seed.
+func get_seed_crop_id(item_id: String) -> String:
+	var seed_item: ItemData = _seed_items.get(item_id)
+	return seed_item.crop_id if seed_item != null else ""
+
+## Whether an item has a use on the farm, and so belongs in the Hotbar:
+## tools and seed stacks. Harvests, food, eggs... live in the inventory only.
+func is_hotbar_item(item_id: String) -> bool:
+	return get_use_action(item_id) != FarmAction.Type.NONE
+
+## Tool items in catalog order - starter tools first, so a new game's bar
+## always opens on the hoe then the watering can.
+func get_tool_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for item in _item_list:
+		if item.tool_action != FarmAction.Type.NONE:
+			ids.append(item.id)
+	return ids
+
+## Seed ids in crop registry order.
+func get_seed_ids() -> Array[String]:
+	var ids: Array[String] = []
+	ids.assign(_seed_items.keys())
+	return ids

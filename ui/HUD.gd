@@ -1,38 +1,101 @@
 class_name HUD
 extends Control
 
-## Day, season and money. What the player holds is shown by the HotbarUI.
+## Top-left panel: the date as players plan around it (season, day of the
+## season, year, and how far into the season we are) and the money. What
+## the player holds is shown by the HotbarUI.
+##
+## Money reacts to changes: the number counts up/down to its new value and
+## the difference floats up next to it (green gain, red spending) - so a sale
+## or a purchase is felt, not just silently rewritten.
 
 const SEASON_NAMES := {
 	GameClock.Season.ASARA: "Asara",
 	GameClock.Season.ASOTRY: "Asotry",
 }
+const SEASON_GLYPHS := {
+	GameClock.Season.ASARA: "sun",
+	GameClock.Season.ASOTRY: "dry_leaf",
+}
+## Season bar fill: lush green for the rainy season, dry tan for the cool one.
+const SEASON_COLORS := {
+	GameClock.Season.ASARA: Color(0.42, 0.66, 0.26),
+	GameClock.Season.ASOTRY: Color(0.8, 0.56, 0.26),
+}
+const GAIN_COLOR := Color(0.2, 0.55, 0.15)
+const LOSS_COLOR := Color(0.75, 0.2, 0.12)
+const COUNT_TIME := 0.4
+const DELTA_RISE := 12.0
+const DELTA_TIME := 1.1
 
-@onready var day_label: Label = $VBoxContainer/DayLabel
-@onready var season_label: Label = $VBoxContainer/SeasonLabel
-@onready var money_label: Label = $VBoxContainer/MoneyLabel
+@onready var season_glyph: HudGlyph = %SeasonGlyph
+@onready var date_label: Label = %DateLabel
+@onready var year_label: Label = %YearLabel
+@onready var season_bar: ProgressBar = %SeasonBar
+@onready var days_label: Label = %DaysLabel
+@onready var money_label: Label = %MoneyLabel
+@onready var delta_label: Label = %DeltaLabel
 
 var _simulation: FarmSimulation
+## Money as currently drawn - tweened toward the real amount.
+var _shown_money := 0.0
+var _money_tween: Tween
+var _delta_tween: Tween
+## Off until the frame that sets the game up is over: loading a save changes
+## money in that same frame, and that must not play as a "+192 000 Ar" gain.
+var _animate_money := false
 
 func setup(simulation: FarmSimulation) -> void:
 	_simulation = simulation
 	simulation.money_changed.connect(_on_money_changed)
-	simulation.day_changed.connect(_on_day_changed)
-	_refresh_all()
+	simulation.day_changed.connect(func(_day: int): _refresh_date())
+	season_bar.max_value = GameClock.DAYS_PER_SEASON
+	season_bar.add_theme_stylebox_override("fill", season_bar.get_theme_stylebox("fill").duplicate())
+	delta_label.modulate.a = 0.0
+	_refresh_date()
+	_set_money_text(simulation.state.money)
+	set.call_deferred("_animate_money", true)
 
 ## Every label here is built from a translated template plus live values, so
 ## a language switch (pause menu) needs a full redraw.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_TRANSLATION_CHANGED and _simulation != null:
-		_refresh_all()
+		_refresh_date()
+		_set_money_text(roundi(_shown_money))
 
-func _refresh_all() -> void:
-	_on_day_changed(_simulation.state.day)
-	_on_money_changed(_simulation.state.money)
-
-func _on_day_changed(day: int) -> void:
-	day_label.text = tr("Jour %d") % day
-	season_label.text = tr("Saison : %s") % tr(SEASON_NAMES.get(_simulation.state.clock.get_season(), "?"))
+func _refresh_date() -> void:
+	var clock := _simulation.state.clock
+	var season := clock.get_season()
+	season_glyph.kind = SEASON_GLYPHS[season]
+	date_label.text = tr("%s · Jour %d") % [tr(SEASON_NAMES[season]), clock.get_day_of_season()]
+	year_label.text = tr("An %d") % clock.get_year()
+	season_bar.value = clock.get_day_of_season()
+	(season_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = SEASON_COLORS[season]
+	days_label.text = "%d/%d" % [clock.get_day_of_season(), GameClock.DAYS_PER_SEASON]
 
 func _on_money_changed(money: int) -> void:
-	money_label.text = tr("Argent : %s") % Currency.format(money)
+	var delta := money - roundi(_shown_money)
+	if not _animate_money or delta == 0:
+		_set_money_text(money)
+		return
+	if _money_tween:
+		_money_tween.kill()
+	_money_tween = create_tween()
+	_money_tween.tween_method(_set_money_text, _shown_money, float(money), COUNT_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_show_delta(delta)
+
+func _set_money_text(amount: float) -> void:
+	_shown_money = amount
+	money_label.text = Currency.format(roundi(amount))
+
+## "+1 200 Ar" / "-500 Ar" floating up and fading next to the money.
+func _show_delta(delta: int) -> void:
+	if _delta_tween:
+		_delta_tween.kill()
+	delta_label.text = ("+" if delta > 0 else "") + Currency.format(delta)
+	delta_label.add_theme_color_override("font_color", GAIN_COLOR if delta > 0 else LOSS_COLOR)
+	delta_label.position.y = 0.0
+	delta_label.modulate.a = 1.0
+	_delta_tween = create_tween().set_parallel(true)
+	_delta_tween.tween_property(delta_label, "position:y", -DELTA_RISE, DELTA_TIME).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_delta_tween.tween_property(delta_label, "modulate:a", 0.0, DELTA_TIME).set_delay(DELTA_TIME * 0.4)

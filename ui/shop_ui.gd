@@ -4,7 +4,7 @@ extends Control
 ## Village market: 4 categories (Seeds/Tools/Food/Animals), a scrollable grid
 ## of ItemCards, and a CartPanel. What's on sale comes from ItemDatabase
 ## (seeds synthesized from the real CropData registry, the rest hand-authored
-## ShopItemData resources) - see ItemDatabase.SHOP_ITEM_PATHS for the catalog.
+## ItemData resources) - see ItemDatabase.ITEM_PATHS for the catalog.
 
 const ItemCardScene := preload("res://ui/shop/item_card.tscn")
 
@@ -21,8 +21,8 @@ const CLOSED_SCALE := Vector2(0.9, 0.9)
 var _shop_controller: ShopController
 var _simulation: FarmSimulation
 var _item_db: ItemDatabase
-var _catalog: Dictionary = {} # ShopItemData.Category -> Array[ShopItemData]
-var _selected_category: ShopItemData.Category = ShopItemData.Category.SEEDS
+var _catalog: Dictionary = {} # ItemData.Category -> Array[ItemData]
+var _selected_category: ItemData.Category = ItemData.Category.SEEDS
 var _open_tween: Tween
 
 func _ready() -> void:
@@ -84,36 +84,36 @@ func _setup_category_buttons() -> void:
 		first_button.set_pressed_no_signal(true)
 	_rebuild_item_grid() # _selected_category already defaults to SEEDS
 
-func _on_category_chosen(category: ShopItemData.Category) -> void:
+func _on_category_chosen(category: ItemData.Category) -> void:
 	_selected_category = category
 	_rebuild_item_grid()
 
 func _rebuild_item_grid() -> void:
 	for child in item_grid.get_children():
 		child.queue_free()
-	for item: ShopItemData in _catalog.get(_selected_category, []):
+	for item: ItemData in _catalog.get(_selected_category, []):
 		var card: ItemCard = ItemCardScene.instantiate()
 		item_grid.add_child(card)
-		var owned_id := item.crop_id if item.category == ShopItemData.Category.SEEDS else item.id
+		var owned_id := item.crop_id if item.category == ItemData.Category.SEEDS else item.id
 		card.setup(item, _is_locked(item), _simulation.state.get_inventory_count(owned_id))
 		card.add_requested.connect(_on_add_requested)
 		card.sell_requested.connect(_on_sell_requested)
 
 ## Only SEEDS carry an unlock_day (via their backing CropData) - the other
 ## categories have no progression gate.
-func _is_locked(item: ShopItemData) -> bool:
-	if item.category != ShopItemData.Category.SEEDS:
+func _is_locked(item: ItemData) -> bool:
+	if item.category != ItemData.Category.SEEDS:
 		return false
 	var crop_data := _simulation.get_crop_data(item.crop_id)
 	return crop_data != null and _simulation.state.day < crop_data.unlock_day
 
-func _on_add_requested(item: ShopItemData, quantity: int) -> void:
+func _on_add_requested(item: ItemData, quantity: int) -> void:
 	cart_panel.add_item(item, quantity)
 
 ## Selling is instant (no cart step) - symmetric to the old per-crop "Vendre"
 ## button, just generalized to any category via FarmSimulation.sell_item().
-func _on_sell_requested(item: ShopItemData, quantity: int) -> void:
-	if item.category == ShopItemData.Category.SEEDS:
+func _on_sell_requested(item: ItemData, quantity: int) -> void:
+	if item.category == ItemData.Category.SEEDS:
 		_shop_controller.sell(item.crop_id, quantity)
 	else:
 		_shop_controller.sell_item(item.id, item.sell_price, quantity)
@@ -129,10 +129,10 @@ func _on_checkout_requested() -> void:
 		_purchase(entry.item, entry.quantity)
 	cart_panel.clear()
 
-func _purchase(item: ShopItemData, quantity: int) -> void:
-	if item.category == ShopItemData.Category.SEEDS:
+func _purchase(item: ItemData, quantity: int) -> void:
+	if item.category == ItemData.Category.SEEDS:
 		_shop_controller.buy_seed(item.crop_id, quantity)
-	elif item.category == ShopItemData.Category.ANIMALS and item.animal_species == AnimalData.Species.CHICKEN:
+	elif item.category == ItemData.Category.ANIMALS and item.animal_species == AnimalData.Species.CHICKEN:
 		_shop_controller.buy_chicken(quantity)
 	else:
 		_shop_controller.buy_item(item.id, item.price, quantity)

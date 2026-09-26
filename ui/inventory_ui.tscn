@@ -151,28 +151,17 @@ layout_mode = 0
 offset_left = 656.0
 offset_top = 34.0
 offset_right = 871.0
-offset_bottom = 400.0
+offset_bottom = 450.0
 
 [node name="MoneyLabel" type="Label" parent="Book"]
 theme_type_variation = &"BookStrong"
 unique_name_in_owner = true
 layout_mode = 0
-offset_left = 656.0
-offset_top = 404.0
-offset_right = 871.0
-offset_bottom = 426.0
+offset_left = 66.0
+offset_top = 66.0
+offset_right = 285.0
+offset_bottom = 88.0
 text = "Argent : 0 Ar"
-horizontal_alignment = 1
-
-[node name="CloseHint" type="Label" parent="Book"]
-theme_type_variation = &"BookHint"
-layout_mode = 0
-offset_left = 656.0
-offset_top = 426.0
-offset_right = 871.0
-offset_bottom = 446.0
-text = "I / Échap : fermer"
-horizontal_alignment = 1
 
 [node name="NavHint" type="Label" parent="Book"]
 theme_type_variation = &"BookHint"
@@ -181,7 +170,7 @@ offset_left = 292.0
 offset_top = 438.0
 offset_right = 638.0
 offset_bottom = 456.0
-text = "Tab : catégorie  ·  Flèches : objet"
+text = "Tab : catégorie  ·  Flèches : objet  ·  1-8 : barre"
 horizontal_alignment = 1
 
 [node name="CloseButton" parent="Book" instance=ExtResource("5_close")]

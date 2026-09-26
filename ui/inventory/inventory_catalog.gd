@@ -38,10 +38,10 @@ const CROP_TYPE_NAMES := {
 ## Shop categories -> inventory tabs. Seeds and harvests share "Cultures";
 ## animal products (eggs) live with the animals that make them.
 const SHOP_TO_INVENTORY := {
-	ShopItemData.Category.SEEDS: Category.CROPS,
-	ShopItemData.Category.ANIMALS: Category.ANIMALS,
-	ShopItemData.Category.TOOLS: Category.TOOLS,
-	ShopItemData.Category.FOOD: Category.FOOD,
+	ItemData.Category.SEEDS: Category.CROPS,
+	ItemData.Category.ANIMALS: Category.ANIMALS,
+	ItemData.Category.TOOLS: Category.TOOLS,
+	ItemData.Category.FOOD: Category.FOOD,
 }
 
 static var _warned_unknown_ids := {}
@@ -60,7 +60,7 @@ static func describe(db: ItemDatabase, item_id: String) -> Dictionary:
 	match db.get_kind(item_id):
 		ItemDatabase.Kind.SEED:
 			var seed_crop := db.get_crop(item_id)
-			return _entry(item_id, db.get_shop_item(item_id), Category.CROPS,
+			return _entry(item_id, db.get_item(item_id), Category.CROPS,
 				_t("À semer sur une parcelle labourée, puis à arroser chaque jour."),
 				[
 					[_t("Pousse en"), _t("%d jours") % seed_crop.growth_days],
@@ -72,14 +72,14 @@ static func describe(db: ItemDatabase, item_id: String) -> Dictionary:
 		ItemDatabase.Kind.CROP:
 			var crop := db.get_crop(item_id)
 			return _make(item_id, _t(crop.display_name), crop.icon,
-				Category.CROPS, ShopItemData.Category.SEEDS,
+				Category.CROPS, ItemData.Category.SEEDS,
 				_t("Fraîchement récolté. À vendre au marché ou à garder pour plus tard."),
 				[
 					[_t("Type"), _t(CROP_TYPE_NAMES.get(crop.category, "?"))],
 					[_t("Prix de vente"), Currency.format(crop.sell_price)],
 				])
-		ItemDatabase.Kind.SHOP_ITEM:
-			var item := db.get_shop_item(item_id)
+		ItemDatabase.Kind.AUTHORED:
+			var item := db.get_item(item_id)
 			var details: Array = []
 			if item.price > 0:
 				details.append([_t("Prix d'achat"), Currency.format(item.price)])
@@ -89,7 +89,7 @@ static func describe(db: ItemDatabase, item_id: String) -> Dictionary:
 				item.get_description(), details)
 		ItemDatabase.Kind.UNPLACED_ANIMAL:
 			var animal := db.get_unplaced_species(item_id)
-			var shop_item := db.get_shop_item_for_species(animal.species)
+			var shop_item := db.get_item_for_species(animal.species)
 			var description := _t("À installer dans le poulailler : appuie sur E devant le poulailler.")
 			if shop_item != null and shop_item.description != "":
 				description = shop_item.get_description() + "\n" + description
@@ -97,7 +97,7 @@ static func describe(db: ItemDatabase, item_id: String) -> Dictionary:
 			if icon == null and shop_item != null:
 				icon = shop_item.icon
 			return _make(item_id, _t("%s (à placer)") % _t(animal.display_name), icon,
-				Category.ANIMALS, ShopItemData.Category.ANIMALS, description, [])
+				Category.ANIMALS, ItemData.Category.ANIMALS, description, [])
 
 	# Once per id: describe() runs on every inventory refresh, and a stale id
 	# would otherwise flood the log. Old saves get cleaned up by
@@ -105,7 +105,7 @@ static func describe(db: ItemDatabase, item_id: String) -> Dictionary:
 	if not _warned_unknown_ids.has(item_id):
 		_warned_unknown_ids[item_id] = true
 		push_warning("InventoryCatalog: unknown item id '%s' - shown under Outils." % item_id)
-	return _make(item_id, item_id, null, Category.TOOLS, ShopItemData.Category.TOOLS, "", [])
+	return _make(item_id, item_id, null, Category.TOOLS, ItemData.Category.TOOLS, "", [])
 
 static func _yield_text(crop: CropData) -> String:
 	if crop.yield_min == crop.yield_max:
@@ -113,16 +113,18 @@ static func _yield_text(crop: CropData) -> String:
 	return _t("%d à %d") % [crop.yield_min, crop.yield_max]
 
 ## Names/icon/placeholder color straight from a catalog entry.
-static func _entry(id: String, item: ShopItemData, category: Category, description: String, details: Array) -> Dictionary:
-	return _make(id, item.get_display_name(), item.icon, category, item.category, description, details)
+static func _entry(id: String, item: ItemData, category: Category, description: String, details: Array) -> Dictionary:
+	var entry := _make(id, item.get_display_name(), item.icon, category, item.category, description, details)
+	entry["glyph"] = ToolGlyph.glyph_for(item.tool_action)
+	return entry
 
 static func _make(id: String, display_name: String, icon: Texture2D,
-		category: Category, color_category: ShopItemData.Category, description: String, details: Array) -> Dictionary:
+		category: Category, color_category: ItemData.Category, description: String, details: Array) -> Dictionary:
 	return {
 		"id": id,
 		"name": display_name,
 		"icon": icon,
-		"color": ShopItemData.CATEGORY_COLORS.get(color_category, Color.GRAY),
+		"color": ItemData.CATEGORY_COLORS.get(color_category, Color.GRAY),
 		"category": category,
 		"description": description,
 		"details": details,

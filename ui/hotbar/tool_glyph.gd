@@ -5,6 +5,13 @@ extends Control
 ## can), drawn in code to fit the control. Replace with real textures by
 ## giving the tool an icon - HotbarSlot only falls back to this without one.
 
+## The pictogram of a tool, per the FarmAction it performs - the one map
+## every UI showing tools (hotbar, inventory book) goes through.
+const GLYPH_BY_ACTION := {
+	FarmAction.Type.TILL: "hoe",
+	FarmAction.Type.WATER: "watering_can",
+}
+
 @export_enum("hoe", "watering_can") var tool_id: String = "hoe":
 	set(value):
 		tool_id = value
@@ -17,6 +24,10 @@ const METAL_DARK := Color(0.45, 0.47, 0.52)
 const CAN := Color(0.42, 0.58, 0.72)
 const CAN_DARK := Color(0.28, 0.4, 0.52)
 const WATER := Color(0.55, 0.8, 1.0)
+
+## Glyph id for an item performing `action`, "" if there's no pictogram.
+static func glyph_for(action: FarmAction.Type) -> String:
+	return GLYPH_BY_ACTION.get(action, "")
 
 func _draw() -> void:
 	var s := minf(size.x, size.y)

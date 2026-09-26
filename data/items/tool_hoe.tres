@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/item_data.gd" id="1_tool"]
+
+[resource]
+script = ExtResource("1_tool")
+id = "tool_hoe"
+display_name = "Houe"
+malagasy_name = "Fangady"
+description = "Une houe simple, pour labourer la terre avant de semer."
+category = 1
+tool_action = 1
+sold_in_shop = false

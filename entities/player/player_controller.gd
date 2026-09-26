@@ -1,12 +1,9 @@
 class_name PlayerController
 extends CharacterBody2D
 
-## Which farming action a tool-use animation is for. Selecting what the
+## Which tool-use animation (if any) a FarmAction plays. Selecting what the
 ## player holds is the Hotbar's job, not the player's - FarmingController
-## picks the Tool and calls play_tool_animation().
-enum Tool {HOE, WATERING_CAN, SEEDS, HARVEST}
-
-## Which tool-use animation (if any) a Tool plays. SEEDS has none yet - no
+## picks the action and calls play_tool_animation(). PLANT has none yet - no
 ## sprite exists for planting, so it stays instant like before.
 enum ActionAnim {NONE, SHOVEL, WATERING, HARVEST}
 
@@ -20,7 +17,7 @@ signal use_item_requested
 ## exactly once per interact press, even for tools with no animation, so
 ## listeners can safely gate an effect on "the swing is done" without risking
 ## a permanent soft-lock if a sprite/animation goes missing later.
-signal action_animation_finished(tool: Tool)
+signal action_animation_finished(action: FarmAction.Type)
 ## Fires when an auto_walk_to() ends - arrived, timed out, or cancelled.
 signal auto_walk_finished
 
@@ -210,16 +207,16 @@ func _try_interact() -> bool:
 
 	return false
 
-func _tool_action_anim(tool: Tool) -> ActionAnim:
-	match tool:
-		Tool.HOE:
+func _tool_action_anim(farm_action: FarmAction.Type) -> ActionAnim:
+	match farm_action:
+		FarmAction.Type.TILL:
 			return ActionAnim.SHOVEL
-		Tool.WATERING_CAN:
+		FarmAction.Type.WATER:
 			return ActionAnim.WATERING
-		Tool.HARVEST:
+		FarmAction.Type.HARVEST:
 			return ActionAnim.HARVEST
 		_:
-			return ActionAnim.NONE # SEEDS: no dedicated art yet, stays instant
+			return ActionAnim.NONE # PLANT: no dedicated art yet, stays instant
 
 ## Only shovel/harvest_left/right/watering_left/right exist - shovel has a
 ## single animation for both sides (no up/down art either). The gaps are
@@ -244,14 +241,14 @@ func _resolve_action_animation(action: ActionAnim) -> Dictionary:
 ## externally by FarmingController - only once it has confirmed the action is
 ## actually possible (standing on a tillable/waterable plot, a mature crop to
 ## harvest...), so the character never swings a tool at nothing.
-func play_tool_animation(tool: Tool) -> void:
-	var action := _tool_action_anim(tool )
+func play_tool_animation(farm_action: FarmAction.Type) -> void:
+	var action := _tool_action_anim(farm_action)
 	if action == ActionAnim.NONE:
-		action_animation_finished.emit(tool )
+		action_animation_finished.emit(farm_action)
 		return
 	var resolved := _resolve_action_animation(action)
 	if resolved.is_empty() or not anim.sprite_frames.has_animation(resolved["name"]):
-		action_animation_finished.emit(tool )
+		action_animation_finished.emit(farm_action)
 		return
 
 	_is_performing_action = true
@@ -268,7 +265,7 @@ func play_tool_animation(tool: Tool) -> void:
 	anim.flip_h = false
 	_is_performing_action = false
 	input_enabled = true
-	action_animation_finished.emit(tool )
+	action_animation_finished.emit(farm_action)
 
 ## SpriteFrames animations here loop, so animation_finished never fires for
 ## them - total playtime is computed directly from frame durations/speed

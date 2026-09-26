@@ -12,7 +12,7 @@ const DEFAULT_ZONE_ID := "village"
 ## shipped, only append new ones. This is the single place format drift gets
 ## fixed, instead of runtime code scattered across load_game() staying
 ## permanently tolerant of every historical format.
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4
 
 var simulation: FarmSimulation
 var world_manager: WorldManager
@@ -76,6 +76,8 @@ func _migrate(data: Dictionary, from_version: int) -> Dictionary:
 		data = _migrate_to_v2(data)
 	if from_version < 3:
 		data = _migrate_to_v3(data)
+	if from_version < 4:
+		data = _migrate_to_v4(data)
 	return data
 
 ## v0 (unversioned save, predates this field entirely) -> v1: zone_id was
@@ -130,6 +132,25 @@ func _migrate_to_v3(data: Dictionary) -> Dictionary:
 	if refund > 0:
 		data["money"] = int(data.get("money", 0)) + refund
 		print("SaveController: removed-crop items refunded for %d Ar." % refund)
+	return data
+
+## v3 -> v4: the hoe and watering can became real inventory items (they
+## used to be always-owned pseudo tools, "hoe"/"watering_can" in the hotbar).
+## Every player had them, so every save gets them, and hotbar slots holding
+## the old pseudo ids now hold the items. Hardcoded snapshot, same reason as v1.
+const _V4_STARTER_TOOLS := ["tool_hoe", "tool_watering_can"]
+const _V4_HOTBAR_IDS := {"hoe": "tool_hoe", "watering_can": "tool_watering_can"}
+func _migrate_to_v4(data: Dictionary) -> Dictionary:
+	var inventory = data.get("inventory")
+	if not inventory is Dictionary:
+		inventory = {}
+		data["inventory"] = inventory
+	for item_id in _V4_STARTER_TOOLS:
+		inventory[item_id] = maxi(int(inventory.get(item_id, 0)), 1)
+	var hotbar = data.get("hotbar")
+	if hotbar is Array:
+		for i in hotbar.size():
+			hotbar[i] = _V4_HOTBAR_IDS.get(str(hotbar[i]), hotbar[i])
 	return data
 
 func _unhandled_input(event: InputEvent) -> void:

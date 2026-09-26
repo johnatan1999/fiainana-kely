@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://ui/inventory/inventory_slot.gd" id="1_slot"]
 [ext_resource type="Texture2D" path="res://assets/sprites/inventory/cell.png" id="2_cell"]
+[ext_resource type="Script" path="res://ui/hotbar/tool_glyph.gd" id="3_glyph"]
 
 [node name="InventorySlot" type="Control"]
 custom_minimum_size = Vector2(72, 72)
@@ -53,6 +54,20 @@ offset_bottom = -15.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
+
+[node name="Glyph" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+mouse_filter = 2
+script = ExtResource("3_glyph")
 
 [node name="Frame" type="TextureRect" parent="."]
 unique_name_in_owner = true
