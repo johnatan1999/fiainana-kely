@@ -44,10 +44,11 @@ func _init(p_grid_width: int, p_grid_height: int, crop_registry: Dictionary, ani
 	_crop_registry = crop_registry
 	_animal_registry = animal_registry
 	state = FarmState.new(p_grid_width, p_grid_height)
-	# Whoever spends the last of an item, it leaves the hotbar.
-	inventory_changed.connect(func(item_id: String, count: int):
-		if count <= 0:
-			remove_from_hotbar(item_id))
+	# Whoever spends the last of an item, it leaves the hotbar. A method, not a
+	# lambda: a lambda using self holds a strong reference to this RefCounted,
+	# so connecting it to our own signal would keep the whole simulation (and
+	# every resource it holds) alive forever - leaked at exit.
+	inventory_changed.connect(_on_inventory_changed)
 
 func get_plot(plot_id: int) -> PlotState:
 	return state.plots.get(plot_id)
@@ -495,6 +496,10 @@ func remove_from_hotbar(item_id: String) -> bool:
 	state.hotbar[index] = ""
 	hotbar_changed.emit()
 	return true
+
+func _on_inventory_changed(item_id: String, count: int) -> void:
+	if count <= 0:
+		remove_from_hotbar(item_id)
 
 ## Brings a loaded/initialized layout back within the rules above.
 func _normalize_hotbar() -> void:
