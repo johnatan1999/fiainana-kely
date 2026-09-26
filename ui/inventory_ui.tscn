@@ -1,91 +1,199 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://ui/inventory_ui.gd" id="1_inventoryui"]
+[ext_resource type="Texture2D" path="res://assets/sprites/inventory/inventory.png" id="2_sheet"]
+[ext_resource type="PackedScene" path="res://ui/inventory/category_tab.tscn" id="3_tab"]
+[ext_resource type="PackedScene" path="res://ui/inventory/item_info_card.tscn" id="4_card"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wood"]
-bg_color = Color(0.36, 0.24, 0.14, 1)
-border_width_left = 6
-border_width_top = 6
-border_width_right = 6
-border_width_bottom = 6
-border_color = Color(0.22, 0.14, 0.08, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+[sub_resource type="AtlasTexture" id="AtlasTexture_book"]
+atlas = ExtResource("2_sheet")
+region = Rect2(0, 0, 930, 475)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon_crops"]
+atlas = ExtResource("2_sheet")
+region = Rect2(354, 484, 60, 56)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon_animals"]
+atlas = ExtResource("2_sheet")
+region = Rect2(292, 482, 57, 62)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon_tools"]
+atlas = ExtResource("2_sheet")
+region = Rect2(423, 489, 53, 46)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_icon_food"]
+atlas = ExtResource("2_sheet")
+region = Rect2(291, 554, 59, 43)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_scroll_track"]
+content_margin_left = 4.0
+content_margin_right = 4.0
+bg_color = Color(0.55, 0.3, 0.2, 0.15)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_scroll_grabber"]
+bg_color = Color(0.55, 0.3, 0.2, 0.8)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [node name="InventoryUI" type="Control"]
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 60.0
-offset_top = 40.0
-offset_right = -60.0
-offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_inventoryui")
+scroll_track_style = SubResource("StyleBoxFlat_scroll_track")
+scroll_grabber_style = SubResource("StyleBoxFlat_scroll_grabber")
 
-[node name="Background" type="Panel" parent="."]
+[node name="Dim" type="ColorRect" parent="."]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_wood")
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.45)
 
-[node name="Margin" type="MarginContainer" parent="Background"]
+[node name="Book" type="TextureRect" parent="."]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 12
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -465.0
+offset_top = -237.0
+offset_right = 465.0
+offset_bottom = 238.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("AtlasTexture_book")
 
-[node name="VBox" type="VBoxContainer" parent="Background/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 10
+[node name="TitleLabel" type="Label" parent="Book"]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 30.0
+offset_right = 285.0
+offset_bottom = 64.0
+theme_override_colors/font_color = Color(0.29, 0.18, 0.1, 1)
+theme_override_font_sizes/font_size = 26
+text = "Inventaire"
 
-[node name="HeaderRow" type="HBoxContainer" parent="Background/Margin/VBox"]
-layout_mode = 2
+[node name="SubtitleLabel" type="Label" parent="Book"]
+layout_mode = 0
+offset_left = 66.0
+offset_top = 62.0
+offset_right = 285.0
+offset_bottom = 82.0
+theme_override_colors/font_color = Color(0.45, 0.32, 0.2, 1)
+theme_override_font_sizes/font_size = 14
+text = "Fitaovana"
 
-[node name="TitleLabel" type="Label" parent="Background/Margin/VBox/HeaderRow"]
-layout_mode = 2
-text = "Inventaire — Fitaovana"
-theme_override_font_sizes/font_size = 20
-
-[node name="HeaderSpacer" type="Control" parent="Background/Margin/VBox/HeaderRow"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="MoneyLabel" type="Label" parent="Background/Margin/VBox/HeaderRow"]
+[node name="CategoryList" type="VBoxContainer" parent="Book"]
 unique_name_in_owner = true
-layout_mode = 2
-text = "Argent: 100 $"
+layout_mode = 0
+offset_left = 64.0
+offset_top = 100.0
+offset_right = 264.0
+offset_bottom = 452.0
+mouse_filter = 2
+theme_override_constants/separation = 6
 
-[node name="CloseButton" type="Button" parent="Background/Margin/VBox/HeaderRow"]
+[node name="CropsTab" parent="Book/CategoryList" instance=ExtResource("3_tab")]
+layout_mode = 2
+icon = SubResource("AtlasTexture_icon_crops")
+
+[node name="AnimalsTab" parent="Book/CategoryList" instance=ExtResource("3_tab")]
+layout_mode = 2
+category = 1
+icon = SubResource("AtlasTexture_icon_animals")
+
+[node name="ToolsTab" parent="Book/CategoryList" instance=ExtResource("3_tab")]
+layout_mode = 2
+category = 2
+icon = SubResource("AtlasTexture_icon_tools")
+
+[node name="FoodTab" parent="Book/CategoryList" instance=ExtResource("3_tab")]
+layout_mode = 2
+category = 3
+icon = SubResource("AtlasTexture_icon_food")
+
+[node name="ItemScroll" type="ScrollContainer" parent="Book"]
 unique_name_in_owner = true
-layout_mode = 2
-focus_mode = 0
-text = "Fermer (I)"
-
-[node name="EmptyLabel" type="Label" parent="Background/Margin/VBox"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Inventaire vide"
-horizontal_alignment = 1
-modulate = Color(1, 1, 1, 0.6)
-
-[node name="ItemScroll" type="ScrollContainer" parent="Background/Margin/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
+layout_mode = 0
+offset_left = 305.0
+offset_top = 166.0
+offset_right = 621.0
+offset_bottom = 422.0
 horizontal_scroll_mode = 0
 
-[node name="ItemGrid" type="GridContainer" parent="Background/Margin/VBox/ItemScroll"]
+[node name="ItemGrid" type="GridContainer" parent="Book/ItemScroll"]
 unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 10
-theme_override_constants/v_separation = 10
-columns = 5
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 4
+
+[node name="EmptyLabel" type="Label" parent="Book"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 303.0
+offset_top = 262.0
+offset_right = 622.0
+offset_bottom = 322.0
+theme_override_colors/font_color = Color(0.45, 0.32, 0.2, 1)
+theme_override_font_sizes/font_size = 15
+text = "Rien dans cette catégorie
+pour l'instant."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InfoCard" parent="Book" instance=ExtResource("4_card")]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 656.0
+offset_top = 34.0
+offset_right = 871.0
+offset_bottom = 400.0
+
+[node name="MoneyLabel" type="Label" parent="Book"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 656.0
+offset_top = 404.0
+offset_right = 871.0
+offset_bottom = 426.0
+theme_override_colors/font_color = Color(0.29, 0.18, 0.1, 1)
+theme_override_font_sizes/font_size = 15
+text = "Argent : 0 Ar"
+horizontal_alignment = 1
+
+[node name="CloseHint" type="Label" parent="Book"]
+layout_mode = 0
+offset_left = 656.0
+offset_top = 426.0
+offset_right = 871.0
+offset_bottom = 446.0
+theme_override_colors/font_color = Color(0.45, 0.32, 0.2, 0.8)
+theme_override_font_sizes/font_size = 12
+text = "I / Échap : fermer"
+horizontal_alignment = 1
+
+[node name="NavHint" type="Label" parent="Book"]
+layout_mode = 0
+offset_left = 292.0
+offset_top = 438.0
+offset_right = 638.0
+offset_bottom = 456.0
+theme_override_colors/font_color = Color(0.45, 0.32, 0.2, 0.8)
+theme_override_font_sizes/font_size = 12
+text = "Tab : catégorie  ·  Flèches : objet"
+horizontal_alignment = 1

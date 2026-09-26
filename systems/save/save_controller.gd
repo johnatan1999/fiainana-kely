@@ -12,7 +12,7 @@ const DEFAULT_ZONE_ID := "village"
 ## shipped, only append new ones. This is the single place format drift gets
 ## fixed, instead of runtime code scattered across load_game() staying
 ## permanently tolerant of every historical format.
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 
 var simulation: FarmSimulation
 var world_manager: WorldManager
@@ -74,6 +74,8 @@ func _migrate(data: Dictionary, from_version: int) -> Dictionary:
 		data = _migrate_to_v1(data)
 	if from_version < 2:
 		data = _migrate_to_v2(data)
+	if from_version < 3:
+		data = _migrate_to_v3(data)
 	return data
 
 ## v0 (unversioned save, predates this field entirely) -> v1: zone_id was
@@ -104,6 +106,28 @@ func _migrate_to_v2(data: Dictionary) -> Dictionary:
 	var old_id = data.get("zone_id")
 	if old_id is String and _V2_ZONE_ID_MAP.has(old_id):
 		data["zone_id"] = _V2_ZONE_ID_MAP[old_id]
+	return data
+
+## v2 -> v3: items of crops removed from the game (turnip, cut in 9aacc4a)
+## are dropped from the inventory and refunded at their last shipped price
+## (turnip.tres sell_price / seed_price at the time), so the player never
+## just loses what they owned. Hardcoded snapshot, same reason as v1.
+const _V3_REMOVED_ITEM_REFUNDS := {
+	"turnip": 30,
+	"turnip_seed": 10,
+}
+func _migrate_to_v3(data: Dictionary) -> Dictionary:
+	var inventory = data.get("inventory")
+	if not inventory is Dictionary:
+		return data
+	var refund := 0
+	for item_id in _V3_REMOVED_ITEM_REFUNDS:
+		if inventory.has(item_id):
+			refund += maxi(0, int(inventory[item_id])) * _V3_REMOVED_ITEM_REFUNDS[item_id]
+			inventory.erase(item_id)
+	if refund > 0:
+		data["money"] = int(data.get("money", 0)) + refund
+		print("SaveController: removed-crop items refunded for %d Ar." % refund)
 	return data
 
 func _unhandled_input(event: InputEvent) -> void:

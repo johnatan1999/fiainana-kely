@@ -1,0 +1,102 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://ui/inventory/item_info_card.gd" id="1_card"]
+[ext_resource type="Texture2D" path="res://assets/sprites/inventory/cell.png" id="2_cell"]
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_rule"]
+color = Color(0.55, 0.3, 0.2, 0.6)
+thickness = 2
+
+[node name="ItemInfoCard" type="VBoxContainer"]
+offset_right = 215.0
+offset_bottom = 370.0
+mouse_filter = 2
+theme_override_constants/separation = 4
+script = ExtResource("1_card")
+
+[node name="IconHolder" type="CenterContainer" parent="."]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Frame" type="TextureRect" parent="IconHolder"]
+custom_minimum_size = Vector2(112, 112)
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_cell")
+expand_mode = 1
+
+[node name="Placeholder" type="ColorRect" parent="IconHolder/Frame"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 34.0
+offset_top = 34.0
+offset_right = -34.0
+offset_bottom = -34.0
+mouse_filter = 2
+color = Color(0.5, 0.5, 0.5, 1)
+
+[node name="Icon" type="TextureRect" parent="IconHolder/Frame"]
+unique_name_in_owner = true
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.29, 0.18, 0.1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Nom"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="MalagasyLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.32, 0.2, 1)
+theme_override_font_sizes/font_size = 14
+text = "Anarana"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="MetaLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.3, 0.2, 1)
+theme_override_font_sizes/font_size = 13
+text = "Catégorie"
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+theme_override_styles/separator = SubResource("StyleBoxLine_rule")
+
+[node name="DescriptionLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.29, 0.18, 0.1, 1)
+theme_override_font_sizes/font_size = 13
+text = "Description"
+autowrap_mode = 3
+
+[node name="DetailsGrid" type="GridContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 2
+columns = 2
