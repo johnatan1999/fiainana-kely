@@ -24,7 +24,7 @@ signal hotbar_remove_requested
 @onready var remove_button: Button = %RemoveButton
 
 func _ready() -> void:
-	for i in Hotbar.SIZE:
+	for i in FarmState.HOTBAR_SIZE:
 		var button := Button.new()
 		button.text = str(i + 1)
 		button.toggle_mode = true

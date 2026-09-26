@@ -5,9 +5,9 @@ extends Button
 ## by ShopUI at build time) gives radio-button behavior for free - only one
 ## CategoryButton is ever pressed at a time.
 
-signal category_chosen(category: ShopItemData.Category)
+signal category_chosen(category: ItemData.Category)
 
-@export var category: ShopItemData.Category = ShopItemData.Category.SEEDS
+@export var category: ItemData.Category = ItemData.Category.SEEDS
 
 var _tween: Tween
 

@@ -275,7 +275,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_move_selection(0, 1)
 	else:
 		# Keys 1-8 (the hotbar's own actions) put the selected item in that slot.
-		for i in Hotbar.SIZE:
+		for i in FarmState.HOTBAR_SIZE:
 			if event.is_action_pressed("hotbar_%d" % (i + 1)):
 				_assign_selected_to_hotbar(i)
 				get_viewport().set_input_as_handled()

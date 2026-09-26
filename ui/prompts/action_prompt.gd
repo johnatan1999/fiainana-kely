@@ -8,11 +8,11 @@ extends Control
 ## come from InputBindings: the keys actually bound, or the connected
 ## gamepad's buttons (Nintendo / PlayStation / Xbox symbols) once it's used.
 
-## "use_item" verb per PlayerController.Tool (translation keys).
+## "use_item" verb per FarmAction (translation keys).
 const USE_VERBS := {
-	PlayerController.Tool.HOE: "Labourer",
-	PlayerController.Tool.WATERING_CAN: "Arroser",
-	PlayerController.Tool.SEEDS: "Planter",
+	FarmAction.Type.TILL: "Labourer",
+	FarmAction.Type.WATER: "Arroser",
+	FarmAction.Type.PLANT: "Planter",
 }
 const HARVEST_VERB := "Récolter"
 ## Gap between the bubble's bottom edge and the top of the plot, in pixels.
@@ -23,7 +23,7 @@ const LIFT := 6.0
 @onready var row: HBoxContainer = %Row
 
 var _anchor := Vector2.ZERO
-var _use_tool := FarmingController.NO_ACTION
+var _use_action := FarmAction.Type.NONE
 var _can_harvest := false
 
 func setup(farming_controller: FarmingController) -> void:
@@ -33,9 +33,9 @@ func setup(farming_controller: FarmingController) -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 
-func _on_target_actions_changed(anchor: Vector2, use_tool: int, can_harvest: bool) -> void:
+func _on_target_actions_changed(anchor: Vector2, use_action: FarmAction.Type, can_harvest: bool) -> void:
 	_anchor = anchor
-	_use_tool = use_tool
+	_use_action = use_action
 	_can_harvest = can_harvest
 	_rebuild()
 
@@ -44,7 +44,7 @@ func _notification(what: int) -> void:
 		_rebuild()
 
 func _has_actions() -> bool:
-	return _use_tool != FarmingController.NO_ACTION or _can_harvest
+	return _use_action != FarmAction.Type.NONE or _can_harvest
 
 func _rebuild() -> void:
 	# remove_child first: queue_free() alone keeps the old labels in the row
@@ -52,8 +52,8 @@ func _rebuild() -> void:
 	for child in row.get_children():
 		row.remove_child(child)
 		child.queue_free()
-	if _use_tool != FarmingController.NO_ACTION:
-		_add_action("use_item", USE_VERBS.get(_use_tool, ""))
+	if _use_action != FarmAction.Type.NONE:
+		_add_action("use_item", USE_VERBS.get(_use_action, ""))
 	if _can_harvest:
 		_add_action("interact", HARVEST_VERB)
 	# Deferred: the new labels' minimum size is only known once laid out.

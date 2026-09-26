@@ -16,7 +16,6 @@ extends Node
 ## on-screen button prompts can swap their labels.
 signal device_changed(using_gamepad: bool)
 
-const HOTBAR_SIZE := 8
 ## Stick movement below this doesn't count as "using the gamepad" (drift).
 const STICK_DEADZONE := 0.5
 
@@ -65,7 +64,7 @@ func _ready() -> void:
 		_joy(JOY_BUTTON_LEFT_SHOULDER),
 	])
 	# Physical keys, so the number row works on AZERTY too (no Shift needed).
-	for i in HOTBAR_SIZE:
+	for i in FarmState.HOTBAR_SIZE:
 		_ensure_action("hotbar_%d" % (i + 1), [_key(KEY_1 + i)])
 
 ## Tracks the last device the player touched. Never consumes the event.

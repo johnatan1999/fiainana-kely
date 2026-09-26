@@ -1,15 +1,14 @@
-class_name ShopItemData
+class_name ItemData
 extends Resource
 
-## Generic catalog entry shown in the shop UI. Seeds are synthesized at
-## runtime from CropData (see ShopItemData.from_crop_data) so crop economy
-## numbers only ever live in one place; Tools/Food/Animals are hand-authored
-## .tres resources under data/shop_items/.
+## What an item *is*, wherever it shows up: inventory book, hotbar, market
+## shelf, info card. Selling it is only one of its facets (price,
+## sold_in_shop) - the starter tools are items the market never lists.
+## Seeds are synthesized at runtime from CropData (see from_crop_data) so crop
+## economy numbers only ever live in one place; tools, food, animals and
+## animal products are hand-authored .tres resources under data/items/.
 
 enum Category { SEEDS, TOOLS, FOOD, ANIMALS }
-## What a TOOLS item does when used on a plot (FarmingController). Several
-## items can share a type - the starter hoe and the Angady are both HOE.
-enum ToolType { NONE, HOE, WATERING_CAN }
 
 ## Identity color of each category - the placeholder square shown by every
 ## screen (shop cards, inventory cells) for an item with no icon art yet.
@@ -41,8 +40,9 @@ const CATEGORY_COLORS := {
 ## buying livestock needs to become a real AnimalState once placed in a coop.
 @export var animal_species: AnimalData.Species = AnimalData.Species.CHICKEN
 
-## Only meaningful for TOOLS: the farming action the tool performs.
-@export var tool_type: ToolType = ToolType.NONE
+## Only meaningful for TOOLS: what the tool does to a plot. Several items can
+## share one - the starter hoe and the Angady both TILL.
+@export var tool_action: FarmAction.Type = FarmAction.Type.NONE
 ## False for items the player gets but can't buy (the starter tools): they
 ## still exist for the inventory/hotbar, the market just doesn't list them.
 @export var sold_in_shop: bool = true
@@ -74,8 +74,8 @@ static func _season_key(season: CropData.Season) -> String:
 			return "Asotry"
 	return "toute saison"
 
-static func from_crop_data(crop_data: CropData) -> ShopItemData:
-	var item := ShopItemData.new()
+static func from_crop_data(crop_data: CropData) -> ItemData:
+	var item := ItemData.new()
 	item._seed_crop = crop_data
 	item.id = crop_data.id + "_seed"
 	item.display_name = crop_data.seed_display_name if crop_data.seed_display_name != "" else "Graine de %s" % crop_data.display_name

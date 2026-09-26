@@ -6,9 +6,9 @@ extends PanelContainer
 ## the actual transactions, then calls clear() on success.
 
 class CartEntry:
-	var item: ShopItemData
+	var item: ItemData
 	var quantity: int
-	func _init(p_item: ShopItemData, p_quantity: int) -> void:
+	func _init(p_item: ItemData, p_quantity: int) -> void:
 		item = p_item
 		quantity = p_quantity
 
@@ -38,7 +38,7 @@ func _notification(what: int) -> void:
 			_update_row_label(item_id)
 		_refresh_totals()
 
-func add_item(item: ShopItemData, quantity: int) -> void:
+func add_item(item: ItemData, quantity: int) -> void:
 	if _entries.has(item.id):
 		_entries[item.id].quantity += quantity
 	else:
