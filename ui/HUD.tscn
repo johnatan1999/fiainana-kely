@@ -6,7 +6,7 @@
 offset_left = 16.0
 offset_top = 16.0
 offset_right = 220.0
-offset_bottom = 180.0
+offset_bottom = 100.0
 mouse_filter = 1
 script = ExtResource("1_hud")
 
@@ -22,12 +22,3 @@ text = "Saison: Asara"
 
 [node name="MoneyLabel" type="Label" parent="VBoxContainer"]
 text = "Argent: 100 $"
-
-[node name="SeedsLabel" type="Label" parent="VBoxContainer"]
-text = "Graines (Maïs): 3"
-
-[node name="CropsLabel" type="Label" parent="VBoxContainer"]
-text = "Récolte (Maïs): 0"
-
-[node name="ToolLabel" type="Label" parent="VBoxContainer"]
-text = "Outil: Houe"

@@ -12,18 +12,22 @@ extends RefCounted
 enum Kind { SEED, CROP, SHOP_ITEM, UNPLACED_ANIMAL, UNKNOWN }
 
 ## Hand-authored catalog entries (tools, food, animals, animal products).
-## Explicit preloads rather than a directory scan: exported builds remap
+## An explicit list rather than a directory scan: exported builds remap
 ## .tres files, so a scan of data/shop_items/ would silently find nothing.
+## Paths loaded in _init() rather than preload()ed: preloading them at
+## compile time could run while shop_item_data.gd itself was still compiling
+## (load cycle through the scripts that reference ItemDatabase), leaving the
+## entries as bare Resources with no ShopItemData script.
 ## animal_zebu.tres is deliberately left out: FarmSimulation already supports
 ## buying any species, but there's no Zebu scene in AnimalManager and no
 ## structure to place one in - add it back here once both exist.
-const SHOP_ITEMS: Array[ShopItemData] = [
-	preload("res://data/shop_items/tool_angady.tres"),
-	preload("res://data/shop_items/tool_watering_can_tin.tres"),
-	preload("res://data/shop_items/food_vary_sy_laoka.tres"),
-	preload("res://data/shop_items/food_vary_amin_anana.tres"),
-	preload("res://data/shop_items/animal_chicken.tres"),
-	preload("res://data/shop_items/egg.tres"),
+const SHOP_ITEM_PATHS := [
+	"res://data/shop_items/tool_angady.tres",
+	"res://data/shop_items/tool_watering_can_tin.tres",
+	"res://data/shop_items/food_vary_sy_laoka.tres",
+	"res://data/shop_items/food_vary_amin_anana.tres",
+	"res://data/shop_items/animal_chicken.tres",
+	"res://data/shop_items/egg.tres",
 ]
 
 const SEED_SUFFIX := "_seed"
@@ -32,26 +36,32 @@ const UNPLACED_SUFFIX := "_unplaced"
 var _crops: Dictionary # crop_id -> CropData
 var _animals: Dictionary # AnimalData.Species -> AnimalData
 var _shop_items: Dictionary = {} # item_id -> ShopItemData
+var _shop_item_list: Array[ShopItemData] = [] # SHOP_ITEM_PATHS order
 var _seed_items: Dictionary = {} # "<crop_id>_seed" -> ShopItemData (synthesized)
 
 func _init(crop_registry: Dictionary, animal_registry: Dictionary) -> void:
 	_crops = crop_registry
 	_animals = animal_registry
-	for item in SHOP_ITEMS:
+	for path in SHOP_ITEM_PATHS:
+		var item := load(path) as ShopItemData
+		if item == null:
+			push_error("ItemDatabase: %s is not a ShopItemData." % path)
+			continue
+		_shop_item_list.append(item)
 		_shop_items[item.id] = item
 	for crop_id in _crops:
 		var seed_item := ShopItemData.from_crop_data(_crops[crop_id])
 		_seed_items[seed_item.id] = seed_item
 
 ## Everything the market sells, per ShopItemData.Category, in a stable order:
-## seeds follow the crop registry order, the rest follow SHOP_ITEMS.
+## seeds follow the crop registry order, the rest follow SHOP_ITEM_PATHS.
 func get_shop_catalog() -> Dictionary:
 	var catalog := {}
 	for category in ShopItemData.Category.values():
 		catalog[category] = []
 	for seed_item in _seed_items.values():
 		catalog[ShopItemData.Category.SEEDS].append(seed_item)
-	for item in SHOP_ITEMS:
+	for item in _shop_item_list:
 		catalog[item.category].append(item)
 	return catalog
 
@@ -91,7 +101,7 @@ func get_unplaced_species(item_id: String) -> AnimalData:
 
 ## The shop entry that sells animals of this species (for its description).
 func get_shop_item_for_species(species: AnimalData.Species) -> ShopItemData:
-	for item in SHOP_ITEMS:
+	for item in _shop_item_list:
 		if item.category == ShopItemData.Category.ANIMALS and item.animal_species == species and item.price > 0:
 			return item
 	return null

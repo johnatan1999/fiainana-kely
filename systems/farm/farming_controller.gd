@@ -3,8 +3,13 @@ extends Node
 
 ## Translates player interactions into FarmSimulation commands.
 ## Holds no farming rules itself - it only decides *which* simulation call to make.
+##
+## Two buttons, never ambiguous (like Stardew):
+## - "use_item" (Space / left click / gamepad X) acts with the item selected
+##   in the Hotbar: hoe tills, watering can waters, a seed stack plants that
+##   crop - even on a ripe crop, the watering can only ever waters;
+## - "interact" (E / gamepad A) is the bare-hands action: harvest a ripe crop.
 
-const DEFAULT_CROP_ID := "corn"
 ## Where the player's feet end up when stepping up to a plot: this many
 ## pixels outside the plot's edge on their side.
 const APPROACH_GAP := 6.0
@@ -12,21 +17,23 @@ const APPROACH_GAP := 6.0
 ## and acts from wherever the player got to.
 const APPROACH_MAX_DURATION := 0.5
 
-## Fired whenever the crop the SEEDS tool will plant changes, so HUD can relabel itself.
-signal crop_selected(crop_id: String)
+## No action possible on the targeted plot with what the player holds.
+const NO_ACTION := -1
 
 var simulation: FarmSimulation
 var player: PlayerController
+var hotbar: Hotbar
 var farm_view: FarmView # null while the player is outside the farm zone
-var selected_crop_id: String = DEFAULT_CROP_ID
-## Set by _on_interact_requested() for HARVEST, consumed by
+## Set by _perform() for HARVEST, consumed by
 ## _on_action_animation_finished() - -1 means no harvest is pending.
 var _pending_harvest_plot_id := -1
 
-func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_world_manager: WorldManager) -> void:
+func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_world_manager: WorldManager, p_hotbar: Hotbar) -> void:
 	simulation = p_simulation
 	player = p_player
+	hotbar = p_hotbar
 	player.interact_requested.connect(_on_interact_requested)
+	player.use_item_requested.connect(_on_use_item_requested)
 	player.action_animation_finished.connect(_on_action_animation_finished)
 	p_world_manager.zone_loaded.connect(_on_zone_loaded)
 	p_world_manager.zone_unloading.connect(_on_zone_unloading)
@@ -34,12 +41,15 @@ func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_world_man
 func set_farm_view(p_farm_view: FarmView) -> void:
 	farm_view = p_farm_view
 
-## Keeps the "which plot will interact() affect" outline live - same
-## _get_target_plot_id() that _on_interact_requested() uses below.
+## Keeps the target outline live, using the same rules as the two buttons:
+## white when the held item can act, a hand when "interact" would harvest,
+## red when neither button would do anything.
 func _process(_delta: float) -> void:
 	if farm_view:
 		var plot_id := _get_target_plot_id()
-		farm_view.show_highlight_for_plot(plot_id, plot_id != -1 and _can_use_tool(player.current_tool, plot_id))
+		var can_use := plot_id != -1 and _item_action_for(plot_id) != NO_ACTION
+		var can_harvest := plot_id != -1 and simulation.can_harvest(plot_id)
+		farm_view.show_highlight_for_plot(plot_id, can_use, can_harvest)
 
 ## The plot in the cell right in front of the player (see
 ## FarmView.get_plot_id_in_front_of), or -1.
@@ -58,46 +68,40 @@ func _on_zone_unloading(_zone: ZoneRoot) -> void:
 func advance_day() -> void:
 	simulation.advance_day()
 
-## Kept out of the project's InputMap - see PlayerController.NUMBER_KEY_TOOLS
-## for why raw keycodes are used here instead.
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_TAB:
-		_cycle_selected_crop()
-		get_viewport().set_input_as_handled()
-
-## Cycles through the crops the player currently holds seeds for. Crops with
-## zero seeds in inventory are skipped since planting them would just fail.
-func _cycle_selected_crop() -> void:
-	var owned_ids := _get_ownable_crop_ids()
-	if owned_ids.is_empty():
-		return
-	var current_index := owned_ids.find(selected_crop_id)
-	var next_index := (current_index + 1) % owned_ids.size()
-	selected_crop_id = owned_ids[next_index]
-	AudioManager.play_interact_sfx()
-	crop_selected.emit(selected_crop_id)
-
-func _get_ownable_crop_ids() -> Array:
-	var result: Array = []
-	for crop_id in simulation.get_all_crop_ids():
-		if simulation.state.get_inventory_count(crop_id + "_seed") > 0:
-			result.append(crop_id)
-	return result
-
-## Tool animations only play once the underlying action is confirmed
-## possible - swinging the hoe on unplowable ground, or the sickle on a plot
-## with nothing ready to harvest, does nothing and plays nothing (and the
-## player doesn't step up to the plot for nothing either) - just the denied
-## sound, matching the red highlight shown on that plot.
-func _on_interact_requested(tool: PlayerController.Tool) -> void:
-	if farm_view == null or player.is_auto_walking():
-		return
-	var plot_id := _get_target_plot_id()
+## "interact": harvest by hand - the only farming action that needs no item.
+func _on_interact_requested() -> void:
+	var plot_id := _target_for_action()
 	if plot_id == -1:
 		return
-	if not _can_use_tool(tool, plot_id):
+	if not simulation.can_harvest(plot_id):
 		AudioManager.play_action_denied_sfx()
 		return
+	_perform(plot_id, PlayerController.Tool.HARVEST, "")
+
+## "use_item": the held item's action, nothing else.
+func _on_use_item_requested() -> void:
+	var plot_id := _target_for_action()
+	if plot_id == -1:
+		return
+	var action := _item_action_for(plot_id)
+	if action == NO_ACTION:
+		AudioManager.play_action_denied_sfx()
+		return
+	# Captured now: the player may change slot while stepping up to the plot.
+	_perform(plot_id, action as PlayerController.Tool, _selected_seed_crop_id())
+
+## The plot a button press applies to, or -1 (no farm here, the player is
+## already stepping up to a plot, or nothing in front).
+func _target_for_action() -> int:
+	if farm_view == null or player.is_auto_walking():
+		return -1
+	return _get_target_plot_id()
+
+## Tool animations only play once the underlying action is confirmed
+## possible (the callers check first) - swinging the hoe on unplowable ground
+## does nothing and plays nothing, and the player doesn't step up to the plot
+## for nothing either.
+func _perform(plot_id: int, tool: PlayerController.Tool, crop_id: String) -> void:
 	await _approach_plot(plot_id)
 	if farm_view == null: # zone changed while walking
 		return
@@ -111,30 +115,35 @@ func _on_interact_requested(tool: PlayerController.Tool) -> void:
 				AudioManager.play_watering_sfx()
 				player.play_tool_animation(tool)
 		PlayerController.Tool.SEEDS:
-			if simulation.plant(plot_id, selected_crop_id):
+			if simulation.plant(plot_id, crop_id):
 				AudioManager.play_plant_sfx()
 				player.play_tool_animation(tool)
 		PlayerController.Tool.HARVEST:
 			# The actual harvest() call is applied in
 			# _on_action_animation_finished() instead of right here, so the
 			# crop sprite only disappears once the harvest swing animation
-			# actually completes, not the instant E is pressed. can_harvest()
-			# is the read-only check that gates whether the swing plays at all.
+			# actually completes, not the instant the button is pressed.
 			if simulation.can_harvest(plot_id):
 				_pending_harvest_plot_id = plot_id
 				player.play_tool_animation(tool)
 
-func _can_use_tool(tool: PlayerController.Tool, plot_id: int) -> bool:
-	match tool:
-		PlayerController.Tool.HOE:
-			return simulation.can_till(plot_id)
-		PlayerController.Tool.WATERING_CAN:
-			return simulation.can_water(plot_id)
-		PlayerController.Tool.SEEDS:
-			return simulation.can_plant(plot_id, selected_crop_id)
-		PlayerController.Tool.HARVEST:
-			return simulation.can_harvest(plot_id)
-	return false
+## What the item selected in the Hotbar would do on plot_id, as a
+## PlayerController.Tool, or NO_ACTION. Single source of truth for both
+## "use_item" and the highlight. Harvesting is never an item action.
+func _item_action_for(plot_id: int) -> int:
+	var item_id := hotbar.get_selected_item()
+	if item_id == Hotbar.HOE and simulation.can_till(plot_id):
+		return PlayerController.Tool.HOE
+	if item_id == Hotbar.WATERING_CAN and simulation.can_water(plot_id):
+		return PlayerController.Tool.WATERING_CAN
+	if Hotbar.is_seed_id(item_id) and simulation.can_plant(plot_id, _selected_seed_crop_id()):
+		return PlayerController.Tool.SEEDS
+	return NO_ACTION
+
+## Crop id of the seed stack in the selected slot, "" if it isn't one.
+func _selected_seed_crop_id() -> String:
+	var item_id := hotbar.get_selected_item()
+	return item_id.trim_suffix(Hotbar.SEED_SUFFIX) if Hotbar.is_seed_id(item_id) else ""
 
 ## If the player stands at the far side of their own cell, walks them forward
 ## (along the facing axis only - never sideways or backwards) until their
@@ -154,7 +163,7 @@ func _approach_plot(plot_id: int) -> void:
 	if stand.distance_to(player.global_position) > PlayerController.AUTO_WALK_ARRIVE_DISTANCE:
 		await player.auto_walk_to(stand, APPROACH_MAX_DURATION, Vector2(step))
 
-## PlayerController guarantees this fires exactly once per interact press
+## PlayerController guarantees this fires exactly once per tool animation
 ## (even with no animation), so this can't soft-lock a pending harvest.
 func _on_action_animation_finished(tool: PlayerController.Tool) -> void:
 	if tool != PlayerController.Tool.HARVEST or _pending_harvest_plot_id == -1:

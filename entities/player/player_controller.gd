@@ -1,14 +1,21 @@
 class_name PlayerController
 extends CharacterBody2D
 
+## Which farming action a tool-use animation is for. Selecting what the
+## player holds is the Hotbar's job, not the player's - FarmingController
+## picks the Tool and calls play_tool_animation().
 enum Tool {HOE, WATERING_CAN, SEEDS, HARVEST}
 
 ## Which tool-use animation (if any) a Tool plays. SEEDS has none yet - no
 ## sprite exists for planting, so it stays instant like before.
 enum ActionAnim {NONE, SHOVEL, WATERING, HARVEST}
 
-signal interact_requested(tool: Tool)
-signal tool_changed(tool: Tool)
+## "interact" (E / gamepad A) pressed with nothing interactable (sign,
+## bowl...) in reach - the bare-hands action on the plot in front (harvest).
+signal interact_requested
+## "use_item" (Space / left click / gamepad X) pressed - act on the plot in
+## front with whatever the Hotbar has selected (till, water, plant).
+signal use_item_requested
 ## Fires once the tool-use animation (if any) actually finishes - always
 ## exactly once per interact press, even for tools with no animation, so
 ## listeners can safely gate an effect on "the swing is done" without risking
@@ -32,7 +39,6 @@ signal auto_walk_finished
 @onready var interaction_pivot: Node2D = $InteractionPivot
 @onready var interaction_detector: Area2D = $InteractionPivot/InteractionDetector
 
-var current_tool: Tool = Tool.HOE
 var last_facing_direction: Vector2 = Vector2.RIGHT
 ## False during a zone transition (see WorldManager) or a tool-use animation -
 ## movement/tool input is ignored and the character smoothly decelerates to a
@@ -172,31 +178,15 @@ func _play_footstep() -> void:
 	AudioManager.play_footstep_sfx(velocity.length() > walk_speed + 1.0)
 
 
-## 1=Houe 2=Graines 3=Arrosoir 4=Récolte - direct raw keycodes, kept out of the
-## project's custom InputMap since it has repeatedly lost entries there.
-const NUMBER_KEY_TOOLS := {
-	KEY_1: Tool.HOE,
-	KEY_2: Tool.SEEDS,
-	KEY_3: Tool.WATERING_CAN,
-	KEY_4: Tool.HARVEST,
-}
-
 func _unhandled_input(event: InputEvent) -> void:
 	if not input_enabled:
 		return
 	if event.is_action_pressed("interact"):
 		var interacted := _try_interact()
 		if not interacted:
-			interact_requested.emit(current_tool)
-		return
-
-	if event.is_action_pressed("cycle_tool"):
-		current_tool = ((current_tool + 1) % Tool.size()) as Tool
-		tool_changed.emit(current_tool)
-		return
-	if event is InputEventKey and event.pressed and not event.echo and NUMBER_KEY_TOOLS.has(event.keycode):
-		current_tool = NUMBER_KEY_TOOLS[event.keycode]
-		tool_changed.emit(current_tool)
+			interact_requested.emit()
+	elif event.is_action_pressed("use_item"):
+		use_item_requested.emit()
 
 ## Tries to interact with the closest component. Returns true if successful.
 func _try_interact() -> bool:
