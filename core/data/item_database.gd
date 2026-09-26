@@ -11,7 +11,7 @@ extends RefCounted
 ## What kind of thing an inventory id is - drives how each screen presents it.
 ## AUTHORED = a hand-authored ItemData from ITEM_PATHS (tool, food, animal,
 ## egg...).
-enum Kind { SEED, CROP, AUTHORED, UNPLACED_ANIMAL, UNKNOWN }
+enum Kind { SEED, CROP, AUTHORED, UNKNOWN }
 
 ## Hand-authored catalog entries (tools, food, animals, animal products) -
 ## including ones the market doesn't sell (sold_in_shop = false, e.g. the
@@ -37,7 +37,6 @@ const ITEM_PATHS := [
 ]
 
 const SEED_SUFFIX := "_seed"
-const UNPLACED_SUFFIX := "_unplaced"
 
 var _crops: Dictionary # crop_id -> CropData
 var _animals: Dictionary # AnimalData.Species -> AnimalData
@@ -79,8 +78,6 @@ func get_kind(item_id: String) -> Kind:
 		return Kind.CROP
 	if _items.has(item_id):
 		return Kind.AUTHORED
-	if get_unplaced_species(item_id) != null:
-		return Kind.UNPLACED_ANIMAL
 	return Kind.UNKNOWN
 
 ## The CropData behind a seed or harvest id, else null.
@@ -96,16 +93,9 @@ func get_item(item_id: String) -> ItemData:
 		return _seed_items[item_id]
 	return _items.get(item_id)
 
-## "<species prefix>_unplaced" is how FarmState counts animals bought but not
-## yet placed in a structure - resolved against the animal registry, so any
-## registered species works without a hardcoded id.
-func get_unplaced_species(item_id: String) -> AnimalData:
-	if not item_id.ends_with(UNPLACED_SUFFIX):
-		return null
-	for species in _animals:
-		if FarmState.species_prefix(species) + UNPLACED_SUFFIX == item_id:
-			return _animals[species]
-	return null
+## What a species is (name, icon, product cycle...), or null if unregistered.
+func get_animal(species: AnimalData.Species) -> AnimalData:
+	return _animals.get(species)
 
 ## The item that sells animals of this species (for its description).
 func get_item_for_species(species: AnimalData.Species) -> ItemData:

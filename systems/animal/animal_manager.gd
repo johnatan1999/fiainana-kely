@@ -85,16 +85,34 @@ func set_farm_area(p_zone: Node) -> void:
 		_spawn_animal(animal_id)
 	_flush_pending_products()
 
+## Builds the coop, or settles one waiting hen - with a message either way,
+## so a press that does nothing always says why.
 func interact_with_coop(coop: Coop) -> void:
 	if not simulation.state.has_coop:
 		if simulation.build_coop():
 			AudioManager.play_coop_build_sfx()
 			coop.refresh_visual()
+			UIEvents.notify(tr("Poulailler construit !"))
+		else:
+			AudioManager.play_action_denied_sfx()
+			UIEvents.notify(tr("Il te faut %s pour construire le poulailler.") % Currency.format(FarmSimulation.COOP_COST))
 		return
-	if simulation.place_chicken() != "":
-		AudioManager.play_click_menu_sfx()
-	# place_chicken() already fired animal_added -> _spawn_animal(); nothing
-	# else to do here even on success.
+	match simulation.check_place_animal(AnimalData.Species.CHICKEN):
+		FarmSimulation.PlaceCheck.OK:
+			# place_chicken() fires animal_added -> _spawn_animal().
+			simulation.place_chicken()
+			AudioManager.play_click_menu_sfx()
+			UIEvents.notify(tr("Poule installée ! (%s)") % get_coop_occupancy())
+		FarmSimulation.PlaceCheck.FULL:
+			AudioManager.play_action_denied_sfx()
+			UIEvents.notify(tr("Poulailler plein (%s)") % get_coop_occupancy())
+		FarmSimulation.PlaceCheck.NONE_WAITING:
+			AudioManager.play_action_denied_sfx()
+			UIEvents.notify(tr("Aucune poule à installer : achètes-en au marché."))
+
+## "4/6": animals in the coop / its capacity.
+func get_coop_occupancy() -> String:
+	return "%d/%d" % [simulation.state.animals.size(), simulation.state.coop_capacity]
 
 func feed_animal(animal_id: String) -> void:
 	if simulation.feed_animal(animal_id):

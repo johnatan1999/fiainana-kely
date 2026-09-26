@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://fdjfwhhhgssy"]
+[gd_scene load_steps=17 format=3 uid="uid://fdjfwhhhgssy"]
 
 [ext_resource type="Script" path="res://world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://bf1stuuqjofir" path="res://entities/player/player.tscn" id="2_player"]
@@ -15,6 +15,7 @@
 [ext_resource type="Script" path="res://systems/hotbar/hotbar.gd" id="13_hotbar"]
 [ext_resource type="PackedScene" path="res://ui/hotbar/hotbar_ui.tscn" id="14_hotbarui"]
 [ext_resource type="PackedScene" path="res://ui/prompts/action_prompt.tscn" id="15_prompt"]
+[ext_resource type="PackedScene" path="res://ui/notifications/toast.tscn" id="16_toast"]
 
 [node name="World" type="Node2D"]
 y_sort_enabled = true
@@ -57,6 +58,8 @@ layout_mode = 3
 [node name="InventoryUI" parent="UI" instance=ExtResource("11_inventoryui")]
 
 [node name="PauseMenu" parent="UI" instance=ExtResource("9_pausemenu")]
+
+[node name="Toast" parent="UI" instance=ExtResource("16_toast")]
 
 [node name="ZoneContainer" type="Node2D" parent="."]
 y_sort_enabled = true

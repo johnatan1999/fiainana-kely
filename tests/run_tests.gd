@@ -59,7 +59,7 @@ func _run_all() -> void:
 	test_season_boundaries()
 	test_build_coop_deducts_money()
 	test_cannot_build_coop_twice()
-	test_buy_chicken_adds_unplaced_inventory()
+	test_buy_chicken_adds_pending_animal()
 	test_cannot_place_chicken_without_coop()
 	test_place_chicken_creates_animal()
 	test_place_chicken_respects_coop_capacity()
@@ -284,15 +284,16 @@ func test_cannot_build_coop_twice() -> void:
 	var ok := sim.build_coop()
 	_check(not ok and sim.state.money == money_after_first, "build_coop() fails once a coop already exists")
 
-func test_buy_chicken_adds_unplaced_inventory() -> void:
+func test_buy_chicken_adds_pending_animal() -> void:
 	var sim := _make_sim_with_chicken()
 	var money_before := sim.state.money
 	var chicken_data := sim.get_animal_data(AnimalData.Species.CHICKEN)
 	var ok := sim.buy_chicken(1)
 	_check(
 		ok and sim.state.money == money_before - chicken_data.purchase_price
-		and sim.state.get_inventory_count("chicken_unplaced") == 1,
-		"buy_chicken() deducts money and adds an unplaced chicken"
+		and sim.get_pending_count(AnimalData.Species.CHICKEN) == 1
+		and sim.state.get_inventory_count("chicken_unplaced") == 0,
+		"buy_chicken() deducts money and adds a chicken waiting to be settled (not an inventory item)"
 	)
 
 func test_cannot_place_chicken_without_coop() -> void:
@@ -308,8 +309,8 @@ func test_place_chicken_creates_animal() -> void:
 	var id := sim.place_chicken()
 	_check(
 		id != "" and sim.get_animal(id) != null and sim.get_animal(id).species == AnimalData.Species.CHICKEN
-		and sim.state.get_inventory_count("chicken_unplaced") == 0,
-		"place_chicken() creates a real animal from an unplaced chicken"
+		and sim.get_pending_count(AnimalData.Species.CHICKEN) == 0,
+		"place_chicken() settles a waiting chicken as a real animal"
 	)
 
 func test_place_chicken_respects_coop_capacity() -> void:

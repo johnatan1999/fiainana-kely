@@ -17,6 +17,8 @@ signal plot_removed(plot_id: int)
 signal inventory_changed(item_id: String, amount: int)
 
 signal animal_added(animal_id: String)
+## Animals bought and waiting to be settled changed (see place_animal()).
+signal pending_animals_changed
 signal animal_changed(animal_id: String)
 ## A save was just loaded into `state` - fired right after it's replaced and
 ## before the per-item/per-plot change signals that follow, so listeners can
@@ -30,6 +32,10 @@ signal hotbar_changed
 signal product_ready(animal_id: String, product_id: String)
 
 const COOP_COST := 6000
+
+## Why an animal can or can't be settled right now - the UI turns it into a
+## message ("Coop full (6/6)"...).
+enum PlaceCheck { OK, NO_BUILDING, FULL, NONE_WAITING }
 
 var state: FarmState
 var grid_width: int
@@ -222,6 +228,7 @@ func _advance_animals() -> void:
 		if animal_data == null:
 			continue
 
+		animal.age_days += 1
 		if animal.is_well_cared_today():
 			animal.days_well_cared += 1
 			animal.days_since_product += 1
@@ -272,10 +279,10 @@ func build_coop() -> bool:
 	state.has_coop = true
 	return true
 
-## Pure economy transaction - buying doesn't materialize an animal in the
-## world. place_animal() does that and requires the coop to exist. Species
-## with no AnimalData registered (nothing passed to FarmSimulation._init()
-## for them) simply can't be bought yet - fails closed rather than crash.
+## Buying doesn't put the animal anywhere yet: it waits (the seller keeps it)
+## until the player settles it in the pen of their choice - place_animal().
+## Species with no AnimalData registered simply can't be bought yet - fails
+## closed rather than crash.
 func buy_animal(species: AnimalData.Species, quantity: int = 1) -> bool:
 	if quantity <= 0:
 		return false
@@ -287,31 +294,36 @@ func buy_animal(species: AnimalData.Species, quantity: int = 1) -> bool:
 		return false
 	state.money -= cost
 	money_changed.emit(state.money)
-	var key := _unplaced_key(species)
-	state.add_inventory(key, quantity)
-	inventory_changed.emit(key, state.get_inventory_count(key))
+	state.pending_animals[species] = get_pending_count(species) + quantity
+	pending_animals_changed.emit()
 	return true
 
-## Converts one purchased-but-unplaced animal of this species into a real
-## animal in the coop. Returns the new animal's id, or "" if it couldn't be
-## placed.
-func place_animal(species: AnimalData.Species) -> String:
+func get_pending_count(species: AnimalData.Species) -> int:
+	return state.pending_animals.get(species, 0)
+
+## Whether place_animal(species) would succeed, and if not, why.
+func check_place_animal(species: AnimalData.Species) -> PlaceCheck:
 	if not state.has_coop:
-		return ""
+		return PlaceCheck.NO_BUILDING
+	if get_pending_count(species) <= 0:
+		return PlaceCheck.NONE_WAITING
 	if state.animals.size() >= state.coop_capacity:
+		return PlaceCheck.FULL
+	return PlaceCheck.OK
+
+## Settles one waiting animal of this species in the coop. Returns the new
+## animal's id, or "" if it couldn't be settled (see check_place_animal()).
+func place_animal(species: AnimalData.Species) -> String:
+	if check_place_animal(species) != PlaceCheck.OK:
 		return ""
-	var key := _unplaced_key(species)
-	if state.get_inventory_count(key) <= 0:
-		return ""
-	state.add_inventory(key, -1)
-	inventory_changed.emit(key, state.get_inventory_count(key))
+	state.pending_animals[species] -= 1
+	if state.pending_animals[species] <= 0:
+		state.pending_animals.erase(species)
+	pending_animals_changed.emit()
 	var animal_id := state.generate_animal_id(species)
 	state.animals[animal_id] = AnimalState.new(animal_id, species)
 	animal_added.emit(animal_id)
 	return animal_id
-
-func _unplaced_key(species: AnimalData.Species) -> String:
-	return "%s_unplaced" % FarmState.species_prefix(species)
 
 ## Thin chicken-specific wrappers over buy_animal()/place_animal() - every
 ## current call site (Coop.gd, the shop) only ever deals in chickens, and
@@ -428,6 +440,7 @@ func load_save_data(data: Dictionary) -> void:
 	_normalize_hotbar()
 	state_loaded.emit()
 	hotbar_changed.emit()
+	pending_animals_changed.emit()
 
 	var bounds := state.get_grid_bounds()
 	grid_width = bounds.size.x

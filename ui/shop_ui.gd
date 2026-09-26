@@ -133,7 +133,12 @@ func _purchase(item: ItemData, quantity: int) -> void:
 	if item.category == ItemData.Category.SEEDS:
 		_shop_controller.buy_seed(item.crop_id, quantity)
 	elif item.category == ItemData.Category.ANIMALS and item.animal_species == AnimalData.Species.CHICKEN:
-		_shop_controller.buy_chicken(quantity)
+		if _shop_controller.buy_chicken(quantity):
+			# The animal isn't anywhere yet: tell the player where it goes.
+			var animal_name := tr(_item_db.get_animal(item.animal_species).display_name)
+			var bought := animal_name if quantity == 1 else "%s ×%d" % [animal_name, quantity]
+			UIEvents.notify(tr("Nouvel animal : %s ! Va au poulailler et appuie sur %s pour l'installer.")
+					% [bought, InputBindings.get_button_label("interact")])
 	else:
 		_shop_controller.buy_item(item.id, item.price, quantity)
 

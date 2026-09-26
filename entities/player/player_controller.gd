@@ -185,27 +185,26 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("use_item"):
 		use_item_requested.emit()
 
-## Tries to interact with the closest component. Returns true if successful.
-func _try_interact() -> bool:
-	var overlapping_areas: Array[Area2D] = interaction_detector.get_overlapping_areas()
-	if overlapping_areas.is_empty():
-		return false
-
-	var closest_interactable: InteractableComponent = null
-	var min_distance: float = INF
-
-	for area in overlapping_areas:
+## The interactable "interact" would trigger right now: the closest one in
+## reach, or null. Also what ActionPrompt shows a prompt for.
+func get_focused_interactable() -> InteractableComponent:
+	var closest: InteractableComponent = null
+	var min_distance := INF
+	for area in interaction_detector.get_overlapping_areas():
 		if area is InteractableComponent and area.is_interactable:
 			var distance := global_position.distance_squared_to(area.global_position)
 			if distance < min_distance:
 				min_distance = distance
-				closest_interactable = area
+				closest = area
+	return closest
 
-	if closest_interactable:
-		closest_interactable.interact()
-		return true # Une interaction a eu lieu !
-
-	return false
+## Tries to interact with the closest component. Returns true if successful.
+func _try_interact() -> bool:
+	var focused := get_focused_interactable()
+	if focused == null:
+		return false
+	focused.interact()
+	return true
 
 func _tool_action_anim(farm_action: FarmAction.Type) -> ActionAnim:
 	match farm_action:

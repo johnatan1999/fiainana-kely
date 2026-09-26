@@ -5,7 +5,9 @@ extends Control
 ## inventory book (assets/sprites/inventory/inventory.png): category tabs on
 ## the left page, the items of the selected tab in the center frame, and a
 ## card describing the selected (or hovered) item on the right page.
-## Item names/icons/details come from InventoryCatalog.
+## Item names/icons/details come from InventoryCatalog. The Élevage tab also
+## lists the animals themselves - waiting to be settled, then settled with
+## today's care - before their products.
 
 const SlotScene := preload("res://ui/inventory/inventory_slot.tscn")
 
@@ -69,6 +71,9 @@ func setup(simulation: FarmSimulation, shop_ui: ShopUI, item_db: ItemDatabase, h
 
 	simulation.money_changed.connect(_on_money_changed)
 	simulation.inventory_changed.connect(_on_inventory_changed)
+	for livestock_signal in [simulation.animal_added, simulation.animal_changed]:
+		livestock_signal.connect(func(_animal_id: String): _on_inventory_changed("", 0))
+	simulation.pending_animals_changed.connect(func(): _on_inventory_changed("", 0))
 	_on_money_changed(simulation.state.money)
 
 	resized.connect(func(): pivot_offset = size / 2.0)
@@ -112,9 +117,23 @@ func _collect_items() -> Dictionary:
 			continue
 		var info := InventoryCatalog.describe(_item_db, item_id)
 		by_category[info.category].append({"info": info, "quantity": quantity})
+	var livestock: Array = by_category[InventoryCatalog.Category.ANIMALS]
+	for species in _simulation.state.pending_animals:
+		var count: int = _simulation.state.pending_animals[species]
+		livestock.append({"info": InventoryCatalog.describe_pending(_item_db, species, count), "quantity": count})
+	for animal_id in _simulation.get_all_animal_ids():
+		livestock.append({"info": InventoryCatalog.describe_animal(_item_db, _simulation.get_animal(animal_id)), "quantity": 1})
 	for category in by_category:
-		by_category[category].sort_custom(func(a, b): return a.info.name.naturalnocasecmp_to(b.info.name) < 0)
+		by_category[category].sort_custom(_sort_entries)
 	return by_category
+
+## Waiting animals, then settled ones, then items - each group by name.
+static func _sort_entries(a: Dictionary, b: Dictionary) -> bool:
+	var group_a: int = a.info.get("sort_group", 2)
+	var group_b: int = b.info.get("sort_group", 2)
+	if group_a != group_b:
+		return group_a < group_b
+	return a.info.name.naturalnocasecmp_to(b.info.name) < 0
 
 func _rebuild() -> void:
 	var by_category := _collect_items()

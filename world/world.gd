@@ -69,7 +69,7 @@ func _ready() -> void:
 	shop_controller.setup(simulation, farm_land_manager)
 	hud.setup(simulation)
 	hotbar_ui.setup(hotbar, item_db)
-	action_prompt.setup(farming_controller)
+	action_prompt.setup(farming_controller, player)
 	shop_ui.setup(shop_controller, simulation, item_db)
 	inventory_ui.setup(simulation, shop_ui, item_db, hotbar)
 	pause_menu.setup(shop_ui, inventory_ui)

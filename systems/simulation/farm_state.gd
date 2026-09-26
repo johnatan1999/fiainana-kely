@@ -17,6 +17,10 @@ var _next_plot_id: int = 0
 var inventory: Dictionary = {} # item_id: String -> int
 
 var animals: Dictionary = {} # animal_id: String -> AnimalState
+## Animals bought but not settled yet - the seller keeps them until the
+## player settles them in a pen of their choice (FarmSimulation.place_animal).
+## Not inventory items: they're living animals, not things in the bag.
+var pending_animals: Dictionary = {} # AnimalData.Species -> count
 var has_coop: bool = false
 var coop_capacity: int = 4
 var _next_animal_index: int = 0
@@ -97,8 +101,7 @@ func add_inventory(item_id: String, amount: int) -> void:
 ## outside that class.
 const _SPECIES_PREFIXES := ["chicken", "duck", "goose", "pig", "zebu"]
 
-## Public so FarmSimulation can derive the same "<prefix>_unplaced" inventory
-## key generate_animal_id() uses for ids, without duplicating this table.
+## Id prefix of a species ("chicken" -> animal ids "chicken_3").
 static func species_prefix(species: AnimalData.Species) -> String:
 	return _SPECIES_PREFIXES[species]
 
@@ -156,10 +159,18 @@ func to_dict() -> Dictionary:
 		"coop_capacity": coop_capacity,
 		"next_animal_index": _next_animal_index,
 		"animals": animals_data,
+		"pending_animals": _pending_animals_to_dict(),
 		"unlocked_zone_ids": unlocked_zone_ids.keys(),
 		"progressive_tiles_unlocked": progressive_tiles_unlocked,
 		"hotbar": hotbar.duplicate(),
 	}
+
+## JSON object keys are strings: species saved as "0", "4"...
+func _pending_animals_to_dict() -> Dictionary:
+	var out := {}
+	for species in pending_animals:
+		out[str(species)] = pending_animals[species]
+	return out
 
 ## Restores state in-place from a dictionary produced by to_dict(). Unlike
 ## the old fixed-grid version, this fully rebuilds the plot grid to match
@@ -217,6 +228,12 @@ func load_dict(data: Dictionary) -> void:
 		animal.days_well_cared = int(animal_data.get("days_well_cared", 0))
 		animal.days_since_product = int(animal_data.get("days_since_product", 0))
 		animals[animal_id] = animal
+
+	pending_animals.clear()
+	var pending_data: Dictionary = data.get("pending_animals", {})
+	for species in pending_data:
+		if int(pending_data[species]) > 0:
+			pending_animals[int(species)] = int(pending_data[species])
 
 	unlocked_zone_ids.clear()
 	for zone_id in data.get("unlocked_zone_ids", []):

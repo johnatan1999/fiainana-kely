@@ -12,7 +12,7 @@ enum Category { CROPS, ANIMALS, TOOLS, FOOD }
 
 const CATEGORY_NAMES := {
 	Category.CROPS: "Cultures",
-	Category.ANIMALS: "Animaux",
+	Category.ANIMALS: "Élevage",
 	Category.TOOLS: "Outils",
 	Category.FOOD: "Nourriture",
 }
@@ -87,17 +87,6 @@ static func describe(db: ItemDatabase, item_id: String) -> Dictionary:
 				details.append([_t("Prix de vente"), Currency.format(item.sell_price)])
 			return _entry(item_id, item, SHOP_TO_INVENTORY.get(item.category, Category.TOOLS),
 				item.get_description(), details)
-		ItemDatabase.Kind.UNPLACED_ANIMAL:
-			var animal := db.get_unplaced_species(item_id)
-			var shop_item := db.get_item_for_species(animal.species)
-			var description := _t("À installer dans le poulailler : appuie sur E devant le poulailler.")
-			if shop_item != null and shop_item.description != "":
-				description = shop_item.get_description() + "\n" + description
-			var icon: Texture2D = animal.icon
-			if icon == null and shop_item != null:
-				icon = shop_item.icon
-			return _make(item_id, _t("%s (à placer)") % _t(animal.display_name), icon,
-				Category.ANIMALS, ItemData.Category.ANIMALS, description, [])
 
 	# Once per id: describe() runs on every inventory refresh, and a stale id
 	# would otherwise flood the log. Old saves get cleaned up by
@@ -106,6 +95,61 @@ static func describe(db: ItemDatabase, item_id: String) -> Dictionary:
 		_warned_unknown_ids[item_id] = true
 		push_warning("InventoryCatalog: unknown item id '%s' - shown under Outils." % item_id)
 	return _make(item_id, item_id, null, Category.TOOLS, ItemData.Category.TOOLS, "", [])
+
+## The Élevage tab lists living animals too - not inventory items, so they
+## get their own ids ("animal:<id>", "pending:<species>"), never valid item
+## ids (no hotbar, no selling). `meta` replaces the card's quantity line,
+## `sort_group` keeps waiting animals, then settled ones, before products.
+
+## Animals bought and waiting for the player to settle them in a pen.
+static func describe_pending(db: ItemDatabase, species: AnimalData.Species, count: int) -> Dictionary:
+	var animal := db.get_animal(species)
+	var entry := _make("pending:%d" % species, _t("%s - à installer") % _t(animal.display_name),
+		_animal_icon(db, species), Category.ANIMALS, ItemData.Category.ANIMALS,
+		_t("Le marchand te la garde : va au poulailler et appuie sur %s pour l'installer.") % InputBindings.get_button_label("interact"),
+		[])
+	entry["meta"] = _t("En attente : %d") % count
+	entry["sort_group"] = 0
+	return entry
+
+## A settled animal: how it's doing today.
+static func describe_animal(db: ItemDatabase, animal: AnimalState) -> Dictionary:
+	var data := db.get_animal(animal.species)
+	var number := int(animal.id.get_slice("_", animal.id.get_slice_count("_") - 1)) + 1
+	var details: Array = [
+		[_t("Nourriture"), _t("Donnée") if animal.fed_today else _t("À donner")],
+		[_t("Eau"), _t("Donnée") if animal.watered_today else _t("À donner")],
+		[_t("Âge"), _days(animal.age_days, "%d jour", "%d jours")],
+		[_t("Soins réguliers"), _days(animal.days_well_cared, "%d jour d'affilée", "%d jours d'affilée")],
+	]
+	if data.product_id != "":
+		details.append([_t("Ponte"), _t("tous les %d jours") % data.product_cycle_days])
+	var entry := _make("animal:" + animal.id, _t("%s n°%d") % [_t(data.display_name), number],
+		_animal_icon(db, animal.species), Category.ANIMALS, ItemData.Category.ANIMALS,
+		_care_text(animal), details)
+	entry["meta"] = _t("Au poulailler")
+	entry["sort_group"] = 1
+	return entry
+
+## French: singular for 0 and 1 ("0 jour", "1 jour", "2 jours").
+static func _days(count: int, singular: String, plural: String) -> String:
+	return _t(singular if count <= 1 else plural) % count
+
+static func _care_text(animal: AnimalState) -> String:
+	if animal.is_starving():
+		return _t("A très faim ! Occupe-t'en vite.")
+	if animal.fed_today and animal.watered_today:
+		return _t("En pleine forme aujourd'hui.")
+	if not animal.fed_today and not animal.watered_today:
+		return _t("Attend à manger et à boire.")
+	return _t("Attend à manger.") if not animal.fed_today else _t("Attend à boire.")
+
+static func _animal_icon(db: ItemDatabase, species: AnimalData.Species) -> Texture2D:
+	var animal := db.get_animal(species)
+	if animal != null and animal.icon != null:
+		return animal.icon
+	var shop_item := db.get_item_for_species(species)
+	return shop_item.icon if shop_item != null else null
 
 static func _yield_text(crop: CropData) -> String:
 	if crop.yield_min == crop.yield_max:

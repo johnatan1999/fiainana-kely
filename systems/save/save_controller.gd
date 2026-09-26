@@ -12,7 +12,7 @@ const DEFAULT_ZONE_ID := "village"
 ## shipped, only append new ones. This is the single place format drift gets
 ## fixed, instead of runtime code scattered across load_game() staying
 ## permanently tolerant of every historical format.
-const SAVE_VERSION := 4
+const SAVE_VERSION := 5
 
 var simulation: FarmSimulation
 var world_manager: WorldManager
@@ -81,6 +81,8 @@ func _migrate(data: Dictionary, from_version: int) -> Dictionary:
 		data = _migrate_to_v3(data)
 	if from_version < 4:
 		data = _migrate_to_v4(data)
+	if from_version < 5:
+		data = _migrate_to_v5(data)
 	return data
 
 ## v0 (unversioned save, predates this field entirely) -> v1: zone_id was
@@ -154,6 +156,26 @@ func _migrate_to_v4(data: Dictionary) -> Dictionary:
 	if hotbar is Array:
 		for i in hotbar.size():
 			hotbar[i] = _V4_HOTBAR_IDS.get(str(hotbar[i]), hotbar[i])
+	return data
+
+## v4 -> v5: animals bought but not settled yet were inventory items
+## ("<species prefix>_unplaced" x count); they're now their own list,
+## pending_animals (species index as a string key -> count), out of the bag.
+## Hardcoded snapshot of the prefixes, in AnimalData.Species order as of v5.
+const _V5_SPECIES_PREFIXES := ["chicken", "duck", "goose", "pig", "zebu"]
+func _migrate_to_v5(data: Dictionary) -> Dictionary:
+	var inventory = data.get("inventory")
+	if not inventory is Dictionary:
+		return data
+	var pending := {}
+	for species in _V5_SPECIES_PREFIXES.size():
+		var key: String = _V5_SPECIES_PREFIXES[species] + "_unplaced"
+		if inventory.has(key):
+			var count := int(inventory[key])
+			inventory.erase(key)
+			if count > 0:
+				pending[str(species)] = count
+	data["pending_animals"] = pending
 	return data
 
 func _unhandled_input(event: InputEvent) -> void:

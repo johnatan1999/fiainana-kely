@@ -47,7 +47,9 @@ func show_item(info: Dictionary, quantity: int) -> void:
 	placeholder.visible = icon == null and glyph_id == ""
 	placeholder.color = info.color
 	name_label.text = info.name
-	meta_label.text = tr("%s  ·  Quantité : %d") % [InventoryCatalog.category_name(info.category), quantity]
+	# Living animals have no quantity - their entry says where they are instead.
+	var meta: String = info.get("meta", tr("Quantité : %d") % quantity)
+	meta_label.text = "%s  ·  %s" % [InventoryCatalog.category_name(info.category), meta]
 	meta_label.visible = true
 	separator.visible = true
 	description_label.text = info.description
