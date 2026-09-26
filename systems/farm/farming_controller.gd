@@ -38,7 +38,8 @@ func set_farm_view(p_farm_view: FarmView) -> void:
 ## _get_target_plot_id() that _on_interact_requested() uses below.
 func _process(_delta: float) -> void:
 	if farm_view:
-		farm_view.show_highlight_for_plot(_get_target_plot_id())
+		var plot_id := _get_target_plot_id()
+		farm_view.show_highlight_for_plot(plot_id, plot_id != -1 and _can_use_tool(player.current_tool, plot_id))
 
 ## The plot in the cell right in front of the player (see
 ## FarmView.get_plot_id_in_front_of), or -1.
@@ -86,12 +87,16 @@ func _get_ownable_crop_ids() -> Array:
 ## Tool animations only play once the underlying action is confirmed
 ## possible - swinging the hoe on unplowable ground, or the sickle on a plot
 ## with nothing ready to harvest, does nothing and plays nothing (and the
-## player doesn't step up to the plot for nothing either).
+## player doesn't step up to the plot for nothing either) - just the denied
+## sound, matching the red highlight shown on that plot.
 func _on_interact_requested(tool: PlayerController.Tool) -> void:
 	if farm_view == null or player.is_auto_walking():
 		return
 	var plot_id := _get_target_plot_id()
-	if plot_id == -1 or not _can_use_tool(tool, plot_id):
+	if plot_id == -1:
+		return
+	if not _can_use_tool(tool, plot_id):
+		AudioManager.play_action_denied_sfx()
 		return
 	await _approach_plot(plot_id)
 	if farm_view == null: # zone changed while walking

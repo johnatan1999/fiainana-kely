@@ -13,8 +13,6 @@ const SPEED := 40.0
 const WANDER_RADIUS := 60.0
 const WILD_WANDER_RADIUS := 160.0
 const EAT_DRINK_DURATION := 1.5
-const HUNGRY_THRESHOLD := 50.0
-const THIRSTY_THRESHOLD := 50.0
 const ARRIVE_DISTANCE := 6.0
 ## Bowls are solid, so a chicken can never reach their center: it walks to a
 ## random spot around the bowl instead (so several can eat side by side) and
@@ -35,6 +33,16 @@ const FIRST_MOVE_DELAY_MAX := 3.0
 ## gently drift apart, so they never end up stacked on the same spot.
 const SEPARATION_RADIUS := 12.0
 const SEPARATION_SPEED := 25.0
+## Needs are daily, matching FarmSimulation's care rules (eggs and breeding
+## count consecutive days fed AND watered): a chicken wants to eat until it
+## has eaten today (AnimalState.fed_today) and drink until it has drunk
+## today, and the bubble shows exactly that. The hunger/thirst gauges only
+## drop on days it went without - at or below this, the bubble turns red.
+const CRITICAL_NEED_THRESHOLD := 20.0
+## Pecking while eating/drinking (no dedicated art yet): the sprite squashes
+## toward its feet and back, PECK_PERIOD seconds per peck.
+const PECK_SQUASH := Vector2(1.06, 0.84)
+const PECK_PERIOD := 0.3
 
 ## Set start_wild = true on a Chicken instance placed directly in a zone
 ## scene (e.g. wandering free in the yard) instead of spawned by
@@ -67,6 +75,8 @@ var _wander_area := Rect2()
 var _walk_time_left: float = 0.0
 ## FeedingBowl or WaterBowl (no shared base class - both expose get_center()).
 var _target_bowl
+var _need_bubble: NeedBubble
+var _peck_tween: Tween
 
 func _ready() -> void:
 	anim.scale = Vector2(size_multiplier, size_multiplier)
@@ -85,6 +95,15 @@ func setup(animal_manager: AnimalManager, animal_id: String, wander_area := Rect
 	_wander_radius = WANDER_RADIUS
 	_wander_area = wander_area
 	_randomize_start()
+	_create_need_bubble()
+
+## Only simulated animals have needs - wild/decorative ones never get one.
+## Tail tip sits just above the head: frames are 64px tall with the feet at
+## the origin (see the AnimatedSprite2D offset), scaled by size_multiplier.
+func _create_need_bubble() -> void:
+	_need_bubble = NeedBubble.new()
+	_need_bubble.position = Vector2(0, -64.0 * size_multiplier + 6.0)
+	add_child(_need_bubble)
 
 ## Purely decorative: no FarmSimulation-backed AnimalState, so it never gets
 ## hungry/thirsty and never lays eggs - it just wanders and occasionally
@@ -120,6 +139,8 @@ func _physics_process(delta: float) -> void:
 	if animal == null:
 		queue_free() # sold/removed from the simulation
 		return
+	_need_bubble.set_needs(not animal.fed_today, not animal.watered_today,
+		minf(animal.hunger, animal.thirst) <= CRITICAL_NEED_THRESHOLD)
 
 	match _state:
 		State.EAT, State.DRINK, State.SLEEP:
@@ -127,6 +148,7 @@ func _physics_process(delta: float) -> void:
 			_state_timer -= delta
 			if _state_timer <= 0.0:
 				_state = State.IDLE
+				_stop_peck()
 		State.WALK:
 			_process_walk(delta)
 		State.IDLE:
@@ -173,12 +195,12 @@ func _process_idle(delta: float, animal: AnimalState) -> void:
 	velocity = Vector2.ZERO
 	_wander_cooldown -= delta
 
-	if animal.hunger <= HUNGRY_THRESHOLD:
+	if not animal.fed_today:
 		var bowl := _animal_manager.get_feeding_bowl()
 		if bowl != null and bowl.is_full():
 			_walk_to_bowl(bowl, State.EAT)
 			return
-	if animal.thirst <= THIRSTY_THRESHOLD:
+	if not animal.watered_today:
 		var bowl := _animal_manager.get_water_bowl()
 		if bowl != null and bowl.is_full():
 			_walk_to_bowl(bowl, State.DRINK)
@@ -243,6 +265,7 @@ func _on_arrived() -> void:
 			bowl.consume()
 		_animal_manager.feed_animal(_animal_id)
 		_state = State.EAT
+		_start_peck()
 		_state_timer = EAT_DRINK_DURATION
 	elif _arrival_state == State.DRINK:
 		var bowl := _animal_manager.get_water_bowl()
@@ -250,9 +273,23 @@ func _on_arrived() -> void:
 			bowl.consume()
 		_animal_manager.water_animal(_animal_id)
 		_state = State.DRINK
+		_start_peck()
 		_state_timer = EAT_DRINK_DURATION
 	else:
 		_state = State.IDLE
+
+func _start_peck() -> void:
+	_stop_peck()
+	var base := Vector2(size_multiplier, size_multiplier)
+	_peck_tween = create_tween().set_loops()
+	_peck_tween.tween_property(anim, "scale", base * PECK_SQUASH, PECK_PERIOD * 0.4).set_trans(Tween.TRANS_SINE)
+	_peck_tween.tween_property(anim, "scale", base, PECK_PERIOD * 0.6).set_trans(Tween.TRANS_SINE)
+
+func _stop_peck() -> void:
+	if _peck_tween != null:
+		_peck_tween.kill()
+		_peck_tween = null
+	anim.scale = Vector2(size_multiplier, size_multiplier)
 
 func _play_animation(facing: Vector2) -> void:
 	if anim.sprite_frames == null:

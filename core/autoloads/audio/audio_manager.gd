@@ -26,6 +26,9 @@ const SFX_POOL_SIZE := 8
 ## AudioStreamRandomizers - see assets/audio/SFX/footstep_*_randomizer.tres.
 const FOOTSTEP_WALK_VOLUME_DB := -10.0
 const FOOTSTEP_RUN_VOLUME_DB := -7.0
+## The denied sound is mastered hot (peaks at 0 dBFS) and can be spammed by
+## pressing E repeatedly - kept well under the regular SFX.
+const ACTION_DENIED_VOLUME_DB := -8.0
 
 ## Assign these in the AudioManager.tscn inspector once SFX files exist.
 ## play_*_sfx() is a safe no-op while a slot is empty.
@@ -40,6 +43,7 @@ const FOOTSTEP_RUN_VOLUME_DB := -7.0
 @export var sfx_coop_build: AudioStream
 @export var sfx_footstep_walk: AudioStream
 @export var sfx_footstep_run: AudioStream
+@export var sfx_action_denied: AudioStream
 
 @onready var _bgm_players: Array[AudioStreamPlayer] = [$BGMPlayerA, $BGMPlayerB]
 
@@ -186,6 +190,11 @@ func play_egg_pickup_sfx() -> void:
 
 func play_coop_build_sfx() -> void:
 	play_sfx(sfx_coop_build)
+
+
+## Pressing E on something the current tool can't act on (red plot highlight).
+func play_action_denied_sfx() -> void:
+	play_sfx(sfx_action_denied, ACTION_DENIED_VOLUME_DB)
 
 
 func play_footstep_sfx(running: bool) -> void:

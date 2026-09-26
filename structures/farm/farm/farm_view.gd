@@ -20,7 +20,7 @@ var grid_height: int
 var _plot_views: Dictionary = {} # plot_id: int -> PlotView
 var _plot_positions: Dictionary = {} # plot_id: int -> Vector2i
 var _simulation: FarmSimulation
-var _highlight: Node2D
+var _highlight: PlotHighlight
 
 @onready var soil_layer: TileMapLayer = $SoilLayer
 
@@ -54,15 +54,17 @@ func _create_highlight() -> void:
 	_highlight.visible = false
 	add_child(_highlight)
 
-## Shows the pulsing outline over plot_id, or hides it for -1. Called every
-## frame by FarmingController with the same plot it would act on, so the
+## Shows the pulsing outline over plot_id - white if `can_act`, red if not -
+## or hides it for -1. Called every frame by FarmingController with the same
+## plot and the same eligibility check it uses when E is pressed, so the
 ## highlight never lies about what pressing E is about to do.
-func show_highlight_for_plot(plot_id: int) -> void:
+func show_highlight_for_plot(plot_id: int, can_act: bool) -> void:
 	if plot_id == -1:
 		_highlight.visible = false
 		return
 	var grid_pos: Vector2i = _simulation.get_plot_position(plot_id)
 	_highlight.position = Vector2(grid_pos.x, grid_pos.y) * CELL_SIZE
+	_highlight.can_act = can_act
 	_highlight.visible = true
 
 func hide_highlight() -> void:

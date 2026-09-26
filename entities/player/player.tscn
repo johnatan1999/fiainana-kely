@@ -277,7 +277,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"shovel",
-"speed": 5.0
+"speed": 12.6667
 }, {
 "frames": [{
 "duration": 1.0,

@@ -18,7 +18,9 @@ signal zone_unloading(zone: ZoneRoot)
 
 const ZONES_DIR := "res://data/world_zones/"
 
-const ChickenScene := preload("res://entities/animals/chicken/chicken.tscn")
+## Loaded on use, not preload()ed - see AnimalManager.SPECIES_SCENE_PATHS for
+## the load cycle that preloading caused.
+const CHICKEN_SCENE_PATH := "res://entities/animals/chicken/chicken.tscn"
 ## How many decorative (non-simulated) chickens to show around the coop
 ## building in the village, capped regardless of how many are actually owned.
 const MAX_DECORATIVE_CHICKENS := 4
@@ -176,8 +178,9 @@ func _spawn_decorative_chickens(coop_building: Node2D, container: Node2D) -> voi
 	if container == null:
 		return
 	var count: int = min(simulation.get_all_animal_ids().size(), MAX_DECORATIVE_CHICKENS)
+	var chicken_scene: PackedScene = load(CHICKEN_SCENE_PATH)
 	for i in range(count):
-		var chicken: Chicken = ChickenScene.instantiate()
+		var chicken: Chicken = chicken_scene.instantiate()
 		chicken.start_wild = true
 		# container and coop_building are both direct children of the same
 		# zone root, so their local spaces match - no need for global_position.

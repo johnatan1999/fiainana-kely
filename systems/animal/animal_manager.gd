@@ -23,8 +23,11 @@ const FALLBACK_AREA_HALF_SIZE := Vector2(60, 40)
 ## one with real art/AI today; buy_animal()/place_animal() in FarmSimulation
 ## already work for any species, so supporting a new one here later is just
 ## adding its scene to this table, not rewriting the spawn logic below.
-const SPECIES_SCENES := {
-	AnimalData.Species.CHICKEN: preload("res://entities/animals/chicken/chicken.tscn"),
+## Paths loaded on first spawn rather than preload()ed: chicken.gd references
+## AnimalManager, so preloading its scene from this script's compile made a
+## load cycle ("Parse Error: Busy" on chicken.tscn during imports).
+const SPECIES_SCENE_PATHS := {
+	AnimalData.Species.CHICKEN: "res://entities/animals/chicken/chicken.tscn",
 }
 
 var simulation: FarmSimulation
@@ -117,7 +120,8 @@ func _spawn_animal(animal_id: String) -> void:
 	var animal := simulation.get_animal(animal_id)
 	if animal == null:
 		return
-	var scene: PackedScene = SPECIES_SCENES.get(animal.species)
+	var path: String = SPECIES_SCENE_PATHS.get(animal.species, "")
+	var scene: PackedScene = load(path) if path != "" else null
 	if scene == null:
 		push_warning("AnimalManager: no scene registered for species %d (animal %s) - nothing spawned." % [animal.species, animal_id])
 		return
