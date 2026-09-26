@@ -29,6 +29,7 @@ const CLOSED_SCALE := Vector2(0.95, 0.95)
 
 var _simulation: FarmSimulation
 var _item_db: ItemDatabase
+var _hotbar: Hotbar
 var _shop_ui: ShopUI
 var _open_tween: Tween
 var _tabs: Array[InventoryCategoryTab] = []
@@ -41,10 +42,18 @@ var _hovered_id := ""
 var _entries: Dictionary = {}
 var _order: Array[String] = []
 
-func setup(simulation: FarmSimulation, shop_ui: ShopUI, item_db: ItemDatabase) -> void:
+func setup(simulation: FarmSimulation, shop_ui: ShopUI, item_db: ItemDatabase, hotbar: Hotbar) -> void:
 	_simulation = simulation
 	_shop_ui = shop_ui
 	_item_db = item_db
+	_hotbar = hotbar
+	info_card.hotbar_slot_chosen.connect(_assign_selected_to_hotbar)
+	info_card.hotbar_remove_requested.connect(func():
+		_hotbar.remove(_selected_id)
+		AudioManager.play_click_menu_sfx())
+	hotbar.slots_changed.connect(func():
+		if visible:
+			_refresh_card())
 
 	# Reste actif malgré get_tree().paused = true (voir open()/close()) - sinon
 	# ses propres boutons et son tween d'ouverture/fermeture se figeraient aussi.
@@ -172,6 +181,7 @@ func _refresh_card() -> void:
 	var shown_id := _hovered_id if _entries.has(_hovered_id) else _selected_id
 	if _entries.has(shown_id):
 		info_card.show_item(_entries[shown_id].info, _entries[shown_id].quantity)
+		info_card.show_hotbar(_item_db.is_hotbar_item(shown_id), _hotbar.index_of(shown_id))
 	else:
 		info_card.show_empty(tr("Aucun objet"))
 
@@ -196,6 +206,13 @@ func _move_selection(dx: int, dy: int) -> void:
 	if target < 0 or target >= _order.size():
 		return
 	_select_item(_order[target])
+
+## Places the selected item in hotbar slot `index` (card button or key 1-8).
+func _assign_selected_to_hotbar(index: int) -> void:
+	if _selected_id == "" or not _item_db.is_hotbar_item(_selected_id):
+		return
+	_hotbar.assign(_selected_id, index)
+	AudioManager.play_click_menu_sfx()
 
 func _cycle_category(step: int) -> void:
 	var count := InventoryCatalog.Category.size()
@@ -257,5 +274,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_down", true):
 		_move_selection(0, 1)
 	else:
+		# Keys 1-8 (the hotbar's own actions) put the selected item in that slot.
+		for i in Hotbar.SIZE:
+			if event.is_action_pressed("hotbar_%d" % (i + 1)):
+				_assign_selected_to_hotbar(i)
+				get_viewport().set_input_as_handled()
+				return
 		return
 	get_viewport().set_input_as_handled()

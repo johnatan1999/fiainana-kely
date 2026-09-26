@@ -6,8 +6,9 @@ extends Node
 ##
 ## Two buttons, never ambiguous (like Stardew):
 ## - "use_item" (Space / left click / gamepad X) acts with the item selected
-##   in the Hotbar: hoe tills, watering can waters, a seed stack plants that
-##   crop - even on a ripe crop, the watering can only ever waters;
+##   in the Hotbar, by its ShopItemData.tool_type: a HOE tool (starter hoe,
+##   Angady...) tills, a WATERING_CAN waters, a seed stack plants that crop -
+##   even on a ripe crop, the watering can only ever waters;
 ## - "interact" (E / gamepad A) is the bare-hands action: harvest a ripe crop.
 
 ## Where the player's feet end up when stepping up to a plot: this many
@@ -154,12 +155,12 @@ func _perform(plot_id: int, tool: PlayerController.Tool, crop_id: String) -> voi
 ## PlayerController.Tool, or NO_ACTION. Single source of truth for both
 ## "use_item" and the highlight. Harvesting is never an item action.
 func _item_action_for(plot_id: int) -> int:
-	var item_id := hotbar.get_selected_item()
-	if item_id == Hotbar.HOE and simulation.can_till(plot_id):
-		return PlayerController.Tool.HOE
-	if item_id == Hotbar.WATERING_CAN and simulation.can_water(plot_id):
-		return PlayerController.Tool.WATERING_CAN
-	if Hotbar.is_seed_id(item_id) and simulation.can_plant(plot_id, _selected_seed_crop_id()):
+	match hotbar.get_selected_tool_type():
+		ShopItemData.ToolType.HOE:
+			return PlayerController.Tool.HOE if simulation.can_till(plot_id) else NO_ACTION
+		ShopItemData.ToolType.WATERING_CAN:
+			return PlayerController.Tool.WATERING_CAN if simulation.can_water(plot_id) else NO_ACTION
+	if Hotbar.is_seed_id(hotbar.get_selected_item()) and simulation.can_plant(plot_id, _selected_seed_crop_id()):
 		return PlayerController.Tool.SEEDS
 	return NO_ACTION
 

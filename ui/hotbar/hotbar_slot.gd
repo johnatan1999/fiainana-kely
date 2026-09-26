@@ -25,15 +25,15 @@ func _ready() -> void:
 	pivot_offset = size / 2.0
 	key_label.text = str(index + 1)
 
-## `icon` null + `tool_id` set -> drawn pictogram; both empty -> placeholder
-## square of `color` (or nothing at all for an empty slot).
-func show_item(icon: Texture2D, tool_id: String, color: Color, count: int, empty: bool) -> void:
+## `icon` null + `glyph_id` set -> drawn tool pictogram; both empty ->
+## placeholder square of `color` (or nothing at all for an empty slot).
+func show_item(icon: Texture2D, glyph_id: String, color: Color, count: int, empty: bool) -> void:
 	icon_rect.texture = icon
 	icon_rect.visible = icon != null
-	glyph.visible = icon == null and tool_id != ""
+	glyph.visible = icon == null and glyph_id != ""
 	if glyph.visible:
-		glyph.tool_id = tool_id
-	placeholder.visible = not empty and icon == null and tool_id == ""
+		glyph.tool_id = glyph_id
+	placeholder.visible = not empty and icon == null and glyph_id == ""
 	placeholder.color = color
 	count_label.text = str(count)
 	count_label.visible = count > 0

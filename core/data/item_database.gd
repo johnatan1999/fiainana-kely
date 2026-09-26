@@ -11,7 +11,9 @@ extends RefCounted
 ## What kind of thing an inventory id is - drives how each screen presents it.
 enum Kind { SEED, CROP, SHOP_ITEM, UNPLACED_ANIMAL, UNKNOWN }
 
-## Hand-authored catalog entries (tools, food, animals, animal products).
+## Hand-authored catalog entries (tools, food, animals, animal products) -
+## including ones the market doesn't sell (sold_in_shop = false, e.g. the
+## starter tools): they still need names, icons and a tool type everywhere.
 ## An explicit list rather than a directory scan: exported builds remap
 ## .tres files, so a scan of data/shop_items/ would silently find nothing.
 ## Paths loaded in _init() rather than preload()ed: preloading them at
@@ -21,7 +23,9 @@ enum Kind { SEED, CROP, SHOP_ITEM, UNPLACED_ANIMAL, UNKNOWN }
 ## animal_zebu.tres is deliberately left out: FarmSimulation already supports
 ## buying any species, but there's no Zebu scene in AnimalManager and no
 ## structure to place one in - add it back here once both exist.
-const SHOP_ITEM_PATHS := [
+const ITEM_PATHS := [
+	"res://data/shop_items/tool_hoe.tres",
+	"res://data/shop_items/tool_watering_can.tres",
 	"res://data/shop_items/tool_angady.tres",
 	"res://data/shop_items/tool_watering_can_tin.tres",
 	"res://data/shop_items/food_vary_sy_laoka.tres",
@@ -36,13 +40,13 @@ const UNPLACED_SUFFIX := "_unplaced"
 var _crops: Dictionary # crop_id -> CropData
 var _animals: Dictionary # AnimalData.Species -> AnimalData
 var _shop_items: Dictionary = {} # item_id -> ShopItemData
-var _shop_item_list: Array[ShopItemData] = [] # SHOP_ITEM_PATHS order
+var _shop_item_list: Array[ShopItemData] = [] # ITEM_PATHS order
 var _seed_items: Dictionary = {} # "<crop_id>_seed" -> ShopItemData (synthesized)
 
 func _init(crop_registry: Dictionary, animal_registry: Dictionary) -> void:
 	_crops = crop_registry
 	_animals = animal_registry
-	for path in SHOP_ITEM_PATHS:
+	for path in ITEM_PATHS:
 		var item := load(path) as ShopItemData
 		if item == null:
 			push_error("ItemDatabase: %s is not a ShopItemData." % path)
@@ -54,7 +58,7 @@ func _init(crop_registry: Dictionary, animal_registry: Dictionary) -> void:
 		_seed_items[seed_item.id] = seed_item
 
 ## Everything the market sells, per ShopItemData.Category, in a stable order:
-## seeds follow the crop registry order, the rest follow SHOP_ITEM_PATHS.
+## seeds follow the crop registry order, the rest follow ITEM_PATHS.
 func get_shop_catalog() -> Dictionary:
 	var catalog := {}
 	for category in ShopItemData.Category.values():
@@ -62,7 +66,8 @@ func get_shop_catalog() -> Dictionary:
 	for seed_item in _seed_items.values():
 		catalog[ShopItemData.Category.SEEDS].append(seed_item)
 	for item in _shop_item_list:
-		catalog[item.category].append(item)
+		if item.sold_in_shop:
+			catalog[item.category].append(item)
 	return catalog
 
 func get_kind(item_id: String) -> Kind:
@@ -105,3 +110,29 @@ func get_shop_item_for_species(species: AnimalData.Species) -> ShopItemData:
 		if item.category == ShopItemData.Category.ANIMALS and item.animal_species == species and item.price > 0:
 			return item
 	return null
+
+## The farming action an item performs when used (ShopItemData.ToolType), or
+## NONE - seeds aren't tools, they plant through their own path.
+func get_tool_type(item_id: String) -> ShopItemData.ToolType:
+	var item: ShopItemData = _shop_items.get(item_id)
+	return item.tool_type if item != null else ShopItemData.ToolType.NONE
+
+## Whether an item has a use on the farm, and so belongs in the Hotbar:
+## tools and seed stacks. Harvests, food, eggs... live in the inventory only.
+func is_hotbar_item(item_id: String) -> bool:
+	return _seed_items.has(item_id) or get_tool_type(item_id) != ShopItemData.ToolType.NONE
+
+## Tool items in catalog order - starter tools first, so a new game's bar
+## always opens on the hoe then the watering can.
+func get_tool_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for item in _shop_item_list:
+		if item.tool_type != ShopItemData.ToolType.NONE:
+			ids.append(item.id)
+	return ids
+
+## Seed ids in crop registry order.
+func get_seed_ids() -> Array[String]:
+	var ids: Array[String] = []
+	ids.assign(_seed_items.keys())
+	return ids

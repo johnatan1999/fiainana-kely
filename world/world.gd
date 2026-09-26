@@ -18,6 +18,13 @@ const CROP_RESOURCES: Array[CropData] = [
 	preload("res://data/crops/litchi.tres"),
 ]
 
+## What a brand-new game starts with (a loaded save replaces it entirely).
+const STARTER_INVENTORY := {
+	"tool_hoe": 1,
+	"tool_watering_can": 1,
+	"corn_seed": 3,
+}
+
 const ANIMAL_RESOURCES: Array[AnimalData] = [
 	preload("res://data/animals/chicken.tres"),
 ]
@@ -52,18 +59,19 @@ func _ready() -> void:
 
 	simulation = FarmSimulation.new(GRID_WIDTH, GRID_HEIGHT, crop_registry, animal_registry)
 	item_db = ItemDatabase.new(crop_registry, animal_registry)
-	simulation.state.add_inventory("corn_seed", 3)
+	for item_id in STARTER_INVENTORY:
+		simulation.state.add_inventory(item_id, STARTER_INVENTORY[item_id])
 
 	world_manager.setup(simulation, player, zone_container)
 	farm_land_manager.setup(simulation, world_manager)
-	hotbar.setup(simulation)
+	hotbar.setup(simulation, item_db)
 	farming_controller.setup(simulation, player, world_manager, hotbar)
 	shop_controller.setup(simulation, farm_land_manager)
 	hud.setup(simulation)
 	hotbar_ui.setup(hotbar, item_db)
 	action_prompt.setup(farming_controller)
 	shop_ui.setup(shop_controller, simulation, item_db)
-	inventory_ui.setup(simulation, shop_ui, item_db)
+	inventory_ui.setup(simulation, shop_ui, item_db, hotbar)
 	pause_menu.setup(shop_ui, inventory_ui)
 	animal_manager.setup(simulation, world_manager)
 	save_controller.setup(simulation, world_manager, player)

@@ -17,6 +17,7 @@ const ANIM_TIME := 0.1
 @onready var frame: TextureRect = %Frame
 @onready var icon_rect: TextureRect = %Icon
 @onready var placeholder: ColorRect = %Placeholder
+@onready var glyph: ToolGlyph = %Glyph
 @onready var quantity_label: Label = %QuantityLabel
 
 var item_id: String
@@ -39,7 +40,11 @@ func setup(info: Dictionary, quantity: int) -> void:
 	var icon: Texture2D = info.icon
 	icon_rect.texture = icon
 	icon_rect.visible = icon != null
-	placeholder.visible = icon == null
+	var glyph_id: String = info.get("glyph", "")
+	glyph.visible = icon == null and glyph_id != ""
+	if glyph.visible:
+		glyph.tool_id = glyph_id
+	placeholder.visible = icon == null and glyph_id == ""
 	placeholder.color = info.color
 
 func set_selected(selected: bool) -> void:

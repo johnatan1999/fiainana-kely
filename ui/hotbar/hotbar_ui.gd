@@ -8,10 +8,10 @@ extends Control
 
 const SlotScene := preload("res://ui/hotbar/hotbar_slot.tscn")
 
-## Tool slots have no inventory entry yet - their names (translation keys).
-const TOOL_NAMES := {
-	Hotbar.HOE: "Houe",
-	Hotbar.WATERING_CAN: "Arrosoir",
+## Pictogram drawn for a tool with no icon art yet, per tool type.
+const TOOL_GLYPHS := {
+	ShopItemData.ToolType.HOE: "hoe",
+	ShopItemData.ToolType.WATERING_CAN: "watering_can",
 }
 const NAME_SHOW_TIME := 1.2
 const NAME_FADE_TIME := 0.4
@@ -44,14 +44,16 @@ func setup(hotbar: Hotbar, item_db: ItemDatabase) -> void:
 func _refresh_slots() -> void:
 	for slot in _slots:
 		var item_id := _hotbar.get_item(slot.index)
-		if item_id == "":
+		var item := _item_db.get_shop_item(item_id) if item_id != "" else null
+		if item == null:
 			slot.show_item(null, "", Color.TRANSPARENT, 0, true)
-		elif Hotbar.is_tool_id(item_id):
-			slot.show_item(null, item_id, Color.TRANSPARENT, 0, false)
-		else:
-			var item := _item_db.get_shop_item(item_id)
-			var color: Color = ShopItemData.CATEGORY_COLORS.get(item.category, Color.GRAY) if item else Color.GRAY
-			slot.show_item(item.icon if item else null, "", color, _hotbar.get_count(slot.index), false)
+			continue
+		var glyph: String = TOOL_GLYPHS.get(item.tool_type, "") if item.icon == null else ""
+		var color: Color = ShopItemData.CATEGORY_COLORS.get(item.category, Color.GRAY)
+		# Seed stacks always show their count; a single tool doesn't need "1".
+		var count := _hotbar.get_count(slot.index)
+		var shown_count := count if Hotbar.is_seed_id(item_id) or count > 1 else 0
+		slot.show_item(item.icon, glyph, color, shown_count, false)
 
 func _on_selection_changed(index: int) -> void:
 	for slot in _slots:
@@ -61,8 +63,6 @@ func _on_selection_changed(index: int) -> void:
 func _item_name(item_id: String) -> String:
 	if item_id == "":
 		return ""
-	if TOOL_NAMES.has(item_id):
-		return tr(TOOL_NAMES[item_id])
 	var item := _item_db.get_shop_item(item_id)
 	return item.get_display_name() if item else item_id
 

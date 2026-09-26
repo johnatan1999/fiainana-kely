@@ -18,6 +18,10 @@ signal inventory_changed(item_id: String, amount: int)
 
 signal animal_added(animal_id: String)
 signal animal_changed(animal_id: String)
+## A save was just loaded into `state` - fired right after it's replaced and
+## before the per-item/per-plot change signals that follow, so listeners can
+## tell "loaded as it was saved" apart from "just acquired".
+signal state_loaded
 ## Fired once an animal's product is ready - the presentation layer spawns
 ## the actual pickup (e.g. Egg.tscn) in response; FarmSimulation never touches
 ## Node2D itself, so it doesn't put the product directly into inventory here.
@@ -414,6 +418,7 @@ func to_save_data() -> Dictionary:
 ## Restores state in-place and re-emits every signal so the presentation layer redraws itself.
 func load_save_data(data: Dictionary) -> void:
 	state.load_dict(data)
+	state_loaded.emit()
 
 	var bounds := state.get_grid_bounds()
 	grid_width = bounds.size.x

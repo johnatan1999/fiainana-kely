@@ -46,6 +46,12 @@ const SHOP_TO_INVENTORY := {
 
 static var _warned_unknown_ids := {}
 
+## Pictogram drawn for a tool with no icon art yet (same as the Hotbar's).
+const TOOL_GLYPHS := {
+	ShopItemData.ToolType.HOE: "hoe",
+	ShopItemData.ToolType.WATERING_CAN: "watering_can",
+}
+
 ## Static functions have no Object.tr() - same lookup, through the server.
 static func _t(key: String) -> String:
 	return String(TranslationServer.translate(key))
@@ -114,7 +120,9 @@ static func _yield_text(crop: CropData) -> String:
 
 ## Names/icon/placeholder color straight from a catalog entry.
 static func _entry(id: String, item: ShopItemData, category: Category, description: String, details: Array) -> Dictionary:
-	return _make(id, item.get_display_name(), item.icon, category, item.category, description, details)
+	var entry := _make(id, item.get_display_name(), item.icon, category, item.category, description, details)
+	entry["glyph"] = TOOL_GLYPHS.get(item.tool_type, "")
+	return entry
 
 static func _make(id: String, display_name: String, icon: Texture2D,
 		category: Category, color_category: ShopItemData.Category, description: String, details: Array) -> Dictionary:

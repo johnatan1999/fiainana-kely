@@ -1,42 +1,41 @@
 class_name Hotbar
 extends Node
 
-## The 8-slot bar of things the player holds: the two farming tools, then
-## seed stacks. Owns *what* is in each slot (stored in FarmState.hotbar so it
-## is saved) and *which* slot is selected; HotbarUI only draws it and
-## FarmingController only asks what is selected.
+## The 8-slot bar of things the player holds - a view of the inventory: only
+## real inventory items with a use on the farm (tools, seed stacks - see
+## ItemDatabase.is_hotbar_item()). Owns *what* is in each slot (stored in
+## FarmState.hotbar so it's saved) and *which* slot is selected; HotbarUI
+## only draws it, FarmingController asks what the held item does, and the
+## inventory book arranges it (assign()/remove()).
 ##
 ## Slot rules, built for muscle memory:
-## - a seed the player gets and doesn't have in the bar yet takes the first
-##   empty slot, and keeps that slot while they have any left;
-## - a seed stack that runs out empties its slot (nothing shifts around);
-## - tools never leave their slots (they're not inventory items yet).
+## - an item the player *newly acquires* takes the first empty slot - one
+##   they removed from the bar on purpose isn't pushed back in;
+## - an item they no longer have empties its slot (nothing shifts around);
+## - placing an item already in the bar onto another slot swaps the two.
 ##
-## Selection: number keys pick a slot directly (empty ones included - empty
-## hands still harvest), next/prev (Tab / wheel / L-R shoulder) skip empty
-## slots so cycling on a gamepad is quick.
+## Selection: number keys pick a slot directly, next/prev (Tab / wheel / L-R
+## shoulder) skip empty slots so cycling on a gamepad is quick.
 
 signal slots_changed
 signal selection_changed(index: int)
 
 const SIZE := 8
-## Tool slots aren't inventory items (yet) - pseudo item ids for the bar.
-const HOE := "hoe"
-const WATERING_CAN := "watering_can"
-const TOOL_IDS := [HOE, WATERING_CAN]
-const DEFAULT_LAYOUT := [HOE, WATERING_CAN]
 const SEED_SUFFIX := "_seed"
 
 var simulation: FarmSimulation
+var item_db: ItemDatabase
 var selected_index := 0
+## Last inventory count seen per item - an item going from 0 to more is a
+## new acquisition (auto-slotted), anything else isn't.
+var _known_counts: Dictionary = {}
 
-func setup(p_simulation: FarmSimulation) -> void:
+func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase) -> void:
 	simulation = p_simulation
-	simulation.inventory_changed.connect(func(_item_id: String, _count: int): _sync())
-	# A save load always emits day_changed (not always inventory_changed, e.g.
-	# empty inventory) and replaces FarmState.hotbar - resync on it too.
-	simulation.day_changed.connect(func(_day: int): _sync())
-	_sync()
+	item_db = p_item_db
+	simulation.inventory_changed.connect(_on_inventory_changed)
+	simulation.state_loaded.connect(_reset_from_state)
+	_reset_from_state()
 
 func get_item(index: int) -> String:
 	var slots := _slots()
@@ -45,18 +44,45 @@ func get_item(index: int) -> String:
 func get_selected_item() -> String:
 	return get_item(selected_index)
 
-## Seeds held in the selected slot, 0 for tools/empty.
+## What the held item does when used (ShopItemData.ToolType).
+func get_selected_tool_type() -> ShopItemData.ToolType:
+	return item_db.get_tool_type(get_selected_item())
+
+## How many of the item in `index` the player has (0 for an empty slot).
 func get_count(index: int) -> int:
 	var item_id := get_item(index)
-	if item_id.ends_with(SEED_SUFFIX):
-		return simulation.state.get_inventory_count(item_id)
-	return 0
+	return simulation.state.get_inventory_count(item_id) if item_id != "" else 0
 
-static func is_tool_id(item_id: String) -> bool:
-	return item_id in TOOL_IDS
+func index_of(item_id: String) -> int:
+	return _slots().find(item_id)
 
 static func is_seed_id(item_id: String) -> bool:
 	return item_id.ends_with(SEED_SUFFIX)
+
+## Puts `item_id` in slot `index` (from the inventory book). If it was
+## already in another slot, the two slots swap; otherwise whatever was in
+## `index` leaves the bar (it stays in the inventory).
+func assign(item_id: String, index: int) -> void:
+	if index < 0 or index >= SIZE or not item_db.is_hotbar_item(item_id):
+		return
+	if simulation.state.get_inventory_count(item_id) <= 0:
+		return
+	var slots := _slots()
+	var previous := slots.find(item_id)
+	if previous == index:
+		return
+	if previous != -1:
+		slots[previous] = slots[index]
+	slots[index] = item_id
+	slots_changed.emit()
+
+## Takes `item_id` out of the bar (it stays in the inventory).
+func remove(item_id: String) -> void:
+	var index := index_of(item_id)
+	if index == -1:
+		return
+	_slots()[index] = ""
+	slots_changed.emit()
 
 func select(index: int) -> void:
 	index = clampi(index, 0, SIZE - 1)
@@ -92,35 +118,37 @@ func _unhandled_input(event: InputEvent) -> void:
 func _slots() -> Array:
 	return simulation.state.hotbar
 
-## Brings FarmState.hotbar in line with the inventory: default layout on a
-## new game / old save, seeds that ran out removed, new seeds slotted in.
-## Runs on every inventory change - 8 slots, cheap.
-func _sync() -> void:
+## New game, or a save just loaded: default layout if there's none yet (a
+## new game, or a save from before the hotbar), then drop anything the
+## player doesn't own - without auto-adding: the saved layout is respected.
+func _reset_from_state() -> void:
 	var slots := _slots()
-	var before := slots.duplicate()
 	if slots.is_empty():
-		slots.append_array(DEFAULT_LAYOUT)
+		for item_id in item_db.get_tool_ids() + item_db.get_seed_ids():
+			if slots.size() < SIZE and simulation.state.get_inventory_count(item_id) > 0:
+				slots.append(item_id)
 	slots.resize(SIZE)
 	for i in SIZE:
 		var item_id = slots[i]
-		if item_id == null or (is_seed_id(item_id) and simulation.state.get_inventory_count(item_id) <= 0):
+		if item_id == null or not _holds(str(item_id)):
 			slots[i] = ""
-	for item_id in _owned_seeds():
-		if item_id in slots:
-			continue
-		var free := slots.find("")
-		if free == -1:
-			break # bar full - the seed stays reachable in the inventory
-		slots[free] = item_id
-	if slots != before:
-		slots_changed.emit()
+	_known_counts = simulation.state.inventory.duplicate()
+	slots_changed.emit()
 
-## Seed stacks the player holds, in crop registry order (stable, so a batch
-## bought at once always lands in the same order).
-func _owned_seeds() -> Array:
-	var seeds := []
-	for crop_id in simulation.get_all_crop_ids():
-		var item_id: String = crop_id + SEED_SUFFIX
-		if simulation.state.get_inventory_count(item_id) > 0:
-			seeds.append(item_id)
-	return seeds
+func _on_inventory_changed(item_id: String, count: int) -> void:
+	var was_owned: bool = _known_counts.get(item_id, 0) > 0
+	_known_counts[item_id] = count
+	var slots := _slots()
+	var index := slots.find(item_id)
+	if count <= 0 and index != -1:
+		slots[index] = ""
+		slots_changed.emit()
+	elif count > 0 and not was_owned and index == -1 and item_db.is_hotbar_item(item_id):
+		var free := slots.find("")
+		if free != -1: # bar full: still reachable from the inventory book
+			slots[free] = item_id
+			slots_changed.emit()
+
+## Whether `item_id` can stay in the bar: a hotbar item the player still has.
+func _holds(item_id: String) -> bool:
+	return item_id != "" and item_db.is_hotbar_item(item_id) and simulation.state.get_inventory_count(item_id) > 0
