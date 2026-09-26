@@ -4,7 +4,7 @@ extends Control
 ## Village market: 4 categories (Seeds/Tools/Food/Animals), a scrollable grid
 ## of ItemCards, and a CartPanel. What's on sale comes from ItemDatabase
 ## (seeds synthesized from the real CropData registry, the rest hand-authored
-## ShopItemData resources) - see ItemDatabase.SHOP_ITEMS for the catalog.
+## ShopItemData resources) - see ItemDatabase.SHOP_ITEM_PATHS for the catalog.
 
 const ItemCardScene := preload("res://ui/shop/item_card.tscn")
 

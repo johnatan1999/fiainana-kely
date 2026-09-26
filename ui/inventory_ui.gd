@@ -230,8 +230,8 @@ func close() -> void:
 		get_tree().paused = false
 	)
 
-## "I" is a raw keycode, not a project InputMap action - kept out of it for
-## the same reason PlayerController.NUMBER_KEY_TOOLS is (see its comment).
+## "I" is a raw keycode, not a project InputMap action (yet) - it should
+## move to an action in InputBindings once the inventory gets gamepad support.
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_I:
 		if not visible and _shop_ui != null and _shop_ui.visible:

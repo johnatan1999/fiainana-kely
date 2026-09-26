@@ -26,6 +26,10 @@ var _next_animal_index: int = 0
 ## modulable expansion zone have been bought, in its fixed unlock order.
 var unlocked_zone_ids: Dictionary = {} # zone_id: String -> true
 var progressive_tiles_unlocked: int = 0
+## Item id in each hotbar slot ("" = empty), managed by Hotbar - kept here so
+## the player's arrangement survives a save/load. Empty = not initialized
+## yet (new game, or a save from before the hotbar): Hotbar fills defaults.
+var hotbar: Array = []
 
 ## Convenience read access - the clock is the single source of truth for the day.
 var day: int:
@@ -152,6 +156,7 @@ func to_dict() -> Dictionary:
 		"animals": animals_data,
 		"unlocked_zone_ids": unlocked_zone_ids.keys(),
 		"progressive_tiles_unlocked": progressive_tiles_unlocked,
+		"hotbar": hotbar.duplicate(),
 	}
 
 ## Restores state in-place from a dictionary produced by to_dict(). Unlike
@@ -215,3 +220,4 @@ func load_dict(data: Dictionary) -> void:
 	for zone_id in data.get("unlocked_zone_ids", []):
 		unlocked_zone_ids[zone_id] = true
 	progressive_tiles_unlocked = int(data.get("progressive_tiles_unlocked", 0))
+	hotbar = Array(data.get("hotbar", [])).map(func(item_id): return str(item_id))

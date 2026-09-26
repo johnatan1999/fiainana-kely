@@ -58,13 +58,14 @@ func _create_highlight() -> void:
 ## or hides it for -1. Called every frame by FarmingController with the same
 ## plot and the same eligibility check it uses when E is pressed, so the
 ## highlight never lies about what pressing E is about to do.
-func show_highlight_for_plot(plot_id: int, can_act: bool) -> void:
+func show_highlight_for_plot(plot_id: int, can_use: bool, can_harvest: bool) -> void:
 	if plot_id == -1:
 		_highlight.visible = false
 		return
 	var grid_pos: Vector2i = _simulation.get_plot_position(plot_id)
 	_highlight.position = Vector2(grid_pos.x, grid_pos.y) * CELL_SIZE
-	_highlight.can_act = can_act
+	_highlight.can_act = can_use or can_harvest
+	_highlight.show_hand = can_harvest
 	_highlight.visible = true
 
 func hide_highlight() -> void:
