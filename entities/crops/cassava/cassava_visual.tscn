@@ -14,7 +14,6 @@ script = ExtResource("1_qojm3")
 [node name="Sprite2D" type="Sprite2D" parent="Seed"]
 scale = Vector2(1.2, 1.2)
 texture = ExtResource("2_3440g")
-offset = Vector2(0, -8)
 region_enabled = true
 region_rect = Rect2(192, 192, 64, 64)
 
@@ -24,7 +23,6 @@ visible = false
 [node name="Sprite2D" type="Sprite2D" parent="Sprout"]
 scale = Vector2(0.574, 0.574)
 texture = ExtResource("2_3440g")
-offset = Vector2(0, -23)
 region_enabled = true
 region_rect = Rect2(256, 192, 64, 64)
 
@@ -34,7 +32,6 @@ visible = false
 [node name="Sprite2D" type="Sprite2D" parent="Growing"]
 scale = Vector2(0.452, 0.452)
 texture = ExtResource("2_3440g")
-offset = Vector2(0, -42.5)
 region_enabled = true
 region_rect = Rect2(320, 128, 64, 128)
 
@@ -51,7 +48,6 @@ visible = false
 [node name="Sprite2D" type="Sprite2D" parent="Mature"]
 scale = Vector2(0.623, 0.623)
 texture = ExtResource("2_3440g")
-offset = Vector2(0, -52)
 region_enabled = true
 region_rect = Rect2(384, 128, 64, 128)
 

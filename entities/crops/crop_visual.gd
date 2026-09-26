@@ -8,7 +8,14 @@ extends Node2D
 ## outline is drawn as a guide.
 ##
 ## Children named Seed / Sprout / Growing / Mature (any Node2D) are the
-## stages - PlotView shows exactly one. A missing stage falls back to the
+## stages - PlotView shows exactly one.
+##
+## Sprites need no offset: each stage's Sprite2D is anchored automatically by
+## the bottom-center of its image (its region, on a sprite sheet) onto the
+## foot. The art convention that makes it work, for every crop: in the
+## sheet, the plant stands on the bottom edge of its cell, centered
+## horizontally. Scale sets its size; `position` can still nudge one sprite
+## if its art breaks the convention. A missing stage falls back to the
 ## closest earlier one. Collision shapes under a stage are only active while
 ## that stage is shown, so solidity is per stage: put a StaticBody2D under
 ## Growing and Mature to make the crop block from Growing on.
@@ -16,6 +23,31 @@ extends Node2D
 ## Indexed by CropState.Stage.
 const STAGE_NODE_NAMES := ["Seed", "Sprout", "Growing", "Mature"]
 const EDITOR_GUIDE_COLOR := Color(1.0, 1.0, 1.0, 0.5)
+
+func _ready() -> void:
+	_anchor_sprites()
+	# In the editor, keep the anchoring live while regions are being picked.
+	set_process(Engine.is_editor_hint())
+
+func _process(_delta: float) -> void:
+	_anchor_sprites()
+
+func _anchor_sprites() -> void:
+	for stage_name in STAGE_NODE_NAMES:
+		var stage := get_node_or_null(stage_name)
+		if stage == null:
+			continue
+		for child in stage.get_children():
+			var sprite := child as Sprite2D
+			if sprite == null or sprite.texture == null:
+				continue
+			var height := sprite.region_rect.size.y if sprite.region_enabled else float(sprite.texture.get_height())
+			var anchored := Vector2(0, -height / 2.0)
+			# Only on change: in the editor, rewriting the same value every
+			# frame would keep flagging the scene as modified.
+			if not sprite.centered or sprite.offset != anchored:
+				sprite.centered = true
+				sprite.offset = anchored
 
 ## Shows the node for `stage` (a CropState.Stage value), hides the others and
 ## returns it - or null if the scene has no stage node at or below `stage`.
