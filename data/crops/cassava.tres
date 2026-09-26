@@ -1,6 +1,12 @@
-[gd_resource type="Resource" script_class="CropData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="CropData" load_steps=5 format=3 uid="uid://ikqhld3t5bkh"]
 
 [ext_resource type="Script" path="res://core/data/crop_data.gd" id="1_cassava"]
+[ext_resource type="Texture2D" uid="uid://e67dbnhae0am" path="res://assets/sprites/icons.png" id="1_im6i0"]
+[ext_resource type="PackedScene" uid="uid://p8x771fthanv" path="res://entities/crops/cassava/cassava_visual.tscn" id="3_fy64l"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4375n"]
+atlas = ExtResource("1_im6i0")
+region = Rect2(64, 0, 64, 64)
 
 [resource]
 script = ExtResource("1_cassava")
@@ -21,3 +27,5 @@ water_need = 0
 min_watered_ratio_for_quality = 0.4
 is_perennial = false
 unlock_day = 0
+icon = SubResource("AtlasTexture_4375n")
+visual_scene = ExtResource("3_fy64l")

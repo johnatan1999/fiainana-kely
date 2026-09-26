@@ -1,0 +1,63 @@
+[gd_scene load_steps=4 format=3 uid="uid://p8x771fthanv"]
+
+[ext_resource type="Script" path="res://entities/crops/crop_visual.gd" id="1_qojm3"]
+[ext_resource type="Texture2D" uid="uid://caqbhel04kf4x" path="res://assets/sprites/voly.png" id="2_3440g"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_base"]
+size = Vector2(16, 8)
+
+[node name="CassavaVisual" type="Node2D"]
+script = ExtResource("1_qojm3")
+
+[node name="Seed" type="Node2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="Seed"]
+scale = Vector2(1.2, 1.2)
+texture = ExtResource("2_3440g")
+offset = Vector2(0, -8)
+region_enabled = true
+region_rect = Rect2(192, 192, 64, 64)
+
+[node name="Sprout" type="Node2D" parent="."]
+visible = false
+
+[node name="Sprite2D" type="Sprite2D" parent="Sprout"]
+scale = Vector2(0.574, 0.574)
+texture = ExtResource("2_3440g")
+offset = Vector2(0, -23)
+region_enabled = true
+region_rect = Rect2(256, 192, 64, 64)
+
+[node name="Growing" type="Node2D" parent="."]
+visible = false
+
+[node name="Sprite2D" type="Sprite2D" parent="Growing"]
+scale = Vector2(0.452, 0.452)
+texture = ExtResource("2_3440g")
+offset = Vector2(0, -42.5)
+region_enabled = true
+region_rect = Rect2(320, 128, 64, 128)
+
+[node name="Blocker" type="StaticBody2D" parent="Growing"]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Growing/Blocker"]
+position = Vector2(0, -4)
+shape = SubResource("RectangleShape2D_base")
+
+[node name="Mature" type="Node2D" parent="."]
+visible = false
+
+[node name="Sprite2D" type="Sprite2D" parent="Mature"]
+scale = Vector2(0.623, 0.623)
+texture = ExtResource("2_3440g")
+offset = Vector2(0, -52)
+region_enabled = true
+region_rect = Rect2(384, 128, 64, 128)
+
+[node name="Blocker" type="StaticBody2D" parent="Mature"]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Mature/Blocker"]
+position = Vector2(0, -4)
+shape = SubResource("RectangleShape2D_base")

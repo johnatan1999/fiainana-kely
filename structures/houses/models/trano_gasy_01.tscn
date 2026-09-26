@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=11 format=3 uid="uid://xycao8wn8a4p"]
 
 [ext_resource type="Script" path="res://structures/houses/house.gd" id="1_house"]
 [ext_resource type="Texture2D" uid="uid://cf316iks83p6x" path="res://assets/sprites/houses/trano_gasy_01/body.png" id="2_body"]
