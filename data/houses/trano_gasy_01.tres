@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="HouseData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/data/structures/house_data.gd" id="1_data"]
+[ext_resource type="Texture2D" path="res://assets/sprites/houses/trano_gasy_01/body.png" id="2_body"]
+[ext_resource type="Texture2D" path="res://assets/sprites/houses/trano_gasy_01/door_open.png" id="3_door"]
+
+[resource]
+script = ExtResource("1_data")
+id = "trano_gasy_01"
+display_name = "Trano gasy (Hautes Terres)"
+body_texture = ExtResource("2_body")
+door_open_texture = ExtResource("3_door")
+door_open_position = Vector2(246, 288)
+footprint = Rect2(21, 314, 579, 96)
+entrance = Rect2(226, 362, 120, 48)
+door = Rect2(246, 288, 47, 74)
+interior_zone = ""
+interior_spawn = ""
+behind_alpha = 0.45
