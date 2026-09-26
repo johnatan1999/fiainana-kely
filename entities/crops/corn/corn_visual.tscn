@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=4 format=3 uid="uid://c1ajwsqj6qn8c"]
 
 [ext_resource type="Script" path="res://entities/crops/crop_visual.gd" id="1_cropvisual"]
 [ext_resource type="Texture2D" uid="uid://caqbhel04kf4x" path="res://assets/sprites/voly.png" id="2_voly"]

@@ -1,16 +1,9 @@
 {
-	"id": "trano_gasy_01",
-	"display_name": "Trano gasy (Hautes Terres)",
 	"master": "res://assets/sprites/houses/house-1.png",
 	"out_dir": "res://assets/sprites/houses/trano_gasy_01",
-	"data_path": "res://data/houses/trano_gasy_01.tres",
-	"width_tiles": 13,
 	"crop": [40, 216, 1200, 804],
-	"footprint": [80, 820, 1114, 185],
-	"entrance": [475, 912, 231, 92],
+	"width_tiles": 13,
+	"bake_scale": 2,
 	"door": [515, 770, 88, 142],
-	"door_leaf": [520, 777, 78, 131],
-	"interior_zone": "",
-	"interior_spawn": "",
-	"behind_alpha": 0.45
+	"door_leaf": [520, 777, 78, 131]
 }

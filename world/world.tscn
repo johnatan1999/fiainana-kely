@@ -55,7 +55,6 @@ script = ExtResource("13_hotbar")
 layout_mode = 3
 
 [node name="InventoryUI" parent="UI" instance=ExtResource("11_inventoryui")]
-layout_mode = 3
 
 [node name="PauseMenu" parent="UI" instance=ExtResource("9_pausemenu")]
 
