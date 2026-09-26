@@ -1,6 +1,12 @@
-[gd_resource type="Resource" script_class="CropData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="CropData" load_steps=5 format=3 uid="uid://c2qhcbu7i4g5t"]
 
+[ext_resource type="Texture2D" uid="uid://e67dbnhae0am" path="res://assets/sprites/icons.png" id="1_bdwo7"]
 [ext_resource type="Script" path="res://core/data/crop_data.gd" id="1_sweet_potato"]
+[ext_resource type="PackedScene" uid="uid://f31r3qx38ah1" path="res://entities/crops/sweet_potato/sweet_potato_visual.tscn" id="3_0lmdw"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gsw81"]
+atlas = ExtResource("1_bdwo7")
+region = Rect2(128, 0, 64, 64)
 
 [resource]
 script = ExtResource("1_sweet_potato")
@@ -21,3 +27,5 @@ water_need = 0
 min_watered_ratio_for_quality = 0.5
 is_perennial = false
 unlock_day = 5
+icon = SubResource("AtlasTexture_gsw81")
+visual_scene = ExtResource("3_0lmdw")

@@ -22,6 +22,11 @@ InputBindings="*res://core/autoloads/input_bindings.gd"
 AudioManager="*res://core/autoloads/audio/audio_manager.tscn"
 UIEvents="*res://core/autoloads/ui_events.gd"
 
+[display]
+
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
 [gui]
 
 theme/custom="res://ui/theme/main_theme.tres"
@@ -94,3 +99,4 @@ locale/fallback="fr"
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)

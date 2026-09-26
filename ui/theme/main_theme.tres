@@ -1,20 +1,8 @@
-[gd_resource type="Theme" load_steps=5 format=3]
+[gd_resource type="Theme" load_steps=5 format=3 uid="uid://b2s3kr3rs23ca"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot_normal"]
-content_margin_left = 5.0
-content_margin_top = 1.0
-content_margin_right = 5.0
-content_margin_bottom = 1.0
-bg_color = Color(0.9, 0.82, 0.66, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 2
-border_color = Color(0.55, 0.38, 0.22, 1)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_book_rule"]
+color = Color(0.55, 0.3, 0.2, 0.6)
+thickness = 2
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot_hover"]
 content_margin_left = 5.0
@@ -48,9 +36,21 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 
-[sub_resource type="StyleBoxLine" id="StyleBoxLine_book_rule"]
-color = Color(0.55, 0.3, 0.2, 0.6)
-thickness = 2
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slot_normal"]
+content_margin_left = 5.0
+content_margin_top = 1.0
+content_margin_right = 5.0
+content_margin_bottom = 1.0
+bg_color = Color(0.9, 0.82, 0.66, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 2
+border_color = Color(0.55, 0.38, 0.22, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
 
 [resource]
 default_font_size = 16
@@ -66,6 +66,17 @@ BookHint/font_sizes/font_size = 12
 BookSeparator/base_type = &"HSeparator"
 BookSeparator/constants/separation = 10
 BookSeparator/styles/separator = SubResource("StyleBoxLine_book_rule")
+BookSlotButton/base_type = &"Button"
+BookSlotButton/colors/font_color = Color(0.29, 0.18, 0.1, 1)
+BookSlotButton/colors/font_hover_color = Color(0.29, 0.18, 0.1, 1)
+BookSlotButton/colors/font_hover_pressed_color = Color(0.29, 0.18, 0.1, 1)
+BookSlotButton/colors/font_pressed_color = Color(0.29, 0.18, 0.1, 1)
+BookSlotButton/font_sizes/font_size = 12
+BookSlotButton/styles/focus = SubResource("StyleBoxFlat_slot_hover")
+BookSlotButton/styles/hover = SubResource("StyleBoxFlat_slot_hover")
+BookSlotButton/styles/hover_pressed = SubResource("StyleBoxFlat_slot_pressed")
+BookSlotButton/styles/normal = SubResource("StyleBoxFlat_slot_normal")
+BookSlotButton/styles/pressed = SubResource("StyleBoxFlat_slot_pressed")
 BookStrong/base_type = &"Label"
 BookStrong/colors/font_color = Color(0.29, 0.18, 0.1, 1)
 BookStrong/font_sizes/font_size = 15
@@ -81,6 +92,18 @@ BookTextSoft/font_sizes/font_size = 13
 BookTitle/base_type = &"Label"
 BookTitle/colors/font_color = Color(0.29, 0.18, 0.1, 1)
 BookTitle/font_sizes/font_size = 26
+HudSmall/base_type = &"Label"
+HudSmall/colors/font_color = Color(0.45, 0.32, 0.2, 1)
+HudSmall/font_sizes/font_size = 13
+HudText/base_type = &"Label"
+HudText/colors/font_color = Color(0.29, 0.18, 0.1, 1)
+HudText/font_sizes/font_size = 16
+PromptKey/base_type = &"Label"
+PromptKey/colors/font_color = Color(0.22, 0.14, 0.08, 1)
+PromptKey/font_sizes/font_size = 13
+PromptVerb/base_type = &"Label"
+PromptVerb/colors/font_color = Color(1, 0.97, 0.88, 1)
+PromptVerb/font_sizes/font_size = 13
 SlotQuantity/base_type = &"Label"
 SlotQuantity/colors/font_color = Color(1, 0.97, 0.88, 1)
 SlotQuantity/colors/font_outline_color = Color(0.25, 0.13, 0.05, 1)
@@ -94,26 +117,3 @@ TabLabel/colors/font_color = Color(0.98, 0.93, 0.8, 1)
 TabLabel/colors/font_outline_color = Color(0.3, 0.1, 0.08, 1)
 TabLabel/constants/outline_size = 3
 TabLabel/font_sizes/font_size = 17
-PromptKey/base_type = &"Label"
-PromptKey/colors/font_color = Color(0.22, 0.14, 0.08, 1)
-PromptKey/font_sizes/font_size = 13
-PromptVerb/base_type = &"Label"
-PromptVerb/colors/font_color = Color(1, 0.97, 0.88, 1)
-PromptVerb/font_sizes/font_size = 13
-HudSmall/base_type = &"Label"
-HudSmall/colors/font_color = Color(0.45, 0.32, 0.2, 1)
-HudSmall/font_sizes/font_size = 13
-HudText/base_type = &"Label"
-HudText/colors/font_color = Color(0.29, 0.18, 0.1, 1)
-HudText/font_sizes/font_size = 16
-BookSlotButton/base_type = &"Button"
-BookSlotButton/colors/font_color = Color(0.29, 0.18, 0.1, 1)
-BookSlotButton/colors/font_hover_color = Color(0.29, 0.18, 0.1, 1)
-BookSlotButton/colors/font_hover_pressed_color = Color(0.29, 0.18, 0.1, 1)
-BookSlotButton/colors/font_pressed_color = Color(0.29, 0.18, 0.1, 1)
-BookSlotButton/font_sizes/font_size = 12
-BookSlotButton/styles/focus = SubResource("StyleBoxFlat_slot_hover")
-BookSlotButton/styles/hover = SubResource("StyleBoxFlat_slot_hover")
-BookSlotButton/styles/hover_pressed = SubResource("StyleBoxFlat_slot_pressed")
-BookSlotButton/styles/normal = SubResource("StyleBoxFlat_slot_normal")
-BookSlotButton/styles/pressed = SubResource("StyleBoxFlat_slot_pressed")

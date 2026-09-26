@@ -49,6 +49,8 @@ func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_zone_cont
 	zone_container = p_zone_container
 	_load_zone_registry()
 	_create_fade_overlay()
+	# The window can change shape (aspect "expand"): refit the camera.
+	get_viewport().size_changed.connect(_apply_camera_limits)
 
 ## Built in code rather than as a .tscn node: a plain full-screen ColorRect on
 ## its own high-priority CanvasLayer, independent of zone_container's
@@ -132,14 +134,33 @@ func change_zone(zone_id: String, spawn_name: String = "SpawnDefault") -> void:
 	if spawn:
 		player.global_position = spawn.global_position
 
-	player.camera.limit_left = zone.camera_limit_left
-	player.camera.limit_top = zone.camera_limit_top
-	player.camera.limit_right = zone.camera_limit_right
-	player.camera.limit_bottom = zone.camera_limit_bottom
 	player.camera.zoom = Vector2(zone.camera_zoom, zone.camera_zoom)
+	_apply_camera_limits()
 
 	_apply_zone_bgm(zone)
 	_wire_zone_content(zone)
+
+## The zone's camera limits, except along an axis where the zone is smaller
+## than the view (a small room): there the limits are widened evenly around
+## it, so the room sits still, centered, on the (black) clear color - instead
+## of hugging one edge or sliding around as the player walks.
+func _apply_camera_limits() -> void:
+	if current_zone == null:
+		return
+	var zone := current_zone
+	var view := get_viewport().get_visible_rect().size / player.camera.zoom
+	var x := _fit_axis(zone.camera_limit_left, zone.camera_limit_right, view.x)
+	var y := _fit_axis(zone.camera_limit_top, zone.camera_limit_bottom, view.y)
+	player.camera.limit_left = x.x
+	player.camera.limit_right = x.y
+	player.camera.limit_top = y.x
+	player.camera.limit_bottom = y.y
+
+static func _fit_axis(low: int, high: int, view: float) -> Vector2i:
+	if high - low >= view:
+		return Vector2i(low, high)
+	var center := (low + high) / 2.0
+	return Vector2i(floori(center - view / 2.0), ceili(center + view / 2.0))
 
 ## Looks in /Spawns, then anywhere by path from the zone root - so a spawn
 ## can be a node path ("Houses/House2/ExitSpawn") to a marker a structure
