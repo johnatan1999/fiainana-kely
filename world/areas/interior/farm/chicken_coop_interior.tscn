@@ -21,6 +21,11 @@ size = Vector2(220, 160)
 [node name="ChickenCoopInterior" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_gayrm")
+camera_limit_left = -192
+camera_limit_top = -160
+camera_limit_right = 192
+camera_limit_bottom = 160
+camera_zoom = 1.4
 
 [node name="Spawns" type="Node2D" parent="."]
 position = Vector2(1, 88)
