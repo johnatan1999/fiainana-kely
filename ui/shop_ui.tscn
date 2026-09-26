@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://ui/shop_ui.gd" id="1_shopui"]
 [ext_resource type="PackedScene" path="res://ui/shop/category_button.tscn" id="2_categorybutton"]
 [ext_resource type="PackedScene" path="res://ui/shop/cart_panel.tscn" id="3_cartpanel"]
+[ext_resource type="PackedScene" path="res://ui/common/close_button.tscn" id="20_close"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wood"]
 bg_color = Color(0.36, 0.24, 0.14, 1)
@@ -66,11 +67,9 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Argent: 100 $"
 
-[node name="CloseButton" type="Button" parent="Background/Margin/VBox/HeaderRow"]
+[node name="CloseButton" parent="Background/Margin/VBox/HeaderRow" instance=ExtResource("20_close")]
 unique_name_in_owner = true
 layout_mode = 2
-focus_mode = 0
-text = "Fermer"
 
 [node name="CategoryRow" type="HBoxContainer" parent="Background/Margin/VBox"]
 unique_name_in_owner = true

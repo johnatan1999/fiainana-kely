@@ -25,6 +25,7 @@ const CLOSED_SCALE := Vector2(0.95, 0.95)
 @onready var empty_label: Label = %EmptyLabel
 @onready var info_card: ItemInfoCard = %InfoCard
 @onready var money_label: Label = %MoneyLabel
+@onready var close_button: BaseButton = %CloseButton
 
 var _simulation: FarmSimulation
 var _item_db: ItemDatabase
@@ -54,6 +55,7 @@ func setup(simulation: FarmSimulation, shop_ui: ShopUI, item_db: ItemDatabase) -
 			_tabs.append(child)
 			child.chosen.connect(_select_category)
 	dim.gui_input.connect(_on_dim_input)
+	close_button.pressed.connect(close)
 	_style_scrollbar()
 
 	simulation.money_changed.connect(_on_money_changed)

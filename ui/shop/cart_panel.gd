@@ -12,6 +12,8 @@ class CartEntry:
 		item = p_item
 		quantity = p_quantity
 
+const CloseButtonScene := preload("res://ui/common/close_button.tscn")
+
 signal checkout_requested
 signal cart_changed(total: int)
 
@@ -70,9 +72,9 @@ func _create_row(item_id: String) -> void:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(label)
 
-	var remove_button := Button.new()
-	remove_button.text = "x"
-	remove_button.focus_mode = Control.FOCUS_NONE
+	var remove_button: BaseButton = CloseButtonScene.instantiate()
+	remove_button.custom_minimum_size = Vector2(24, 24)
+	remove_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	remove_button.pressed.connect(_on_remove_pressed.bind(item_id))
 	row.add_child(remove_button)
 

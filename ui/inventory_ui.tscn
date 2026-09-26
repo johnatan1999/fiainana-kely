@@ -1,9 +1,10 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://ui/inventory_ui.gd" id="1_inventoryui"]
 [ext_resource type="Texture2D" path="res://assets/sprites/inventory/inventory.png" id="2_sheet"]
 [ext_resource type="PackedScene" path="res://ui/inventory/category_tab.tscn" id="3_tab"]
 [ext_resource type="PackedScene" path="res://ui/inventory/item_info_card.tscn" id="4_card"]
+[ext_resource type="PackedScene" path="res://ui/common/close_button.tscn" id="5_close"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_book"]
 atlas = ExtResource("2_sheet")
@@ -182,3 +183,11 @@ offset_right = 638.0
 offset_bottom = 456.0
 text = "Tab : catégorie  ·  Flèches : objet"
 horizontal_alignment = 1
+
+[node name="CloseButton" parent="Book" instance=ExtResource("5_close")]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 836.0
+offset_top = 18.0
+offset_right = 872.0
+offset_bottom = 54.0

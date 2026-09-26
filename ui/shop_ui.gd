@@ -13,7 +13,7 @@ const CLOSE_TIME := 0.14
 const CLOSED_SCALE := Vector2(0.9, 0.9)
 
 @onready var money_label: Label = %MoneyLabel
-@onready var close_button: Button = %CloseButton
+@onready var close_button: BaseButton = %CloseButton
 @onready var category_row: HBoxContainer = %CategoryRow
 @onready var item_grid: GridContainer = %ItemGrid
 @onready var cart_panel: CartPanel = %CartPanel
