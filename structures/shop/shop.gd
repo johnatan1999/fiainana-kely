@@ -1,16 +1,11 @@
-class_name Shop extends Node2D
+class_name Shop extends StaticBody2D
 
-@onready var shop_trigger: ShopTrigger = $ShopTrigger
-
-func setup(player: PlayerController, shop_ui: ShopUI) -> void:
-	if shop_trigger:
-		shop_trigger.setup(player, shop_ui)
-		 
+@onready var interactable_component: InteractableComponent = $InteractableComponent
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	StructureEvents.shop_spawned.emit(self)
+	interactable_component.interacted.connect(_on_interacted)
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+func _on_interacted() -> void:
+	#AudioManager.play_interact_sfx()
+	UIEvents.shop_requested.emit(null)

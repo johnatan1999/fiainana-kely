@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://structures/shop/shop.gd" id="1_4onli"]
 [ext_resource type="Texture2D" uid="uid://kkk5vjbjryep" path="res://assets/tileset/exterior.png" id="2_pqhcg"]
-[ext_resource type="Script" path="res://structures/shop/shop_trigger.gd" id="3_voha7"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="4_3mfkf"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_rvwm7"]
 atlas = ExtResource("2_pqhcg")
@@ -12,13 +12,13 @@ region = Rect2(0, 0, 160, 64)
 atlas = ExtResource("2_pqhcg")
 region = Rect2(0, 64, 160, 64)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_1tw7g"]
-size = Vector2(176, 90)
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_xjqn6"]
 size = Vector2(129, 36)
 
-[node name="Shop" type="Node2D"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_0oxjc"]
+size = Vector2(151, 61)
+
+[node name="Shop" type="StaticBody2D"]
 y_sort_enabled = true
 script = ExtResource("1_4onli")
 
@@ -32,15 +32,15 @@ texture = SubResource("AtlasTexture_bo6vu")
 centered = false
 offset = Vector2(0, -64)
 
-[node name="ShopTrigger" type="Area2D" parent="."]
-script = ExtResource("3_voha7")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ShopTrigger"]
-position = Vector2(83, -28)
-shape = SubResource("RectangleShape2D_1tw7g")
-
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(85.5, -29)
 shape = SubResource("RectangleShape2D_xjqn6")
+
+[node name="InteractableComponent" parent="." instance=ExtResource("4_3mfkf")]
+position = Vector2(74, 6)
+
+[node name="InteractableCollision2D" parent="InteractableComponent" index="0"]
+position = Vector2(9.5, -36.5)
+shape = SubResource("RectangleShape2D_0oxjc")
+
+[editable path="InteractableComponent"]

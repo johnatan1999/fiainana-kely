@@ -38,7 +38,6 @@ const PROGRESSIVE_WIDTH := 8
 const PROGRESSIVE_HEIGHT := 6
 
 var simulation: FarmSimulation
-var player: PlayerController
 
 var _predefined_zones: Array = [] # Array[FarmZoneData], loaded in setup()
 var _zone_by_id: Dictionary = {} # zone_id: String -> FarmZoneData
@@ -50,14 +49,26 @@ var _predefined_markers: Dictionary = {}
 var _progressive_marker_rect: ColorRect
 var _progressive_marker_label: Label
 
-func setup(p_simulation: FarmSimulation, p_player: PlayerController) -> void:
+## p_world_manager is null in unit tests that construct FarmLandManager
+## standalone (it's never added to a tree there, so there's no WorldManager
+## to listen to) - buy_zone()/buy_progressive_patch() work fine without it,
+## only the zone_loaded/zone_unloading wiring below is skipped.
+func setup(p_simulation: FarmSimulation, p_world_manager: WorldManager = null) -> void:
 	simulation = p_simulation
-	player = p_player
 	for path in PREDEFINED_ZONE_PATHS:
 		var zone_data = load(path)
 		_predefined_zones.append(zone_data)
 		_zone_by_id[zone_data.id] = zone_data
 	_progressive_sequence = _build_progressive_sequence()
+	if p_world_manager:
+		p_world_manager.zone_loaded.connect(_on_zone_loaded)
+		p_world_manager.zone_unloading.connect(_on_zone_unloading)
+
+func _on_zone_loaded(zone: ZoneRoot) -> void:
+	set_zone_markers(zone)
+
+func _on_zone_unloading(_zone: ZoneRoot) -> void:
+	set_zone_markers(null)
 
 func _build_progressive_sequence() -> Array:
 	var sequence: Array = []
@@ -160,9 +171,9 @@ func set_zone_markers(zone: Node) -> void:
 func _setup_signs(zone: Node) -> void:
 	for child in zone.get_children():
 		if child is FarmZoneSign:
-			child.setup(player, self)
+			child.setup(self)
 		elif child is ModularFarmZoneSign:
-			child.setup(player, self)
+			child.setup(self)
 
 func _refresh_predefined_marker(zone_id: String) -> void:
 	var marker: Dictionary = _predefined_markers.get(zone_id, {})
@@ -179,20 +190,39 @@ func _refresh_predefined_marker(zone_id: String) -> void:
 		# brief pulse of feedback at the moment of purchase, fading back to
 		# this same transparent color.
 		rect.color = Color(0.45, 0.65, 0.25, 0.0)
-		label.text = "%s (débloqué)" % zone_data.display_name
 		_play_unlock_flash(rect)
 	else:
 		rect.color = Color(0.3, 0.3, 0.3, 0.55)
-		label.text = "%s — %d $ (voir le panneau)" % [zone_data.display_name, zone_data.price]
+	label.text = _predefined_marker_text(zone_data, unlocked)
+
+func _predefined_marker_text(zone_data: FarmZoneData, unlocked: bool) -> String:
+	if unlocked:
+		return tr("%s (débloqué)") % tr(zone_data.display_name)
+	return tr("%s — %s (voir le panneau)") % [tr(zone_data.display_name), Currency.format(zone_data.price)]
+
+func _progressive_marker_text() -> String:
+	return tr("Zone d'expansion : %d / %d parcelles (voir le panneau)") % [
+		get_progressive_unlocked_count(), get_progressive_capacity(),
+	]
 
 func _refresh_progressive_marker() -> void:
 	if _progressive_marker_label == null:
 		return
-	_progressive_marker_label.text = "Zone d'expansion : %d / %d parcelles (voir le panneau)" % [
-		get_progressive_unlocked_count(), get_progressive_capacity(),
-	]
+	_progressive_marker_label.text = _progressive_marker_text()
 	if _progressive_marker_rect:
 		_play_unlock_flash(_progressive_marker_rect)
+
+## Marker labels are built from translated text - redo them after a language
+## switch, without replaying the unlock flash.
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_TRANSLATION_CHANGED:
+		return
+	for zone_id in _predefined_markers:
+		var marker: Dictionary = _predefined_markers[zone_id]
+		if is_instance_valid(marker["label"]):
+			marker["label"].text = _predefined_marker_text(get_zone_data(zone_id), is_zone_unlocked(zone_id))
+	if is_instance_valid(_progressive_marker_label):
+		_progressive_marker_label.text = _progressive_marker_text()
 
 ## Small visual "feedback" pulse on the marker rect when land is unlocked.
 func _play_unlock_flash(rect: ColorRect) -> void:

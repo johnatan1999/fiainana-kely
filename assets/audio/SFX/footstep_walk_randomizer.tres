@@ -1,0 +1,20 @@
+[gd_resource type="AudioStreamRandomizer" load_steps=5 format=3]
+
+[ext_resource type="AudioStream" uid="uid://cno8pek5lgxln" path="res://assets/audio/SFX/Audio_SFX_Footstep.wav" id="1_step01"]
+[ext_resource type="AudioStream" uid="uid://cewqrsa5x52ga" path="res://assets/audio/SFX/Audio_SFX_Footstep_02.wav" id="2_step02"]
+[ext_resource type="AudioStream" uid="uid://br5xpltkpnrgj" path="res://assets/audio/SFX/Audio_SFX_Footstep_03.wav" id="3_step03"]
+[ext_resource type="AudioStream" uid="uid://ddprm37iarc51" path="res://assets/audio/SFX/Audio_SFX_Footstep_04.wav" id="4_step04"]
+
+[resource]
+playback_mode = 0
+random_pitch = 1.08
+random_volume_offset_db = 2.0
+streams_count = 4
+stream_0/stream = ExtResource("1_step01")
+stream_0/weight = 1.0
+stream_1/stream = ExtResource("2_step02")
+stream_1/weight = 1.0
+stream_2/stream = ExtResource("3_step03")
+stream_2/weight = 1.0
+stream_3/stream = ExtResource("4_step04")
+stream_3/weight = 1.0

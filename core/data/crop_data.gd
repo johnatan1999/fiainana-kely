@@ -11,6 +11,12 @@ enum WaterNeed { LOW, MEDIUM, HIGH }
 @export var id: String
 @export var display_name: String
 @export var malagasy_name: String = ""
+## Name of this crop's seed item, in French (a translation key, see
+## localization/translations.csv). Written per crop rather than composed
+## from display_name, because each language builds it differently
+## ("Graine d'arachide", "Voam-bary", "Rice seed"). Empty = the generic
+## "Graine de %s" template.
+@export var seed_display_name: String = ""
 @export var category: Category = Category.VIVRIER
 @export var tier: int = 1
 
@@ -36,24 +42,12 @@ enum WaterNeed { LOW, MEDIUM, HIGH }
 ## Day (FarmState.day) from which this crop can be bought in the shop. 0 = always available.
 @export var unlock_day: int = 0
 
-## Shown in the Shop/Inventory. Also used as a generic in-field sprite
-## (scaled by growth stage) for crops that don't have dedicated per-stage art.
+## Shown in the Shop/Inventory.
 @export var icon: Texture2D
 
-## Optional dedicated in-field sprites for PlotView, one per CropState.Stage.
-## Any left unset falls back to `icon` for that stage; if `icon` is also
-## unset, PlotView falls back to its placeholder colored square. So a crop
-## with zero art still renders exactly as before.
-@export var sprite_seed: Texture2D
-@export var sprite_sprout: Texture2D
-@export var sprite_growing: Texture2D
-@export var sprite_mature: Texture2D
-
-## How much of the plot cell each dedicated stage sprite fills (aspect
-## preserved, centered). 1.0 = fills the cell. Tune per crop from the
-## Inspector - a wide sprite sheet crop like corn's tiny seedling can look
-## oversized at 1.0, so these default smaller for the early stages.
-@export_range(0.1, 1.5, 0.05) var sprite_seed_scale: float = 0.4
-@export_range(0.1, 1.5, 0.05) var sprite_sprout_scale: float = 0.55
-@export_range(0.1, 1.5, 0.05) var sprite_growing_scale: float = 0.8
-@export_range(0.1, 1.5, 0.05) var sprite_mature_scale: float = 1.0
+## In-field look: a CropVisual scene (see entities/crops/crop_visual.gd) with
+## one child per growth stage, each placed visually in the editor relative
+## to the plot cell's bottom-center, and carrying its own collision if the
+## crop should block the player at that stage. Unset = PlotView shows its
+## placeholder colored square.
+@export var visual_scene: PackedScene

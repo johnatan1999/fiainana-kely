@@ -1,9 +1,10 @@
-[gd_scene load_steps=12 format=3 uid="uid://1vf3wl4rr8gi"]
+[gd_scene load_steps=13 format=3 uid="uid://1vf3wl4rr8gi"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_r400i"]
 [ext_resource type="Texture2D" uid="uid://br46ejog1t0na" path="res://assets/sprites/houses/interior/interior_1.png" id="2_6wlfw"]
 [ext_resource type="Script" path="res://components/zone_transition.gd" id="3_40t3b"]
 [ext_resource type="Script" path="res://components/sleep_spot.gd" id="4_45pqr"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="5_slpint"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_jt5yt"]
 size = Vector2(69, 8)
@@ -40,8 +41,8 @@ position = Vector2(2, 169)
 [node name="DoorTransition" type="Area2D" parent="."]
 position = Vector2(1, -218)
 script = ExtResource("3_40t3b")
-target_zone = "exterior"
-target_spawn = "SpawnFromHouse"
+target_zone = "village"
+target_spawn = "SpawnFrom_PLAYER_HOUSE"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorTransition"]
 position = Vector2(-2, 439)
@@ -93,10 +94,14 @@ polygon = PackedVector2Array(3.98584, -8.88465, 2.69496, -4.57017, -2.79127, -4.
 [node name="SpawnDefault" type="Marker2D" parent="."]
 position = Vector2(-47, -23)
 
-[node name="SleepSpot" type="Area2D" parent="."]
+[node name="SleepSpot" type="Node2D" parent="."]
 position = Vector2(-162, 124)
 script = ExtResource("4_45pqr")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SleepSpot"]
+[node name="InteractableComponent" parent="SleepSpot" instance=ExtResource("5_slpint")]
+
+[node name="InteractableCollision2D" parent="SleepSpot/InteractableComponent" index="0"]
 position = Vector2(0, -1)
 shape = SubResource("RectangleShape2D_iisxe")
+
+[editable path="SleepSpot/InteractableComponent"]

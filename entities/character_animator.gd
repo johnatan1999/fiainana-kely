@@ -3,9 +3,20 @@ extends Node
 
 @onready var anim: AnimatedSprite2D = $"../AnimatedSprite2D"
 
+## Last non-zero movement direction - idle animations face it, instead of
+## always resolving a zero velocity to idle_up.
+var _last_dir := Vector2.DOWN
+
+## Sets the facing without moving (e.g. a random facing at spawn).
+func face(dir: Vector2) -> void:
+	if dir != Vector2.ZERO:
+		_last_dir = dir
+
 func play(dir: Vector2, state: String):
 	if anim.sprite_frames == null:
 		return
+	face(dir)
+	dir = _last_dir
 
 	var anim_name := ""
 

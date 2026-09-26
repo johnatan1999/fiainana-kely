@@ -8,6 +8,15 @@ extends Resource
 
 enum Category { SEEDS, TOOLS, FOOD, ANIMALS }
 
+## Identity color of each category - the placeholder square shown by every
+## screen (shop cards, inventory cells) for an item with no icon art yet.
+const CATEGORY_COLORS := {
+	Category.SEEDS: Color(0.45, 0.65, 0.25),
+	Category.TOOLS: Color(0.55, 0.5, 0.45),
+	Category.FOOD: Color(0.75, 0.5, 0.2),
+	Category.ANIMALS: Color(0.6, 0.4, 0.25),
+}
+
 @export var id: String
 @export var display_name: String
 @export var malagasy_name: String = ""
@@ -29,17 +38,40 @@ enum Category { SEEDS, TOOLS, FOOD, ANIMALS }
 ## buying livestock needs to become a real AnimalState once placed in a coop.
 @export var animal_species: AnimalData.Species = AnimalData.Species.CHICKEN
 
+## Set only on seed entries synthesized by from_crop_data(): their name and
+## description are composed from the crop at display time, so they follow
+## the current language (see get_display_name()/get_description()).
+var _seed_crop: CropData
+
+## display_name/description hold the French source texts (the translation
+## keys, see localization/translations.csv) - screens show these instead.
+func get_display_name() -> String:
+	if _seed_crop != null:
+		if _seed_crop.seed_display_name != "":
+			return tr(_seed_crop.seed_display_name)
+		return tr("Graine de %s") % tr(_seed_crop.display_name)
+	return tr(display_name)
+
+func get_description() -> String:
+	if _seed_crop != null:
+		return tr("Pousse en %d jours. Idéal en %s.") % [_seed_crop.growth_days, tr(_season_key(_seed_crop.ideal_season))]
+	return tr(description)
+
+static func _season_key(season: CropData.Season) -> String:
+	match season:
+		CropData.Season.ASARA:
+			return "Asara"
+		CropData.Season.ASOTRY:
+			return "Asotry"
+	return "toute saison"
+
 static func from_crop_data(crop_data: CropData) -> ShopItemData:
 	var item := ShopItemData.new()
+	item._seed_crop = crop_data
 	item.id = crop_data.id + "_seed"
-	item.display_name = "Graine de %s" % crop_data.display_name
+	item.display_name = crop_data.seed_display_name if crop_data.seed_display_name != "" else "Graine de %s" % crop_data.display_name
 	item.malagasy_name = crop_data.malagasy_name
-	item.description = "Pousse en %d jours. Idéal en %s." % [
-		crop_data.growth_days,
-		"Asara" if crop_data.ideal_season == CropData.Season.ASARA
-		else "Asotry" if crop_data.ideal_season == CropData.Season.ASOTRY
-		else "toute saison",
-	]
+	item.description = "Pousse en %d jours. Idéal en %s." % [crop_data.growth_days, _season_key(crop_data.ideal_season)]
 	item.category = Category.SEEDS
 	item.price = crop_data.seed_price
 	item.sell_price = crop_data.sell_price

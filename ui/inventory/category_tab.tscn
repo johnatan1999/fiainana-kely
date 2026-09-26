@@ -1,0 +1,56 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/inventory/category_tab.gd" id="1_tab"]
+[ext_resource type="Texture2D" path="res://assets/sprites/inventory/button.png" id="2_button"]
+
+[node name="CategoryTab" type="Control"]
+custom_minimum_size = Vector2(194, 80)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 194.0
+offset_bottom = 80.0
+mouse_filter = 2
+script = ExtResource("1_tab")
+
+[node name="Body" type="TextureButton" parent="."]
+layout_mode = 0
+offset_right = 180.0
+offset_bottom = 80.0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+texture_normal = ExtResource("2_button")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="Icon" type="TextureRect" parent="Body"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 11.0
+offset_top = 19.0
+offset_right = 59.0
+offset_bottom = 61.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="Body"]
+theme_type_variation = &"TabLabel"
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 66.0
+offset_top = 17.0
+offset_right = 172.0
+offset_bottom = 43.0
+text = "Catégorie"
+vertical_alignment = 1
+
+[node name="CountLabel" type="Label" parent="Body"]
+theme_type_variation = &"TabCaption"
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 66.0
+offset_top = 42.0
+offset_right = 172.0
+offset_bottom = 62.0
+text = "vide"
+vertical_alignment = 1

@@ -1,8 +1,12 @@
 class_name FarmView
 extends Node2D
 
-const CELL_SIZE := 64.0
+const CELL_SIZE := PlotView.CELL_SIZE
+## See get_plot_id_in_front_of(): 0.75 = "a cell entered by at most 1/4
+## still counts as the target".
+const TARGET_REACH := 0.75
 const PlotViewScene := preload("res://structures/farm/farm/plot_view.tscn")
+const PlotHighlightScript := preload("res://structures/farm/farm/plot_highlight.gd")
 
 ## Atlas coordinates in farm_tileset.tres (source id 0) for each soil state.
 const TILE_SOURCE_ID := 0
@@ -16,8 +20,21 @@ var grid_height: int
 var _plot_views: Dictionary = {} # plot_id: int -> PlotView
 var _plot_positions: Dictionary = {} # plot_id: int -> Vector2i
 var _simulation: FarmSimulation
+var _highlight: PlotHighlight
 
 @onready var soil_layer: TileMapLayer = $SoilLayer
+
+## y-sorted so the player walks behind a crop's upper part and in front of
+## its base (PlotViews sort by their bottom-center origin). The soil is pushed
+## below everything via z_index since it isn't part of that ordering.
+func _ready() -> void:
+	y_sort_enabled = true
+	soil_layer.z_index = -1
+	if soil_layer.tile_set == null:
+		push_error("FarmView: SoilLayer has no tile_set - check that farm_tileset.tres and its texture are imported")
+		return
+	if Vector2(soil_layer.tile_set.tile_size) != Vector2(CELL_SIZE, CELL_SIZE):
+		push_warning("FarmView.CELL_SIZE (%s) != tileset tile_size (%s) - soil and crops will be misaligned" % [CELL_SIZE, soil_layer.tile_set.tile_size])
 
 func setup(simulation: FarmSimulation) -> void:
 	_simulation = simulation
@@ -27,6 +44,32 @@ func setup(simulation: FarmSimulation) -> void:
 	simulation.plot_changed.connect(_on_plot_changed)
 	simulation.plot_added.connect(_on_plot_added)
 	simulation.plot_removed.connect(_on_plot_removed)
+	_create_highlight()
+
+## Built in code rather than as a .tscn node - see WorldManager's fade
+## overlay for why (avoids scene-file edits getting clobbered by a
+## concurrently open editor).
+func _create_highlight() -> void:
+	_highlight = PlotHighlightScript.new()
+	_highlight.visible = false
+	add_child(_highlight)
+
+## Shows the pulsing outline over plot_id - white if `can_act`, red if not -
+## or hides it for -1. Called every frame by FarmingController with the same
+## plot and the same eligibility check it uses when E is pressed, so the
+## highlight never lies about what pressing E is about to do.
+func show_highlight_for_plot(plot_id: int, can_act: bool) -> void:
+	if plot_id == -1:
+		_highlight.visible = false
+		return
+	var grid_pos: Vector2i = _simulation.get_plot_position(plot_id)
+	_highlight.position = Vector2(grid_pos.x, grid_pos.y) * CELL_SIZE
+	_highlight.can_act = can_act
+	_highlight.visible = true
+
+func hide_highlight() -> void:
+	if _highlight:
+		_highlight.visible = false
 
 func _build_grid() -> void:
 	for plot_id in _simulation.get_all_plot_ids():
@@ -38,7 +81,8 @@ func _create_plot_view(plot_id: int) -> void:
 	var plot_view: PlotView = PlotViewScene.instantiate()
 	add_child(plot_view)
 	var pos := _simulation.get_plot_position(plot_id)
-	plot_view.position = Vector2(pos.x, pos.y) * CELL_SIZE
+	# PlotView's origin is its cell's bottom-center - see PlotView.CELL_TOP_LEFT.
+	plot_view.position = Vector2(pos.x, pos.y) * CELL_SIZE + Vector2(CELL_SIZE / 2.0, CELL_SIZE)
 	_plot_views[plot_id] = plot_view
 	_plot_positions[plot_id] = pos
 	_refresh_plot_view(plot_view, plot_id)
@@ -79,10 +123,34 @@ func _on_plot_removed(plot_id: int) -> void:
 		soil_layer.erase_cell(_plot_positions[plot_id])
 		_plot_positions.erase(plot_id)
 
-## Returns the plot_id under the given world position, or -1 if there's no
-## plot there (outside the grid, or a hole left by remove_tile()).
-func get_plot_id_at(world_pos: Vector2) -> int:
+## The plot the player at world_pos is facing, or -1 if there's no plot
+## there (outside the grid, or a hole left by remove_tile()). Diagonals snap
+## to the dominant axis, ties going left/right to match the player's
+## left/right-only tool animations.
+##
+## Probes TARGET_REACH of a cell ahead of the feet: while the feet are no
+## more than a quarter of the way into a cell (from the side the player
+## faces away from), the probe stays in that same cell and it's the target;
+## any deeper and the probe lands in the next cell. So a player who just
+## stepped onto a plot still works it, and one standing well inside a cell
+## works the one in front - the player never has to stand on a plot's middle
+## to work it, which is what lets crops be solid.
+func get_plot_id_in_front_of(world_pos: Vector2, facing: Vector2) -> int:
+	var probe := world_pos + Vector2(facing_step(facing)) * CELL_SIZE * TARGET_REACH
+	var grid_pos := world_to_grid(probe)
+	return _simulation.get_plot_id_at(grid_pos.x, grid_pos.y)
+
+## `facing` snapped to one grid step: (±1, 0) or (0, ±1).
+static func facing_step(facing: Vector2) -> Vector2i:
+	if absf(facing.x) >= absf(facing.y):
+		return Vector2i(int(signf(facing.x)), 0)
+	return Vector2i(0, int(signf(facing.y)))
+
+## The plot's cell in world coordinates.
+func get_plot_global_rect(plot_id: int) -> Rect2:
+	var grid_pos := _simulation.get_plot_position(plot_id)
+	return Rect2(global_position + Vector2(grid_pos) * CELL_SIZE, Vector2.ONE * CELL_SIZE)
+
+func world_to_grid(world_pos: Vector2) -> Vector2i:
 	var local_pos := world_pos - global_position
-	var grid_x := int(floor(local_pos.x / CELL_SIZE))
-	var grid_y := int(floor(local_pos.y / CELL_SIZE))
-	return _simulation.get_plot_id_at(grid_x, grid_y)
+	return Vector2i(floori(local_pos.x / CELL_SIZE), floori(local_pos.y / CELL_SIZE))

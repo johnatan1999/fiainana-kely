@@ -1,8 +1,9 @@
 extends SceneTree
 
-## Drives the real World.tscn through WorldManager into the Exterior zone
-## (which now embeds the chicken pen directly - see WorldManager's
-## get_node_or_null("Coop") check) and exercises the full
+## Drives the real World.tscn through WorldManager into the Village zone
+## (for the land-sign checks) and then the ChickenCoopInterior zone (which
+## embeds the real ChickenCoop/AnimalContainer - see WorldManager's
+## get_node_or_null("ChickenCoop") check) to exercise the full
 ## build->buy->place->advance_day->egg chain. The unit tests cover
 ## FarmSimulation in isolation, this covers the wiring between
 ## WorldManager/AnimalManager/Coop/Chicken that only breaks at integration
@@ -21,7 +22,7 @@ var _world
 var _frame := 0
 
 func _initialize() -> void:
-	var packed = load("res://scenes/world/World.tscn")
+	var packed = load("res://world/world.tscn")
 	_world = packed.instantiate()
 	root.add_child(_world)
 
@@ -43,16 +44,27 @@ func _check(condition: bool, description: String) -> void:
 ## instead of an absolute value, so it passes regardless of what's already
 ## in that save.
 func _run_flow() -> void:
+	# The GameSettings autoload applies the player's saved language (user://
+	# settings.cfg) at startup - pin French, the source language the text
+	# checks below are written against, so results never depend on it.
+	TranslationServer.set_locale("fr")
 	var world_manager = _world.get_node("Gameplay/WorldManager")
 	var animal_manager = _world.get_node("Gameplay/AnimalManager")
 	var simulation = _world.simulation
 
-	world_manager.change_zone("exterior", "SpawnDefault")
-	_check(animal_manager.farm_area != null, "entering the Exterior zone calls AnimalManager.set_farm_area() (Coop found)")
+	# Land-sign checks (ZoneMarker_*/ModularFarmZoneSign/FarmZoneSign) live in
+	# the Village zone - run those first, then move on to the coop.
+	world_manager.change_zone("village", "SpawnDefault")
+	_run_zone_manager_checks()
+
+	# The real, simulated ChickenCoop/AnimalContainer live in their own
+	# interior zone since the "decorative exterior building" split.
+	world_manager.change_zone("chicken_coop", "SpawnDefault")
+	_check(animal_manager.farm_area != null, "entering the ChickenCoopInterior zone calls AnimalManager.set_farm_area() (ChickenCoop found)")
 
 	var animal_container = animal_manager.farm_area.get_node("AnimalContainer")
 
-	simulation.state.money = 1000
+	simulation.state.money = 100000
 	simulation.state.has_coop = false
 	simulation.state.coop_capacity = max(simulation.state.coop_capacity, simulation.get_all_animal_ids().size() + 1)
 	var built = simulation.build_coop()
@@ -82,8 +94,6 @@ func _run_flow() -> void:
 		"a full product cycle spawns at least one new Egg pickup in the world"
 	)
 
-	_run_zone_manager_checks()
-
 	print("\n%s" % ("SOME CHECKS FAILED" if root.has_meta("failed") else "all integration checks passed"))
 
 ## Verifies FarmLandManager actually found the ZoneMarker_*/ProgressiveZoneMarker
@@ -104,7 +114,7 @@ func _run_zone_manager_checks() -> void:
 		"Exterior.tscn's ProgressiveZoneMarker is found by FarmLandManager.set_zone_markers()"
 	)
 
-	simulation.state.money = 10000
+	simulation.state.money = 100000
 	simulation.state.unlocked_zone_ids.erase("zone_east")
 	var ok = shop_controller.buy_zone("zone_east")
 	var marker: Dictionary = zone_manager._predefined_markers.get("zone_east", {})
@@ -140,8 +150,7 @@ func _run_zone_sign_checks(zone_manager, simulation) -> void:
 	if modular_sign == null or zone_sign_south == null:
 		return
 
-	modular_sign._player_inside = true
-	modular_sign._on_interact_requested(null)
+	modular_sign.interactable_component.interact()
 	_check(modular_sign.dialog.visible, "interacting with ModularFarmZoneSign opens its own dialog")
 
 	var progressive_before = zone_manager.get_progressive_unlocked_count()
@@ -151,9 +160,8 @@ func _run_zone_sign_checks(zone_manager, simulation) -> void:
 		"clicking a patch option on ModularFarmZoneSign's dialog buys it via FarmLandManager"
 	)
 
-	simulation.state.money = 10000
-	zone_sign_south._player_inside = true
-	zone_sign_south._on_interact_requested(null)
+	simulation.state.money = 100000
+	zone_sign_south.interactable_component.interact()
 	_check(zone_sign_south.dialog.visible, "interacting with FarmZoneSign opens its own dialog")
 
 	var zone_south_unlocked_before = zone_manager.is_zone_unlocked("zone_south")
@@ -166,6 +174,6 @@ func _run_zone_sign_checks(zone_manager, simulation) -> void:
 func _count_eggs(animal_container) -> int:
 	var count := 0
 	for child in animal_container.get_children():
-		if child.get_script() != null and child.get_script().resource_path.ends_with("Egg.gd"):
+		if child.get_script() != null and child.get_script().resource_path.ends_with("egg.gd"):
 			count += 1
 	return count

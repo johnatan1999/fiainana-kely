@@ -1,28 +1,41 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=8 format=3 uid="uid://y7jfr7cu2kqf"]
 
 [ext_resource type="Script" path="res://structures/chicken_coop/water_bowl.gd" id="1_waterbowl"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="2_fgvim"]
+[ext_resource type="Texture2D" uid="uid://wpq6cib7ujm" path="res://assets/tileset/farm-interior01.png" id="2_q88pi"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v6kb3"]
+atlas = ExtResource("2_q88pi")
+region = Rect2(128, 320, 32, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3jvjh"]
+atlas = ExtResource("2_q88pi")
+region = Rect2(160, 320, 32, 64)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bowl"]
-size = Vector2(28, 28)
+size = Vector2(24, 29)
 
-[node name="WaterBowl" type="Area2D"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_opybq"]
+size = Vector2(26, 29)
+
+[node name="WaterBowl" type="StaticBody2D"]
 script = ExtResource("1_waterbowl")
+empty_bowl_texture = SubResource("AtlasTexture_v6kb3")
+full_bowl_texture = SubResource("AtlasTexture_3jvjh")
 
-[node name="Visual" type="ColorRect" parent="."]
-offset_left = -14.0
-offset_top = -14.0
-offset_right = 14.0
-offset_bottom = 14.0
-mouse_filter = 2
-color = Color(0.3, 0.55, 0.75, 1)
-
-[node name="Label" type="Label" parent="."]
-offset_left = -30.0
-offset_top = -34.0
-offset_right = 30.0
-offset_bottom = -14.0
-text = "Abreuvoir (E)"
-horizontal_alignment = 1
+[node name="Visual" type="Sprite2D" parent="."]
+position = Vector2(0, -25)
+texture = SubResource("AtlasTexture_v6kb3")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -14.5)
 shape = SubResource("RectangleShape2D_bowl")
+
+[node name="InteractableComponent" parent="." instance=ExtResource("2_fgvim")]
+position = Vector2(18, 3)
+
+[node name="InteractableCollision2D" parent="InteractableComponent" index="0"]
+position = Vector2(-18, -17.5)
+shape = SubResource("RectangleShape2D_opybq")
+
+[editable path="InteractableComponent"]

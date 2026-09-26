@@ -26,12 +26,10 @@ func _make_sim_with_chicken(breeding_chance: float = 0.25) -> FarmSimulation:
 
 ## FarmLandManager extends Node but is never added to the tree in these tests -
 ## fine, since buy_zone()/buy_progressive_patch() never touch tree-dependent
-## APIs unless set_zone_markers() is called (it isn't here). player is only
-## ever forwarded to FarmZoneSign/ModularFarmZoneSign.setup() inside
-## set_zone_markers(), so null is safe for these pure-logic tests.
+## APIs unless set_zone_markers() is called (it isn't here).
 func _make_farm_land_manager(simulation: FarmSimulation) -> FarmLandManager:
 	var farm_land_manager := FarmLandManager.new()
-	farm_land_manager.setup(simulation, null)
+	farm_land_manager.setup(simulation)
 	return farm_land_manager
 
 func _check(condition: bool, description: String) -> void:
@@ -182,17 +180,19 @@ func test_low_watering_caps_harvest_below_max_yield() -> void:
 	)
 
 func test_sell_increases_money() -> void:
+	var corn: CropData = load("res://data/crops/corn.tres")
 	var sim := _make_sim()
 	sim.state.add_inventory("corn", 1)
 	var money_before := sim.state.money
 	var ok := sim.sell("corn", 1)
-	_check(ok and sim.state.money == money_before + 12, "sell() increases money by the sell price")
+	_check(ok and sim.state.money == money_before + corn.sell_price, "sell() increases money by the sell price")
 
 func test_buy_decreases_money() -> void:
+	var corn: CropData = load("res://data/crops/corn.tres")
 	var sim := _make_sim()
 	var money_before := sim.state.money
 	var ok := sim.buy_seed("corn", 1)
-	_check(ok and sim.state.money == money_before - 5, "buy_seed() decreases money by the seed price")
+	_check(ok and sim.state.money == money_before - corn.seed_price, "buy_seed() decreases money by the seed price")
 
 func test_cannot_plant_untilled_plot() -> void:
 	var sim := _make_sim()
@@ -217,7 +217,7 @@ func test_cannot_buy_without_enough_money() -> void:
 func test_cannot_buy_locked_crop() -> void:
 	var rice: CropData = load("res://data/crops/rice.tres")
 	var sim := FarmSimulation.new(4, 4, {"corn": load("res://data/crops/corn.tres"), "rice": rice})
-	sim.state.money = 1000
+	sim.state.money = 100000
 	var ok := sim.buy_seed("rice", 1)
 	_check(
 		not ok and sim.state.get_inventory_count("rice_seed") == 0,
@@ -316,7 +316,7 @@ func test_place_chicken_respects_coop_capacity() -> void:
 	var sim := _make_sim_with_chicken()
 	sim.build_coop()
 	sim.state.coop_capacity = 1
-	sim.state.money = 1000
+	sim.state.money = 100000
 	sim.buy_chicken(2)
 	var first_id := sim.place_chicken()
 	var second_id := sim.place_chicken()
@@ -382,7 +382,7 @@ func test_product_ready_signal_fires_after_cycle() -> void:
 func test_breeding_creates_offspring_when_guaranteed() -> void:
 	var sim := _make_sim_with_chicken(1.0) # force the roll to always succeed
 	sim.build_coop()
-	sim.state.money = 1000
+	sim.state.money = 100000
 	sim.buy_chicken(2)
 	sim.place_chicken()
 	sim.place_chicken()
@@ -397,7 +397,7 @@ func test_breeding_creates_offspring_when_guaranteed() -> void:
 func test_no_breeding_when_chance_is_zero() -> void:
 	var sim := _make_sim_with_chicken(0.0)
 	sim.build_coop()
-	sim.state.money = 1000
+	sim.state.money = 100000
 	sim.buy_chicken(2)
 	sim.place_chicken()
 	sim.place_chicken()
@@ -542,7 +542,7 @@ func test_grid_survives_resize_and_save_load_roundtrip() -> void:
 
 func test_buy_zone_unlocks_all_its_tiles() -> void:
 	var sim := _make_sim()
-	sim.state.money = 1000
+	sim.state.money = 100000
 	var farm_land_manager := _make_farm_land_manager(sim)
 	var zone_data := farm_land_manager.get_zone_data("zone_east")
 
@@ -560,7 +560,7 @@ func test_buy_zone_unlocks_all_its_tiles() -> void:
 
 func test_buy_zone_deducts_price() -> void:
 	var sim := _make_sim()
-	sim.state.money = 1000
+	sim.state.money = 100000
 	var farm_land_manager := _make_farm_land_manager(sim)
 	var zone_data := farm_land_manager.get_zone_data("zone_east")
 	var money_before := sim.state.money
@@ -571,7 +571,7 @@ func test_buy_zone_deducts_price() -> void:
 
 func test_cannot_buy_zone_twice() -> void:
 	var sim := _make_sim()
-	sim.state.money = 10000
+	sim.state.money = 100000
 	var farm_land_manager := _make_farm_land_manager(sim)
 	farm_land_manager.buy_zone("zone_east")
 	var money_after_first := sim.state.money
@@ -656,7 +656,7 @@ func test_buy_progressive_patch_fails_without_enough_money() -> void:
 
 func test_zone_state_save_load_roundtrip() -> void:
 	var sim := _make_sim()
-	sim.state.money = 10000
+	sim.state.money = 100000
 	var farm_land_manager := _make_farm_land_manager(sim)
 	farm_land_manager.buy_zone("zone_east")
 	farm_land_manager.buy_progressive_patch(9, 110)

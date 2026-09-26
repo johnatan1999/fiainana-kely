@@ -12,6 +12,8 @@ class CartEntry:
 		item = p_item
 		quantity = p_quantity
 
+const CloseButtonScene := preload("res://ui/common/close_button.tscn")
+
 signal checkout_requested
 signal cart_changed(total: int)
 
@@ -27,6 +29,14 @@ var _row_labels: Dictionary = {} # item_id: String -> Label
 func _ready() -> void:
 	checkout_button.pressed.connect(_on_checkout_pressed)
 	_refresh_totals()
+
+## Row and total texts are translated when built - redo them on a language
+## switch so a cart kept across it doesn't stay in the old language.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		for item_id in _entries:
+			_update_row_label(item_id)
+		_refresh_totals()
 
 func add_item(item: ShopItemData, quantity: int) -> void:
 	if _entries.has(item.id):
@@ -62,9 +72,9 @@ func _create_row(item_id: String) -> void:
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(label)
 
-	var remove_button := Button.new()
-	remove_button.text = "x"
-	remove_button.focus_mode = Control.FOCUS_NONE
+	var remove_button: BaseButton = CloseButtonScene.instantiate()
+	remove_button.custom_minimum_size = Vector2(24, 24)
+	remove_button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	remove_button.pressed.connect(_on_remove_pressed.bind(item_id))
 	row.add_child(remove_button)
 
@@ -75,7 +85,7 @@ func _create_row(item_id: String) -> void:
 func _update_row_label(item_id: String) -> void:
 	var entry: CartEntry = _entries[item_id]
 	var label: Label = _row_labels[item_id]
-	label.text = "%s x%d — %d $" % [entry.item.display_name, entry.quantity, entry.item.price * entry.quantity]
+	label.text = "%s x%d — %s" % [entry.item.get_display_name(), entry.quantity, Currency.format(entry.item.price * entry.quantity)]
 
 func _on_remove_pressed(item_id: String) -> void:
 	if not _entries.has(item_id):
@@ -90,7 +100,7 @@ func _on_remove_pressed(item_id: String) -> void:
 func _refresh_totals() -> void:
 	empty_label.visible = _entries.is_empty()
 	checkout_button.disabled = _entries.is_empty()
-	total_label.text = "Total: %d $" % get_total()
+	total_label.text = tr("Total : %s") % Currency.format(get_total())
 	cart_changed.emit(get_total())
 
 func _on_checkout_pressed() -> void:

@@ -1,5 +1,5 @@
 class_name ModularFarmZoneSign
-extends Area2D
+extends Node2D
 
 ## Physical, self-contained purchase panel for the modulable farmland
 ## expansion zone (micro progression). Player interacts (E) to open a menu
@@ -8,11 +8,12 @@ extends Area2D
 ## unlocks the next tiles in automatic order. The player never picks where.
 
 const PATCH_OPTIONS := [
-	{"label": "Acheter 1 parcelle", "size": 1, "price": 15},
-	{"label": "Acheter patch 3x3 (9 parcelles)", "size": 9, "price": 110},
-	{"label": "Acheter patch 5x5 (25 parcelles)", "size": 25, "price": 280},
+	{"label": "Acheter 1 parcelle", "size": 1, "price": 1500},
+	{"label": "Acheter patch 3x3 (9 parcelles)", "size": 9, "price": 11000},
+	{"label": "Acheter patch 5x5 (25 parcelles)", "size": 25, "price": 28000},
 ]
 
+@onready var interactable_component: InteractableComponent = $InteractableComponent
 @onready var world_label: Label = $WorldLabel
 @onready var dialog: CanvasLayer = $Dialog
 @onready var progress_label: Label = $Dialog/Panel/Margin/VBox/ProgressLabel
@@ -20,18 +21,13 @@ const PATCH_OPTIONS := [
 @onready var option_buttons_container: VBoxContainer = $Dialog/Panel/Margin/VBox/OptionButtons
 @onready var cancel_button: Button = $Dialog/Panel/Margin/VBox/CancelButton
 
-var _player: PlayerController
 var _farm_land_manager: FarmLandManager
-var _player_inside := false
 var _option_buttons: Array = []
 
-func setup(player: PlayerController, zone_manager: FarmLandManager) -> void:
-	_player = player
+func setup(zone_manager: FarmLandManager) -> void:
 	_farm_land_manager = zone_manager
 
-	_player.interact_requested.connect(_on_interact_requested)
-	body_entered.connect(_on_body_entered)
-	body_exited.connect(_on_body_exited)
+	interactable_component.interacted.connect(_on_interacted)
 	cancel_button.pressed.connect(_close_dialog)
 	_farm_land_manager.progressive_tiles_changed.connect(_on_progressive_tiles_changed)
 
@@ -42,31 +38,36 @@ func setup(player: PlayerController, zone_manager: FarmLandManager) -> void:
 func _build_option_buttons() -> void:
 	for option in PATCH_OPTIONS:
 		var button := Button.new()
-		button.text = "%s — %d $" % [option["label"], option["price"]]
 		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(_on_patch_pressed.bind(option))
 		option_buttons_container.add_child(button)
 		_option_buttons.append(button)
+	_refresh_option_texts()
+
+## PATCH_OPTIONS labels are translation keys (French source texts).
+func _refresh_option_texts() -> void:
+	for i in _option_buttons.size():
+		var option: Dictionary = PATCH_OPTIONS[i]
+		_option_buttons[i].text = "%s — %s" % [tr(option["label"]), Currency.format(option["price"])]
+
+## Button/label texts are built from translated text - redo them after a
+## language switch.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _farm_land_manager != null:
+		_refresh_world_label()
+		_refresh_progress_label()
+		_refresh_option_texts()
 
 func _refresh_world_label() -> void:
-	world_label.text = "Zone d'expansion : %d/%d (E)" % [
+	world_label.text = tr("Zone d'expansion : %d/%d (E)") % [
 		_farm_land_manager.get_progressive_unlocked_count(), _farm_land_manager.get_progressive_capacity(),
 	]
 
 func _on_progressive_tiles_changed(_count: int) -> void:
 	_refresh_world_label()
 
-func _on_body_entered(body: Node) -> void:
-	if body == _player:
-		_player_inside = true
-
-func _on_body_exited(body: Node) -> void:
-	if body == _player:
-		_player_inside = false
-		_close_dialog()
-
-func _on_interact_requested(_tool) -> void:
-	if _player_inside and not dialog.visible:
+func _on_interacted() -> void:
+	if not dialog.visible:
 		_open_dialog()
 
 func _open_dialog() -> void:
@@ -77,7 +78,7 @@ func _open_dialog() -> void:
 	AudioManager.play_click_menu_sfx()
 
 func _refresh_progress_label() -> void:
-	progress_label.text = "Zone d'expansion : %d / %d parcelles" % [
+	progress_label.text = tr("Zone d'expansion : %d / %d parcelles") % [
 		_farm_land_manager.get_progressive_unlocked_count(), _farm_land_manager.get_progressive_capacity(),
 	]
 
@@ -94,13 +95,14 @@ func _close_dialog() -> void:
 
 func _on_patch_pressed(option: Dictionary) -> void:
 	if _farm_land_manager.buy_progressive_patch(option["size"], option["price"]):
-		status_label.text = "%d parcelle(s) débloquée(s) !" % option["size"]
+		var size: int = option["size"]
+		status_label.text = (tr("%d parcelles débloquées !") if size > 1 else tr("%d parcelle débloquée !")) % size
 		AudioManager.play_coop_build_sfx()
 		_play_unlock_animation()
 		_refresh_progress_label()
 		_refresh_option_buttons()
 	else:
-		status_label.text = "Fonds insuffisants ou capacité atteinte !"
+		status_label.text = tr("Fonds insuffisants ou capacité atteinte !")
 		AudioManager.play_click_menu_sfx()
 
 func _play_unlock_animation() -> void:

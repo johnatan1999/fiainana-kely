@@ -1,28 +1,41 @@
-[gd_scene load_steps=3 format=3 uid="uid://byhktvnatk5mw"]
+[gd_scene load_steps=8 format=3 uid="uid://byhktvnatk5mw"]
 
 [ext_resource type="Script" path="res://structures/chicken_coop/feeding_bowl.gd" id="1_gylyh"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="2_mbvn4"]
+[ext_resource type="Texture2D" uid="uid://wpq6cib7ujm" path="res://assets/tileset/farm-interior01.png" id="2_uah0x"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t6ghh"]
+atlas = ExtResource("2_uah0x")
+region = Rect2(0, 320, 64, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hpc8d"]
+atlas = ExtResource("2_uah0x")
+region = Rect2(64, 320, 64, 32)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bowl"]
-size = Vector2(28, 28)
+size = Vector2(33, 18)
 
-[node name="FeedingBowl" type="Area2D"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_t1do3"]
+size = Vector2(33, 19)
+
+[node name="FeedingBowl" type="StaticBody2D"]
 script = ExtResource("1_gylyh")
+empty_bowl_texture = SubResource("AtlasTexture_t6ghh")
+full_bowl_texture = SubResource("AtlasTexture_hpc8d")
 
-[node name="Visual" type="ColorRect" parent="."]
-offset_left = -14.0
-offset_top = -14.0
-offset_right = 14.0
-offset_bottom = 14.0
-mouse_filter = 2
-color = Color(0.75, 0.55, 0.3, 1)
-
-[node name="Label" type="Label" parent="."]
-offset_left = -30.0
-offset_top = -34.0
-offset_right = 30.0
-offset_bottom = -14.0
-text = "Mangeoire (E)"
-horizontal_alignment = 1
+[node name="Visual" type="Sprite2D" parent="."]
+position = Vector2(0, -16)
+texture = SubResource("AtlasTexture_t6ghh")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-0.5, -11)
 shape = SubResource("RectangleShape2D_bowl")
+
+[node name="InteractableComponent" parent="." instance=ExtResource("2_mbvn4")]
+position = Vector2(-29, 1)
+
+[node name="InteractableCollision2D" parent="InteractableComponent" index="0"]
+position = Vector2(28.5, -12.5)
+shape = SubResource("RectangleShape2D_t1do3")
+
+[editable path="InteractableComponent"]

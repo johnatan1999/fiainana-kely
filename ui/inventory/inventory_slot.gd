@@ -1,40 +1,59 @@
 class_name InventorySlot
-extends PanelContainer
+extends Control
 
-## One read-only tile in the inventory grid. Purely presentational - shows
-## whatever InventoryUI resolves for an item_id (name/color/icon/quantity),
-## never touches FarmSimulation itself.
+## One cell of the inventory grid: the item's icon in a wooden frame, with
+## its quantity in the corner. Purely presentational - InventoryUI resolves
+## the item (InventoryCatalog.describe()) and decides which cell is
+## selected; the cell only reports clicks and hovers.
 
-@onready var icon_rect: TextureRect = %IconRect
-@onready var icon_placeholder: ColorRect = %IconPlaceholder
-@onready var name_label: Label = %NameLabel
-@onready var malagasy_label: Label = %MalagasyLabel
+signal clicked(item_id: String)
+signal hover_changed(item_id: String, hovered: bool)
+
+const HOVER_SCALE := Vector2(1.06, 1.06)
+const SELECTED_FRAME_TINT := Color(1.35, 1.15, 0.7)
+const ANIM_TIME := 0.1
+
+@onready var glow: ColorRect = %Glow
+@onready var frame: TextureRect = %Frame
+@onready var icon_rect: TextureRect = %Icon
+@onready var placeholder: ColorRect = %Placeholder
 @onready var quantity_label: Label = %QuantityLabel
 
+var item_id: String
+var _selected := false
 var _tween: Tween
 
 func _ready() -> void:
-	resized.connect(func(): pivot_offset = size / 2.0)
-	mouse_entered.connect(func(): _animate_scale(Vector2(1.05, 1.05)))
-	mouse_exited.connect(func(): _animate_scale(Vector2.ONE))
+	pivot_offset = size / 2.0
+	mouse_entered.connect(func():
+		_animate_scale(HOVER_SCALE)
+		hover_changed.emit(item_id, true))
+	mouse_exited.connect(func():
+		_animate_scale(Vector2.ONE)
+		hover_changed.emit(item_id, false))
 
-func setup(display_name: String, malagasy_name: String, quantity: int, color: Color, icon: Texture2D) -> void:
-	name_label.text = display_name
-	malagasy_label.text = malagasy_name
-	malagasy_label.visible = malagasy_name != ""
-	quantity_label.text = "x %d" % quantity
+func setup(info: Dictionary, quantity: int) -> void:
+	item_id = info.id
+	quantity_label.text = str(quantity)
+	quantity_label.visible = quantity > 1
+	var icon: Texture2D = info.icon
+	icon_rect.texture = icon
+	icon_rect.visible = icon != null
+	placeholder.visible = icon == null
+	placeholder.color = info.color
 
-	if icon:
-		icon_rect.texture = icon
-		icon_rect.visible = true
-		icon_placeholder.visible = false
-	else:
-		icon_rect.visible = false
-		icon_placeholder.visible = true
-		icon_placeholder.color = color
+func set_selected(selected: bool) -> void:
+	_selected = selected
+	glow.visible = selected
+	frame.self_modulate = SELECTED_FRAME_TINT if selected else Color.WHITE
+
+func _gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		clicked.emit(item_id)
+		accept_event()
 
 func _animate_scale(target: Vector2) -> void:
 	if _tween:
 		_tween.kill()
 	_tween = create_tween()
-	_tween.tween_property(self, "scale", target, 0.12).set_trans(Tween.TRANS_SINE)
+	_tween.tween_property(self, "scale", target, ANIM_TIME).set_trans(Tween.TRANS_SINE)

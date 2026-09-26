@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://bhnm7ccttiisy"]
+[gd_scene load_steps=8 format=3 uid="uid://bhnm7ccttiisy"]
 
 [ext_resource type="Script" path="res://structures/houses/house.gd" id="1_wbo8y"]
 [ext_resource type="Texture2D" uid="uid://kkk5vjbjryep" path="res://assets/tileset/exterior.png" id="3_g0pnn"]
 [ext_resource type="Texture2D" uid="uid://lj5cu3o6ub4r" path="res://structures/houses/House.tres" id="4_v8s14"]
 [ext_resource type="Script" path="res://components/zone_transition.gd" id="5_7txgv"]
+[ext_resource type="AudioStream" uid="uid://v644po0aqtbb" path="res://assets/audio/SFX/Audio_SFX_Door_Cracking.wav" id="6_door"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_2y0co"]
 atlas = ExtResource("3_g0pnn")
@@ -28,8 +29,10 @@ offset = Vector2(0, -256)
 
 [node name="EnterHouse" type="Area2D" parent="."]
 script = ExtResource("5_7txgv")
-target_zone = "house"
+target_zone = "player_house"
 target_spawn = "HouseSpawnEntry"
+transition_sound = ExtResource("6_door")
+transition_volume_db = -8.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EnterHouse"]
 position = Vector2(175.844, -32)

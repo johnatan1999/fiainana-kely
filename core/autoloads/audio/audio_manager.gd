@@ -18,6 +18,18 @@ const BGM_INTERIOR_VOLUME := -20.0
 const SILENT_DB := -80.0
 const SFX_POOL_SIZE := 8
 
+## Footsteps repeat constantly, so they sit well under the one-off SFX.
+## Walk and run use their own recordings (all slices level-matched to the
+## same loudness, so these two values are the only walk/run balance knob).
+## Per-step variety (which sample, pitch and volume jitter, never the same
+## sample twice in a row) comes from sfx_footstep_walk/_run being
+## AudioStreamRandomizers - see assets/audio/SFX/footstep_*_randomizer.tres.
+const FOOTSTEP_WALK_VOLUME_DB := -10.0
+const FOOTSTEP_RUN_VOLUME_DB := -7.0
+## The denied sound is mastered hot (peaks at 0 dBFS) and can be spammed by
+## pressing E repeatedly - kept well under the regular SFX.
+const ACTION_DENIED_VOLUME_DB := -8.0
+
 ## Assign these in the AudioManager.tscn inspector once SFX files exist.
 ## play_*_sfx() is a safe no-op while a slot is empty.
 @export var sfx_till: AudioStream
@@ -29,6 +41,9 @@ const SFX_POOL_SIZE := 8
 @export var sfx_chicken: AudioStream
 @export var sfx_egg_pickup: AudioStream
 @export var sfx_coop_build: AudioStream
+@export var sfx_footstep_walk: AudioStream
+@export var sfx_footstep_run: AudioStream
+@export var sfx_action_denied: AudioStream
 
 @onready var _bgm_players: Array[AudioStreamPlayer] = [$BGMPlayerA, $BGMPlayerB]
 
@@ -175,6 +190,18 @@ func play_egg_pickup_sfx() -> void:
 
 func play_coop_build_sfx() -> void:
 	play_sfx(sfx_coop_build)
+
+
+## Pressing E on something the current tool can't act on (red plot highlight).
+func play_action_denied_sfx() -> void:
+	play_sfx(sfx_action_denied, ACTION_DENIED_VOLUME_DB)
+
+
+func play_footstep_sfx(running: bool) -> void:
+	if running:
+		play_sfx(sfx_footstep_run, FOOTSTEP_RUN_VOLUME_DB)
+	else:
+		play_sfx(sfx_footstep_walk, FOOTSTEP_WALK_VOLUME_DB)
 
 
 func play_sfx(stream: AudioStream, volume_db: float = 0.0, pitch_scale: float = 1.0) -> void:

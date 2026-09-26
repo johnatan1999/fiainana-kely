@@ -1,7 +1,7 @@
 class_name FarmState
 extends RefCounted
 
-var money: int = 100
+var money: int = 10000
 var clock := GameClock.new()
 
 ## plot_id: int -> PlotState. Ids are stable and never reused - a plot's
@@ -91,10 +91,15 @@ func add_inventory(item_id: String, amount: int) -> void:
 ## outside that class.
 const _SPECIES_PREFIXES := ["chicken", "duck", "goose", "pig", "zebu"]
 
+## Public so FarmSimulation can derive the same "<prefix>_unplaced" inventory
+## key generate_animal_id() uses for ids, without duplicating this table.
+static func species_prefix(species: AnimalData.Species) -> String:
+	return _SPECIES_PREFIXES[species]
+
 ## Animal ids are allocated sequentially and never reused, even across saves,
 ## so a stale reference from a Chicken node can never collide with a new animal.
 func generate_animal_id(species: AnimalData.Species) -> String:
-	var prefix: String = _SPECIES_PREFIXES[species]
+	var prefix := species_prefix(species)
 	var id := "%s_%d" % [prefix, _next_animal_index]
 	_next_animal_index += 1
 	return id

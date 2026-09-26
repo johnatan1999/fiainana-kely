@@ -8,6 +8,6 @@ id = "zone_east"
 display_name = "Terrain de l'Est"
 malagasy_name = "Tany Atsinanana"
 description = "Un terrain supplémentaire prêt à cultiver, à l'est du champ principal."
-price = 400
+price = 40000
 origin = Vector2i(8, 9)
 size = Vector2i(4, 6)
