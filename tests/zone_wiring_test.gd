@@ -52,6 +52,12 @@ func _check_zone_doors(world_manager, zone_id: String) -> void:
 
 	for transition in _find_transitions(zone):
 		var label := "zone '%s', door '%s'" % [zone_id, transition.name]
+		# A locked door (decorative house) leads nowhere on purpose. A
+		# back_to_entrance exit is still checked: its target is the fallback
+		# when the way in is unknown.
+		if transition.locked:
+			_check(transition.target_zone.is_empty(), "%s: locked door has no destination" % label)
+			continue
 		var target_zone_id: String = transition.target_zone
 		var target_spawn_name: String = transition.target_spawn
 

@@ -30,6 +30,7 @@ func save_game() -> void:
 	var data := simulation.to_save_data()
 	data["save_version"] = SAVE_VERSION
 	data["zone_id"] = world_manager.current_zone_id
+	data["return_point"] = world_manager.get_return_point()
 	data["player_position"] = {"x": player.global_position.x, "y": player.global_position.y}
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	file.store_string(JSON.stringify(data))
@@ -52,6 +53,8 @@ func load_game() -> bool:
 
 	simulation.load_save_data(data)
 
+	# Optional key (older saves have none): only means "no way back known yet".
+	world_manager.set_return_point(data.get("return_point", {}) if data.get("return_point") is Dictionary else {})
 	var zone_id: String = data.get("zone_id", DEFAULT_ZONE_ID)
 	if world_manager.has_zone(zone_id):
 		world_manager.change_zone(zone_id, "SpawnDefault")

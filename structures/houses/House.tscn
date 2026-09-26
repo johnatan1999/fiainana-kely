@@ -1,48 +1,20 @@
-[gd_scene load_steps=8 format=3 uid="uid://bhnm7ccttiisy"]
+[gd_scene load_steps=5 format=3 uid="uid://bhnm7ccttiisy"]
 
 [ext_resource type="Script" path="res://structures/houses/house.gd" id="1_wbo8y"]
-[ext_resource type="Texture2D" uid="uid://kkk5vjbjryep" path="res://assets/tileset/exterior.png" id="3_g0pnn"]
-[ext_resource type="Texture2D" uid="uid://lj5cu3o6ub4r" path="res://structures/houses/House.tres" id="4_v8s14"]
 [ext_resource type="Script" path="res://components/zone_transition.gd" id="5_7txgv"]
 [ext_resource type="AudioStream" uid="uid://v644po0aqtbb" path="res://assets/audio/SFX/Audio_SFX_Door_Cracking.wav" id="6_door"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_2y0co"]
-atlas = ExtResource("3_g0pnn")
-region = Rect2(256, 0, 384, 128)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_g64y0"]
-size = Vector2(96.3125, 32)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_enter"]
+size = Vector2(40, 20)
 
 [node name="House" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_wbo8y")
 
-[node name="WallSprite" type="Sprite2D" parent="."]
-texture = ExtResource("4_v8s14")
-centered = false
-offset = Vector2(0, -128)
-
-[node name="RoofSprite" type="Sprite2D" parent="."]
-texture = SubResource("AtlasTexture_2y0co")
-centered = false
-offset = Vector2(0, -256)
-
 [node name="EnterHouse" type="Area2D" parent="."]
 script = ExtResource("5_7txgv")
-target_zone = "player_house"
-target_spawn = "HouseSpawnEntry"
 transition_sound = ExtResource("6_door")
 transition_volume_db = -8.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EnterHouse"]
-position = Vector2(175.844, -32)
-shape = SubResource("RectangleShape2D_g64y0")
-
-[node name="SpawnFromHouse" type="Marker2D" parent="."]
-position = Vector2(176, 14)
-
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
-position = Vector2(-15, -8)
-polygon = PackedVector2Array(32, 0, 32, -139, 380, -140, 382, 2, 302, 1, 303, 7, 250, 7, 250, 0, 236, 0, 234, -74, 141, -74, 141, 0)
+shape = SubResource("RectangleShape2D_enter")

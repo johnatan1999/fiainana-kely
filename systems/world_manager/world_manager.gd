@@ -37,6 +37,11 @@ var current_zone_id: String = ""
 
 var _zones: Dictionary = {} # id: String -> ZoneData
 var _fade_overlay: ColorRect
+## The door the player last went in by, to come back out through it from a
+## shared interior: {"zone": id, "spawn": path to a Marker2D in that zone}.
+## Empty when unknown. Saved (see get/set_return_point) - quitting inside a
+## house must not lose the way out.
+var _return_point: Dictionary = {}
 
 func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_zone_container: Node2D) -> void:
 	simulation = p_simulation
@@ -136,7 +141,9 @@ func change_zone(zone_id: String, spawn_name: String = "SpawnDefault") -> void:
 	_apply_zone_bgm(zone)
 	_wire_zone_content(zone)
 
-# Fonction utilitaire pour chercher dans /Spawns ou à la racine
+## Looks in /Spawns, then anywhere by path from the zone root - so a spawn
+## can be a node path ("Houses/House2/ExitSpawn") to a marker a structure
+## owns, not only a marker placed by hand under /Spawns.
 func _find_spawn(zone: ZoneRoot, spawn_name: String) -> Marker2D:
 	var spawns_container := zone.get_node_or_null("Spawns")
 	if spawns_container:
@@ -166,7 +173,7 @@ func _wire_zone_content(zone: ZoneRoot) -> void:
 		_spawn_decorative_chickens(coop_building, zone.get_node_or_null("AnimalContainer"))
 
 	for transition in _find_transitions(zone):
-		transition.triggered.connect(request_zone_change)
+		transition.triggered.connect(_on_transition_triggered.bind(transition))
 
 	zone_loaded.emit(zone)
 
@@ -186,6 +193,27 @@ func _spawn_decorative_chickens(coop_building: Node2D, container: Node2D) -> voi
 		# zone root, so their local spaces match - no need for global_position.
 		chicken.position = coop_building.position + Vector2(randf_range(-40.0, 40.0), randf_range(20.0, 50.0))
 		container.add_child(chicken)
+
+func _on_transition_triggered(target_zone: String, target_spawn: String, transition: ZoneTransition) -> void:
+	if transition.back_to_entrance and not _return_point.is_empty() and has_zone(_return_point["zone"]):
+		var back := _return_point
+		_return_point = {}
+		request_zone_change(back["zone"], back["spawn"])
+		return
+	if transition.return_point != null:
+		_return_point = {
+			"zone": current_zone_id,
+			"spawn": String(current_zone.get_path_to(transition.return_point)),
+		}
+	request_zone_change(target_zone, target_spawn)
+
+func get_return_point() -> Dictionary:
+	return _return_point.duplicate()
+
+func set_return_point(point: Dictionary) -> void:
+	_return_point = {}
+	if point.get("zone") is String and point.get("spawn") is String:
+		_return_point = {"zone": point["zone"], "spawn": point["spawn"]}
 
 func _find_transitions(node: Node) -> Array:
 	var result: Array = []
