@@ -1,11 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://ui/inventory/item_info_card.gd" id="1_card"]
 [ext_resource type="Texture2D" path="res://assets/sprites/inventory/cell.png" id="2_cell"]
-
-[sub_resource type="StyleBoxLine" id="StyleBoxLine_rule"]
-color = Color(0.55, 0.3, 0.2, 0.6)
-thickness = 2
 
 [node name="ItemInfoCard" type="VBoxContainer"]
 offset_right = 215.0
@@ -55,42 +51,29 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="NameLabel" type="Label" parent="."]
+theme_type_variation = &"BookHeading"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.29, 0.18, 0.1, 1)
-theme_override_font_sizes/font_size = 20
 text = "Nom"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="MalagasyLabel" type="Label" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.32, 0.2, 1)
-theme_override_font_sizes/font_size = 14
-text = "Anarana"
-horizontal_alignment = 1
-autowrap_mode = 3
-
 [node name="MetaLabel" type="Label" parent="."]
+theme_type_variation = &"BookAccent"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.55, 0.3, 0.2, 1)
-theme_override_font_sizes/font_size = 13
 text = "Catégorie"
 horizontal_alignment = 1
 
 [node name="Separator" type="HSeparator" parent="."]
+theme_type_variation = &"BookSeparator"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 10
-theme_override_styles/separator = SubResource("StyleBoxLine_rule")
 
 [node name="DescriptionLabel" type="Label" parent="."]
+theme_type_variation = &"BookText"
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.29, 0.18, 0.1, 1)
-theme_override_font_sizes/font_size = 13
 text = "Description"
 autowrap_mode = 3
 

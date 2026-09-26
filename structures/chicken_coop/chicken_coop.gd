@@ -17,7 +17,7 @@ func setup(animal_manager: AnimalManager) -> void:
 
 func refresh_visual() -> void:
 	var built: bool = _animal_manager.simulation.state.has_coop
-	label.text = "Poulailler (E: placer une poule)" if built else "Construire le poulailler (E)"
+	label.text = "Poulailler (E : placer une poule)" if built else "Construire le poulailler (E)"
 
 func _on_interacted() -> void:
 	_animal_manager.interact_with_coop(self)

@@ -1,11 +1,12 @@
 class_name InventoryCatalog
 extends RefCounted
 
-## Turns a raw FarmState.inventory item_id into everything the inventory
-## screen shows about it: names, icon, which tab it belongs to, description
-## and a list of detail rows. Reuses the registries that already exist
-## (CropData via FarmSimulation, ShopUI's hand-authored catalog) so nothing
-## here duplicates economy numbers or drifts out of sync with the Shop.
+## Presentation layer for the inventory screen: turns an inventory item_id
+## into what the book shows - names, icon, which tab it goes in, description
+## and detail rows. All facts come from ItemDatabase (the data layer); this
+## only decides how the inventory lays them out. Every text it returns is
+## already translated to the current language (the French texts in the
+## tables below are the keys of localization/translations.csv).
 
 enum Category { CROPS, ANIMALS, TOOLS, FOOD }
 
@@ -34,8 +35,6 @@ const CROP_TYPE_NAMES := {
 	CropData.Category.EXPORT: "Culture d'export",
 }
 
-static var _warned_unknown_ids := {}
-
 ## Shop categories -> inventory tabs. Seeds and harvests share "Cultures";
 ## animal products (eggs) live with the animals that make them.
 const SHOP_TO_INVENTORY := {
@@ -45,48 +44,60 @@ const SHOP_TO_INVENTORY := {
 	ShopItemData.Category.FOOD: Category.FOOD,
 }
 
-## Returns {id, name, malagasy_name, icon, color, category, description,
+static var _warned_unknown_ids := {}
+
+## Static functions have no Object.tr() - same lookup, through the server.
+static func _t(key: String) -> String:
+	return String(TranslationServer.translate(key))
+
+static func category_name(category: Category) -> String:
+	return _t(CATEGORY_NAMES[category])
+
+## Returns {id, name, icon, color, category, description,
 ## details: Array of [label, value]} - color is the placeholder square shown
 ## when the item has no icon art yet.
-static func describe(simulation: FarmSimulation, item_id: String) -> Dictionary:
-	if item_id == "chicken_unplaced":
-		var chicken := _find_shop_item("animal_chicken")
-		return _entry(item_id, "Poule (à placer)", "Akoho", null, Category.ANIMALS,
-			"%s\nÀ installer dans le poulailler : appuie sur E devant le poulailler." % (chicken.description if chicken else ""),
-			[])
-
-	if item_id.ends_with("_seed"):
-		var seed_crop := simulation.get_crop_data(item_id.trim_suffix("_seed"))
-		if seed_crop != null:
-			return _entry(item_id, "Graine de %s" % seed_crop.display_name, seed_crop.malagasy_name,
-				seed_crop.icon, Category.CROPS,
-				"À semer sur une parcelle labourée, puis à arroser chaque jour.",
+static func describe(db: ItemDatabase, item_id: String) -> Dictionary:
+	match db.get_kind(item_id):
+		ItemDatabase.Kind.SEED:
+			var seed_crop := db.get_crop(item_id)
+			return _entry(item_id, db.get_shop_item(item_id), Category.CROPS,
+				_t("À semer sur une parcelle labourée, puis à arroser chaque jour."),
 				[
-					["Pousse en", "%d jours" % seed_crop.growth_days],
-					["Saison idéale", SEASON_NAMES.get(seed_crop.ideal_season, "?")],
-					["Besoin en eau", WATER_NEED_NAMES.get(seed_crop.water_need, "?")],
-					["Rendement", _yield_text(seed_crop)],
-					["Prix d'achat", Currency.format(seed_crop.seed_price)],
+					[_t("Pousse en"), _t("%d jours") % seed_crop.growth_days],
+					[_t("Saison idéale"), _t(SEASON_NAMES.get(seed_crop.ideal_season, "?"))],
+					[_t("Besoin en eau"), _t(WATER_NEED_NAMES.get(seed_crop.water_need, "?"))],
+					[_t("Rendement"), _yield_text(seed_crop)],
+					[_t("Prix d'achat"), Currency.format(seed_crop.seed_price)],
 				])
-
-	var crop := simulation.get_crop_data(item_id)
-	if crop != null:
-		return _entry(item_id, crop.display_name, crop.malagasy_name, crop.icon, Category.CROPS,
-			"Fraîchement récolté. À vendre au marché ou à garder pour plus tard.",
-			[
-				["Type", CROP_TYPE_NAMES.get(crop.category, "?")],
-				["Prix de vente", Currency.format(crop.sell_price)],
-			])
-
-	var shop_item := _find_shop_item(item_id)
-	if shop_item != null:
-		var details: Array = []
-		if shop_item.price > 0:
-			details.append(["Prix d'achat", Currency.format(shop_item.price)])
-		if shop_item.sell_price > 0:
-			details.append(["Prix de vente", Currency.format(shop_item.sell_price)])
-		return _entry(item_id, shop_item.display_name, shop_item.malagasy_name, shop_item.icon,
-			SHOP_TO_INVENTORY.get(shop_item.category, Category.TOOLS), shop_item.description, details)
+		ItemDatabase.Kind.CROP:
+			var crop := db.get_crop(item_id)
+			return _make(item_id, _t(crop.display_name), crop.icon,
+				Category.CROPS, ShopItemData.Category.SEEDS,
+				_t("Fraîchement récolté. À vendre au marché ou à garder pour plus tard."),
+				[
+					[_t("Type"), _t(CROP_TYPE_NAMES.get(crop.category, "?"))],
+					[_t("Prix de vente"), Currency.format(crop.sell_price)],
+				])
+		ItemDatabase.Kind.SHOP_ITEM:
+			var item := db.get_shop_item(item_id)
+			var details: Array = []
+			if item.price > 0:
+				details.append([_t("Prix d'achat"), Currency.format(item.price)])
+			if item.sell_price > 0:
+				details.append([_t("Prix de vente"), Currency.format(item.sell_price)])
+			return _entry(item_id, item, SHOP_TO_INVENTORY.get(item.category, Category.TOOLS),
+				item.get_description(), details)
+		ItemDatabase.Kind.UNPLACED_ANIMAL:
+			var animal := db.get_unplaced_species(item_id)
+			var shop_item := db.get_shop_item_for_species(animal.species)
+			var description := _t("À installer dans le poulailler : appuie sur E devant le poulailler.")
+			if shop_item != null and shop_item.description != "":
+				description = shop_item.get_description() + "\n" + description
+			var icon: Texture2D = animal.icon
+			if icon == null and shop_item != null:
+				icon = shop_item.icon
+			return _make(item_id, _t("%s (à placer)") % _t(animal.display_name), icon,
+				Category.ANIMALS, ShopItemData.Category.ANIMALS, description, [])
 
 	# Once per id: describe() runs on every inventory refresh, and a stale id
 	# would otherwise flood the log. Old saves get cleaned up by
@@ -94,36 +105,25 @@ static func describe(simulation: FarmSimulation, item_id: String) -> Dictionary:
 	if not _warned_unknown_ids.has(item_id):
 		_warned_unknown_ids[item_id] = true
 		push_warning("InventoryCatalog: unknown item id '%s' - shown under Outils." % item_id)
-	return _entry(item_id, item_id, "", null, Category.TOOLS, "", [])
+	return _make(item_id, item_id, null, Category.TOOLS, ShopItemData.Category.TOOLS, "", [])
 
 static func _yield_text(crop: CropData) -> String:
 	if crop.yield_min == crop.yield_max:
 		return str(crop.yield_min)
-	return "%d à %d" % [crop.yield_min, crop.yield_max]
+	return _t("%d à %d") % [crop.yield_min, crop.yield_max]
 
-static func _entry(id: String, display_name: String, malagasy_name: String, icon: Texture2D,
-		category: Category, description: String, details: Array) -> Dictionary:
+## Names/icon/placeholder color straight from a catalog entry.
+static func _entry(id: String, item: ShopItemData, category: Category, description: String, details: Array) -> Dictionary:
+	return _make(id, item.get_display_name(), item.icon, category, item.category, description, details)
+
+static func _make(id: String, display_name: String, icon: Texture2D,
+		category: Category, color_category: ShopItemData.Category, description: String, details: Array) -> Dictionary:
 	return {
 		"id": id,
 		"name": display_name,
-		"malagasy_name": malagasy_name,
 		"icon": icon,
-		"color": placeholder_color(category),
+		"color": ShopItemData.CATEGORY_COLORS.get(color_category, Color.GRAY),
 		"category": category,
 		"description": description,
 		"details": details,
 	}
-
-## Same palette the Shop uses for icon-less items, so an item looks the same
-## on both screens.
-static func placeholder_color(category: Category) -> Color:
-	for shop_category in SHOP_TO_INVENTORY:
-		if SHOP_TO_INVENTORY[shop_category] == category:
-			return ItemCard.CATEGORY_PLACEHOLDER_COLORS.get(shop_category, Color.GRAY)
-	return Color.GRAY
-
-static func _find_shop_item(item_id: String) -> ShopItemData:
-	for shop_item: ShopItemData in ShopUI.TOOLS_FOOD_ANIMALS_RESOURCES:
-		if shop_item.id == item_id:
-			return shop_item
-	return null

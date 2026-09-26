@@ -7,6 +7,7 @@ script = ExtResource("1_clove")
 id = "clove"
 display_name = "Girofle"
 malagasy_name = "Jirofo"
+seed_display_name = "Graine de girofle"
 category = 2
 tier = 4
 seed_price = 5000

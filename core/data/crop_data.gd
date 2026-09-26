@@ -11,6 +11,12 @@ enum WaterNeed { LOW, MEDIUM, HIGH }
 @export var id: String
 @export var display_name: String
 @export var malagasy_name: String = ""
+## Name of this crop's seed item, in French (a translation key, see
+## localization/translations.csv). Written per crop rather than composed
+## from display_name, because each language builds it differently
+## ("Graine d'arachide", "Voam-bary", "Rice seed"). Empty = the generic
+## "Graine de %s" template.
+@export var seed_display_name: String = ""
 @export var category: Category = Category.VIVRIER
 @export var tier: int = 1
 

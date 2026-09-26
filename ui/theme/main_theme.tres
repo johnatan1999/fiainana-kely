@@ -1,0 +1,48 @@
+[gd_resource type="Theme" load_steps=2 format=3]
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_book_rule"]
+color = Color(0.55, 0.3, 0.2, 0.6)
+thickness = 2
+
+[resource]
+default_font_size = 16
+BookAccent/base_type = &"Label"
+BookAccent/colors/font_color = Color(0.55, 0.3, 0.2, 1)
+BookAccent/font_sizes/font_size = 13
+BookHeading/base_type = &"Label"
+BookHeading/colors/font_color = Color(0.29, 0.18, 0.1, 1)
+BookHeading/font_sizes/font_size = 20
+BookHint/base_type = &"Label"
+BookHint/colors/font_color = Color(0.45, 0.32, 0.2, 0.8)
+BookHint/font_sizes/font_size = 12
+BookSeparator/base_type = &"HSeparator"
+BookSeparator/constants/separation = 10
+BookSeparator/styles/separator = SubResource("StyleBoxLine_book_rule")
+BookStrong/base_type = &"Label"
+BookStrong/colors/font_color = Color(0.29, 0.18, 0.1, 1)
+BookStrong/font_sizes/font_size = 15
+BookSubtitle/base_type = &"Label"
+BookSubtitle/colors/font_color = Color(0.45, 0.32, 0.2, 1)
+BookSubtitle/font_sizes/font_size = 14
+BookText/base_type = &"Label"
+BookText/colors/font_color = Color(0.29, 0.18, 0.1, 1)
+BookText/font_sizes/font_size = 13
+BookTextSoft/base_type = &"Label"
+BookTextSoft/colors/font_color = Color(0.45, 0.32, 0.2, 1)
+BookTextSoft/font_sizes/font_size = 13
+BookTitle/base_type = &"Label"
+BookTitle/colors/font_color = Color(0.29, 0.18, 0.1, 1)
+BookTitle/font_sizes/font_size = 26
+SlotQuantity/base_type = &"Label"
+SlotQuantity/colors/font_color = Color(1, 0.97, 0.88, 1)
+SlotQuantity/colors/font_outline_color = Color(0.25, 0.13, 0.05, 1)
+SlotQuantity/constants/outline_size = 4
+SlotQuantity/font_sizes/font_size = 15
+TabCaption/base_type = &"Label"
+TabCaption/colors/font_color = Color(0.98, 0.93, 0.8, 0.75)
+TabCaption/font_sizes/font_size = 12
+TabLabel/base_type = &"Label"
+TabLabel/colors/font_color = Color(0.98, 0.93, 0.8, 1)
+TabLabel/colors/font_outline_color = Color(0.3, 0.1, 0.08, 1)
+TabLabel/constants/outline_size = 3
+TabLabel/font_sizes/font_size = 17

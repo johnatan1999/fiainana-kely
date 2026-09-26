@@ -27,6 +27,7 @@ const CLOSED_SCALE := Vector2(0.95, 0.95)
 @onready var money_label: Label = %MoneyLabel
 
 var _simulation: FarmSimulation
+var _item_db: ItemDatabase
 var _shop_ui: ShopUI
 var _open_tween: Tween
 var _tabs: Array[InventoryCategoryTab] = []
@@ -39,9 +40,10 @@ var _hovered_id := ""
 var _entries: Dictionary = {}
 var _order: Array[String] = []
 
-func setup(simulation: FarmSimulation, shop_ui: ShopUI) -> void:
+func setup(simulation: FarmSimulation, shop_ui: ShopUI, item_db: ItemDatabase) -> void:
 	_simulation = simulation
 	_shop_ui = shop_ui
+	_item_db = item_db
 
 	# Reste actif malgré get_tree().paused = true (voir open()/close()) - sinon
 	# ses propres boutons et son tween d'ouverture/fermeture se figeraient aussi.
@@ -72,7 +74,15 @@ func _style_scrollbar() -> void:
 			bar.add_theme_stylebox_override(state, scroll_grabber_style)
 
 func _on_money_changed(money: int) -> void:
-	money_label.text = "Argent : %s" % Currency.format(money)
+	money_label.text = tr("Argent : %s") % Currency.format(money)
+
+## Names/descriptions/counts are translated when built - redo them after a
+## language switch (static texts in the scene re-translate on their own).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _simulation != null:
+		_on_money_changed(_simulation.state.money)
+		if visible:
+			_rebuild()
 
 ## Only rebuilds while actually visible - no point re-resolving every item
 ## on every purchase/harvest while the player isn't even looking at it.
@@ -89,7 +99,7 @@ func _collect_items() -> Dictionary:
 		var quantity: int = _simulation.state.inventory[item_id]
 		if quantity <= 0:
 			continue
-		var info := InventoryCatalog.describe(_simulation, item_id)
+		var info := InventoryCatalog.describe(_item_db, item_id)
 		by_category[info.category].append({"info": info, "quantity": quantity})
 	for category in by_category:
 		by_category[category].sort_custom(func(a, b): return a.info.name.naturalnocasecmp_to(b.info.name) < 0)
@@ -161,7 +171,7 @@ func _refresh_card() -> void:
 	if _entries.has(shown_id):
 		info_card.show_item(_entries[shown_id].info, _entries[shown_id].quantity)
 	else:
-		info_card.show_empty("Aucun objet")
+		info_card.show_empty(tr("Aucun objet"))
 
 ## Opens on the last tab used, or the first non-empty one if that's empty.
 func _pick_start_category() -> void:

@@ -37,7 +37,14 @@ func _refresh_world_label() -> void:
 	if zone_data == null:
 		world_label.text = "?"
 		return
-	world_label.text = ("%s (débloqué)" % zone_data.display_name) if _farm_land_manager.is_zone_unlocked(zone_id) else "%s (E)" % zone_data.display_name
+	var zone_name := tr(zone_data.display_name)
+	world_label.text = tr("%s (débloqué)") % zone_name if _farm_land_manager.is_zone_unlocked(zone_id) else "%s (E)" % zone_name
+
+## The world label is built from translated text - redo it after a language
+## switch (the dialog is rebuilt every time it opens anyway).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _farm_land_manager != null:
+		_refresh_world_label()
 
 func _on_zone_unlocked(unlocked_zone_id: String) -> void:
 	if unlocked_zone_id == zone_id:
@@ -52,14 +59,14 @@ func _open_dialog() -> void:
 	if zone_data == null:
 		return
 
-	name_label.text = zone_data.display_name
+	name_label.text = tr(zone_data.display_name)
 	price_label.text = Currency.format(zone_data.price)
-	description_label.text = "%s (%d parcelles)" % [zone_data.description, zone_data.get_tile_count()]
+	description_label.text = tr("%s (%d parcelles)") % [tr(zone_data.description), zone_data.get_tile_count()]
 
 	var already_unlocked := _farm_land_manager.is_zone_unlocked(zone_id)
-	status_label.text = "Déjà débloqué." if already_unlocked else ""
+	status_label.text = tr("Déjà débloqué.") if already_unlocked else ""
 	buy_button.disabled = already_unlocked
-	buy_button.text = "Déjà acheté" if already_unlocked else "Acheter"
+	buy_button.text = tr("Déjà acheté") if already_unlocked else tr("Acheter")
 
 	dialog.visible = true
 	AudioManager.play_click_menu_sfx()
@@ -73,13 +80,13 @@ func _on_buy_pressed() -> void:
 		return
 
 	if _farm_land_manager.buy_zone(zone_id):
-		status_label.text = "%s débloqué !" % zone_data.display_name
+		status_label.text = tr("%s débloqué !") % tr(zone_data.display_name)
 		buy_button.disabled = true
-		buy_button.text = "Déjà acheté"
+		buy_button.text = tr("Déjà acheté")
 		AudioManager.play_coop_build_sfx()
 		_play_unlock_animation()
 	else:
-		status_label.text = "Fonds insuffisants !"
+		status_label.text = tr("Fonds insuffisants !")
 		AudioManager.play_click_menu_sfx()
 
 func _play_unlock_animation() -> void:

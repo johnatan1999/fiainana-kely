@@ -54,7 +54,7 @@ layout_mode = 2
 
 [node name="TitleLabel" type="Label" parent="Background/Margin/VBox/HeaderRow"]
 layout_mode = 2
-text = "Tsena — Marché du village"
+text = "Marché du village"
 theme_override_font_sizes/font_size = 20
 
 [node name="HeaderSpacer" type="Control" parent="Background/Margin/VBox/HeaderRow"]

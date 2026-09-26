@@ -2,26 +2,9 @@ class_name ShopUI
 extends Control
 
 ## Village market: 4 categories (Seeds/Tools/Food/Animals), a scrollable grid
-## of ItemCards, and a CartPanel. Seeds are synthesized from the real
-## CropData registry (see ShopItemData.from_crop_data) so their price/growth
-## numbers never drift from FarmSimulation; the other categories are
-## hand-authored ShopItemData resources under data/shop_items/.
-
-## animal_zebu.tres is deliberately NOT listed here yet: FarmSimulation.
-## buy_animal()/place_animal() already support any species, but there's no
-## Zebu scene registered in AnimalManager.SPECIES_SCENES and no structure to
-## place one in (Coop only ever places chickens) - selling it today would
-## just be a purchase with no way to ever use it. Re-add it here once a real
-## Zebu entity + placement structure exist, alongside a data/animals/zebu.tres
-## AnimalData and a ShopUI._purchase() branch for it (see the chicken one).
-const TOOLS_FOOD_ANIMALS_RESOURCES: Array[ShopItemData] = [
-	preload("res://data/shop_items/tool_angady.tres"),
-	preload("res://data/shop_items/tool_watering_can_tin.tres"),
-	preload("res://data/shop_items/food_vary_sy_laoka.tres"),
-	preload("res://data/shop_items/food_vary_amin_anana.tres"),
-	preload("res://data/shop_items/animal_chicken.tres"),
-	preload("res://data/shop_items/egg.tres"),
-]
+## of ItemCards, and a CartPanel. What's on sale comes from ItemDatabase
+## (seeds synthesized from the real CropData registry, the rest hand-authored
+## ShopItemData resources) - see ItemDatabase.SHOP_ITEMS for the catalog.
 
 const ItemCardScene := preload("res://ui/shop/item_card.tscn")
 
@@ -37,6 +20,7 @@ const CLOSED_SCALE := Vector2(0.9, 0.9)
 
 var _shop_controller: ShopController
 var _simulation: FarmSimulation
+var _item_db: ItemDatabase
 var _catalog: Dictionary = {} # ShopItemData.Category -> Array[ShopItemData]
 var _selected_category: ShopItemData.Category = ShopItemData.Category.SEEDS
 var _open_tween: Tween
@@ -59,9 +43,10 @@ func _ready() -> void:
 func _on_shop_requested(_shop_data = null) -> void:
 	open()
 	
-func setup(shop_controller: ShopController, simulation: FarmSimulation) -> void:
+func setup(shop_controller: ShopController, simulation: FarmSimulation, item_db: ItemDatabase) -> void:
 	_shop_controller = shop_controller
 	_simulation = simulation
+	_item_db = item_db
 
 	_build_catalog()
 	_setup_category_buttons()
@@ -80,17 +65,7 @@ func setup(shop_controller: ShopController, simulation: FarmSimulation) -> void:
 	scale = CLOSED_SCALE
 
 func _build_catalog() -> void:
-	_catalog = {
-		ShopItemData.Category.SEEDS: [],
-		ShopItemData.Category.TOOLS: [],
-		ShopItemData.Category.FOOD: [],
-		ShopItemData.Category.ANIMALS: [],
-	}
-	for crop_id in _simulation.get_all_crop_ids():
-		var crop_data: CropData = _simulation.get_crop_data(crop_id)
-		_catalog[ShopItemData.Category.SEEDS].append(ShopItemData.from_crop_data(crop_data))
-	for shop_item in TOOLS_FOOD_ANIMALS_RESOURCES:
-		_catalog[shop_item.category].append(shop_item)
+	_catalog = _item_db.get_shop_catalog()
 
 ## The 4 CategoryButton children are placed directly in ShopUI.tscn (fixed
 ## set of categories). This just wires them into one radio group and starts
@@ -163,14 +138,21 @@ func _purchase(item: ShopItemData, quantity: int) -> void:
 		_shop_controller.buy_item(item.id, item.price, quantity)
 
 func _on_money_changed(money: int) -> void:
-	money_label.text = "Argent: %s" % Currency.format(money)
+	money_label.text = tr("Argent : %s") % Currency.format(money)
+
+## Cards and the money line are built from translated texts - rebuild them
+## after a language switch (static scene texts re-translate on their own).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _simulation != null:
+		_on_money_changed(_simulation.state.money)
+		_rebuild_item_grid()
 
 ## Crop unlock_day gates can flip while the shop happens to be open; cheapest
 ## correct fix is to just re-lock/unlock the currently visible grid.
 func _on_day_changed(_day: int) -> void:
 	_rebuild_item_grid()
 
-## Keeps "Tu as: N" and the Sell button's enabled state live while the shop
+## Keeps "Tu as : N" and the Sell button's enabled state live while the shop
 ## is open (e.g. selling one egg should immediately grey out Sell at 0 left).
 func _on_inventory_changed(_item_id: String, _amount: int) -> void:
 	_rebuild_item_grid()

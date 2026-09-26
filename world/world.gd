@@ -36,6 +36,7 @@ const ANIMAL_RESOURCES: Array[AnimalData] = [
 @onready var pause_menu: PauseMenu = $UI/PauseMenu
 
 var simulation: FarmSimulation
+var item_db: ItemDatabase
 
 func _ready() -> void:
 	var crop_registry := {}
@@ -47,6 +48,7 @@ func _ready() -> void:
 		animal_registry[animal_data.species] = animal_data
 
 	simulation = FarmSimulation.new(GRID_WIDTH, GRID_HEIGHT, crop_registry, animal_registry)
+	item_db = ItemDatabase.new(crop_registry, animal_registry)
 	simulation.state.add_inventory("corn_seed", 3)
 
 	world_manager.setup(simulation, player, zone_container)
@@ -54,8 +56,8 @@ func _ready() -> void:
 	farming_controller.setup(simulation, player, world_manager)
 	shop_controller.setup(simulation, farm_land_manager)
 	hud.setup(simulation, player, farming_controller)
-	shop_ui.setup(shop_controller, simulation)
-	inventory_ui.setup(simulation, shop_ui)
+	shop_ui.setup(shop_controller, simulation, item_db)
+	inventory_ui.setup(simulation, shop_ui, item_db)
 	pause_menu.setup(shop_ui, inventory_ui)
 	animal_manager.setup(simulation, world_manager)
 	save_controller.setup(simulation, world_manager, player)

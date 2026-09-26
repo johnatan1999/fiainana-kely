@@ -44,6 +44,10 @@ func _check(condition: bool, description: String) -> void:
 ## instead of an absolute value, so it passes regardless of what's already
 ## in that save.
 func _run_flow() -> void:
+	# The GameSettings autoload applies the player's saved language (user://
+	# settings.cfg) at startup - pin French, the source language the text
+	# checks below are written against, so results never depend on it.
+	TranslationServer.set_locale("fr")
 	var world_manager = _world.get_node("Gameplay/WorldManager")
 	var animal_manager = _world.get_node("Gameplay/AnimalManager")
 	var simulation = _world.simulation

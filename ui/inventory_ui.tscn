@@ -78,24 +78,13 @@ grow_vertical = 2
 texture = SubResource("AtlasTexture_book")
 
 [node name="TitleLabel" type="Label" parent="Book"]
+theme_type_variation = &"BookTitle"
 layout_mode = 0
 offset_left = 64.0
 offset_top = 30.0
 offset_right = 285.0
 offset_bottom = 64.0
-theme_override_colors/font_color = Color(0.29, 0.18, 0.1, 1)
-theme_override_font_sizes/font_size = 26
 text = "Inventaire"
-
-[node name="SubtitleLabel" type="Label" parent="Book"]
-layout_mode = 0
-offset_left = 66.0
-offset_top = 62.0
-offset_right = 285.0
-offset_bottom = 82.0
-theme_override_colors/font_color = Color(0.45, 0.32, 0.2, 1)
-theme_override_font_sizes/font_size = 14
-text = "Fitaovana"
 
 [node name="CategoryList" type="VBoxContainer" parent="Book"]
 unique_name_in_owner = true
@@ -143,14 +132,13 @@ theme_override_constants/v_separation = 6
 columns = 4
 
 [node name="EmptyLabel" type="Label" parent="Book"]
+theme_type_variation = &"BookSubtitle"
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 303.0
 offset_top = 262.0
 offset_right = 622.0
 offset_bottom = 322.0
-theme_override_colors/font_color = Color(0.45, 0.32, 0.2, 1)
-theme_override_font_sizes/font_size = 15
 text = "Rien dans cette catégorie
 pour l'instant."
 horizontal_alignment = 1
@@ -165,35 +153,32 @@ offset_right = 871.0
 offset_bottom = 400.0
 
 [node name="MoneyLabel" type="Label" parent="Book"]
+theme_type_variation = &"BookStrong"
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 656.0
 offset_top = 404.0
 offset_right = 871.0
 offset_bottom = 426.0
-theme_override_colors/font_color = Color(0.29, 0.18, 0.1, 1)
-theme_override_font_sizes/font_size = 15
 text = "Argent : 0 Ar"
 horizontal_alignment = 1
 
 [node name="CloseHint" type="Label" parent="Book"]
+theme_type_variation = &"BookHint"
 layout_mode = 0
 offset_left = 656.0
 offset_top = 426.0
 offset_right = 871.0
 offset_bottom = 446.0
-theme_override_colors/font_color = Color(0.45, 0.32, 0.2, 0.8)
-theme_override_font_sizes/font_size = 12
 text = "I / Échap : fermer"
 horizontal_alignment = 1
 
 [node name="NavHint" type="Label" parent="Book"]
+theme_type_variation = &"BookHint"
 layout_mode = 0
 offset_left = 292.0
 offset_top = 438.0
 offset_right = 638.0
 offset_bottom = 456.0
-theme_override_colors/font_color = Color(0.45, 0.32, 0.2, 0.8)
-theme_override_font_sizes/font_size = 12
 text = "Tab : catégorie  ·  Flèches : objet"
 horizontal_alignment = 1

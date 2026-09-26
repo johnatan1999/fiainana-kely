@@ -28,6 +28,14 @@ func _ready() -> void:
 	checkout_button.pressed.connect(_on_checkout_pressed)
 	_refresh_totals()
 
+## Row and total texts are translated when built - redo them on a language
+## switch so a cart kept across it doesn't stay in the old language.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		for item_id in _entries:
+			_update_row_label(item_id)
+		_refresh_totals()
+
 func add_item(item: ShopItemData, quantity: int) -> void:
 	if _entries.has(item.id):
 		_entries[item.id].quantity += quantity
@@ -75,7 +83,7 @@ func _create_row(item_id: String) -> void:
 func _update_row_label(item_id: String) -> void:
 	var entry: CartEntry = _entries[item_id]
 	var label: Label = _row_labels[item_id]
-	label.text = "%s x%d — %s" % [entry.item.display_name, entry.quantity, Currency.format(entry.item.price * entry.quantity)]
+	label.text = "%s x%d — %s" % [entry.item.get_display_name(), entry.quantity, Currency.format(entry.item.price * entry.quantity)]
 
 func _on_remove_pressed(item_id: String) -> void:
 	if not _entries.has(item_id):
@@ -90,7 +98,7 @@ func _on_remove_pressed(item_id: String) -> void:
 func _refresh_totals() -> void:
 	empty_label.visible = _entries.is_empty()
 	checkout_button.disabled = _entries.is_empty()
-	total_label.text = "Total: %s" % Currency.format(get_total())
+	total_label.text = tr("Total : %s") % Currency.format(get_total())
 	cart_changed.emit(get_total())
 
 func _on_checkout_pressed() -> void:

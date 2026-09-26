@@ -30,7 +30,10 @@ func _ready() -> void:
 	set_selected(false, false)
 
 func set_count(count: int) -> void:
-	count_label.text = "%d objet%s" % [count, "s" if count > 1 else ""] if count > 0 else "vide"
+	if count == 0:
+		count_label.text = tr("vide")
+	else:
+		count_label.text = (tr("%d objets") if count > 1 else tr("%d objet")) % count
 
 func set_selected(selected: bool, animate := true) -> void:
 	var target_x := SELECTED_OFFSET if selected else 0.0

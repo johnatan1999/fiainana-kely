@@ -109,12 +109,14 @@ func _migrate_to_v2(data: Dictionary) -> Dictionary:
 	return data
 
 ## v2 -> v3: items of crops removed from the game (turnip, cut in 9aacc4a)
-## are dropped from the inventory and refunded at their last shipped price
-## (turnip.tres sell_price / seed_price at the time), so the player never
-## just loses what they owned. Hardcoded snapshot, same reason as v1.
+## are dropped from the inventory and refunded, so the player never just
+## loses what they owned. Turnip was cut before the currency change
+## (a3068a9), which multiplied every price by exactly 100 - so its last
+## shipped prices (sell 30, seed 10) are converted the same way.
+## Hardcoded snapshot, same reason as v1.
 const _V3_REMOVED_ITEM_REFUNDS := {
-	"turnip": 30,
-	"turnip_seed": 10,
+	"turnip": 30 * 100,
+	"turnip_seed": 10 * 100,
 }
 func _migrate_to_v3(data: Dictionary) -> Dictionary:
 	var inventory = data.get("inventory")

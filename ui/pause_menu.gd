@@ -6,6 +6,7 @@ signal quit_requested
 
 @onready var continue_button: Button = $Panel/VBoxContainer/ContinueButton
 @onready var save_button: Button = $Panel/VBoxContainer/SaveButton
+@onready var language_button: Button = $Panel/VBoxContainer/LanguageButton
 @onready var quit_button: Button = $Panel/VBoxContainer/QuitButton
 
 var _shop_ui: ShopUI
@@ -24,11 +25,27 @@ func _ready() -> void:
 		_close()
 	)
 
+	# Cycles Français -> Malagasy -> English; saved right away by GameSettings.
+	language_button.pressed.connect(func():
+		AudioManager.play_click_menu_sfx()
+		GameSettings.cycle_locale()
+	)
+	_refresh_language_button()
+
 	quit_button.pressed.connect(func():
 		AudioManager.play_click_menu_sfx()
 		quit_requested.emit()
 	)
 	visible = false
+
+## The language name itself is never translated (see GameSettings.LOCALE_NAMES),
+## only the "Langue : %s" template around it.
+func _refresh_language_button() -> void:
+	language_button.text = tr("Langue : %s") % GameSettings.get_locale_name()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready():
+		_refresh_language_button()
 
 func setup(shop_ui: ShopUI, inventory_ui: InventoryUI) -> void:
 	_shop_ui = shop_ui

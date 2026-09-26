@@ -10,9 +10,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -90.0
-offset_top = -80.0
+offset_top = -98.0
 offset_right = 90.0
-offset_bottom = 80.0
+offset_bottom = 98.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_pause")
@@ -45,6 +45,11 @@ text = "Continuer"
 layout_mode = 2
 focus_mode = 0
 text = "Sauvegarder"
+
+[node name="LanguageButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+focus_mode = 0
+text = "Langue : Français"
 
 [node name="QuitButton" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2

@@ -11,20 +11,12 @@ const POP_SCALE := Vector2(0.9, 0.9)
 const POP_TIME := 0.08
 const MAX_QUANTITY := 99
 
-const CATEGORY_PLACEHOLDER_COLORS := {
-	ShopItemData.Category.SEEDS: Color(0.45, 0.65, 0.25),
-	ShopItemData.Category.TOOLS: Color(0.55, 0.5, 0.45),
-	ShopItemData.Category.FOOD: Color(0.75, 0.5, 0.2),
-	ShopItemData.Category.ANIMALS: Color(0.6, 0.4, 0.25),
-}
-
 signal add_requested(item: ShopItemData, quantity: int)
 signal sell_requested(item: ShopItemData, quantity: int)
 
 @onready var icon_rect: TextureRect = %IconRect
 @onready var icon_placeholder: ColorRect = %IconPlaceholder
 @onready var name_label: Label = %NameLabel
-@onready var malagasy_label: Label = %MalagasyLabel
 @onready var description_label: Label = %DescriptionLabel
 @onready var price_label: Label = %PriceLabel
 @onready var minus_button: Button = %MinusButton
@@ -50,16 +42,15 @@ func _ready() -> void:
 
 ## locked = true when the item's unlock_day hasn't been reached yet: shown,
 ## greyed out, and non-interactive rather than hidden, so the player knows
-## it exists and can plan for it. owned_count drives the "Tu as: N" label and
+## it exists and can plan for it. owned_count drives the "Tu as : N" label and
 ## whether the Sell button is enabled.
 func setup(item: ShopItemData, locked: bool = false, owned_count: int = 0) -> void:
 	_item = item
 	_quantity = 1
 
-	name_label.text = item.display_name
-	malagasy_label.text = item.malagasy_name
-	description_label.text = item.description
-	owned_label.text = "Tu as: %d" % owned_count
+	name_label.text = item.get_display_name()
+	description_label.text = item.get_description()
+	owned_label.text = tr("Tu as : %d") % owned_count
 
 	if item.icon:
 		icon_rect.texture = item.icon
@@ -68,7 +59,7 @@ func setup(item: ShopItemData, locked: bool = false, owned_count: int = 0) -> vo
 	else:
 		icon_rect.visible = false
 		icon_placeholder.visible = true
-		icon_placeholder.color = CATEGORY_PLACEHOLDER_COLORS.get(item.category, Color.GRAY)
+		icon_placeholder.color = ShopItemData.CATEGORY_COLORS.get(item.category, Color.GRAY)
 
 	# price <= 0 marks a sell-only entry (e.g. eggs): hide the buy controls
 	# entirely instead of showing a misleading "Acheter" for 0 $.
@@ -79,7 +70,7 @@ func setup(item: ShopItemData, locked: bool = false, owned_count: int = 0) -> vo
 	add_button.visible = buyable
 
 	sell_button.visible = item.sell_price > 0
-	sell_button.text = "Vendre 1 (%s)" % Currency.format(item.sell_price)
+	sell_button.text = tr("Vendre 1 (%s)") % Currency.format(item.sell_price)
 	sell_button.disabled = owned_count <= 0
 
 	_refresh_quantity_label()
@@ -90,7 +81,7 @@ func _set_locked(locked: bool) -> void:
 	minus_button.disabled = locked
 	plus_button.disabled = locked
 	add_button.disabled = locked
-	add_button.text = "Verrouillé" if locked else "Ajouter"
+	add_button.text = tr("Verrouillé") if locked else tr("Ajouter")
 
 func _refresh_quantity_label() -> void:
 	quantity_label.text = str(_quantity)

@@ -38,14 +38,28 @@ func setup(zone_manager: FarmLandManager) -> void:
 func _build_option_buttons() -> void:
 	for option in PATCH_OPTIONS:
 		var button := Button.new()
-		button.text = "%s — %s" % [option["label"], Currency.format(option["price"])]
 		button.focus_mode = Control.FOCUS_NONE
 		button.pressed.connect(_on_patch_pressed.bind(option))
 		option_buttons_container.add_child(button)
 		_option_buttons.append(button)
+	_refresh_option_texts()
+
+## PATCH_OPTIONS labels are translation keys (French source texts).
+func _refresh_option_texts() -> void:
+	for i in _option_buttons.size():
+		var option: Dictionary = PATCH_OPTIONS[i]
+		_option_buttons[i].text = "%s — %s" % [tr(option["label"]), Currency.format(option["price"])]
+
+## Button/label texts are built from translated text - redo them after a
+## language switch.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _farm_land_manager != null:
+		_refresh_world_label()
+		_refresh_progress_label()
+		_refresh_option_texts()
 
 func _refresh_world_label() -> void:
-	world_label.text = "Zone d'expansion : %d/%d (E)" % [
+	world_label.text = tr("Zone d'expansion : %d/%d (E)") % [
 		_farm_land_manager.get_progressive_unlocked_count(), _farm_land_manager.get_progressive_capacity(),
 	]
 
@@ -64,7 +78,7 @@ func _open_dialog() -> void:
 	AudioManager.play_click_menu_sfx()
 
 func _refresh_progress_label() -> void:
-	progress_label.text = "Zone d'expansion : %d / %d parcelles" % [
+	progress_label.text = tr("Zone d'expansion : %d / %d parcelles") % [
 		_farm_land_manager.get_progressive_unlocked_count(), _farm_land_manager.get_progressive_capacity(),
 	]
 
@@ -81,13 +95,14 @@ func _close_dialog() -> void:
 
 func _on_patch_pressed(option: Dictionary) -> void:
 	if _farm_land_manager.buy_progressive_patch(option["size"], option["price"]):
-		status_label.text = "%d parcelle(s) débloquée(s) !" % option["size"]
+		var size: int = option["size"]
+		status_label.text = (tr("%d parcelles débloquées !") if size > 1 else tr("%d parcelle débloquée !")) % size
 		AudioManager.play_coop_build_sfx()
 		_play_unlock_animation()
 		_refresh_progress_label()
 		_refresh_option_buttons()
 	else:
-		status_label.text = "Fonds insuffisants ou capacité atteinte !"
+		status_label.text = tr("Fonds insuffisants ou capacité atteinte !")
 		AudioManager.play_click_menu_sfx()
 
 func _play_unlock_animation() -> void:

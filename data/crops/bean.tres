@@ -7,6 +7,7 @@ script = ExtResource("1_bean")
 id = "bean"
 display_name = "Haricot"
 malagasy_name = "Tsaramaso"
+seed_display_name = "Graine de haricot"
 category = 1
 tier = 2
 seed_price = 1000

@@ -65,6 +65,7 @@ texture = ExtResource("2_cell")
 expand_mode = 1
 
 [node name="QuantityLabel" type="Label" parent="."]
+theme_type_variation = &"SlotQuantity"
 unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 3
@@ -78,10 +79,6 @@ offset_right = -11.0
 offset_bottom = -10.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_colors/font_color = Color(1, 0.97, 0.88, 1)
-theme_override_colors/font_outline_color = Color(0.25, 0.13, 0.05, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 15
 text = "0"
 horizontal_alignment = 2
 vertical_alignment = 2

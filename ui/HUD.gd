@@ -39,6 +39,12 @@ func setup(simulation: FarmSimulation, player: PlayerController, farming_control
 
 	_refresh_all()
 
+## Every label here is built from a translated template plus live values, so
+## a language switch (pause menu) needs a full redraw.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and _simulation != null:
+		_refresh_all()
+
 func _refresh_all() -> void:
 	_on_day_changed(_simulation.state.day)
 	_on_money_changed(_simulation.state.money)
@@ -46,11 +52,11 @@ func _refresh_all() -> void:
 	_on_tool_changed(_player.current_tool)
 
 func _on_day_changed(day: int) -> void:
-	day_label.text = "Jour %d" % day
-	season_label.text = "Saison: %s" % SEASON_NAMES.get(_simulation.state.clock.get_season(), "?")
+	day_label.text = tr("Jour %d") % day
+	season_label.text = tr("Saison : %s") % tr(SEASON_NAMES.get(_simulation.state.clock.get_season(), "?"))
 
 func _on_money_changed(money: int) -> void:
-	money_label.text = "Argent: %s" % Currency.format(money)
+	money_label.text = tr("Argent : %s") % Currency.format(money)
 
 func _on_inventory_changed(item_id: String, _amount: int) -> void:
 	if item_id == _selected_crop_id or item_id == _selected_crop_id + "_seed":
@@ -62,11 +68,11 @@ func _on_crop_selected(crop_id: String) -> void:
 
 func _refresh_crop_labels() -> void:
 	var crop_data := _simulation.get_crop_data(_selected_crop_id)
-	var display_name := crop_data.display_name if crop_data else _selected_crop_id
+	var display_name := tr(crop_data.display_name) if crop_data else _selected_crop_id
 	var seed_count := _simulation.state.get_inventory_count(_selected_crop_id + "_seed")
 	var crop_count := _simulation.state.get_inventory_count(_selected_crop_id)
-	seeds_label.text = "Graines (%s): %d" % [display_name, seed_count]
-	crops_label.text = "Récolte (%s): %d" % [display_name, crop_count]
+	seeds_label.text = tr("Graines (%s) : %d") % [display_name, seed_count]
+	crops_label.text = tr("Récolte (%s) : %d") % [display_name, crop_count]
 
 func _on_tool_changed(tool: PlayerController.Tool) -> void:
-	tool_label.text = "Outil: %s" % TOOL_NAMES.get(tool, "?")
+	tool_label.text = tr("Outil : %s") % tr(TOOL_NAMES.get(tool, "?"))

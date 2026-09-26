@@ -19,7 +19,7 @@ theme_override_constants/separation = 6
 
 [node name="TitleLabel" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-text = "Panier — Sobika"
+text = "Panier"
 horizontal_alignment = 1
 
 [node name="CartScroll" type="ScrollContainer" parent="Margin/VBox"]
