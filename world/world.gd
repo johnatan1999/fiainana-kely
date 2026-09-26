@@ -33,6 +33,7 @@ const ANIMAL_RESOURCES: Array[AnimalData] = [
 @onready var hotbar: Hotbar = $Gameplay/Hotbar
 @onready var hud: HUD = $UI/HUD
 @onready var hotbar_ui: HotbarUI = $UI/HotbarUI
+@onready var action_prompt: ActionPrompt = $UI/ActionPrompt
 @onready var shop_ui: ShopUI = $UI/ShopUI
 @onready var inventory_ui: InventoryUI = $UI/InventoryUI
 @onready var pause_menu: PauseMenu = $UI/PauseMenu
@@ -60,6 +61,7 @@ func _ready() -> void:
 	shop_controller.setup(simulation, farm_land_manager)
 	hud.setup(simulation)
 	hotbar_ui.setup(hotbar, item_db)
+	action_prompt.setup(farming_controller)
 	shop_ui.setup(shop_controller, simulation, item_db)
 	inventory_ui.setup(simulation, shop_ui, item_db)
 	pause_menu.setup(shop_ui, inventory_ui)

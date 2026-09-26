@@ -20,6 +20,13 @@ const APPROACH_MAX_DURATION := 0.5
 ## No action possible on the targeted plot with what the player holds.
 const NO_ACTION := -1
 
+## What the two buttons would do on the plot in front, for on-screen button
+## prompts: `use_tool` is the "use_item" action as a PlayerController.Tool
+## (or NO_ACTION), `can_harvest` whether "interact" would harvest. `anchor` is
+## the top-center of that plot in world coordinates. Only emitted on change;
+## NO_ACTION + false means "nothing to prompt".
+signal target_actions_changed(anchor: Vector2, use_tool: int, can_harvest: bool)
+
 var simulation: FarmSimulation
 var player: PlayerController
 var hotbar: Hotbar
@@ -27,6 +34,8 @@ var farm_view: FarmView # null while the player is outside the farm zone
 ## Set by _perform() for HARVEST, consumed by
 ## _on_action_animation_finished() - -1 means no harvest is pending.
 var _pending_harvest_plot_id := -1
+## Last state sent through target_actions_changed, to only emit on change.
+var _last_prompt := []
 
 func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_world_manager: WorldManager, p_hotbar: Hotbar) -> void:
 	simulation = p_simulation
@@ -45,11 +54,25 @@ func set_farm_view(p_farm_view: FarmView) -> void:
 ## white when the held item can act, a hand when "interact" would harvest,
 ## red when neither button would do anything.
 func _process(_delta: float) -> void:
-	if farm_view:
-		var plot_id := _get_target_plot_id()
-		var can_use := plot_id != -1 and _item_action_for(plot_id) != NO_ACTION
-		var can_harvest := plot_id != -1 and simulation.can_harvest(plot_id)
-		farm_view.show_highlight_for_plot(plot_id, can_use, can_harvest)
+	if farm_view == null:
+		_publish_prompt(Vector2.ZERO, NO_ACTION, false)
+		return
+	var plot_id := _get_target_plot_id()
+	var use_tool := _item_action_for(plot_id) if plot_id != -1 else NO_ACTION
+	var can_harvest := plot_id != -1 and simulation.can_harvest(plot_id)
+	farm_view.show_highlight_for_plot(plot_id, use_tool != NO_ACTION, can_harvest)
+	var anchor := Vector2.ZERO
+	if plot_id != -1:
+		var rect := farm_view.get_plot_global_rect(plot_id)
+		anchor = Vector2(rect.get_center().x, rect.position.y)
+	_publish_prompt(anchor, use_tool, can_harvest)
+
+func _publish_prompt(anchor: Vector2, use_tool: int, can_harvest: bool) -> void:
+	var state := [anchor, use_tool, can_harvest]
+	if state == _last_prompt:
+		return
+	_last_prompt = state
+	target_actions_changed.emit(anchor, use_tool, can_harvest)
 
 ## The plot in the cell right in front of the player (see
 ## FarmView.get_plot_id_in_front_of), or -1.

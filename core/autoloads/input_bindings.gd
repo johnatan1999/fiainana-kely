@@ -12,7 +12,35 @@ extends Node
 ## positional layout (Xbox names): A = bottom face button, X = left face
 ## button, LEFT/RIGHT_SHOULDER = L/R on a Nintendo Switch pad.
 
+## Fired when the player switches between keyboard/mouse and a gamepad, so
+## on-screen button prompts can swap their labels.
+signal device_changed(using_gamepad: bool)
+
 const HOTBAR_SIZE := 8
+## Stick movement below this doesn't count as "using the gamepad" (drift).
+const STICK_DEADZONE := 0.5
+
+## Face-button labels per pad family, indexed by Godot's positional buttons.
+const PAD_LABELS := {
+	"xbox": {JOY_BUTTON_A: "A", JOY_BUTTON_B: "B", JOY_BUTTON_X: "X", JOY_BUTTON_Y: "Y"},
+	"nintendo": {JOY_BUTTON_A: "B", JOY_BUTTON_B: "A", JOY_BUTTON_X: "Y", JOY_BUTTON_Y: "X"},
+	"playstation": {JOY_BUTTON_A: "✕", JOY_BUTTON_B: "○", JOY_BUTTON_X: "□", JOY_BUTTON_Y: "△"},
+}
+const SHOULDER_LABELS := {
+	"xbox": {JOY_BUTTON_LEFT_SHOULDER: "LB", JOY_BUTTON_RIGHT_SHOULDER: "RB"},
+	"nintendo": {JOY_BUTTON_LEFT_SHOULDER: "L", JOY_BUTTON_RIGHT_SHOULDER: "R"},
+	"playstation": {JOY_BUTTON_LEFT_SHOULDER: "L1", JOY_BUTTON_RIGHT_SHOULDER: "R1"},
+}
+## Keyboard keys whose engine name isn't what the player reads on the key -
+## translation keys (French source), see localization/translations.csv.
+const KEY_NAMES := {
+	KEY_SPACE: "Espace",
+	KEY_TAB: "Tab",
+	KEY_ESCAPE: "Échap",
+}
+
+var using_gamepad := false
+var _gamepad_device := 0
 
 func _ready() -> void:
 	# Two-button farming, like Stardew: "use_item" acts with what the player
@@ -39,6 +67,54 @@ func _ready() -> void:
 	# Physical keys, so the number row works on AZERTY too (no Shift needed).
 	for i in HOTBAR_SIZE:
 		_ensure_action("hotbar_%d" % (i + 1), [_key(KEY_1 + i)])
+
+## Tracks the last device the player touched. Never consumes the event.
+func _input(event: InputEvent) -> void:
+	var gamepad: bool
+	if event is InputEventJoypadButton:
+		gamepad = true
+	elif event is InputEventJoypadMotion:
+		if absf(event.axis_value) < STICK_DEADZONE:
+			return
+		gamepad = true
+	elif event is InputEventKey or event is InputEventMouseButton:
+		gamepad = false
+	else:
+		return # mouse motion alone doesn't switch prompts back
+	if gamepad:
+		_gamepad_device = event.device
+	if gamepad != using_gamepad:
+		using_gamepad = gamepad
+		device_changed.emit(using_gamepad)
+
+## Player-facing label of the button bound to `action` on the device in use
+## - "E", "Espace", "A", "✕"... - read from the Input Map, so it follows any
+## rebinding. Empty if nothing on that device is bound to it.
+func get_button_label(action: StringName) -> String:
+	for event in InputMap.action_get_events(action):
+		if using_gamepad and event is InputEventJoypadButton:
+			var family := _pad_family()
+			if PAD_LABELS[family].has(event.button_index):
+				return PAD_LABELS[family][event.button_index]
+			if SHOULDER_LABELS[family].has(event.button_index):
+				return SHOULDER_LABELS[family][event.button_index]
+			return str(event.button_index)
+		if not using_gamepad and event is InputEventKey:
+			var physical: Key = event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode
+			if KEY_NAMES.has(physical):
+				return tr(KEY_NAMES[physical])
+			# What's printed on the player's own keyboard (AZERTY, QWERTY...).
+			return OS.get_keycode_string(DisplayServer.keyboard_get_keycode_from_physical(physical))
+	return ""
+
+## Which label set matches the connected pad, from its reported name.
+func _pad_family() -> String:
+	var name := Input.get_joy_name(_gamepad_device).to_lower()
+	if name.contains("nintendo") or name.contains("switch") or name.contains("joy-con") or name.contains("pro controller"):
+		return "nintendo"
+	if name.contains("playstation") or name.contains("dualsense") or name.contains("dualshock") or name.contains("ps4") or name.contains("ps5") or name.contains("sony"):
+		return "playstation"
+	return "xbox"
 
 func _ensure_action(action: StringName, events: Array[InputEvent]) -> void:
 	if InputMap.has_action(action):

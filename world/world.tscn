@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://fdjfwhhhgssy"]
+[gd_scene load_steps=16 format=3 uid="uid://fdjfwhhhgssy"]
 
 [ext_resource type="Script" path="res://world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://bf1stuuqjofir" path="res://entities/player/player.tscn" id="2_player"]
@@ -14,6 +14,7 @@
 [ext_resource type="Script" path="res://systems/farm/farm_land_manager.gd" id="12_zonemanager"]
 [ext_resource type="Script" path="res://systems/hotbar/hotbar.gd" id="13_hotbar"]
 [ext_resource type="PackedScene" path="res://ui/hotbar/hotbar_ui.tscn" id="14_hotbarui"]
+[ext_resource type="PackedScene" path="res://ui/prompts/action_prompt.tscn" id="15_prompt"]
 
 [node name="World" type="Node2D"]
 y_sort_enabled = true
@@ -53,6 +54,8 @@ offset_right = 204.0
 offset_bottom = 184.0
 
 [node name="HotbarUI" parent="UI" instance=ExtResource("14_hotbarui")]
+
+[node name="ActionPrompt" parent="UI" instance=ExtResource("15_prompt")]
 
 [node name="ShopUI" parent="UI" instance=ExtResource("8_shopui")]
 layout_mode = 3
