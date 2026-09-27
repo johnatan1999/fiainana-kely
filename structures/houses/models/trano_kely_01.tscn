@@ -13,7 +13,7 @@ size = Vector2(192, 96)
 size = Vector2(38, 49)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_porch"]
-size = Vector2(79, 66)
+size = Vector2(79, 80)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_threshold"]
 size = Vector2(39, 20)
@@ -53,7 +53,7 @@ position = Vector2(287, -31.5)
 shape = SubResource("RectangleShape2D_wall_right")
 
 [node name="WallBehindPorch" type="CollisionShape2D" parent="Walls"]
-position = Vector2(249.5, -71)
+position = Vector2(249.5, -62)
 shape = SubResource("RectangleShape2D_wall_porch")
 
 [node name="EnterHouse" type="Area2D" parent="."]

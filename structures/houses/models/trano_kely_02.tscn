@@ -1,77 +1,76 @@
-[gd_scene load_steps=11 format=3 uid="uid://xycao8wn8a4p"]
+[gd_scene load_steps=11 format=3 uid="uid://c5y5kwfe6g5qh"]
 
-[ext_resource type="Script" path="res://structures/houses/house.gd" id="1_house"]
-[ext_resource type="Texture2D" uid="uid://bd4uqijcec174" path="res://assets/sprites/houses/trano_be_01/body.png" id="2_xfcsi"]
-[ext_resource type="Texture2D" uid="uid://qs3tpg6apgiw" path="res://assets/sprites/houses/trano_gasy_01/door_open.png" id="3_door"]
-[ext_resource type="Script" path="res://components/zone_transition.gd" id="4_transition"]
-[ext_resource type="AudioStream" uid="uid://v644po0aqtbb" path="res://assets/audio/SFX/Audio_SFX_Door_Cracking.wav" id="5_door_sfx"]
+[ext_resource type="Script" path="res://structures/houses/house.gd" id="1_kvydk"]
+[ext_resource type="Texture2D" uid="uid://cghnxo2e4u3q7" path="res://assets/sprites/houses/trano_kely_02/body.png" id="2_sh6a7"]
+[ext_resource type="Texture2D" uid="uid://qs3tpg6apgiw" path="res://assets/sprites/houses/trano_gasy_01/door_open.png" id="3_4abm1"]
+[ext_resource type="Script" path="res://components/zone_transition.gd" id="4_banrt"]
+[ext_resource type="AudioStream" uid="uid://v644po0aqtbb" path="res://assets/audio/SFX/Audio_SFX_Door_Cracking.wav" id="5_o8fvf"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_left"]
-size = Vector2(171, 120)
+size = Vector2(133, 116)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_right"]
-size = Vector2(210, 120)
+size = Vector2(177, 117)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_porch"]
-size = Vector2(120, 72)
+size = Vector2(48, 75)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_threshold"]
 size = Vector2(39, 20)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_door_reach"]
-size = Vector2(160, 69)
+size = Vector2(61, 45)
 
-[node name="TranoGasy01" type="Node2D"]
+[node name="TranoKely01" type="Node2D"]
 y_sort_enabled = true
-script = ExtResource("1_house")
+script = ExtResource("1_kvydk")
 
 [node name="Visual" type="Node2D" parent="."]
 texture_filter = 4
 position = Vector2(0, -56)
 
 [node name="Body" type="Sprite2D" parent="Visual"]
-position = Vector2(0, -286)
+position = Vector2(0, -241)
 scale = Vector2(0.5, 0.5)
-texture = ExtResource("2_xfcsi")
+texture = ExtResource("2_sh6a7")
 centered = false
 
 [node name="DoorOpen" type="Sprite2D" parent="Visual"]
 modulate = Color(1, 1, 1, 0)
-position = Vector2(233, -61)
-scale = Vector2(0.457447, 0.493243)
-texture = ExtResource("3_door")
+position = Vector2(246, -74)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_4abm1")
 centered = false
 
 [node name="Walls" type="StaticBody2D" parent="."]
-visible = false
 
 [node name="WallLeft" type="CollisionShape2D" parent="Walls"]
-position = Vector2(106.5, -68)
+position = Vector2(84.5, -63)
 shape = SubResource("RectangleShape2D_wall_left")
 
 [node name="WallRight" type="CollisionShape2D" parent="Walls"]
-position = Vector2(418, -68)
+position = Vector2(287.5, -62.5)
 shape = SubResource("RectangleShape2D_wall_right")
 
 [node name="WallBehindPorch" type="CollisionShape2D" parent="Walls"]
-position = Vector2(253, -92)
+position = Vector2(175, -83.5)
 shape = SubResource("RectangleShape2D_wall_porch")
 
 [node name="EnterHouse" type="Area2D" parent="."]
-script = ExtResource("4_transition")
-transition_sound = ExtResource("5_door_sfx")
+script = ExtResource("4_banrt")
+transition_sound = ExtResource("5_o8fvf")
 transition_volume_db = -8.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EnterHouse"]
-position = Vector2(254.5, -58)
+position = Vector2(177, -52)
 shape = SubResource("RectangleShape2D_threshold")
 
 [node name="DoorReach" type="Area2D" parent="."]
 monitorable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DoorReach"]
-position = Vector2(253, -21.5)
+position = Vector2(174, -20)
 shape = SubResource("RectangleShape2D_door_reach")
 
 [node name="ExitSpawn" type="Marker2D" parent="."]
-position = Vector2(254, 15)
+position = Vector2(176, 21)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=15 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -7,6 +7,8 @@
 [ext_resource type="PackedScene" uid="uid://xycao8wn8a4p" path="res://structures/houses/models/trano_gasy_01.tscn" id="5_bvnba"]
 [ext_resource type="PackedScene" uid="uid://c5aeyv64qw26" path="res://structures/houses/models/trano_kely_01.tscn" id="5_wftrh"]
 [ext_resource type="PackedScene" uid="uid://41pmy102xlbk" path="res://structures/chicken_coop/chicken_coop.tscn" id="6_eobbd"]
+[ext_resource type="PackedScene" uid="uid://g1qr3qbmi5k1" path="res://structures/houses/models/trano_lava_01.tscn" id="7_ddh6d"]
+[ext_resource type="PackedScene" uid="uid://c5y5kwfe6g5qh" path="res://structures/houses/models/trano_kely_02.tscn" id="8_53hp2"]
 [ext_resource type="PackedScene" uid="uid://dgak5cew5n3hy" path="res://entities/animals/chicken/chicken.tscn" id="9_5wie0"]
 [ext_resource type="SpriteFrames" uid="uid://c8b1vmmb21c3e" path="res://data/rooster.tres" id="10_dyv0b"]
 [ext_resource type="PackedScene" path="res://structures/modular_farm_zone_sign.tscn" id="11_vq4vc"]
@@ -46,6 +48,12 @@ interior_spawn = "HouseSpawnEntry"
 
 [node name="TranoKely01" parent="HouseGroup" instance=ExtResource("5_wftrh")]
 position = Vector2(1749, 1002)
+
+[node name="TranoGasy01" parent="HouseGroup" instance=ExtResource("7_ddh6d")]
+position = Vector2(56, 1088)
+
+[node name="TranoKely02" parent="HouseGroup" instance=ExtResource("8_53hp2")]
+position = Vector2(1408, 1408)
 
 [node name="ChickenCoopBuilding" parent="." instance=ExtResource("6_eobbd")]
 position = Vector2(384, 278)
