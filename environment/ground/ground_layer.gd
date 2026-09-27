@@ -1,18 +1,16 @@
 class_name GroundLayer
 extends TileMapLayer
 
-## Fills itself with the grass ground tile across a rectangular area, once, at
-## scene load - the base outdoor ground beneath the farm plots, buildings and
-## paths. Replaces the old flat-color "Floor" ColorRect placeholder.
+## The zone's ground, painted by hand in the editor - and its size: the
+## painted area is the zone's playable area. ZoneRoot fits the camera limits
+## and the invisible edge walls to it, so growing a village is just painting
+## more ground.
 
-const TILE_SOURCE_ID := 0
-const TILE_GRASS := Vector2i(0, 3)
-
-## Size of the area to fill, in tiles - set to cover the zone's playable rect.
-@export var grid_width: int = 30
-@export var grid_height: int = 34
-
-#func _ready() -> void:
-	#for y in range(grid_height):
-		#for x in range(grid_width):
-			#set_cell(Vector2i(x, y), TILE_SOURCE_ID, TILE_GRASS)
+## Bounding box of the painted tiles, in global coordinates.
+func get_world_rect() -> Rect2:
+	var used := get_used_rect()
+	if used.size == Vector2i.ZERO:
+		return Rect2()
+	var tile := Vector2(tile_set.tile_size)
+	var local := Rect2(Vector2(used.position) * tile, Vector2(used.size) * tile)
+	return global_transform * local

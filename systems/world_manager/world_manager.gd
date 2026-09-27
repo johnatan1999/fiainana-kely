@@ -140,17 +140,18 @@ func change_zone(zone_id: String, spawn_name: String = "SpawnDefault") -> void:
 	_apply_zone_bgm(zone)
 	_wire_zone_content(zone)
 
-## The zone's camera limits, except along an axis where the zone is smaller
-## than the view (a small room): there the limits are widened evenly around
-## it, so the room sits still, centered, on the (black) clear color - instead
-## of hugging one edge or sliding around as the player walks.
+## The zone's bounds (ZoneRoot.get_camera_bounds()), except along an axis
+## where the zone is smaller than the view (a small room): there the limits
+## are widened evenly around it, so the room sits still, centered, on the
+## (black) clear color - instead of hugging one edge or sliding around as
+## the player walks.
 func _apply_camera_limits() -> void:
 	if current_zone == null:
 		return
-	var zone := current_zone
+	var bounds := current_zone.get_camera_bounds()
 	var view := get_viewport().get_visible_rect().size / player.camera.zoom
-	var x := _fit_axis(zone.camera_limit_left, zone.camera_limit_right, view.x)
-	var y := _fit_axis(zone.camera_limit_top, zone.camera_limit_bottom, view.y)
+	var x := _fit_axis(floori(bounds.position.x), ceili(bounds.end.x), view.x)
+	var y := _fit_axis(floori(bounds.position.y), ceili(bounds.end.y), view.y)
 	player.camera.limit_left = x.x
 	player.camera.limit_right = x.y
 	player.camera.limit_top = y.x

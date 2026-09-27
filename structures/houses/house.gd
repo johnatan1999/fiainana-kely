@@ -65,6 +65,13 @@ func _ready() -> void:
 	$EnterHouse.set(&"return_point", $ExitSpawn)
 	_apply_destination()
 
+## Right after the scene is instantiated, before it enters the tree: a house
+## whose settings were all left at their defaults (a decorative house) gets
+## its door locked too - the setters above only run for values that are set.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_SCENE_INSTANTIATED:
+		_apply_destination()
+
 func is_enterable() -> bool:
 	return not locked and interior_zone != ""
 
