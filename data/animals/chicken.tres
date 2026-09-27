@@ -1,6 +1,11 @@
-[gd_resource type="Resource" script_class="AnimalData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="AnimalData" load_steps=4 format=3 uid="uid://batv0dmku5weo"]
 
 [ext_resource type="Script" path="res://core/data/animal_data.gd" id="1_chicken"]
+[ext_resource type="Texture2D" uid="uid://e67dbnhae0am" path="res://assets/sprites/icons.png" id="1_yiei8"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tqn6t"]
+atlas = ExtResource("1_yiei8")
+region = Rect2(0, 384, 64, 64)
 
 [resource]
 script = ExtResource("1_chicken")
@@ -15,3 +20,4 @@ hunger_decay_per_day = 25.0
 thirst_decay_per_day = 30.0
 breeding_days_required = 5
 breeding_chance = 0.25
+icon = SubResource("AtlasTexture_tqn6t")
