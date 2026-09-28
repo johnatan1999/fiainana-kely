@@ -2,86 +2,87 @@ class_name FarmLandManager
 extends Node
 
 ## Bridges on-site land purchase panels (FarmZoneSign/ModularFarmZoneSign) to
-## FarmSimulation's dynamic tile grid (FarmSimulation.add_tile/expand_grid).
-## Land is no longer sold through the Shop - the player buys it by walking
-## up to a physical panel in the world.
+## FarmSimulation's dynamic tile grid (FarmSimulation.add_tile). Land is
+## bought by walking up to a physical panel in the world.
 ##
-## Two purchase modes:
-## - Predefined zones (macro progression): a fixed rectangle of tiles,
-##   unlocked all at once for a flat price. The player picks WHICH zone to
-##   buy, never where its tiles land - that's baked into FarmZoneData.
-## - The progressive zone (micro progression): one large dedicated area the
-##   player expands into a few tiles at a time (1 / 3x3 / 5x5 patches). Tiles
-##   always unlock in a fixed left-to-right, row-by-row order - the player
-##   never chooses the location, only how many tiles to buy.
+## The land itself is designed in the zone scenes, as FarmField nodes: each
+## field's painted cells are its plots, and its `kind` says how they're
+## obtained. Fields register here when their zone loads:
+## - STARTER: owned from the start.
+## - ZONE (macro progression): all cells unlocked at once for the flat price
+##   of its FarmZoneData. The player picks WHICH zone to buy, never where
+##   its tiles land.
+## - PROGRESSIVE (micro progression): cells unlocked a few at a time (1 / 3x3
+##   / 5x5 patches), always in a fixed left-to-right, row-by-row order - the
+##   player only picks how many.
 ##
-## Never touches Node2D directly except the small visual markers/signs it's
-## handed via set_zone_markers() - all economy rules go through
-## FarmSimulation.
+## Registration also restores owned land: cells of an owned field that have
+## no plot yet (a field repainted bigger since the save) are added. All
+## economy rules go through FarmSimulation.
 
 signal zone_unlocked(zone_id: String)
 signal progressive_tiles_changed(unlocked_count: int)
 
-## load(), not preload(): preloading a custom-scripted Resource from inside
-## another class's top-level const can race that script's own compilation
-## during a fresh project scan, silently loading it with its exports unset.
-## Deferring to a runtime load() in setup() sidesteps that entirely.
-const PREDEFINED_ZONE_PATHS := [
-	"res://data/zones/zone_east.tres",
-	"res://data/zones/zone_south.tres",
-]
-
-## Rectangle (in the same grid space as FarmSimulation plot positions) set
-## aside for progressive, tile-by-tile expansion.
-const PROGRESSIVE_ORIGIN := Vector2i(0, 9)
-const PROGRESSIVE_WIDTH := 8
-const PROGRESSIVE_HEIGHT := 6
-
 var simulation: FarmSimulation
 
-var _predefined_zones: Array = [] # Array[FarmZoneData], loaded in setup()
-var _zone_by_id: Dictionary = {} # zone_id: String -> FarmZoneData
-var _progressive_sequence: Array = [] # Array[Vector2i], fixed unlock order
-
-## zone_id -> {rect: ColorRect, label: Label} for the currently loaded zone
-## (Exterior). Rebuilt by set_zone_markers() each time that zone loads.
-var _predefined_markers: Dictionary = {}
-var _progressive_marker_rect: ColorRect
-var _progressive_marker_label: Label
+var _zones: Dictionary = {} # zone_id: String -> {"data": FarmZoneData, "cells": Array[Vector2i]}
+var _progressive_sequence: Array[Vector2i] = [] # fixed unlock order
 
 ## p_world_manager is null in unit tests that construct FarmLandManager
 ## standalone (it's never added to a tree there, so there's no WorldManager
-## to listen to) - buy_zone()/buy_progressive_patch() work fine without it,
-## only the zone_loaded/zone_unloading wiring below is skipped.
+## to listen to) - they call register_field() themselves.
 func setup(p_simulation: FarmSimulation, p_world_manager: WorldManager = null) -> void:
 	simulation = p_simulation
-	for path in PREDEFINED_ZONE_PATHS:
-		var zone_data = load(path)
-		_predefined_zones.append(zone_data)
-		_zone_by_id[zone_data.id] = zone_data
-	_progressive_sequence = _build_progressive_sequence()
 	if p_world_manager:
 		p_world_manager.zone_loaded.connect(_on_zone_loaded)
-		p_world_manager.zone_unloading.connect(_on_zone_unloading)
 
 func _on_zone_loaded(zone: ZoneRoot) -> void:
-	set_zone_markers(zone)
+	register_fields_in(zone)
+	_setup_signs(zone)
 
-func _on_zone_unloading(_zone: ZoneRoot) -> void:
-	set_zone_markers(null)
+## Registers every FarmField anywhere under `zone`.
+func register_fields_in(zone: Node) -> void:
+	for field in _find_descendants(zone, func(node: Node) -> bool: return node is FarmField):
+		register_field(field.kind, field.get_cells(), field.zone_data)
 
-func _build_progressive_sequence() -> Array:
-	var sequence: Array = []
-	for y in range(PROGRESSIVE_HEIGHT):
-		for x in range(PROGRESSIVE_WIDTH):
-			sequence.append(PROGRESSIVE_ORIGIN + Vector2i(x, y))
-	return sequence
+## `cells` are in the simulation's grid space. Registering the same field
+## again (its zone reloaded) just refreshes it.
+func register_field(kind: FarmField.Kind, cells: Array[Vector2i], zone_data: FarmZoneData = null) -> void:
+	match kind:
+		FarmField.Kind.STARTER:
+			_add_tiles(cells)
+		FarmField.Kind.ZONE:
+			if zone_data == null:
+				push_error("FarmLandManager: a ZONE FarmField has no zone_data - it can't be bought")
+				return
+			_zones[zone_data.id] = {"data": zone_data, "cells": cells.duplicate()}
+			if is_zone_unlocked(zone_data.id):
+				_add_tiles(cells)
+		FarmField.Kind.PROGRESSIVE:
+			# One progressive zone per game for now: its unlock count is a
+			# single number in FarmState.
+			_progressive_sequence = _row_by_row(cells)
+			_add_tiles(_progressive_sequence.slice(0, get_progressive_unlocked_count()))
 
-func get_predefined_zones() -> Array:
-	return _predefined_zones
+func _row_by_row(cells: Array[Vector2i]) -> Array[Vector2i]:
+	var sorted := cells.duplicate()
+	sorted.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
+	return sorted
+
+func _add_tiles(cells: Array) -> void:
+	for cell: Vector2i in cells:
+		simulation.add_tile(cell.x, cell.y) # no-op if a plot is already there
 
 func get_zone_data(zone_id: String) -> FarmZoneData:
-	return _zone_by_id.get(zone_id)
+	return _zones.get(zone_id, {}).get("data")
+
+func get_zone_cells(zone_id: String) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	cells.assign(_zones.get(zone_id, {}).get("cells", []))
+	return cells
+
+func get_zone_tile_count(zone_id: String) -> int:
+	return get_zone_cells(zone_id).size()
 
 func is_zone_unlocked(zone_id: String) -> bool:
 	return simulation.state.unlocked_zone_ids.has(zone_id)
@@ -93,7 +94,7 @@ func get_progressive_capacity() -> int:
 	return _progressive_sequence.size()
 
 ## Unlocks every tile of a predefined zone at once. Fails if it's already
-## owned, unknown, or unaffordable.
+## owned, unknown (its field isn't registered), or unaffordable.
 func buy_zone(zone_id: String) -> bool:
 	if is_zone_unlocked(zone_id):
 		return false
@@ -104,11 +105,8 @@ func buy_zone(zone_id: String) -> bool:
 		return false
 
 	simulation.state.unlocked_zone_ids[zone_id] = true
-	for coordinates: Vector2i in zone_data.get_tile_coordinates():
-		simulation.add_tile(coordinates.x, coordinates.y)
-
+	_add_tiles(get_zone_cells(zone_id))
 	zone_unlocked.emit(zone_id)
-	_refresh_predefined_marker(zone_id)
 	return true
 
 ## Unlocks the next `patch_size` tiles of the progressive zone, in their
@@ -125,108 +123,23 @@ func buy_progressive_patch(patch_size: int, total_price: int) -> bool:
 	if not simulation.spend_money(total_price):
 		return false
 
-	for i in range(patch_size):
-		var coordinates: Vector2i = _progressive_sequence[unlocked + i]
-		simulation.add_tile(coordinates.x, coordinates.y)
+	_add_tiles(_progressive_sequence.slice(unlocked, unlocked + patch_size))
 	simulation.state.progressive_tiles_unlocked = unlocked + patch_size
-
 	progressive_tiles_changed.emit(simulation.state.progressive_tiles_unlocked)
-	_refresh_progressive_marker()
 	return true
 
-## Called by WorldManager whenever a zone containing land markers/signs
-## (Exterior) is loaded/unloaded, exactly like AnimalManager.set_farm_area().
-## Markers and signs are both optional - a zone without them still works,
-## it just shows/offers nothing.
-func set_zone_markers(zone: Node) -> void:
-	_predefined_markers.clear()
-	_progressive_marker_rect = null
-	_progressive_marker_label = null
-	if zone == null:
-		return
-
-	for zone_data in _predefined_zones:
-		var marker_root: Node = zone.get_node_or_null("ZoneMarker_%s" % zone_data.id)
-		if marker_root == null:
-			continue
-		var rect: ColorRect = marker_root.get_node_or_null("Rect")
-		var label: Label = marker_root.get_node_or_null("Label")
-		if rect and label:
-			_predefined_markers[zone_data.id] = {"rect": rect, "label": label}
-
-	var progressive_root: Node = zone.get_node_or_null("ProgressiveZoneMarker")
-	if progressive_root:
-		_progressive_marker_rect = progressive_root.get_node_or_null("Rect")
-		_progressive_marker_label = progressive_root.get_node_or_null("Label")
-
-	for zone_id in _predefined_markers:
-		_refresh_predefined_marker(zone_id)
-	_refresh_progressive_marker()
-
-	_setup_signs(zone)
-
-## Purchases now happen exclusively through on-site FarmZoneSign/
-## ModularFarmZoneSign panels (no more Shop integration) - wire up whichever
-## of them exist in the freshly-loaded zone.
+## Purchases happen exclusively through on-site FarmZoneSign/
+## ModularFarmZoneSign panels - wire up whichever of them exist in the
+## freshly-loaded zone, wherever they sit in its tree (a sign can live
+## inside the FarmField it sells).
 func _setup_signs(zone: Node) -> void:
-	for child in zone.get_children():
-		if child is FarmZoneSign:
-			child.setup(self)
-		elif child is ModularFarmZoneSign:
-			child.setup(self)
+	for panel in _find_descendants(zone, func(node: Node) -> bool: return node is FarmZoneSign or node is ModularFarmZoneSign):
+		panel.setup(self)
 
-func _refresh_predefined_marker(zone_id: String) -> void:
-	var marker: Dictionary = _predefined_markers.get(zone_id, {})
-	if marker.is_empty():
-		return
-	var zone_data := get_zone_data(zone_id)
-	var unlocked := is_zone_unlocked(zone_id)
-	var rect: ColorRect = marker["rect"]
-	var label: Label = marker["label"]
-
-	if unlocked:
-		# Fully transparent once owned - the real farm tiles show through
-		# instead of a permanent color wash. _play_unlock_flash still gives a
-		# brief pulse of feedback at the moment of purchase, fading back to
-		# this same transparent color.
-		rect.color = Color(0.45, 0.65, 0.25, 0.0)
-		_play_unlock_flash(rect)
-	else:
-		rect.color = Color(0.3, 0.3, 0.3, 0.55)
-	label.text = _predefined_marker_text(zone_data, unlocked)
-
-func _predefined_marker_text(zone_data: FarmZoneData, unlocked: bool) -> String:
-	if unlocked:
-		return tr("%s (débloqué)") % tr(zone_data.display_name)
-	return tr("%s — %s (voir le panneau)") % [tr(zone_data.display_name), Currency.format(zone_data.price)]
-
-func _progressive_marker_text() -> String:
-	return tr("Zone d'expansion : %d / %d parcelles (voir le panneau)") % [
-		get_progressive_unlocked_count(), get_progressive_capacity(),
-	]
-
-func _refresh_progressive_marker() -> void:
-	if _progressive_marker_label == null:
-		return
-	_progressive_marker_label.text = _progressive_marker_text()
-	if _progressive_marker_rect:
-		_play_unlock_flash(_progressive_marker_rect)
-
-## Marker labels are built from translated text - redo them after a language
-## switch, without replaying the unlock flash.
-func _notification(what: int) -> void:
-	if what != NOTIFICATION_TRANSLATION_CHANGED:
-		return
-	for zone_id in _predefined_markers:
-		var marker: Dictionary = _predefined_markers[zone_id]
-		if is_instance_valid(marker["label"]):
-			marker["label"].text = _predefined_marker_text(get_zone_data(zone_id), is_zone_unlocked(zone_id))
-	if is_instance_valid(_progressive_marker_label):
-		_progressive_marker_label.text = _progressive_marker_text()
-
-## Small visual "feedback" pulse on the marker rect when land is unlocked.
-func _play_unlock_flash(rect: ColorRect) -> void:
-	var base_color := rect.color
-	var tween := create_tween()
-	tween.tween_property(rect, "color", Color(1.0, 1.0, 0.6, 0.7), 0.15)
-	tween.tween_property(rect, "color", base_color, 0.3)
+func _find_descendants(root: Node, matches: Callable) -> Array[Node]:
+	var found: Array[Node] = []
+	for child in root.get_children():
+		if matches.call(child):
+			found.append(child)
+		found.append_array(_find_descendants(child, matches))
+	return found

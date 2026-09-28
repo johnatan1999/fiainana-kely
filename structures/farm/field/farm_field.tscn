@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://structures/farm/field/farm_field.gd" id="1_field"]
+[ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_tileset"]
+
+[node name="FarmField" type="TileMapLayer"]
+tile_set = ExtResource("2_tileset")
+script = ExtResource("1_field")

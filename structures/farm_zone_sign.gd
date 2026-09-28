@@ -61,7 +61,7 @@ func _open_dialog() -> void:
 
 	name_label.text = tr(zone_data.display_name)
 	price_label.text = Currency.format(zone_data.price)
-	description_label.text = tr("%s (%d parcelles)") % [tr(zone_data.description), zone_data.get_tile_count()]
+	description_label.text = tr("%s (%d parcelles)") % [tr(zone_data.description), _farm_land_manager.get_zone_tile_count(zone_id)]
 
 	var already_unlocked := _farm_land_manager.is_zone_unlocked(zone_id)
 	status_label.text = tr("Déjà débloqué.") if already_unlocked else ""

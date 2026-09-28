@@ -16,7 +16,7 @@ scale = Vector2(1.2, 1.2)
 texture = ExtResource("2_cbuar")
 offset = Vector2(0, -32)
 region_enabled = true
-region_rect = Rect2(0, 256, 64, 64)
+region_rect = Rect2(64, 256, 64, 64)
 
 [node name="Sprout" type="Node2D" parent="."]
 visible = false

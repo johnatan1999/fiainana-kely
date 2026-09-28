@@ -1,8 +1,5 @@
 extends Node2D
 
-const GRID_WIDTH := 4
-const GRID_HEIGHT := 4
-
 const CROP_RESOURCES: Array[CropData] = [
 	preload("res://data/crops/corn.tres"),
 	preload("res://data/crops/cassava.tres"),
@@ -57,7 +54,9 @@ func _ready() -> void:
 	for animal_data in ANIMAL_RESOURCES:
 		animal_registry[animal_data.species] = animal_data
 
-	simulation = FarmSimulation.new(GRID_WIDTH, GRID_HEIGHT, crop_registry, animal_registry)
+	# No plots yet: the land is painted in the zone scenes as FarmFields
+	# (starter field included), registered by FarmLandManager as they load.
+	simulation = FarmSimulation.new(0, 0, crop_registry, animal_registry)
 	item_db = ItemDatabase.new(crop_registry, animal_registry)
 	for item_id in STARTER_INVENTORY:
 		simulation.state.add_inventory(item_id, STARTER_INVENTORY[item_id])

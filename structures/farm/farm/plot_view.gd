@@ -30,7 +30,7 @@ var _visual_scene: PackedScene
 ## crop_data is null when the plot is empty, or briefly while a crop_id
 ## isn't in the registry (shouldn't happen, but PlotView stays defensive
 ## rather than crash the whole farm view over one bad plot). Soil itself is
-## drawn by FarmView's shared TileMapLayer, not here.
+## drawn by the FarmField the plot belongs to, not here.
 func update_view(plot: PlotState, crop_data: CropData) -> void:
 	if plot.crop == null:
 		crop_placeholder.visible = false

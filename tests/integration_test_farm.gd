@@ -96,39 +96,44 @@ func _run_flow() -> void:
 
 	print("\n%s" % ("SOME CHECKS FAILED" if root.has_meta("failed") else "all integration checks passed"))
 
-## Verifies FarmLandManager actually found the ZoneMarker_*/ProgressiveZoneMarker
-## nodes authored in Exterior.tscn - a typo'd node name would pass every
-## unit test (which never touches real scene nodes) but silently show no
-## feedback in game, so it needs its own dedicated check here.
+## Verifies FarmLandManager actually registered the FarmFields painted in
+## the village scene - a field missing its zone_data or painted empty would
+## pass every unit test (which register fields by hand) but leave land
+## unbuyable in game, so it needs its own dedicated check here.
 func _run_zone_manager_checks() -> void:
 	var shop_controller = _world.get_node("Gameplay/ShopController")
 	var zone_manager = _world.get_node("Gameplay/FarmLandManager")
 	var simulation = _world.simulation
+	var farm_view = _world.get_node("ZoneContainer").get_child(0).get_node("FarmView")
 
 	_check(
-		zone_manager._predefined_markers.size() == 2,
-		"Exterior.tscn's two ZoneMarker_* nodes are both found by FarmLandManager.set_zone_markers()"
+		farm_view.get_fields().size() == 4,
+		"the village's four FarmFields are found by FarmView"
 	)
 	_check(
-		zone_manager._progressive_marker_label != null,
-		"Exterior.tscn's ProgressiveZoneMarker is found by FarmLandManager.set_zone_markers()"
+		zone_manager.get_zone_tile_count("zone_east") == 24
+		and zone_manager.get_zone_tile_count("zone_south") == 48
+		and zone_manager.get_progressive_capacity() == 48,
+		"FarmLandManager registered both zones and the progressive field with their painted cells"
+	)
+	_check(
+		simulation.get_plot_id_at(0, 0) != -1 and simulation.get_plot_id_at(3, 3) != -1,
+		"the starter field's cells are owned plots"
 	)
 
 	simulation.state.money = 100000
 	simulation.state.unlocked_zone_ids.erase("zone_east")
 	var ok = shop_controller.buy_zone("zone_east")
-	var marker: Dictionary = zone_manager._predefined_markers.get("zone_east", {})
 	_check(
-		ok and not marker.is_empty() and marker["label"].text.contains("débloqué"),
-		"buying a zone through ShopController updates its world marker label"
+		ok and simulation.get_plot_id_at(8, 9) != -1 and simulation.get_plot_id_at(11, 14) != -1,
+		"buying a zone through ShopController turns its field's cells into plots"
 	)
 
 	var progressive_before = zone_manager.get_progressive_unlocked_count()
 	shop_controller.buy_progressive_patch(1, 15)
 	_check(
-		zone_manager.get_progressive_unlocked_count() == progressive_before + 1
-		and zone_manager._progressive_marker_label.text.contains(str(progressive_before + 1)),
-		"buying a progressive patch through ShopController updates the expansion zone's marker label"
+		zone_manager.get_progressive_unlocked_count() == progressive_before + 1,
+		"buying a progressive patch through ShopController advances the expansion zone"
 	)
 
 	_run_zone_sign_checks(zone_manager, simulation)

@@ -9,5 +9,3 @@ display_name = "Terrain du Sud"
 malagasy_name = "Tany Atsimo"
 description = "Une grande étendue au sud, idéale pour agrandir l'exploitation."
 price = 70000
-origin = Vector2i(0, 15)
-size = Vector2i(12, 4)

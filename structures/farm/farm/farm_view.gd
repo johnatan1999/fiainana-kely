@@ -8,12 +8,6 @@ const TARGET_REACH := 0.75
 const PlotViewScene := preload("res://structures/farm/farm/plot_view.tscn")
 const PlotHighlightScript := preload("res://structures/farm/farm/plot_highlight.gd")
 
-## Atlas coordinates in farm_tileset.tres (source id 0) for each soil state.
-const TILE_SOURCE_ID := 0
-const TILE_NORMAL := Vector2i(2, 2) # untilled ground, sparse grass
-const TILE_TILLED_DRY := Vector2i(0, 0) # tilled, not watered today
-const TILE_TILLED_WET := Vector2i(1, 1) # tilled and watered today
-
 var grid_width: int
 var grid_height: int
 
@@ -21,20 +15,25 @@ var _plot_views: Dictionary = {} # plot_id: int -> PlotView
 var _plot_positions: Dictionary = {} # plot_id: int -> Vector2i
 var _simulation: FarmSimulation
 var _highlight: PlotHighlight
-
-@onready var soil_layer: TileMapLayer = $SoilLayer
+## The FarmField children, which draw the soil - FarmView itself only owns
+## the crops (PlotViews), the target highlight and the grid math.
+var _fields: Array[FarmField] = []
+var _soil_dirty := false
 
 ## y-sorted so the player walks behind a crop's upper part and in front of
-## its base (PlotViews sort by their bottom-center origin). The soil is pushed
-## below everything via z_index since it isn't part of that ordering.
+## its base (PlotViews sort by their bottom-center origin). The fields' soil
+## sits below everything via their z_index since it isn't part of that ordering.
 func _ready() -> void:
 	y_sort_enabled = true
-	soil_layer.z_index = -1
-	if soil_layer.tile_set == null:
-		push_error("FarmView: SoilLayer has no tile_set - check that farm_tileset.tres and its texture are imported")
-		return
-	if Vector2(soil_layer.tile_set.tile_size) != Vector2(CELL_SIZE, CELL_SIZE):
-		push_warning("FarmView.CELL_SIZE (%s) != tileset tile_size (%s) - soil and crops will be misaligned" % [CELL_SIZE, soil_layer.tile_set.tile_size])
+	for child in get_children():
+		if child is FarmField:
+			_fields.append(child)
+			var tile_set: TileSet = child.tile_set
+			if tile_set and Vector2(tile_set.tile_size) != Vector2(CELL_SIZE, CELL_SIZE):
+				push_warning("FarmView.CELL_SIZE (%s) != %s's tile_size (%s) - soil and crops will be misaligned" % [CELL_SIZE, child.name, tile_set.tile_size])
+
+func get_fields() -> Array[FarmField]:
+	return _fields
 
 func setup(simulation: FarmSimulation) -> void:
 	_simulation = simulation
@@ -45,6 +44,8 @@ func setup(simulation: FarmSimulation) -> void:
 	simulation.plot_added.connect(_on_plot_added)
 	simulation.plot_removed.connect(_on_plot_removed)
 	_create_highlight()
+	# Even with no plot at all, locked fields still need drawing.
+	_queue_soil_redraw()
 
 ## Built in code rather than as a .tscn node - see WorldManager's fade
 ## overlay for why (avoids scene-file edits getting clobbered by a
@@ -97,16 +98,36 @@ func _refresh_plot_view(plot_view: PlotView, plot_id: int) -> void:
 	var plot := _simulation.get_plot(plot_id)
 	var crop_data: CropData = _simulation.get_crop_data(plot.crop.crop_id) if plot.crop != null else null
 	plot_view.update_view(plot, crop_data)
-	soil_layer.set_cell(_plot_positions[plot_id], TILE_SOURCE_ID, _soil_tile_for(plot))
+	_queue_soil_redraw()
 
-## Single TileMapLayer shared by every plot - one draw call for the whole
-## farm's soil instead of a Soil node per PlotView.
-func _soil_tile_for(plot: PlotState) -> Vector2i:
-	if plot.watered:
-		return TILE_TILLED_WET
-	if plot.tilled:
-		return TILE_TILLED_DRY
-	return TILE_NORMAL
+## One plot's autotile depends on its 8 neighbours, so each field's soil is
+## repainted as a whole rather than cell by cell - batched to once per frame,
+## since a save load or a new day changes every plot in a row.
+func _queue_soil_redraw() -> void:
+	if _soil_dirty:
+		return
+	_soil_dirty = true
+	_redraw_soil.call_deferred()
+
+## A field cell with a plot is owned (bought); one without is still locked.
+func _redraw_soil() -> void:
+	_soil_dirty = false
+	if _simulation == null:
+		return
+	for field in _fields:
+		var owned := {}
+		var tilled: Array[Vector2i] = []
+		var wet: Array[Vector2i] = []
+		for cell in field.get_cells():
+			var plot := _simulation.get_plot(_simulation.get_plot_id_at(cell.x, cell.y))
+			if plot == null:
+				continue
+			owned[cell] = true
+			if plot.tilled or plot.watered:
+				tilled.append(cell)
+			if plot.watered:
+				wet.append(cell)
+		field.show_soil(owned, tilled, wet)
 
 ## Fired for grid expansion (expand_grid()/add_tile()) and for every plot
 ## restored by a save load - either way, a PlotView needs to be created.
@@ -120,9 +141,8 @@ func _on_plot_removed(plot_id: int) -> void:
 	if plot_view:
 		plot_view.queue_free()
 	_plot_views.erase(plot_id)
-	if _plot_positions.has(plot_id):
-		soil_layer.erase_cell(_plot_positions[plot_id])
-		_plot_positions.erase(plot_id)
+	_plot_positions.erase(plot_id)
+	_queue_soil_redraw()
 
 ## The plot the player at world_pos is facing, or -1 if there's no plot
 ## there (outside the grid, or a hole left by remove_tile()). Diagonals snap

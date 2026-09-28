@@ -1,10 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://dd2hvqpppgxdw"]
+[gd_scene load_steps=2 format=3 uid="uid://dd2hvqpppgxdw"]
 
 [ext_resource type="Script" path="res://structures/farm/farm/farm_view.gd" id="1_farmview"]
-[ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_tileset"]
 
 [node name="FarmView" type="Node2D"]
 script = ExtResource("1_farmview")
-
-[node name="SoilLayer" type="TileMapLayer" parent="."]
-tile_set = ExtResource("2_tileset")

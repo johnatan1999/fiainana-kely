@@ -26,11 +26,28 @@ func _make_sim_with_chicken(breeding_chance: float = 0.25) -> FarmSimulation:
 
 ## FarmLandManager extends Node but is never added to the tree in these tests -
 ## fine, since buy_zone()/buy_progressive_patch() never touch tree-dependent
-## APIs unless set_zone_markers() is called (it isn't here).
+## APIs. The village's FarmFields are registered by hand, at the cells
+## player_village.tscn paints them.
+const EAST_ORIGIN := Vector2i(8, 9)
+const EAST_SIZE := Vector2i(4, 6)
+const PROGRESSIVE_ORIGIN := Vector2i(0, 9)
+const PROGRESSIVE_SIZE := Vector2i(8, 6)
+
 func _make_farm_land_manager(simulation: FarmSimulation) -> FarmLandManager:
 	var farm_land_manager := FarmLandManager.new()
 	farm_land_manager.setup(simulation)
+	farm_land_manager.register_field(FarmField.Kind.ZONE, _rect_cells(EAST_ORIGIN, EAST_SIZE), load("res://data/zones/zone_east.tres"))
+	farm_land_manager.register_field(FarmField.Kind.PROGRESSIVE, _rect_cells(PROGRESSIVE_ORIGIN, PROGRESSIVE_SIZE))
 	return farm_land_manager
+
+## Listed column by column, so row-by-row ordering has to come from
+## FarmLandManager, not from the input order.
+func _rect_cells(origin: Vector2i, size: Vector2i) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for x in size.x:
+		for y in size.y:
+			cells.append(origin + Vector2i(x, y))
+	return cells
 
 func _check(condition: bool, description: String) -> void:
 	if condition:
@@ -90,6 +107,10 @@ func _run_all() -> void:
 	test_buy_progressive_patch_respects_capacity()
 	test_buy_progressive_patch_fails_without_enough_money()
 	test_zone_state_save_load_roundtrip()
+	test_starter_field_registration_adds_its_plots()
+	test_registering_an_owned_zone_restores_missing_plots()
+	test_registering_a_locked_zone_adds_nothing()
+	test_progressive_registration_restores_bought_cells_only()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -545,18 +566,17 @@ func test_buy_zone_unlocks_all_its_tiles() -> void:
 	var sim := _make_sim()
 	sim.state.money = 100000
 	var farm_land_manager := _make_farm_land_manager(sim)
-	var zone_data := farm_land_manager.get_zone_data("zone_east")
-
 	var ok := farm_land_manager.buy_zone("zone_east")
 
 	var all_present := true
-	for coordinates: Vector2i in zone_data.get_tile_coordinates():
+	for coordinates: Vector2i in farm_land_manager.get_zone_cells("zone_east"):
 		if sim.get_plot_id_at(coordinates.x, coordinates.y) == -1:
 			all_present = false
 			break
 	_check(
-		ok and all_present and farm_land_manager.is_zone_unlocked("zone_east"),
-		"buy_zone() unlocks every tile in the zone's rectangle"
+		ok and all_present and farm_land_manager.is_zone_unlocked("zone_east")
+		and farm_land_manager.get_zone_tile_count("zone_east") == EAST_SIZE.x * EAST_SIZE.y,
+		"buy_zone() unlocks every cell of the zone's field"
 	)
 
 func test_buy_zone_deducts_price() -> void:
@@ -606,7 +626,7 @@ func test_buy_progressive_patch_unlocks_next_tiles_in_order() -> void:
 
 	var ok := farm_land_manager.buy_progressive_patch(9, 110)
 
-	# PROGRESSIVE_WIDTH is 8, so the 9th tile (index 8) wraps into row y=10.
+	# The field is 8 wide, so the 9th tile (index 8) wraps into row y=10.
 	_check(
 		ok and farm_land_manager.get_progressive_unlocked_count() == 9
 		and sim.get_plot_id_at(7, 9) != -1
@@ -674,4 +694,50 @@ func test_zone_state_save_load_roundtrip() -> void:
 		and fresh_farm_land_manager.get_progressive_unlocked_count() == 9
 		and fresh_sim.get_plot_id_at(0, 9) != -1,
 		"zone unlock state and progressive tile count survive a save/load roundtrip"
+	)
+
+func test_starter_field_registration_adds_its_plots() -> void:
+	var sim := _make_sim()
+	var farm_land_manager := _make_farm_land_manager(sim)
+	var plots_before := sim.get_all_plot_ids().size()
+
+	farm_land_manager.register_field(FarmField.Kind.STARTER, _rect_cells(Vector2i(20, 20), Vector2i(2, 2)))
+
+	_check(
+		sim.get_all_plot_ids().size() == plots_before + 4 and sim.get_plot_id_at(21, 21) != -1,
+		"registering a STARTER field gives the player all its cells, no purchase needed"
+	)
+
+func test_registering_an_owned_zone_restores_missing_plots() -> void:
+	var sim := _make_sim()
+	sim.state.unlocked_zone_ids["zone_east"] = true # bought in a save, before the field grew
+
+	_make_farm_land_manager(sim)
+
+	_check(
+		sim.get_plot_id_at(EAST_ORIGIN.x, EAST_ORIGIN.y) != -1
+		and sim.get_plot_id_at(EAST_ORIGIN.x + EAST_SIZE.x - 1, EAST_ORIGIN.y + EAST_SIZE.y - 1) != -1,
+		"registering an already-bought zone adds any of its cells that have no plot yet"
+	)
+
+func test_registering_a_locked_zone_adds_nothing() -> void:
+	var sim := _make_sim()
+	var plots_before := sim.get_all_plot_ids().size()
+
+	_make_farm_land_manager(sim)
+
+	_check(
+		sim.get_all_plot_ids().size() == plots_before and sim.get_plot_id_at(EAST_ORIGIN.x, EAST_ORIGIN.y) == -1,
+		"registering zones that aren't bought yet creates no plot"
+	)
+
+func test_progressive_registration_restores_bought_cells_only() -> void:
+	var sim := _make_sim()
+	sim.state.progressive_tiles_unlocked = 3 # from a save
+
+	_make_farm_land_manager(sim)
+
+	_check(
+		sim.get_plot_id_at(2, 9) != -1 and sim.get_plot_id_at(3, 9) == -1,
+		"registering the progressive field restores exactly its first bought cells, row by row"
 	)
