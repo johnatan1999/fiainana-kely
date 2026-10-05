@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3]
+[gd_scene load_steps=33 format=3]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_zone"]
 [ext_resource type="Script" path="res://environment/ground/ground_layer.gd" id="2_ground"]
@@ -29,6 +29,7 @@
 [ext_resource type="PackedScene" path="res://entities/props/hay_sheaf.tscn" id="43_prop_hay_sheaf"]
 [ext_resource type="PackedScene" path="res://entities/props/thatched_hut.tscn" id="44_prop_thatched_hut"]
 [ext_resource type="PackedScene" path="res://entities/props/zebu_cart.tscn" id="45_prop_zebu_cart"]
+[ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ground"]
 texture = ExtResource("4_groundtex")
 texture_region_size = Vector2i(48, 48)
@@ -327,3 +328,18 @@ position = Vector2(488, 882)
 
 [node name="BotteRiz" parent="Props" instance=ExtResource("42_prop_hay_bundle")]
 position = Vector2(546, 900)
+
+[node name="AmbientLife" type="Node2D" parent="."]
+y_sort_enabled = true
+script = ExtResource("61_ambient")
+butterfly_count = 8
+ground_bird_count = 4
+
+[node name="Aigrettes" type="Node2D" parent="."]
+y_sort_enabled = true
+script = ExtResource("61_ambient")
+butterfly_count = 0
+ground_bird_count = 5
+bird_species = PackedStringArray("egret")
+area = Rect2(192, 240, 672, 528)
+flocks = false

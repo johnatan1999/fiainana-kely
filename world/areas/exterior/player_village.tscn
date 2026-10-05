@@ -1,4 +1,4 @@
-[gd_scene load_steps=47 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=49 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -42,6 +42,8 @@
 [ext_resource type="PackedScene" path="res://entities/props/water_jar.tscn" id="50_prop_water_jar"]
 [ext_resource type="PackedScene" path="res://entities/props/woodpile.tscn" id="51_prop_woodpile"]
 [ext_resource type="PackedScene" path="res://entities/props/zebu_cart.tscn" id="52_prop_zebu_cart"]
+[ext_resource type="PackedScene" path="res://entities/props/brick_shed.tscn" id="60_prop_brick_shed"]
+[ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jeqll"]
 texture = ExtResource("4_ibrhb")
 texture_region_size = Vector2i(48, 48)
@@ -626,6 +628,9 @@ position = Vector2(1762, 1524)
 [node name="MaisonSud_Jarres" parent="Props" instance=ExtResource("43_prop_clay_jars")]
 position = Vector2(1530, 1470)
 
+[node name="MaisonSud_Remise" parent="Props" instance=ExtResource("60_prop_brick_shed")]
+position = Vector2(1935, 1232)
+
 [node name="Poulailler_Foin" parent="Props" instance=ExtResource("45_prop_hay_pile")]
 position = Vector2(196, 642)
 
@@ -640,3 +645,9 @@ position = Vector2(1374, 792)
 
 [node name="Marche_PetitPanier" parent="Props" instance=ExtResource("41_prop_basket_small")]
 position = Vector2(1396, 806)
+
+[node name="AmbientLife" type="Node2D" parent="."]
+y_sort_enabled = true
+script = ExtResource("61_ambient")
+butterfly_count = 10
+ground_bird_count = 8
