@@ -31,6 +31,12 @@ const LOCKED_TINT := Color(0.55, 0.55, 0.55, 0.75)
 ## Used when the tileset has no wet terrain: tilled soil, darkened.
 const WET_TINT := Color(0.62, 0.5, 0.42)
 const EDITOR_OUTLINE_COLOR := Color(1.0, 0.85, 0.3, 0.9)
+const EDITOR_WATER_COLOR := Color(0.3, 0.55, 0.75, 0.35)
+## Paddy water drawn over the soil of a flooded field: tile (0, 0) of the
+## water tileset is shallow and walkable.
+const WATER_TILESET := preload("res://assets/tileset/water_tileset.tres")
+const PADDY_WATER_MATERIAL := preload("res://environment/water/paddy_water_material.tres")
+const PADDY_WATER_TILE := Vector2i(0, 0)
 
 @export var kind: Kind = Kind.ZONE:
 	set(value):
@@ -41,6 +47,13 @@ const EDITOR_OUTLINE_COLOR := Color(1.0, 0.85, 0.3, 0.9)
 @export var zone_data: FarmZoneData:
 	set(value):
 		zone_data = value
+		_editor_changed()
+## Rice paddy: its plots are always irrigated and only take paddy crops
+## (CropData.grows_in_paddy) - see PlotState.flooded. Drawn under shallow
+## water, walkable like any field.
+@export var flooded := false:
+	set(value):
+		flooded = value
 		_editor_changed()
 
 @export_group("Terrains")
@@ -56,6 +69,8 @@ var _cells_read := false
 var _locked_layer: TileMapLayer
 var _tilled_layer: TileMapLayer
 var _wet_layer: TileMapLayer
+var _water_layer: TileMapLayer # flooded only: water over the owned cells
+var _locked_water_layer: TileMapLayer # ...and over the locked ones, tinted
 var _arable_terrain := Vector2i(-1, -1) # (terrain_set, terrain)
 var _tilled_terrain := Vector2i(-1, -1)
 var _wet_terrain := Vector2i(-1, -1)
@@ -81,8 +96,13 @@ func get_cells() -> Array[Vector2i]:
 	_cells_read = true
 	return _cells
 
+## Where the field's cell (0, 0) is in the simulation's grid: its position
+## on the plot grid, plus its FarmView's grid_offset (each zone has its own
+## region of the shared grid).
 func get_grid_origin() -> Vector2i:
-	return Vector2i((position / CELL_SIZE).round())
+	var origin := Vector2i((position / CELL_SIZE).round())
+	var offset = get_parent().get("grid_offset") if get_parent() else null
+	return origin + offset if offset is Vector2i else origin
 
 ## Redraws the soil. `owned`: set (Vector2i -> true) of the cells that have a
 ## plot, i.e. were bought; every other cell of the field is locked fallow.
@@ -101,6 +121,9 @@ func show_soil(owned: Dictionary, tilled: Array[Vector2i], wet: Array[Vector2i])
 		_paint(_locked_layer, locked_local, _arable_terrain)
 	_paint(_tilled_layer, _to_local(tilled, origin), _tilled_terrain)
 	_paint(_wet_layer, _to_local(wet, origin), _wet_terrain)
+	if flooded:
+		_flood(_water_layer, owned_local)
+		_flood(_locked_water_layer, locked_local)
 
 func _create_runtime_layers() -> void:
 	_arable_terrain = _find_terrain(arable_terrain_name)
@@ -119,6 +142,15 @@ func _create_runtime_layers() -> void:
 	if _wet_terrain.x == -1:
 		_wet_terrain = _tilled_terrain
 		_wet_layer.modulate = WET_TINT
+	if flooded:
+		# Over all the soil above (children draw in tree order); crops are
+		# PlotViews, above the whole field.
+		_water_layer = _add_layer("WaterLayer")
+		_locked_water_layer = _add_layer("LockedWaterLayer")
+		_locked_water_layer.modulate = LOCKED_TINT
+		for layer in [_water_layer, _locked_water_layer]:
+			layer.tile_set = WATER_TILESET
+			layer.material = PADDY_WATER_MATERIAL
 
 func _add_layer(layer_name: String) -> TileMapLayer:
 	var layer := TileMapLayer.new()
@@ -133,6 +165,11 @@ func _paint(layer: TileMapLayer, cells: Array[Vector2i], terrain: Vector2i) -> v
 	layer.clear()
 	if terrain.x != -1 and not cells.is_empty():
 		layer.set_cells_terrain_connect(cells, terrain.x, terrain.y)
+
+func _flood(layer: TileMapLayer, cells: Array[Vector2i]) -> void:
+	layer.clear()
+	for cell in cells:
+		layer.set_cell(cell, 0, PADDY_WATER_TILE)
 
 func _to_local(cells: Array[Vector2i], origin: Vector2i) -> Array[Vector2i]:
 	var local: Array[Vector2i] = []
@@ -174,6 +211,9 @@ func _draw() -> void:
 	if used.size == Vector2i.ZERO:
 		return
 	var rect := Rect2(Vector2(used.position) * CELL_SIZE, Vector2(used.size) * CELL_SIZE)
+	if flooded:
+		for cell in get_used_cells():
+			draw_rect(Rect2(Vector2(cell) * CELL_SIZE, Vector2.ONE * CELL_SIZE), EDITOR_WATER_COLOR)
 	draw_rect(rect, EDITOR_OUTLINE_COLOR, false, 2.0)
 	var font := ThemeDB.fallback_font
 	draw_string(font, rect.position + Vector2(4, 16), _editor_title(), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, EDITOR_OUTLINE_COLOR)
@@ -186,7 +226,7 @@ func _editor_title() -> String:
 		Kind.PROGRESSIVE:
 			return "Zone progressive (%d)" % cell_count
 	var zone_id := zone_data.id if zone_data else "?"
-	return "Zone %s (%d)" % [zone_id, cell_count]
+	return "%s %s (%d)" % ["Rizière" if flooded else "Zone", zone_id, cell_count]
 
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings := PackedStringArray()

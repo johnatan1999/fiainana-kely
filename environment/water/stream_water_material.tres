@@ -1,0 +1,13 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://environment/water/water.gdshader" id="1_water"]
+
+[resource]
+shader = ExtResource("1_water")
+shader_parameter/shallow_color = Color(0.3, 0.55, 0.6, 0.92)
+shader_parameter/deep_color = Color(0.16, 0.36, 0.48, 0.96)
+shader_parameter/glint_color = Color(0.9, 0.97, 1, 0.7)
+shader_parameter/ripple_scale = 0.05
+shader_parameter/ripple_speed = 0.8
+shader_parameter/glint_amount = 0.6
+shader_parameter/flow = Vector2(28, 6)

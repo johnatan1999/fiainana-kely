@@ -39,6 +39,10 @@ enum WaterNeed { LOW, MEDIUM, HIGH }
 ## survive harvest instead of clearing the plot. Not yet consumed by FarmSimulation.
 @export var is_perennial: bool = false
 
+## Can be planted in flooded paddy plots (FarmField.flooded) - and paddies
+## take nothing else. Such crops still grow on dry land too (upland rice).
+@export var grows_in_paddy: bool = false
+
 ## Day (FarmState.day) from which this crop can be bought in the shop. 0 = always available.
 @export var unlock_day: int = 0
 

@@ -102,6 +102,19 @@ func remove_tile(x: int, y: int) -> bool:
 	plot_removed.emit(plot_id)
 	return true
 
+## Marks the plot at (x, y) as a paddy (or not) - see PlotState.flooded.
+## Set from the zone's FarmFields each time they register. Returns false if
+## there's no plot there.
+func set_tile_flooded(x: int, y: int, flooded: bool) -> bool:
+	var plot_id := state.get_plot_id_at(x, y)
+	var plot := get_plot(plot_id)
+	if plot == null:
+		return false
+	if plot.flooded != flooded:
+		plot.flooded = flooded
+		plot_changed.emit(plot_id)
+	return true
+
 ## Resets the plot at (x, y) to empty/untilled without removing it from the
 ## grid - for reorganizing without changing the grid's shape.
 func clear_tile(x: int, y: int) -> bool:
@@ -147,7 +160,10 @@ func can_plant(plot_id: int, crop_id: String) -> bool:
 	var plot := get_plot(plot_id)
 	if plot == null or not plot.tilled or plot.crop != null:
 		return false
-	return get_crop_data(crop_id) != null and state.get_inventory_count(crop_id + "_seed") > 0
+	var crop_data := get_crop_data(crop_id)
+	if crop_data == null or (plot.flooded and not crop_data.grows_in_paddy):
+		return false
+	return state.get_inventory_count(crop_id + "_seed") > 0
 
 func plant(plot_id: int, crop_id: String) -> bool:
 	if not can_plant(plot_id, crop_id):
@@ -161,9 +177,10 @@ func plant(plot_id: int, crop_id: String) -> bool:
 	plot_changed.emit(plot_id)
 	return true
 
+## A paddy is always irrigated: the watering can has nothing to do there.
 func can_water(plot_id: int) -> bool:
 	var plot := get_plot(plot_id)
-	return plot != null and plot.crop != null
+	return plot != null and plot.crop != null and not plot.flooded
 
 func water(plot_id: int) -> bool:
 	if not can_water(plot_id):
@@ -211,7 +228,7 @@ func advance_day() -> void:
 		var plot: PlotState = state.plots[plot_id]
 		if plot.crop != null:
 			plot.crop.days_total += 1
-			if plot.watered:
+			if plot.watered or plot.flooded:
 				plot.crop.days_watered += 1
 				plot.crop.age += 1
 		plot.watered = false

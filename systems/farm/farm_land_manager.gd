@@ -27,6 +27,9 @@ var simulation: FarmSimulation
 
 var _zones: Dictionary = {} # zone_id: String -> {"data": FarmZoneData, "cells": Array[Vector2i]}
 var _progressive_sequence: Array[Vector2i] = [] # fixed unlock order
+## Cells of paddy fields (FarmField.flooded): their plots are flagged flooded
+## whenever they're added - bought later included.
+var _flooded_cells: Dictionary = {} # Vector2i -> true
 
 ## p_world_manager is null in unit tests that construct FarmLandManager
 ## standalone (it's never added to a tree there, so there's no WorldManager
@@ -43,11 +46,18 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 ## Registers every FarmField anywhere under `zone`.
 func register_fields_in(zone: Node) -> void:
 	for field in _find_descendants(zone, func(node: Node) -> bool: return node is FarmField):
-		register_field(field.kind, field.get_cells(), field.zone_data)
+		register_field(field.kind, field.get_cells(), field.zone_data, field.flooded)
 
 ## `cells` are in the simulation's grid space. Registering the same field
-## again (its zone reloaded) just refreshes it.
-func register_field(kind: FarmField.Kind, cells: Array[Vector2i], zone_data: FarmZoneData = null) -> void:
+## again (its zone reloaded) just refreshes it - `flooded` included, so a
+## field turned into a paddy in the editor updates the plots already owned.
+func register_field(kind: FarmField.Kind, cells: Array[Vector2i], zone_data: FarmZoneData = null, flooded := false) -> void:
+	for cell in cells:
+		if flooded:
+			_flooded_cells[cell] = true
+		else:
+			_flooded_cells.erase(cell)
+		simulation.set_tile_flooded(cell.x, cell.y, flooded) # no-op until owned
 	match kind:
 		FarmField.Kind.STARTER:
 			_add_tiles(cells)
@@ -72,6 +82,8 @@ func _row_by_row(cells: Array[Vector2i]) -> Array[Vector2i]:
 func _add_tiles(cells: Array) -> void:
 	for cell: Vector2i in cells:
 		simulation.add_tile(cell.x, cell.y) # no-op if a plot is already there
+		if _flooded_cells.has(cell):
+			simulation.set_tile_flooded(cell.x, cell.y, true)
 
 func get_zone_data(zone_id: String) -> FarmZoneData:
 	return _zones.get(zone_id, {}).get("data")

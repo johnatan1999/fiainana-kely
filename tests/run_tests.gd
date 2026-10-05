@@ -128,6 +128,10 @@ func _run_all() -> void:
 	test_tree_fruit_rots_at_season_end_and_waits_for_next_season()
 	test_decorative_or_unknown_trees_are_not_registered()
 	test_tree_save_load_roundtrip()
+	test_paddy_plots_grow_without_watering()
+	test_paddy_only_takes_paddy_crops()
+	test_paddy_cannot_be_watered()
+	test_paddy_flag_set_on_purchase_and_saved()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -844,3 +848,58 @@ func test_tree_save_load_roundtrip() -> void:
 		and not tree.fruit_ready and tree.days_growing == 1,
 		"tree ripeness survives a save/load, and re-registering on zone load keeps it"
 	)
+
+## Rice (grows_in_paddy) and corn, on a 4x4 grid whose plot 0 is a paddy.
+func _make_sim_with_paddy() -> FarmSimulation:
+	var corn: CropData = load("res://data/crops/corn.tres")
+	var rice: CropData = load("res://data/crops/rice.tres")
+	var sim := FarmSimulation.new(4, 4, {"corn": corn, "rice": rice})
+	sim.set_tile_flooded(0, 0, true)
+	return sim
+
+func test_paddy_plots_grow_without_watering() -> void:
+	var sim := _make_sim_with_paddy()
+	sim.till(0)
+	sim.state.add_inventory("rice_seed", 1)
+	sim.plant(0, "rice")
+	sim.advance_day()
+	sim.advance_day()
+	var crop := sim.get_plot(0).crop
+	_check(crop.age == 2 and crop.days_watered == 2, "a paddy crop grows every day without the watering can")
+
+func test_paddy_only_takes_paddy_crops() -> void:
+	var sim := _make_sim_with_paddy()
+	sim.till(0)
+	sim.till(1)
+	sim.state.add_inventory("corn_seed", 1)
+	sim.state.add_inventory("rice_seed", 1)
+	_check(
+		not sim.can_plant(0, "corn") and sim.can_plant(0, "rice") and sim.can_plant(1, "rice") and sim.can_plant(1, "corn"),
+		"a paddy only takes rice; dry land takes rice (upland rice) and everything else"
+	)
+
+func test_paddy_cannot_be_watered() -> void:
+	var sim := _make_sim_with_paddy()
+	sim.till(0)
+	sim.state.add_inventory("rice_seed", 1)
+	sim.plant(0, "rice")
+	_check(not sim.can_water(0) and not sim.water(0), "the watering can does nothing on a paddy")
+
+func test_paddy_flag_set_on_purchase_and_saved() -> void:
+	var sim := _make_sim()
+	var farm_land_manager := FarmLandManager.new()
+	farm_land_manager.setup(sim)
+	var cells := _rect_cells(Vector2i(100, 5), Vector2i(2, 2))
+	farm_land_manager.register_field(FarmField.Kind.ZONE, cells, load("res://data/zones/riziere_haute.tres"), true)
+	sim.state.money = 1000000
+	farm_land_manager.buy_zone("riziere_haute")
+	var plot_id := sim.get_plot_id_at(100, 5)
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var fresh_sim := _make_sim()
+	fresh_sim.load_save_data(data)
+	_check(
+		sim.get_plot(plot_id).flooded and fresh_sim.get_plot(fresh_sim.get_plot_id_at(100, 5)).flooded
+		and not fresh_sim.get_plot(fresh_sim.get_plot_id_at(0, 0)).flooded,
+		"plots of a bought paddy field are flooded, and stay so after a save/load"
+	)
+	farm_land_manager.free()

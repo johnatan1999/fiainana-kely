@@ -4,6 +4,10 @@ extends RefCounted
 var tilled: bool = false
 var watered: bool = false
 var crop: CropState = null
+## Paddy plot (a FarmField with `flooded`): always irrigated - it never needs
+## watering - and only takes crops that grow in paddies (CropData.grows_in_paddy).
+## A property of the land, not of what's growing: reset() keeps it.
+var flooded: bool = false
 
 ## Vision only for now: meant to fall with monoculture and recover with
 ## rotation/fallow. Not yet consumed by FarmSimulation.

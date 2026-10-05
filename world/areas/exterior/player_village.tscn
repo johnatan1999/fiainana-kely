@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=33 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -27,6 +27,7 @@
 [ext_resource type="Material" path="res://environment/grass/tall_grass_material.tres" id="25_grassmat"]
 [ext_resource type="Script" path="res://environment/grass/tall_grass_layer.gd" id="26_grassscript"]
 
+[ext_resource type="Script" path="res://components/zone_transition.gd" id="27_transition"]
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jeqll"]
 texture = ExtResource("4_ibrhb")
 texture_region_size = Vector2i(48, 48)
@@ -430,6 +431,9 @@ terrain_set_0/terrain_0/name = "Clif"
 terrain_set_0/terrain_0/color = Color(0.259917, 0.59343, 0.985288, 1)
 sources/1 = SubResource("TileSetAtlasSource_2hju6")
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_north_exit"]
+size = Vector2(150, 24)
+
 [node name="PlayerVillage" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_o0l50")
@@ -439,6 +443,9 @@ bgm = 1
 
 [node name="SpawnDefault" type="Marker2D" parent="Spawns"]
 position = Vector2(1038, 520)
+
+[node name="SpawnFrom_RICE_FIELDS" type="Marker2D" parent="Spawns"]
+position = Vector2(1505, 110)
 
 [node name="SpawnFrom_CHICKEN_COOP" type="Marker2D" parent="Spawns"]
 position = Vector2(491.776, 297.383)
@@ -588,7 +595,7 @@ flip = true
 size_scale = 0.85
 
 [node name="Haie_Nord_3_01" parent="Trees" instance=ExtResource("10_uqot4")]
-position = Vector2(1537, 89)
+position = Vector2(1340, 125)
 tree_data = ExtResource("22_euca")
 flip = true
 size_scale = 1.2
@@ -907,3 +914,12 @@ position = Vector2(1906, 1302)
 tree_data = ExtResource("21_4uh7k")
 flip = true
 size_scale = 1.05
+
+[node name="ToRiceFields" type="Area2D" parent="."]
+script = ExtResource("27_transition")
+target_zone = "rice_fields"
+target_spawn = "SpawnFrom_VILLAGE"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ToRiceFields"]
+position = Vector2(1505, 12)
+shape = SubResource("RectangleShape2D_north_exit")

@@ -10,6 +10,7 @@ malagasy_name = "Vary"
 seed_display_name = "Graine de riz"
 category = 1
 tier = 2
+grows_in_paddy = true
 seed_price = 1500
 sell_price = 4000
 growth_days = 10
