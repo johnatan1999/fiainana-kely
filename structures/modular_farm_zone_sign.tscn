@@ -46,6 +46,7 @@ shape = SubResource("RectangleShape2D_sign")
 [editable path="InteractableComponent"]
 
 [node name="Dialog" type="CanvasLayer" parent="."]
+visible = false
 
 [node name="Panel" type="Panel" parent="Dialog"]
 anchors_preset = 8
