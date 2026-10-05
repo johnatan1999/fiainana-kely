@@ -2,7 +2,7 @@ shader_type canvas_item;
 
 // Tall grass that sways in the wind, leans away from the player and
 // whips back and forth after they pass through (TallGrassLayer feeds the
-// player position and the recent "rustles").
+// recent "rustles").
 //
 // Art convention: every tuft's texture is a single row, tufts standing on
 // its bottom edge - so UV.y says how high a vertex is: the top (UV.y = 0)
@@ -13,8 +13,8 @@ uniform float wind_strength = 1.2; // tip offset, in px
 uniform float wind_speed = 1.7;
 uniform float wind_wavelength = 90.0; // px between two gusts
 
-// Player pushing through.
-uniform vec2 player_position = vec2(-100000.0);
+// Player pushing through. Global, set by PlayerController.
+global uniform vec2 player_position;
 uniform float push_radius = 18.0;
 uniform float push_strength = 5.0;
 

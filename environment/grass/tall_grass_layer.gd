@@ -3,9 +3,9 @@ extends TileMapLayer
 
 ## Tall grass, painted like any tile layer (16 px grid, y-sorted so the
 ## player walks behind/in front of tufts, no collision). Its ShaderMaterial
-## (tall_grass.gdshader) does the movement; this script feeds it the
-## player's position every frame, and when the player steps into a new grass
-## cell, records a "rustle" there - the grass whips and settles around that
+## (tall_grass.gdshader) does the movement - the player's position reaches
+## it as a global shader uniform. When the player steps into a new grass
+## cell, this records a "rustle" there - the grass whips and settles around that
 ## spot - plus a puff of blades and an optional sound.
 ##
 ## The wind plays in the editor too (shader TIME); the player's effects only
@@ -47,7 +47,6 @@ func _process(delta: float) -> void:
 			return
 		_last_player_position = _player.global_position
 	var feet := _player.global_position
-	_material.set_shader_parameter("player_position", feet)
 
 	var moved := feet.distance_squared_to(_last_player_position) > 0.01
 	_last_player_position = feet

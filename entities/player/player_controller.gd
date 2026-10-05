@@ -69,6 +69,9 @@ func _physics_process(delta: float) -> void:
 		var accel := acceleration if input_vector != Vector2.ZERO else friction
 		velocity = velocity.move_toward(target_velocity, accel * delta)
 	move_and_slide()
+	# Grass, crops... lean away from the player: see [shader_globals] in
+	# project.godot.
+	RenderingServer.global_shader_parameter_set(&"player_position", global_position)
 
 	if not _is_performing_action:
 		_update_animation(velocity)

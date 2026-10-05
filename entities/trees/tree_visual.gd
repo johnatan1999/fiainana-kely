@@ -24,6 +24,9 @@ extends Node2D
 ##   foliage fades so they stay visible. Cover the area hidden by the canopy.
 ## - Canopy (any CanvasItem, anywhere): what fades. None = the whole tree fades.
 ##
+## Foliage moves in game (tree_foliage.gdshader): Canopy sprites sway and
+## shimmer, or - with no Canopy - every state sprite and the placeholder.
+##
 ## No art yet (no Sprite2D with a texture in the shown state): a placeholder
 ## tree is drawn instead, fruits included in Fruiting - so a species is
 ## playable, and placeable, before its sprites exist.
@@ -45,6 +48,7 @@ const PLACEHOLDER_FRUIT_SPOTS := [
 	Vector2(0.5, 0.25), Vector2(0.3, 0.6), Vector2(-0.45, -0.35),
 ]
 const EDITOR_GUIDE_COLOR := Color(1.0, 1.0, 1.0, 0.5)
+const FOLIAGE_MATERIAL := preload("res://entities/trees/tree_foliage_material.tres")
 
 ## Placeholder colors only - ignored once the state has sprites, so species
 ## still look different from each other before their art exists.
@@ -85,6 +89,9 @@ var _fade_tween: Tween
 func _ready() -> void:
 	_anchor_sprites()
 	show_state(preview_state if Engine.is_editor_hint() else _state)
+	# In game only: set in the editor, it would be saved into the tree scenes.
+	if not Engine.is_editor_hint():
+		_apply_foliage()
 	# In the editor, keep the anchoring live while regions are being picked.
 	set_process(Engine.is_editor_hint())
 
@@ -115,6 +122,19 @@ func set_faded(faded: bool) -> void:
 	_fade_tween = create_tween().set_parallel()
 	for target in targets:
 		_fade_tween.tween_property(target, "modulate:a", FADE_ALPHA if faded else 1.0, FADE_DURATION)
+
+func _apply_foliage() -> void:
+	# Only affects this node's own drawing: the placeholder tree.
+	material = FOLIAGE_MATERIAL
+	var sprites := find_children("Canopy", "Sprite2D", true, false)
+	if sprites.is_empty():
+		for state_name in STATE_NODE_NAMES:
+			var state := get_node_or_null(state_name)
+			if state:
+				sprites.append_array(state.find_children("*", "Sprite2D", true, false))
+	for sprite: Sprite2D in sprites:
+		if sprite.material == null:
+			sprite.material = FOLIAGE_MATERIAL
 
 func _find_state_node(state: int) -> Node2D:
 	for i in range(state, -1, -1):

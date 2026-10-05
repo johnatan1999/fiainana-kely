@@ -69,6 +69,13 @@ func show_highlight_for_plot(plot_id: int, can_use: bool, can_harvest: bool) -> 
 	_highlight.show_hand = can_harvest
 	_highlight.visible = true
 
+## Plays the plot's feedback for an action that just succeeded on it - see
+## PlotView.react().
+func react_to_action(plot_id: int, action: FarmAction.Type) -> void:
+	var plot_view: PlotView = _plot_views.get(plot_id)
+	if plot_view:
+		plot_view.react(action)
+
 func hide_highlight() -> void:
 	if _highlight:
 		_highlight.visible = false

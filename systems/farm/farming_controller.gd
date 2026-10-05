@@ -132,14 +132,17 @@ func _perform(plot_id: int, action: FarmAction.Type, crop_id: String) -> void:
 			if simulation.till(plot_id):
 				AudioManager.play_till_sfx()
 				player.play_tool_animation(action)
+				farm_view.react_to_action(plot_id, action)
 		FarmAction.Type.WATER:
 			if simulation.water(plot_id):
 				AudioManager.play_watering_sfx()
 				player.play_tool_animation(action)
+				farm_view.react_to_action(plot_id, action)
 		FarmAction.Type.PLANT:
 			if simulation.plant(plot_id, crop_id):
 				AudioManager.play_plant_sfx()
 				player.play_tool_animation(action)
+				farm_view.react_to_action(plot_id, action)
 		FarmAction.Type.HARVEST:
 			# The actual harvest() call is applied in
 			# _on_action_animation_finished() instead of right here, so the
@@ -189,5 +192,8 @@ func _on_action_animation_finished(action: FarmAction.Type) -> void:
 		return
 	var plot_id := _pending_harvest_plot_id
 	_pending_harvest_plot_id = -1
+	# Before harvest(): the crop must be plucked out, not just vanish.
+	if farm_view != null and simulation.can_harvest(plot_id):
+		farm_view.react_to_action(plot_id, FarmAction.Type.HARVEST)
 	if simulation.harvest(plot_id):
 		AudioManager.play_harvest_sfx()

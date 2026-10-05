@@ -20,12 +20,19 @@ extends Node2D
 ## that stage is shown, so solidity is per stage: put a StaticBody2D under
 ## Growing and Mature to make the crop block from Growing on.
 
+## Wind sway + leaning away from the player (crop_sway.gdshader), shared by
+## every crop. Its offsets assume the bottom-center anchoring below.
+const SWAY_MATERIAL := preload("res://entities/crops/crop_sway_material.tres")
+
 ## Indexed by CropState.Stage.
 const STAGE_NODE_NAMES := ["Seed", "Sprout", "Growing", "Mature"]
 const EDITOR_GUIDE_COLOR := Color(1.0, 1.0, 1.0, 0.5)
 
 func _ready() -> void:
 	_anchor_sprites()
+	# In game only: set in the editor, it would be saved into the crop scenes.
+	if not Engine.is_editor_hint():
+		_apply_sway()
 	# In the editor, keep the anchoring live while regions are being picked.
 	set_process(Engine.is_editor_hint())
 
@@ -48,6 +55,15 @@ func _anchor_sprites() -> void:
 			if not sprite.centered or sprite.offset != anchored:
 				sprite.centered = true
 				sprite.offset = anchored
+
+func _apply_sway() -> void:
+	for stage_name in STAGE_NODE_NAMES:
+		var stage := get_node_or_null(stage_name)
+		if stage == null:
+			continue
+		for child in stage.get_children():
+			if child is Sprite2D and child.material == null:
+				child.material = SWAY_MATERIAL
 
 ## Shows the node for `stage` (a CropState.Stage value), hides the others and
 ## returns it - or null if the scene has no stage node at or below `stage`.
