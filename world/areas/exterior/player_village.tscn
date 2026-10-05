@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=26 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -16,9 +16,11 @@
 [ext_resource type="PackedScene" uid="uid://c5y5kwfe6g5qh" path="res://structures/houses/models/trano_kely_02.tscn" id="8_53hp2"]
 [ext_resource type="PackedScene" uid="uid://dgak5cew5n3hy" path="res://entities/animals/chicken/chicken.tscn" id="9_5wie0"]
 [ext_resource type="SpriteFrames" uid="uid://c8b1vmmb21c3e" path="res://data/rooster.tres" id="10_dyv0b"]
+[ext_resource type="PackedScene" uid="uid://inwmcutpcvys" path="res://entities/trees/world_tree.tscn" id="10_uqot4"]
 [ext_resource type="PackedScene" path="res://structures/modular_farm_zone_sign.tscn" id="11_vq4vc"]
 [ext_resource type="PackedScene" uid="uid://yyodnuua7d7i" path="res://structures/farm_zone_sign.tscn" id="12_armmf"]
 [ext_resource type="PackedScene" uid="uid://dv8rtwpbrtee0" path="res://structures/shop/shop.tscn" id="13_okjkt"]
+[ext_resource type="Resource" path="res://data/trees/mango_tree.tres" id="21_4uh7k"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jeqll"]
 texture = ExtResource("4_ibrhb")
@@ -531,3 +533,9 @@ zone_id = "zone_south"
 
 [node name="Shop" parent="." instance=ExtResource("13_okjkt")]
 position = Vector2(1170, 809)
+
+[node name="Trees" type="Node2D" parent="."]
+
+[node name="MangoTree" parent="Trees" instance=ExtResource("10_uqot4")]
+position = Vector2(1773, 403)
+tree_data = ExtResource("21_4uh7k")

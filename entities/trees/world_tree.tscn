@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://inwmcutpcvys"]
+
+[ext_resource type="Script" path="res://entities/trees/world_tree.gd" id="1_worldtree"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="2_treeint"]
+
+[node name="WorldTree" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_worldtree")
+
+[node name="InteractableComponent" parent="." instance=ExtResource("2_treeint")]

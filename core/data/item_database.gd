@@ -34,6 +34,7 @@ const ITEM_PATHS := [
 	"res://data/items/food_vary_amin_anana.tres",
 	"res://data/items/animal_chicken.tres",
 	"res://data/items/egg.tres",
+	"res://data/items/mango.tres",
 ]
 
 const SEED_SUFFIX := "_seed"

@@ -42,6 +42,16 @@ func _make_farm_land_manager(simulation: FarmSimulation) -> FarmLandManager:
 
 ## Listed column by column, so row-by-row ordering has to come from
 ## FarmLandManager, not from the input order.
+const MANGO_TREE_ID := "village:TreeGroup/Manguier"
+
+## Mango tree: fruits in Asara (days 1-30), every 4 days, 2 to 4 at a time.
+func _make_sim_with_mango() -> FarmSimulation:
+	var corn: CropData = load("res://data/crops/corn.tres")
+	var mango: TreeData = load("res://data/trees/mango_tree.tres")
+	var decor := TreeData.new()
+	decor.id = "decor_tree"
+	return FarmSimulation.new(4, 4, {"corn": corn}, {}, {mango.id: mango, decor.id: decor})
+
 func _rect_cells(origin: Vector2i, size: Vector2i) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
 	for x in size.x:
@@ -111,6 +121,13 @@ func _run_all() -> void:
 	test_registering_an_owned_zone_restores_missing_plots()
 	test_registering_a_locked_zone_adds_nothing()
 	test_progressive_registration_restores_bought_cells_only()
+	test_tree_discovered_in_season_starts_ripe()
+	test_tree_discovered_out_of_season_starts_bare()
+	test_harvest_tree_adds_fruit_and_resets()
+	test_tree_ripens_after_its_cycle_in_season()
+	test_tree_fruit_rots_at_season_end_and_waits_for_next_season()
+	test_decorative_or_unknown_trees_are_not_registered()
+	test_tree_save_load_roundtrip()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -740,4 +757,90 @@ func test_progressive_registration_restores_bought_cells_only() -> void:
 	_check(
 		sim.get_plot_id_at(2, 9) != -1 and sim.get_plot_id_at(3, 9) == -1,
 		"registering the progressive field restores exactly its first bought cells, row by row"
+	)
+
+func test_tree_discovered_in_season_starts_ripe() -> void:
+	var sim := _make_sim_with_mango() # day 1: Asara
+	sim.register_tree(MANGO_TREE_ID, "mango_tree")
+	_check(sim.can_harvest_tree(MANGO_TREE_ID), "a mango tree first seen in Asara starts with ripe fruit")
+
+func test_tree_discovered_out_of_season_starts_bare() -> void:
+	var sim := _make_sim_with_mango()
+	sim.state.clock.current_day = 31 # Asotry
+	sim.register_tree(MANGO_TREE_ID, "mango_tree")
+	_check(
+		not sim.can_harvest_tree(MANGO_TREE_ID) and sim.get_tree_days_until_fruit(MANGO_TREE_ID) == -1,
+		"a mango tree first seen in Asotry has no fruit and none coming this season"
+	)
+
+func test_harvest_tree_adds_fruit_and_resets() -> void:
+	var sim := _make_sim_with_mango()
+	sim.register_tree(MANGO_TREE_ID, "mango_tree")
+	var quantity := sim.harvest_tree(MANGO_TREE_ID)
+	_check(
+		quantity >= 2 and quantity <= 4
+		and sim.state.get_inventory_count("mango") == quantity
+		and not sim.can_harvest_tree(MANGO_TREE_ID)
+		and sim.harvest_tree(MANGO_TREE_ID) == 0,
+		"picking a ripe tree adds 2-4 mangoes, then it's bare until the next batch"
+	)
+
+func test_tree_ripens_after_its_cycle_in_season() -> void:
+	var sim := _make_sim_with_mango()
+	sim.register_tree(MANGO_TREE_ID, "mango_tree")
+	sim.harvest_tree(MANGO_TREE_ID)
+	for i in 3:
+		sim.advance_day()
+	var ripe_after_3 := sim.can_harvest_tree(MANGO_TREE_ID)
+	var days_left := sim.get_tree_days_until_fruit(MANGO_TREE_ID)
+	sim.advance_day()
+	_check(
+		not ripe_after_3 and days_left == 1 and sim.can_harvest_tree(MANGO_TREE_ID),
+		"a picked mango tree is ripe again exactly fruit_cycle_days (4) days later"
+	)
+
+func test_tree_fruit_rots_at_season_end_and_waits_for_next_season() -> void:
+	var sim := _make_sim_with_mango()
+	sim.state.clock.current_day = 29
+	sim.register_tree(MANGO_TREE_ID, "mango_tree") # ripe, not picked
+	sim.advance_day() # -> day 30, last day of Asara
+	var still_ripe_on_last_day := sim.can_harvest_tree(MANGO_TREE_ID)
+	sim.advance_day() # -> day 31, Asotry
+	var rotted := not sim.can_harvest_tree(MANGO_TREE_ID)
+	for i in 30:
+		sim.advance_day() # all of Asotry -> day 61, Asara again
+	var bare_at_season_start := not sim.can_harvest_tree(MANGO_TREE_ID)
+	for i in 4:
+		sim.advance_day()
+	_check(
+		still_ripe_on_last_day and rotted and bare_at_season_start and sim.can_harvest_tree(MANGO_TREE_ID),
+		"unpicked mangoes rot when Asara ends, nothing grows in Asotry, a new batch ripens 4 days into the next Asara"
+	)
+
+func test_decorative_or_unknown_trees_are_not_registered() -> void:
+	var sim := _make_sim_with_mango()
+	_check(
+		not sim.register_tree("village:Decor", "decor_tree")
+		and not sim.register_tree("village:Unknown", "baobab")
+		and sim.state.trees.is_empty(),
+		"fruitless or unregistered species are never tracked by the simulation"
+	)
+
+func test_tree_save_load_roundtrip() -> void:
+	var sim := _make_sim_with_mango()
+	sim.register_tree(MANGO_TREE_ID, "mango_tree")
+	sim.harvest_tree(MANGO_TREE_ID)
+	sim.advance_day()
+	var data := sim.to_save_data()
+	data = JSON.parse_string(JSON.stringify(data))
+
+	var fresh_sim := _make_sim_with_mango()
+	fresh_sim.load_save_data(data)
+	var tree := fresh_sim.get_tree_state(MANGO_TREE_ID)
+	# Registering again (the zone loads after the save) must keep the saved state.
+	fresh_sim.register_tree(MANGO_TREE_ID, "mango_tree")
+	_check(
+		tree != null and tree == fresh_sim.get_tree_state(MANGO_TREE_ID)
+		and not tree.fruit_ready and tree.days_growing == 1,
+		"tree ripeness survives a save/load, and re-registering on zone load keeps it"
 	)

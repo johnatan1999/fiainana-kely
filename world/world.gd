@@ -26,6 +26,12 @@ const ANIMAL_RESOURCES: Array[AnimalData] = [
 	preload("res://data/animals/chicken.tres"),
 ]
 
+## Every tree species a WorldTree may point at - fruit trees not listed here
+## are shown but never bear fruit (TreeManager warns).
+const TREE_RESOURCES: Array[TreeData] = [
+	preload("res://data/trees/mango_tree.tres"),
+]
+
 @onready var zone_container: Node2D = $ZoneContainer
 @onready var player: PlayerController = $Player
 @onready var farming_controller: FarmingController = $Gameplay/FarmingController
@@ -34,6 +40,7 @@ const ANIMAL_RESOURCES: Array[AnimalData] = [
 @onready var world_manager: WorldManager = $Gameplay/WorldManager
 @onready var animal_manager: AnimalManager = $Gameplay/AnimalManager
 @onready var farm_land_manager: FarmLandManager = $Gameplay/FarmLandManager
+@onready var tree_manager: TreeManager = $Gameplay/TreeManager
 @onready var hotbar: Hotbar = $Gameplay/Hotbar
 @onready var hud: HUD = $UI/HUD
 @onready var hotbar_ui: HotbarUI = $UI/HotbarUI
@@ -54,9 +61,13 @@ func _ready() -> void:
 	for animal_data in ANIMAL_RESOURCES:
 		animal_registry[animal_data.species] = animal_data
 
+	var tree_registry := {}
+	for tree_data in TREE_RESOURCES:
+		tree_registry[tree_data.id] = tree_data
+
 	# No plots yet: the land is painted in the zone scenes as FarmFields
 	# (starter field included), registered by FarmLandManager as they load.
-	simulation = FarmSimulation.new(0, 0, crop_registry, animal_registry)
+	simulation = FarmSimulation.new(0, 0, crop_registry, animal_registry, tree_registry)
 	item_db = ItemDatabase.new(crop_registry, animal_registry)
 	for item_id in STARTER_INVENTORY:
 		simulation.state.add_inventory(item_id, STARTER_INVENTORY[item_id])
@@ -73,6 +84,7 @@ func _ready() -> void:
 	inventory_ui.setup(simulation, shop_ui, item_db, hotbar)
 	pause_menu.setup(shop_ui, inventory_ui)
 	animal_manager.setup(simulation, world_manager)
+	tree_manager.setup(simulation, item_db, world_manager)
 	save_controller.setup(simulation, world_manager, player)
 
 	pause_menu.save_requested.connect(save_controller.save_game)

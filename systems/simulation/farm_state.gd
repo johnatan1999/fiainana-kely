@@ -30,6 +30,10 @@ var _next_animal_index: int = 0
 ## modulable expansion zone have been bought, in its fixed unlock order.
 var unlocked_zone_ids: Dictionary = {} # zone_id: String -> true
 var progressive_tiles_unlocked: int = 0
+
+## Fruit trees, keyed by their place in the world ("<zone_id>:<node path>",
+## see TreeManager) - registered the first time their zone loads.
+var trees: Dictionary = {} # tree_id: String -> TreeState
 const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
@@ -149,6 +153,15 @@ func to_dict() -> Dictionary:
 			"days_since_product": animal.days_since_product,
 		}
 
+	var trees_data := {}
+	for tree_id in trees:
+		var tree: TreeState = trees[tree_id]
+		trees_data[tree_id] = {
+			"type": tree.tree_type_id,
+			"fruit_ready": tree.fruit_ready,
+			"days_growing": tree.days_growing,
+		}
+
 	return {
 		"money": money,
 		"day": day,
@@ -163,6 +176,7 @@ func to_dict() -> Dictionary:
 		"unlocked_zone_ids": unlocked_zone_ids.keys(),
 		"progressive_tiles_unlocked": progressive_tiles_unlocked,
 		"hotbar": hotbar.duplicate(),
+		"trees": trees_data,
 	}
 
 ## JSON object keys are strings: species saved as "0", "4"...
@@ -240,3 +254,14 @@ func load_dict(data: Dictionary) -> void:
 		unlocked_zone_ids[zone_id] = true
 	progressive_tiles_unlocked = int(data.get("progressive_tiles_unlocked", 0))
 	hotbar = Array(data.get("hotbar", [])).map(func(item_id): return str(item_id))
+
+	# Optional key (older saves have none): their trees register fresh on load.
+	trees.clear()
+	var trees_data = data.get("trees", {})
+	if trees_data is Dictionary:
+		for tree_id in trees_data:
+			var tree_data: Dictionary = trees_data[tree_id]
+			var tree := TreeState.new(str(tree_data.get("type", "")))
+			tree.fruit_ready = tree_data.get("fruit_ready", false)
+			tree.days_growing = int(tree_data.get("days_growing", 0))
+			trees[str(tree_id)] = tree

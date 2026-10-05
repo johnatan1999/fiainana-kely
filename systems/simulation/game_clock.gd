@@ -12,7 +12,10 @@ func advance_day() -> void:
 	current_day += 1
 
 func get_season() -> Season:
-	return Season.ASOTRY if ((current_day - 1) / DAYS_PER_SEASON) % 2 == 1 else Season.ASARA
+	return get_season_on(current_day)
+
+func get_season_on(day: int) -> Season:
+	return Season.ASOTRY if ((day - 1) / DAYS_PER_SEASON) % 2 == 1 else Season.ASARA
 
 ## 1..DAYS_PER_SEASON - the date players plan around ("Asara, day 9").
 func get_day_of_season() -> int:
