@@ -1,0 +1,29 @@
+[gd_resource type="TileSet" load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/tileset/tall_grass_placeholder.png" id="1_grass"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_grass"]
+texture = ExtResource("1_grass")
+texture_region_size = Vector2i(16, 32)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(0, 8)
+0:0/0/y_sort_origin = 8
+1:0/0 = 0
+1:0/0/texture_origin = Vector2i(0, 8)
+1:0/0/y_sort_origin = 8
+2:0/0 = 0
+2:0/0/texture_origin = Vector2i(0, 8)
+2:0/0/y_sort_origin = 8
+3:0/0 = 0
+3:0/0/texture_origin = Vector2i(0, 8)
+3:0/0/y_sort_origin = 8
+4:0/0 = 0
+4:0/0/texture_origin = Vector2i(0, 8)
+4:0/0/y_sort_origin = 8
+5:0/0 = 0
+5:0/0/texture_origin = Vector2i(0, 8)
+5:0/0/y_sort_origin = 8
+
+[resource]
+tile_size = Vector2i(16, 16)
+sources/0 = SubResource("TileSetAtlasSource_grass")
