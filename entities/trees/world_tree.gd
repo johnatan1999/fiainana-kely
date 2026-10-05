@@ -36,6 +36,17 @@ const VISUAL_NODE_NAME := "Visual"
 		if is_node_ready():
 			_rebuild_visual()
 
+## Per-tree variation, so a grove of one species doesn't look copy-pasted:
+## mirror the art, and grow or shrink the whole tree (collision included).
+@export var flip := false:
+	set(value):
+		flip = value
+		_apply_variation()
+@export_range(0.7, 1.4, 0.05) var size_scale := 1.0:
+	set(value):
+		size_scale = value
+		_apply_variation()
+
 # Untyped: InteractableComponent plays sounds through the AudioManager
 # autoload - see the class doc.
 @onready var _interactable = $InteractableComponent
@@ -82,6 +93,7 @@ func _rebuild_visual() -> void:
 		_visual = TreeVisual.new()
 	_visual.name = VISUAL_NODE_NAME
 	add_child(_visual)
+	_apply_variation()
 	if Engine.is_editor_hint():
 		return
 	_visual.show_state(TreeVisual.State.FRUITING if _ripe else TreeVisual.State.BARE)
@@ -89,6 +101,11 @@ func _rebuild_visual() -> void:
 	if fade_area:
 		fade_area.body_entered.connect(_on_fade_area_body_changed.bind(true))
 		fade_area.body_exited.connect(_on_fade_area_body_changed.bind(false))
+
+func _apply_variation() -> void:
+	if _visual:
+		_visual.scale = Vector2.ONE * size_scale
+		_visual.flipped = flip
 
 func _on_fade_area_body_changed(body: Node2D, entered: bool) -> void:
 	if body.is_in_group("player"):

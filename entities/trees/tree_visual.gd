@@ -68,6 +68,17 @@ const EDITOR_GUIDE_COLOR := Color(1.0, 1.0, 1.0, 0.5)
 		if Engine.is_editor_hint() and is_node_ready():
 			show_state(value)
 
+## Mirrors the states' art (set per tree by WorldTree.flip). Only the
+## states flip - Trunk and FadeArea stay put, so keep them centered.
+var flipped := false:
+	set(value):
+		flipped = value
+		for state_name in STATE_NODE_NAMES:
+			var node := get_node_or_null(state_name) as Node2D
+			if node:
+				node.scale.x = -1.0 if flipped else 1.0
+		queue_redraw()
+
 var _state: State = State.BARE
 var _fade_tween: Tween
 
@@ -150,6 +161,7 @@ func _draw_placeholder(with_fruit: bool) -> void:
 	var r := PLACEHOLDER_CANOPY_RADIUS * placeholder_scale
 	var trunk := PLACEHOLDER_TRUNK_SIZE * placeholder_scale
 	var center := Vector2(0, -(trunk.y + r * 0.55))
+	var side := -1.0 if flipped else 1.0 # which side the light comes from
 	# Ground shadow, flattened.
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.35))
 	draw_circle(Vector2.ZERO, r * 0.8, Color(0, 0, 0, 0.22))
@@ -159,9 +171,9 @@ func _draw_placeholder(with_fruit: bool) -> void:
 	draw_circle(center + Vector2(-r * 0.5, r * 0.2), r * 0.72, shade)
 	draw_circle(center + Vector2(r * 0.5, r * 0.2), r * 0.72, shade)
 	draw_circle(center, r * 0.85, placeholder_canopy_color)
-	draw_circle(center + Vector2(-r * 0.25, -r * 0.3), r * 0.45, placeholder_canopy_color.lightened(0.15))
+	draw_circle(center + Vector2(-r * 0.25 * side, -r * 0.3), r * 0.45, placeholder_canopy_color.lightened(0.15))
 	if with_fruit:
 		for spot in PLACEHOLDER_FRUIT_SPOTS:
-			var p: Vector2 = center + spot * r
+			var p: Vector2 = center + Vector2(spot.x * side, spot.y) * r
 			draw_circle(p, 4.5, placeholder_fruit_color.darkened(0.3))
 			draw_circle(p + Vector2(-0.8, -0.8), 3.5, placeholder_fruit_color)
