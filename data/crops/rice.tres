@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="CropData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="CropData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://core/data/crop_data.gd" id="1_rice"]
+[ext_resource type="PackedScene" path="res://entities/crops/rice/rice_visual.tscn" id="3_visual"]
 
 [resource]
 script = ExtResource("1_rice")
@@ -22,3 +23,4 @@ water_need = 2
 min_watered_ratio_for_quality = 0.9
 is_perennial = false
 unlock_day = 12
+visual_scene = ExtResource("3_visual")

@@ -1,0 +1,42 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://entities/crops/crop_visual.gd" id="1_cropvisual"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crops/rice.png" id="2_rice"]
+
+[node name="RiceVisual" type="Node2D"]
+script = ExtResource("1_cropvisual")
+
+[node name="Seed" type="Node2D" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="Seed"]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_rice")
+region_enabled = true
+region_rect = Rect2(0, 0, 96, 128)
+
+[node name="Sprout" type="Node2D" parent="."]
+visible = false
+
+[node name="Sprite2D" type="Sprite2D" parent="Sprout"]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_rice")
+region_enabled = true
+region_rect = Rect2(96, 0, 96, 128)
+
+[node name="Growing" type="Node2D" parent="."]
+visible = false
+
+[node name="Sprite2D" type="Sprite2D" parent="Growing"]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_rice")
+region_enabled = true
+region_rect = Rect2(192, 0, 96, 128)
+
+[node name="Mature" type="Node2D" parent="."]
+visible = false
+
+[node name="Sprite2D" type="Sprite2D" parent="Mature"]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_rice")
+region_enabled = true
+region_rect = Rect2(288, 0, 96, 128)
