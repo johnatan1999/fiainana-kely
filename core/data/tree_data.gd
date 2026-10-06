@@ -21,6 +21,9 @@ extends Resource
 ## the editor relative to the foot of the trunk. Unset = WorldTree shows a
 ## placeholder tree with no collision.
 @export var visual_scene: PackedScene
+## More looks for the same species (e.g. three eucalyptus shapes): each
+## WorldTree shows one of visual_scene + these - see WorldTree.variant.
+@export var visual_variants: Array[PackedScene] = []
 
 @export_group("Fruits")
 ## Item added to the inventory on harvest. Empty = decorative tree: never
@@ -33,6 +36,16 @@ extends Resource
 ## Fruits only grow in this season; unpicked fruit rots when it ends.
 ## Same enum as crops, so both follow the GameClock seasons the same way.
 @export var fruit_season: CropData.Season = CropData.Season.TOUTE_SAISON
+
+## Every look of the species: visual_scene first, then visual_variants.
+func get_visual_scenes() -> Array[PackedScene]:
+	var scenes: Array[PackedScene] = []
+	if visual_scene:
+		scenes.append(visual_scene)
+	for scene in visual_variants:
+		if scene:
+			scenes.append(scene)
+	return scenes
 
 func bears_fruit() -> bool:
 	return fruit_item_id != ""

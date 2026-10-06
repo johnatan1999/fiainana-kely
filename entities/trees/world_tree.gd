@@ -47,6 +47,15 @@ const VISUAL_NODE_NAME := "Visual"
 		if is_node_ready():
 			_rebuild_visual()
 
+## Which of the species' looks (TreeData.get_visual_scenes()) this tree
+## shows. -1 = picked from its tree_id: varied across a grove, and always the
+## same for a given tree.
+@export var variant := -1:
+	set(value):
+		variant = value
+		if is_node_ready():
+			_rebuild_visual()
+
 ## Per-tree variation, so a grove of one species doesn't look copy-pasted:
 ## mirror the art, and grow or shrink the whole tree (collision included).
 @export var flip := false:
@@ -128,8 +137,10 @@ func _rebuild_visual() -> void:
 		_visual = null
 	if tree_data == null:
 		return
-	if tree_data.visual_scene:
-		_visual = tree_data.visual_scene.instantiate() as TreeVisual
+	var scenes := tree_data.get_visual_scenes()
+	if not scenes.is_empty():
+		var index := variant if variant >= 0 else absi(hash(tree_id)) % scenes.size()
+		_visual = scenes[index % scenes.size()].instantiate() as TreeVisual
 		if _visual == null:
 			push_warning("WorldTree %s: %s's visual_scene has no TreeVisual root." % [name, tree_data.id])
 			return

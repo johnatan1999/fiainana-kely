@@ -1,7 +1,9 @@
-[gd_resource type="Resource" script_class="TreeData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="TreeData" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://core/data/tree_data.gd" id="1_tree"]
 [ext_resource type="PackedScene" path="res://entities/trees/eucalyptus/eucalyptus_visual.tscn" id="2_visual"]
+[ext_resource type="PackedScene" path="res://entities/trees/eucalyptus/eucalyptus_2_visual.tscn" id="3_visual"]
+[ext_resource type="PackedScene" path="res://entities/trees/eucalyptus/eucalyptus_3_visual.tscn" id="4_visual"]
 
 [resource]
 script = ExtResource("1_tree")
@@ -9,3 +11,4 @@ id = "eucalyptus"
 display_name = "Eucalyptus"
 malagasy_name = "Kininina"
 visual_scene = ExtResource("2_visual")
+visual_variants = Array[PackedScene]([ExtResource("3_visual"), ExtResource("4_visual")])
