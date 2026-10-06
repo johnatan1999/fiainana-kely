@@ -36,6 +36,7 @@ func _ready() -> void:
 	await _test_lanterns()
 	await _test_tall_grass_rustles()
 	await _test_harvest_popup()
+	await _test_rain()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -197,6 +198,32 @@ func _test_harvest_popup() -> void:
 			texts.append(label.text)
 	_check(popups.size() == 1 and texts.any(func(t): return t.begins_with("+")),
 		"harvest: a \"+N\" popup shows over the harvested plot (%s)" % ", ".join(texts))
+
+# --- rain ----------------------------------------------------------------------
+
+func _test_rain() -> void:
+	await _go_to_zone("village")
+	_set_time(12 * 60)
+	var weather: WeatherController = _world.get_node("Gameplay/WeatherController")
+	var dn: DayNightController = _world.get_node("Gameplay/DayNightController")
+	var life: AmbientLife = _zone().get_node("AmbientLife")
+	var plot_id := _sim.get_plot_id_at(1, 1, "village")
+	_sim.till(plot_id)
+	_sim.get_plot(plot_id).watered = false
+	_sim.set_weather(FarmState.Weather.RAIN)
+	await _frames(150) # the sky clouds over in 2 s
+	var rain: Node2D = weather.get_node("Rain")
+	_check(rain.visible and weather._streaks.emitting and dn.get_overcast() > 0.95,
+		"rain: falls outdoors under an overcast sky")
+	_check(_sim.get_plot(plot_id).watered, "rain: the tilled plots are watered")
+	_check(life._butterflies.all(func(b): return not b.visible), "rain: the butterflies take cover")
+	_wm.change_zone("player_house", "SpawnDefault")
+	await _frames(3)
+	_check(not rain.visible and dn.get_overcast() < 0.5, "rain: not falling indoors, only a greyer light")
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	await _go_to_zone("village")
+	await _frames(150)
+	_check(not rain.visible and dn.get_overcast() < 0.05, "rain: stops when the weather clears")
 
 # --- tall grass ----------------------------------------------------------------
 

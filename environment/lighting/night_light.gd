@@ -32,14 +32,19 @@ func _ready() -> void:
 func set_night(amount: float) -> void:
 	_night = amount
 	visible = amount > 0.01
-	queue_redraw()
+	# Lit right away, not on the next _process: the light must match the
+	# moment it's told, whatever the frame timing.
+	_update_light()
 
 func _process(delta: float) -> void:
 	if not visible:
 		return
 	_t += delta
+	_update_light()
+
+func _update_light() -> void:
 	var flicker := 1.0 + 0.06 * sin(_t * 9.0) + 0.04 * sin(_t * 23.0)
-	_light.energy = energy * _night * flicker
+	_light.energy = energy * _night * flicker if visible else 0.0
 	queue_redraw()
 
 func _draw() -> void:

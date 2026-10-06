@@ -2,7 +2,8 @@
 
 ## Ce que voit le joueur
 - **En haut à gauche (`HUD`)** : saison, jour, année, **heure** (par pas de 10 minutes),
-  progression de la saison et argent. Les gains et dépenses d'argent s'animent (+/−).
+  **icône de pluie** les jours de pluie, progression de la saison et argent. Les gains et
+  dépenses d'argent s'animent (+/−).
 - **En bas au centre (`HotbarUI`)** : la barre d'outils et de graines (8 cases). Les récoltes
   n'y vont pas : elles vont dans le sac, qui s'ouvre depuis le menu pause.
 - **En haut de l'écran (`Toast`)** : les messages courts (« Poulailler plein », « Manguier :

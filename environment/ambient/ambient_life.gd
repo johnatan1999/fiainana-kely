@@ -40,11 +40,13 @@ var _rect: Rect2
 var _grass: TileMapLayer
 ## 0 by day, 1 at full night - see set_night().
 var _night := 0.0
+var _raining := false
 var _butterflies: Array[Butterfly] = []
 var _fireflies: Array[Firefly] = []
 
 func _ready() -> void:
 	add_to_group(DayNightController.LIGHT_GROUP)
+	add_to_group(WeatherController.WEATHER_GROUP)
 	y_sort_enabled = true
 	_rng.randomize()
 	var zone := get_parent()
@@ -78,11 +80,16 @@ func _ready() -> void:
 	if flocks:
 		_schedule_flock()
 
+## Called by WeatherController: no butterflies or flocks under the rain.
+func set_raining(raining: bool) -> void:
+	_raining = raining
+	set_night(_night)
+
 ## Called by DayNightController as the light changes.
 func set_night(amount: float) -> void:
 	_night = amount
 	for butterfly in _butterflies:
-		butterfly.visible = not is_night()
+		butterfly.visible = not is_night() and not _raining
 	for firefly in _fireflies:
 		firefly.visible = is_night()
 	if is_night():
@@ -132,7 +139,7 @@ func _schedule_flock() -> void:
 func _send_flock() -> void:
 	if not is_inside_tree():
 		return
-	if is_night():
+	if is_night() or _raining:
 		_schedule_flock()
 		return
 	var going_right := _rng.randf() < 0.5

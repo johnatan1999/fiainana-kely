@@ -40,10 +40,14 @@ const SKY := [
 ## Indoors: no sky, but the house gets dim and warm (oil lamp) at night.
 const INDOOR_DAY := Color(1.0, 1.0, 1.0)
 const INDOOR_NIGHT := Color(0.78, 0.66, 0.54)
+## Rainy sky: the tint is multiplied by this at full overcast.
+const OVERCAST_TINT := Color(0.72, 0.76, 0.86)
 
 var simulation: FarmSimulation
 var _canvas_modulate: CanvasModulate
 var _indoor := false
+## 0 = clear, 1 = fully overcast - set by WeatherController.
+var _overcast := 0.0
 var _night := -1.0
 
 func setup(p_simulation: FarmSimulation, world_manager: WorldManager) -> void:
@@ -85,10 +89,20 @@ func _minute() -> float:
 
 func _apply() -> void:
 	var night := get_night_amount()
-	_canvas_modulate.color = INDOOR_DAY.lerp(INDOOR_NIGHT, night) if _indoor else sky_color(_minute())
+	var tint := INDOOR_DAY.lerp(INDOOR_NIGHT, night) if _indoor else sky_color(_minute())
+	_canvas_modulate.color = tint * Color.WHITE.lerp(OVERCAST_TINT, _overcast)
 	if absf(night - _night) > 0.01:
 		_night = night
 		get_tree().call_group(LIGHT_GROUP, "set_night", night)
+
+## Greys the light down for rain, on top of the time of day.
+func set_overcast(amount: float) -> void:
+	_overcast = clampf(amount, 0.0, 1.0)
+	if is_inside_tree():
+		_apply()
+
+func get_overcast() -> float:
+	return _overcast
 
 func _broadcast_clock(minute_of_day: int) -> void:
 	get_tree().call_group(CLOCK_GROUP, "set_time_of_day", minute_of_day)

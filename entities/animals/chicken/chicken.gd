@@ -102,6 +102,9 @@ var _time_known := false
 var _going_home := false
 var _stuck_time := 0.0
 var _wake_delay := 0.0
+## Fading in or out through the coop door - killed when the other one starts,
+## or a chicken coming out mid-fade would be hidden again by the old fade.
+var _door_tween: Tween
 
 func _ready() -> void:
 	add_to_group(DayNightController.CLOCK_GROUP)
@@ -302,9 +305,11 @@ func _go_in(instantly := false) -> void:
 	if instantly:
 		visible = false
 		return
-	var tween := create_tween()
-	tween.tween_property(self, "modulate:a", 0.0, FADE_TIME)
-	tween.tween_callback(hide)
+	if _door_tween:
+		_door_tween.kill()
+	_door_tween = create_tween()
+	_door_tween.tween_property(self, "modulate:a", 0.0, FADE_TIME)
+	_door_tween.tween_callback(hide)
 
 func _process_roosting(delta: float) -> void:
 	if _roost_time:
@@ -316,9 +321,12 @@ func _process_roosting(delta: float) -> void:
 	var coop := _find_coop()
 	if coop:
 		global_position = coop.get_door_position()
+	if _door_tween:
+		_door_tween.kill()
 	visible = true
 	modulate.a = 0.0
-	create_tween().tween_property(self, "modulate:a", 1.0, FADE_TIME)
+	_door_tween = create_tween()
+	_door_tween.tween_property(self, "modulate:a", 1.0, FADE_TIME)
 	collistion.set_deferred("disabled", false)
 	_state = State.IDLE
 	_walk_to(_home_position + Vector2(randf_range(-20, 20), randf_range(-20, 20)), State.IDLE)

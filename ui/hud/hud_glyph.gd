@@ -6,7 +6,7 @@ extends Control
 ## (cool, dry season) and an ariary coin. Swap for TextureRects once the
 ## icons exist - nothing else in the HUD depends on how these are drawn.
 
-@export_enum("sun", "dry_leaf", "coin") var kind: String = "sun":
+@export_enum("sun", "dry_leaf", "coin", "rain") var kind: String = "sun":
 	set(value):
 		kind = value
 		queue_redraw()
@@ -18,6 +18,9 @@ const LEAF_DARK := Color(0.5, 0.3, 0.12)
 const COIN := Color(0.95, 0.76, 0.3)
 const COIN_DARK := Color(0.62, 0.43, 0.12)
 const COIN_SHINE := Color(1.0, 0.95, 0.75)
+const CLOUD := Color(0.62, 0.66, 0.74)
+const CLOUD_LIGHT := Color(0.8, 0.83, 0.9)
+const DROP := Color(0.35, 0.55, 0.85)
 
 func _draw() -> void:
 	var s := minf(size.x, size.y)
@@ -43,6 +46,15 @@ func _draw() -> void:
 			draw_colored_polygon(points, LEAF)
 			draw_line(base, tip, LEAF_DARK, s * 0.06)
 			draw_line(base, base + Vector2(-s * 0.12, s * 0.12), LEAF_DARK, s * 0.07)
+		"rain":
+			# A cloud and three slanted drops under it.
+			for i in 3:
+				var x := c.x + (i - 1) * s * 0.24
+				draw_line(Vector2(x, c.y + s * 0.12), Vector2(x - s * 0.07, c.y + s * 0.38), DROP, s * 0.08)
+			draw_circle(c + Vector2(-s * 0.16, -s * 0.04), s * 0.17, CLOUD)
+			draw_circle(c + Vector2(s * 0.14, -s * 0.06), s * 0.19, CLOUD)
+			draw_circle(c + Vector2(-s * 0.01, -s * 0.18), s * 0.2, CLOUD_LIGHT)
+			draw_rect(Rect2(c.x - s * 0.3, c.y - s * 0.06, s * 0.6, s * 0.14), CLOUD)
 		"coin":
 			draw_circle(c, s * 0.44, COIN_DARK)
 			draw_circle(c, s * 0.37, COIN)

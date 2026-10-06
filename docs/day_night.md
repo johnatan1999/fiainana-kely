@@ -45,11 +45,15 @@
   - Règle : un comportement ne doit jamais dépendre de la lumière. Les couleurs du ciel
     (`SKY`) sont un réglage visuel qu'on doit pouvoir retoucher librement.
 - `ZoneRoot.indoor` (export) : coché sur `player_interior_house` et `chicken_coop_interior`.
+- `set_overcast(0..1)` / `get_overcast()` : ciel couvert par la pluie, multiplié à la teinte
+  de l'heure par `OVERCAST_TINT` (voir `weather.md`).
 
 **Lanternes : `environment/lighting/night_light.gd` (`NightLight`)**
 - `PointLight2D` (texture radiale générée en code) et une petite flamme dessinée en
   *unshaded* pour rester vive dans le noir. Légère vacillation.
 - Exports : `color`, `energy`, `radius`, `show_flame`.
+- La lumière est réglée dès `set_night()`, pas seulement à l'image suivante : elle
+  correspond toujours à l'état reçu, quel que soit le rythme des images.
 - Placées sous un nœud `NightLights` (`z_index = 1`) dans chaque zone : portes des maisons,
   poulailler, marché, cabane des rizières.
 

@@ -8,6 +8,8 @@ signal money_changed(money: int)
 signal day_changed(day: int)
 ## The time of day moved on to a new minute (GameClock.minute_of_day).
 signal time_changed(minute_of_day: int)
+## Today's weather is set - each morning, and when a save is loaded.
+signal weather_changed(weather: FarmState.Weather)
 signal plot_changed(plot_id: int)
 ## A new plot came into existence (grid expansion, or a loaded save) - the
 ## presentation layer should create a PlotView for it. Distinct from
@@ -40,6 +42,9 @@ signal product_ready(animal_id: String, product_id: String)
 signal tree_changed(tree_id: String)
 
 const COOP_COST := 6000
+## Chance of a rainy day, per season: Asara is the rainy season. A rainy day
+## waters every tilled plot from the morning - see set_weather().
+const RAIN_CHANCE := {GameClock.Season.ASARA: 0.45, GameClock.Season.ASOTRY: 0.08}
 
 ## Why an animal can or can't be settled right now - the UI turns it into a
 ## message ("Coop full (6/6)"...).
@@ -52,6 +57,9 @@ var grid_height: int
 var _crop_registry: Dictionary = {} # crop_id: String -> CropData
 var _animal_registry: Dictionary = {} # AnimalData.Species -> AnimalData
 var _tree_registry: Dictionary = {} # tree_type_id: String -> TreeData
+## Chance of rain per season for this game - RAIN_CHANCE; tests set it to {}
+## (never rains) so advance_day() stays deterministic.
+var rain_chance: Dictionary = RAIN_CHANCE.duplicate()
 ## Fraction of a minute accumulated by advance_time(), not saved.
 var _minute_fraction := 0.0
 
@@ -252,6 +260,7 @@ func advance_day() -> void:
 	_advance_trees()
 	state.clock.advance_day()
 	_minute_fraction = 0.0
+	set_weather(_roll_weather())
 	day_changed.emit(state.day)
 	time_changed.emit(state.clock.minute_of_day)
 
@@ -309,6 +318,26 @@ func _attempt_breeding(species: AnimalData.Species) -> void:
 		if animal.species == species and animal.days_well_cared >= animal_data.breeding_days_required:
 			animal.days_well_cared = 0
 	animal_added.emit(baby_id)
+
+func is_raining() -> bool:
+	return state.weather == FarmState.Weather.RAIN
+
+## Sets today's weather. Rain waters every tilled plot right away - for the
+## whole day: a crop planted after waking up still counts as watered. Only
+## tilled plots: wet soil is drawn as worked soil, and fallow land isn't.
+func set_weather(weather: FarmState.Weather) -> void:
+	state.weather = weather
+	if weather == FarmState.Weather.RAIN:
+		for plot_id in state.plots:
+			var plot: PlotState = state.plots[plot_id]
+			if plot.tilled and not plot.watered:
+				plot.watered = true
+				plot_changed.emit(plot_id)
+	weather_changed.emit(weather)
+
+func _roll_weather() -> FarmState.Weather:
+	var chance: float = rain_chance.get(state.clock.get_season(), 0.0)
+	return FarmState.Weather.RAIN if randf() < chance else FarmState.Weather.CLEAR
 
 ## Moves the time of day on by `minutes` (fractions add up across calls) -
 ## driven by DayNightController from real time. Stops at
@@ -583,6 +612,7 @@ func load_save_data(data: Dictionary) -> void:
 	day_changed.emit(state.day)
 	_minute_fraction = 0.0
 	time_changed.emit(state.clock.minute_of_day)
+	weather_changed.emit(state.weather)
 	# plot_added, not plot_changed: load_dict() rebuilt the plot set from
 	# scratch, so as far as any listener is concerned every plot is new.
 	for plot_id in state.plots:

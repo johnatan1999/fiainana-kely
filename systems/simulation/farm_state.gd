@@ -8,8 +8,12 @@ extends RefCounted
 ## real zone id.
 const DEFAULT_ZONE := ""
 
+## Today's weather, rolled each morning (FarmSimulation.advance_day()).
+enum Weather { CLEAR, RAIN }
+
 var money: int = 10000
 var clock := GameClock.new()
+var weather: Weather = Weather.CLEAR
 
 ## plot_id: int -> PlotState. Ids are stable and never reused - a plot's
 ## actual (x, y) lives in plot_positions, not encoded in the id itself, so
@@ -187,6 +191,7 @@ func to_dict() -> Dictionary:
 		"money": money,
 		"day": day,
 		"minute": clock.minute_of_day,
+		"weather": weather,
 		"inventory": inventory.duplicate(),
 		"plots": plots_data,
 		"next_plot_id": _next_plot_id,
@@ -217,6 +222,8 @@ func load_dict(data: Dictionary) -> void:
 	clock.current_day = int(data.get("day", clock.current_day))
 	# Optional key (older saves have none): they wake up at dawn.
 	clock.minute_of_day = clampi(int(data.get("minute", GameClock.DAY_START_MINUTE)), 0, GameClock.LATEST_MINUTE)
+	# Optional key (older saves have none): a clear day.
+	weather = clampi(int(data.get("weather", Weather.CLEAR)), 0, Weather.size() - 1) as Weather
 
 	inventory.clear()
 	var saved_inventory: Dictionary = data.get("inventory", {})

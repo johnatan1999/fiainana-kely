@@ -33,6 +33,7 @@ const DELTA_TIME := 1.1
 @onready var date_label: Label = %DateLabel
 @onready var year_label: Label = %YearLabel
 @onready var time_label: Label = %TimeLabel
+@onready var weather_glyph: HudGlyph = %WeatherGlyph
 @onready var season_bar: ProgressBar = %SeasonBar
 @onready var days_label: Label = %DaysLabel
 @onready var money_label: Label = %MoneyLabel
@@ -52,6 +53,8 @@ func setup(simulation: FarmSimulation) -> void:
 	simulation.money_changed.connect(_on_money_changed)
 	simulation.day_changed.connect(func(_day: int): _refresh_date())
 	simulation.time_changed.connect(_refresh_time)
+	simulation.weather_changed.connect(func(weather): weather_glyph.visible = weather == FarmState.Weather.RAIN)
+	weather_glyph.visible = simulation.is_raining()
 	_refresh_time(simulation.state.clock.minute_of_day)
 	season_bar.max_value = GameClock.DAYS_PER_SEASON
 	season_bar.add_theme_stylebox_override("fill", season_bar.get_theme_stylebox("fill").duplicate())

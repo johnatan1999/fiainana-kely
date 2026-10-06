@@ -49,6 +49,9 @@ const BIRD_FLIGHT_MIN_INTERVAL := 0.6
 @export var sfx_footstep_run: AudioStream
 @export var sfx_action_denied: AudioStream
 @export var sfx_bird_flight: AudioStream
+## Looping rain sound (WeatherController). Empty = a rain hiss generated in
+## code stands in until a recording is assigned.
+@export var bgs_rain: AudioStream
 
 @onready var _bgm_players: Array[AudioStreamPlayer] = [$BGMPlayerA, $BGMPlayerB]
 
@@ -57,6 +60,18 @@ var _active_bgm_index := 0
 var _current_bgm_stream: AudioStream
 var _bgm_tween: Tween
 var _last_bird_flight_msec := -100000
+
+const RAIN_VOLUME_DB := -14.0
+## Heard from indoors: quieter.
+const RAIN_MUFFLED_VOLUME_DB := -24.0
+const RAIN_FADE_TIME := 1.5
+const RAIN_MIX_RATE := 22050.0
+var _rain_player: AudioStreamPlayer
+var _rain_playback: AudioStreamGeneratorPlayback
+var _rain_tween: Tween
+## Generated rain: filtered noise, plus the odd louder drop.
+var _rain_lowpass := 0.0
+var _rain_drop := 0.0
 
 
 func _ready() -> void:
@@ -192,6 +207,46 @@ func play_bird_flight_sfx() -> void:
 		return
 	_last_bird_flight_msec = now
 	play_sfx(sfx_bird_flight, BIRD_FLIGHT_VOLUME_DB, randf_range(0.9, 1.15))
+
+
+## Starts or stops the rain's sound, fading. `muffled`: heard from indoors.
+func set_rain_ambience(active: bool, muffled := false) -> void:
+	if _rain_player == null:
+		_rain_player = AudioStreamPlayer.new()
+		_rain_player.bus = BUS_SFX
+		_rain_player.volume_db = SILENT_DB
+		add_child(_rain_player)
+	if _rain_tween:
+		_rain_tween.kill()
+	if active and not _rain_player.playing:
+		if bgs_rain:
+			_rain_player.stream = bgs_rain
+		else:
+			var generator := AudioStreamGenerator.new()
+			generator.mix_rate = RAIN_MIX_RATE
+			generator.buffer_length = 0.3
+			_rain_player.stream = generator
+		_rain_player.play()
+		_rain_playback = _rain_player.get_stream_playback() as AudioStreamGeneratorPlayback
+	var target := (RAIN_MUFFLED_VOLUME_DB if muffled else RAIN_VOLUME_DB) if active else SILENT_DB
+	_rain_tween = create_tween()
+	_rain_tween.tween_property(_rain_player, "volume_db", target, RAIN_FADE_TIME)
+	if not active:
+		_rain_tween.tween_callback(_rain_player.stop)
+
+func _process(_delta: float) -> void:
+	if _rain_playback == null or not _rain_player.playing or bgs_rain != null:
+		return
+	# Brown-ish noise (low-passed) for the hiss, a little white noise on top,
+	# and now and then a louder drop decaying fast.
+	for i in _rain_playback.get_frames_available():
+		var white := randf_range(-1.0, 1.0)
+		_rain_lowpass = lerpf(_rain_lowpass, white, 0.12)
+		if randf() < 0.0004:
+			_rain_drop = randf_range(0.3, 0.6)
+		_rain_drop *= 0.992
+		var sample := _rain_lowpass * 0.9 + white * 0.08 + white * _rain_drop
+		_rain_playback.push_frame(Vector2(sample, sample))
 
 
 func play_chicken_sfx() -> void:

@@ -25,6 +25,8 @@
   `_process_roosting()`, elle ressort à `WAKE_MINUTE`, après un délai aléatoire
   (`WAKE_DELAY_MAX`).
 - **Autres réglages** : `HOME_SPEED`, `HOME_STUCK_TIME`, `FADE_TIME`.
+- **Fondus de la porte** (`_door_tween`) : un seul à la fois. Une poule qui ressort pendant
+  son fondu d'entrée annule l'ancien, sinon il la cacherait de nouveau.
 - **Trajet du soir** : `_head_home()` marche jusqu'à `Coop.get_door_position()`. Le poulailler
   est trouvé par le groupe `Coop.GROUP` (`"chicken_coops"`), en prenant le plus proche.
 - **Pas de recherche de chemin** : une poule bloquée plus de `HOME_STUCK_TIME` « fait le tour »

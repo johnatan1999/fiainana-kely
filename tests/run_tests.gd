@@ -13,7 +13,9 @@ func _initialize() -> void:
 
 func _make_sim() -> FarmSimulation:
 	var corn: CropData = load("res://data/crops/corn.tres")
-	return FarmSimulation.new(4, 4, {"corn": corn})
+	var sim: FarmSimulation = FarmSimulation.new(4, 4, {"corn": corn})
+	sim.rain_chance = {} # deterministic: no surprise rain
+	return sim
 
 ## duplicate() so each test gets its own AnimalData instance - mutating
 ## breeding_chance for one test must never leak into another via the
@@ -22,7 +24,9 @@ func _make_sim_with_chicken(breeding_chance: float = 0.25) -> FarmSimulation:
 	var corn: CropData = load("res://data/crops/corn.tres")
 	var chicken: AnimalData = load("res://data/animals/chicken.tres").duplicate()
 	chicken.breeding_chance = breeding_chance
-	return FarmSimulation.new(4, 4, {"corn": corn}, {AnimalData.Species.CHICKEN: chicken})
+	var sim: FarmSimulation = FarmSimulation.new(4, 4, {"corn": corn}, {AnimalData.Species.CHICKEN: chicken})
+	sim.rain_chance = {} # deterministic: no surprise rain
+	return sim
 
 ## FarmLandManager extends Node but is never added to the tree in these tests -
 ## fine, since buy_zone()/buy_progressive_patch() never touch tree-dependent
@@ -50,7 +54,9 @@ func _make_sim_with_mango() -> FarmSimulation:
 	var mango: TreeData = load("res://data/trees/mango_tree.tres")
 	var decor := TreeData.new()
 	decor.id = "decor_tree"
-	return FarmSimulation.new(4, 4, {"corn": corn}, {}, {mango.id: mango, decor.id: decor})
+	var sim: FarmSimulation = FarmSimulation.new(4, 4, {"corn": corn}, {}, {mango.id: mango, decor.id: decor})
+	sim.rain_chance = {} # deterministic: no surprise rain
+	return sim
 
 func _rect_cells(origin: Vector2i, size: Vector2i) -> Array[Vector2i]:
 	var cells: Array[Vector2i] = []
@@ -140,6 +146,10 @@ func _run_all() -> void:
 	test_zone_plots_save_load_roundtrip()
 	test_v5_save_migrates_plots_to_their_zone()
 	test_harvest_reports_quantity_and_penalties()
+	test_rain_waters_tilled_plots_only()
+	test_crops_grow_on_a_rainy_day_without_watering()
+	test_weather_save_load_roundtrip()
+	test_rain_is_much_more_likely_in_asara()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -863,6 +873,7 @@ func _make_sim_with_paddy() -> FarmSimulation:
 	var rice: CropData = load("res://data/crops/rice.tres")
 	var sim := FarmSimulation.new(4, 4, {"corn": corn, "rice": rice})
 	sim.set_tile_flooded(0, 0, true)
+	sim.rain_chance = {} # deterministic: no surprise rain
 	return sim
 
 func test_paddy_plots_grow_without_watering() -> void:
@@ -1017,3 +1028,46 @@ func test_harvest_reports_quantity_and_penalties() -> void:
 		and reported[3] == true,
 		"a harvest reports how much went into the bag, and that an under-watered crop was cut"
 	)
+
+func test_rain_waters_tilled_plots_only() -> void:
+	var sim := _make_sim()
+	sim.till(0)
+	sim.set_weather(FarmState.Weather.RAIN)
+	_check(sim.get_plot(0).watered and not sim.get_plot(1).watered and sim.is_raining(),
+		"rain waters tilled plots, and leaves fallow ones dry")
+
+func test_crops_grow_on_a_rainy_day_without_watering() -> void:
+	var sim := _make_sim()
+	sim.till(0)
+	sim.state.add_inventory("corn_seed", 1)
+	sim.set_weather(FarmState.Weather.RAIN) # woke up to rain...
+	sim.plant(0, "corn") # ...and planted afterwards
+	sim.advance_day()
+	_check(sim.get_plot(0).crop.age == 1, "a crop planted on a rainy day grows without the watering can")
+
+func test_weather_save_load_roundtrip() -> void:
+	var sim := _make_sim()
+	sim.set_weather(FarmState.Weather.RAIN)
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var fresh_sim := _make_sim()
+	fresh_sim.load_save_data(data)
+	data.erase("weather")
+	var old_save_sim := _make_sim()
+	old_save_sim.load_save_data(data)
+	_check(fresh_sim.is_raining() and not old_save_sim.is_raining(),
+		"today's weather survives a save/load; a save from before it has a clear day")
+
+func test_rain_is_much_more_likely_in_asara() -> void:
+	seed(1234)
+	var sim := _make_sim()
+	sim.rain_chance = FarmSimulation.RAIN_CHANCE.duplicate()
+	var rainy := {GameClock.Season.ASARA: 0, GameClock.Season.ASOTRY: 0}
+	for season_start in [1, 31]: # first day of Asara, of Asotry
+		for i in 2000:
+			sim.state.clock.current_day = season_start
+			if sim._roll_weather() == FarmState.Weather.RAIN:
+				rainy[sim.state.clock.get_season()] += 1
+	var asara: float = rainy[GameClock.Season.ASARA] / 2000.0
+	var asotry: float = rainy[GameClock.Season.ASOTRY] / 2000.0
+	_check(absf(asara - 0.45) < 0.04 and absf(asotry - 0.08) < 0.03,
+		"it rains on ~45%% of Asara days and ~8%% of Asotry days (%.2f / %.2f)" % [asara, asotry])
