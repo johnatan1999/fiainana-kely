@@ -12,7 +12,7 @@ extends Node2D
 var _animal_manager: AnimalManager
 
 ## Free-roaming chickens of the zone find the coop through this group to go
-## in for the night - see Chicken.set_night().
+## in for the night - see Chicken.set_time_of_day().
 const GROUP := "chicken_coops"
 
 func _ready() -> void:

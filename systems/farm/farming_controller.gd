@@ -30,6 +30,7 @@ var simulation: FarmSimulation
 var player: PlayerController
 var hotbar: Hotbar
 var farm_view: FarmView # null while the player is outside the farm zone
+var _world_manager: WorldManager
 ## Set by _perform() for HARVEST, consumed by
 ## _on_action_animation_finished() - -1 means no harvest is pending.
 var _pending_harvest_plot_id := -1
@@ -43,6 +44,7 @@ func setup(p_simulation: FarmSimulation, p_player: PlayerController, p_world_man
 	player.interact_requested.connect(_on_interact_requested)
 	player.use_item_requested.connect(_on_use_item_requested)
 	player.action_animation_finished.connect(_on_action_animation_finished)
+	_world_manager = p_world_manager
 	p_world_manager.zone_loaded.connect(_on_zone_loaded)
 	p_world_manager.zone_unloading.connect(_on_zone_unloading)
 
@@ -81,7 +83,7 @@ func _get_target_plot_id() -> int:
 func _on_zone_loaded(zone: ZoneRoot) -> void:
 	var found: FarmView = zone.get_node_or_null("FarmView")
 	if found:
-		found.setup(simulation)
+		found.setup(simulation, _world_manager.current_zone_id)
 		set_farm_view(found)
 
 func _on_zone_unloading(_zone: ZoneRoot) -> void:

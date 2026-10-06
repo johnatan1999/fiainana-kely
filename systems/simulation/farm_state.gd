@@ -1,6 +1,13 @@
 class_name FarmState
 extends RefCounted
 
+## Plots belong to a world zone (a ZoneData id: "village", "rice_fields"...)
+## and sit at a cell of that zone's own grid - every zone with fields has its
+## own, so two zones never share plots. DEFAULT_ZONE is for code that only
+## ever deals with a single zone (the unit tests): the game always passes a
+## real zone id.
+const DEFAULT_ZONE := ""
+
 var money: int = 10000
 var clock := GameClock.new()
 
@@ -10,8 +17,9 @@ var clock := GameClock.new()
 ## plot's position (unlike the old "id = y * width + x" scheme, which broke
 ## the moment the grid's width changed).
 var plots: Dictionary = {}
-var plot_positions: Dictionary = {} # plot_id: int -> Vector2i
-var _position_to_plot_id: Dictionary = {} # Vector2i -> plot_id: int
+var plot_positions: Dictionary = {} # plot_id: int -> Vector2i (cell in its zone)
+var plot_zones: Dictionary = {} # plot_id: int -> zone_id: String
+var _position_to_plot_id: Dictionary = {} # zone_id: String -> {Vector2i -> plot_id: int}
 var _next_plot_id: int = 0
 
 var inventory: Dictionary = {} # item_id: String -> int
@@ -51,18 +59,24 @@ func _init(grid_width: int, grid_height: int) -> void:
 		for x in range(grid_width):
 			add_plot(x, y)
 
-## Creates a new empty, untilled plot at (x, y). Returns its plot_id, or -1
-## if a plot already exists there.
-func add_plot(x: int, y: int) -> int:
+## Creates a new empty, untilled plot at (x, y) of zone_id. Returns its
+## plot_id, or -1 if a plot already exists there.
+func add_plot(x: int, y: int, zone_id := DEFAULT_ZONE) -> int:
 	var pos := Vector2i(x, y)
-	if _position_to_plot_id.has(pos):
+	if get_plot_id_at(x, y, zone_id) != -1:
 		return -1
 	var plot_id := _next_plot_id
 	_next_plot_id += 1
 	plots[plot_id] = PlotState.new()
-	plot_positions[plot_id] = pos
-	_position_to_plot_id[pos] = plot_id
+	_index(plot_id, pos, zone_id)
 	return plot_id
+
+func _index(plot_id: int, pos: Vector2i, zone_id: String) -> void:
+	plot_positions[plot_id] = pos
+	plot_zones[plot_id] = zone_id
+	if not _position_to_plot_id.has(zone_id):
+		_position_to_plot_id[zone_id] = {}
+	_position_to_plot_id[zone_id][pos] = plot_id
 
 ## Permanently removes a plot - and whatever was growing on it. Returns
 ## false if it didn't exist.
@@ -70,21 +84,26 @@ func remove_plot(plot_id: int) -> bool:
 	if not plots.has(plot_id):
 		return false
 	var pos: Vector2i = plot_positions[plot_id]
+	var zone_id: String = plot_zones[plot_id]
 	plots.erase(plot_id)
 	plot_positions.erase(plot_id)
-	_position_to_plot_id.erase(pos)
+	plot_zones.erase(plot_id)
+	_position_to_plot_id[zone_id].erase(pos)
 	return true
 
-## Returns the plot_id at (x, y), or -1 if no plot exists there.
-func get_plot_id_at(x: int, y: int) -> int:
-	return _position_to_plot_id.get(Vector2i(x, y), -1)
+## Returns the plot_id at (x, y) of zone_id, or -1 if no plot exists there.
+func get_plot_id_at(x: int, y: int, zone_id := DEFAULT_ZONE) -> int:
+	return _position_to_plot_id.get(zone_id, {}).get(Vector2i(x, y), -1)
 
-## Smallest axis-aligned rectangle (in grid cells) containing every plot.
-## Empty Rect2i if there are no plots left.
-func get_grid_bounds() -> Rect2i:
-	if plot_positions.is_empty():
+func get_plot_zone(plot_id: int) -> String:
+	return plot_zones.get(plot_id, DEFAULT_ZONE)
+
+## Smallest axis-aligned rectangle (in grid cells) containing every plot of
+## zone_id. Empty Rect2i if it has none.
+func get_grid_bounds(zone_id := DEFAULT_ZONE) -> Rect2i:
+	var positions: Array = _position_to_plot_id.get(zone_id, {}).keys()
+	if positions.is_empty():
 		return Rect2i()
-	var positions: Array = plot_positions.values()
 	var min_pos: Vector2i = positions[0]
 	var max_pos: Vector2i = positions[0]
 	for pos: Vector2i in positions:
@@ -132,6 +151,7 @@ func to_dict() -> Dictionary:
 				"days_total": plot.crop.days_total,
 			}
 		plots_data[str(plot_id)] = {
+			"zone": plot_zones[plot_id],
 			"x": pos.x,
 			"y": pos.y,
 			"tilled": plot.tilled,
@@ -205,6 +225,7 @@ func load_dict(data: Dictionary) -> void:
 
 	plots.clear()
 	plot_positions.clear()
+	plot_zones.clear()
 	_position_to_plot_id.clear()
 	_next_plot_id = int(data.get("next_plot_id", 0))
 
@@ -227,8 +248,8 @@ func load_dict(data: Dictionary) -> void:
 			plot.crop = crop
 
 		plots[plot_id] = plot
-		plot_positions[plot_id] = pos
-		_position_to_plot_id[pos] = plot_id
+		# Every plot has a zone since save v6 (SaveController migrates older saves).
+		_index(plot_id, pos, str(plot_data.get("zone", DEFAULT_ZONE)))
 
 	has_coop = data.get("has_coop", false)
 	coop_capacity = int(data.get("coop_capacity", coop_capacity))

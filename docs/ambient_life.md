@@ -29,7 +29,8 @@
   - Points d'apparition vérifiés par une requête physique (`intersect_point`, masque 1) :
     jamais dans un mur, un tronc, une clôture ou l'eau profonde. Papillons et lucioles
     apparaissent au-dessus du `GrassLayer`.
-  - Suit l'heure via le groupe `night_lights` : `set_night()`, `is_night()` (seuil 0,6).
+  - Suit la **lumière** via `DayNightController.LIGHT_GROUP` : `set_night()`, `is_night()`
+    (seuil 0,6). C'est acceptable ici parce que tout ce système est purement visuel.
 - **`butterfly.gd`** : errance autour de son point de départ, fuite à l'approche
   (`FLEE_DISTANCE`), `z_index = 3`.
 - **`ambient_bird.gd` (`AmbientBird`)** :

@@ -7,10 +7,11 @@ extends CharacterBody2D
 ## to decide what to do; only ever writes back to it via AnimalManager calls
 ## (feed_animal/water_animal), never directly.
 ##
-## Follows the time of day (DayNightController's "night_lights" group): at
-## dusk a free-roaming chicken walks to its zone's coop door and goes in;
-## at dawn it comes back out and returns to its spot. Chickens kept in the
-## coop (simulated ones) just sleep through the night.
+## Keeps the hours (DayNightController.CLOCK_GROUP): from ROOST_MINUTE a
+## free-roaming chicken walks to its zone's coop door and goes in; from
+## WAKE_MINUTE it comes back out and returns to its spot. Chickens kept in
+## the coop (simulated ones) just sleep through the night. By the clock, not
+## the light: retuning the sky colors never moves these hours.
 
 enum State { IDLE, WALK, EAT, DRINK, SLEEP, ROOSTING }
 
@@ -48,10 +49,10 @@ const CRITICAL_NEED_THRESHOLD := 20.0
 ## toward its feet and back, PECK_PERIOD seconds per peck.
 const PECK_SQUASH := Vector2(1.06, 0.84)
 const PECK_PERIOD := 0.3
-## Night amount (DayNightController) at which chickens head in (~18:50),
-## and below which they come back out in the morning (~6:20).
-const ROOST_AT := 0.4
-const WAKE_AT := 0.25
+## Going in at dusk, out in the morning (minute of the day). WAKE_MINUTE is
+## a little after the 6:00 wake-up, so the player sees them come out.
+const ROOST_MINUTE := 18 * 60 + 45
+const WAKE_MINUTE := 6 * 60 + 15
 ## Hurrying home.
 const HOME_SPEED := 55.0
 ## Walking home has no pathfinding: one stuck behind a fence or a house for
@@ -94,15 +95,16 @@ var _walk_time_left: float = 0.0
 var _target_bowl
 var _need_bubble: NeedBubble
 var _peck_tween: Tween
-var _night := 0.0
-var _night_known := false
+## Between ROOST_MINUTE and WAKE_MINUTE - see set_time_of_day().
+var _roost_time := false
+var _time_known := false
 ## Walking to the coop door for the night.
 var _going_home := false
 var _stuck_time := 0.0
 var _wake_delay := 0.0
 
 func _ready() -> void:
-	add_to_group(DayNightController.NIGHT_GROUP)
+	add_to_group(DayNightController.CLOCK_GROUP)
 	anim.scale = Vector2(size_multiplier, size_multiplier)
 	collistion.scale = Vector2(size_multiplier, size_multiplier)
 	anim.modulate = tint_color
@@ -144,21 +146,26 @@ func _randomize_start() -> void:
 	animator.face([Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN].pick_random())
 	animator.play(Vector2.ZERO, "idle") # apply it now, not on the first physics tick
 
-## DayNightController, whenever the light changes.
-func set_night(amount: float) -> void:
-	_night = amount
-	if not _night_known:
-		_night_known = true
+## DayNightController, on every new minute (and when the zone loads).
+func set_time_of_day(minute_of_day: int) -> void:
+	_roost_time = is_roost_time(minute_of_day)
+	if not _time_known:
+		_time_known = true
 		# Zone entered at night: the chickens are in already.
-		if _is_wild and amount >= ROOST_AT and _find_coop() != null:
+		if _is_wild and _roost_time and _find_coop() != null:
 			_go_in(true)
+
+## Night hours for a chicken. The day starts at 6:00 (GameClock), so before
+## WAKE_MINUTE is the very start of the morning.
+static func is_roost_time(minute_of_day: int) -> bool:
+	return minute_of_day >= ROOST_MINUTE or minute_of_day < WAKE_MINUTE
 
 func _physics_process(delta: float) -> void:
 	if _is_wild:
 		if _state == State.ROOSTING:
 			_process_roosting(delta)
 			return
-		if _night >= ROOST_AT and not _going_home:
+		if _roost_time and not _going_home:
 			_head_home()
 		match _state:
 			State.WALK:
@@ -180,7 +187,7 @@ func _physics_process(delta: float) -> void:
 	_need_bubble.set_needs(not animal.fed_today, not animal.watered_today,
 		minf(animal.hunger, animal.thirst) <= CRITICAL_NEED_THRESHOLD)
 
-	if _night >= ROOST_AT and _state in [State.IDLE, State.WALK]:
+	if _roost_time and _state in [State.IDLE, State.WALK]:
 		# Shut in the coop already: just sleep through the night.
 		_state = State.SLEEP
 		_state_timer = 1.0
@@ -300,7 +307,7 @@ func _go_in(instantly := false) -> void:
 	tween.tween_callback(hide)
 
 func _process_roosting(delta: float) -> void:
-	if _night > WAKE_AT:
+	if _roost_time:
 		return
 	_wake_delay -= delta
 	if _wake_delay > 0.0:

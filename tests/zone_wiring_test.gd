@@ -45,6 +45,27 @@ func _run_checks() -> void:
 	_check(zone_ids.size() > 0, "WorldManager's zone registry is not empty")
 	for zone_id in zone_ids:
 		_check_zone_doors(world_manager, zone_id)
+		_check_zone_tree_ids(world_manager, zone_id)
+
+## A tree's tree_id is its identity in the save: it must be set, and unique
+## within the zone (a tree duplicated outside the editor would share it).
+## Matched by script path, not `is WorldTree` - see _find_transitions().
+func _check_zone_tree_ids(world_manager, zone_id: String) -> void:
+	var zone = world_manager._zones[zone_id].scene.instantiate()
+	var seen := {}
+	var missing := 0
+	var duplicates := 0
+	for node in zone.find_children("*", "", true, false):
+		if node.get_script() == null or not node.get_script().resource_path.ends_with("world_tree.gd"):
+			continue
+		if node.tree_id == "":
+			missing += 1
+		elif seen.has(node.tree_id):
+			duplicates += 1
+		seen[node.tree_id] = true
+	_check(missing == 0, "zone '%s': every tree has a tree_id" % zone_id)
+	_check(duplicates == 0, "zone '%s': tree ids are unique" % zone_id)
+	zone.free()
 
 func _check_zone_doors(world_manager, zone_id: String) -> void:
 	var zone_data = world_manager._zones[zone_id]

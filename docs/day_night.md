@@ -36,8 +36,14 @@
 - Tableau `SKY` : heure → couleur, interpolé en douceur. Intérieur : `INDOOR_DAY` →
   `INDOOR_NIGHT` selon la nuit.
 - `get_night_amount()` : 0 le jour, 1 en pleine nuit (déduit de la luminosité du ciel).
-- Groupe **`night_lights`** : tout nœud qui y est reçoit `set_night(amount)` quand la lumière
-  change, et aussi au chargement d'une zone. Membres : `NightLight`, `AmbientLife`, `Chicken`.
+- **Deux canaux, volontairement séparés.** Les deux sont aussi envoyés au chargement d'une
+  zone, pour que ses nœuds démarrent dans le bon état.
+  - **`LIGHT_GROUP`** (`"light_listeners"`) : `set_night(amount)` quand la lumière change.
+    **Uniquement pour le visuel** : `NightLight`, `AmbientLife`.
+  - **`CLOCK_GROUP`** (`"clock_listeners"`) : `set_time_of_day(minute_of_day)` à chaque
+    minute. **Pour tout comportement réglé sur l'heure** : `Chicken`.
+  - Règle : un comportement ne doit jamais dépendre de la lumière. Les couleurs du ciel
+    (`SKY`) sont un réglage visuel qu'on doit pouvoir retoucher librement.
 - `ZoneRoot.indoor` (export) : coché sur `player_interior_house` et `chicken_coop_interior`.
 
 **Lanternes : `environment/lighting/night_light.gd` (`NightLight`)**

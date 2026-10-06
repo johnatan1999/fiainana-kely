@@ -12,7 +12,7 @@ const DEFAULT_ZONE_ID := "village"
 ## shipped, only append new ones. This is the single place format drift gets
 ## fixed, instead of runtime code scattered across load_game() staying
 ## permanently tolerant of every historical format.
-const SAVE_VERSION := 5
+const SAVE_VERSION := 6
 
 var simulation: FarmSimulation
 var world_manager: WorldManager
@@ -83,6 +83,8 @@ func _migrate(data: Dictionary, from_version: int) -> Dictionary:
 		data = _migrate_to_v4(data)
 	if from_version < 5:
 		data = _migrate_to_v5(data)
+	if from_version < 6:
+		data = _migrate_to_v6(data)
 	return data
 
 ## v0 (unversioned save, predates this field entirely) -> v1: zone_id was
@@ -176,6 +178,33 @@ func _migrate_to_v5(data: Dictionary) -> Dictionary:
 			if count > 0:
 				pending[str(species)] = count
 	data["pending_animals"] = pending
+	return data
+
+## v5 -> v6: plots used to share one grid, each world zone with fields
+## taking its own region of it by hand (FarmView.grid_offset: the rice
+## fields at x >= 100). Plots now belong to a zone and use its own grid:
+## each one gets its zone, its cell shifted back by that zone's old offset.
+## Hardcoded snapshot of the offsets as of v5, same reason as v1.
+const _V6_ZONE_OFFSETS := [["rice_fields", Vector2i(100, 0)]]
+const _V6_DEFAULT_ZONE := "village"
+func _migrate_to_v6(data: Dictionary) -> Dictionary:
+	var plots = data.get("plots")
+	if not plots is Dictionary:
+		return data
+	for key in plots:
+		var plot: Dictionary = plots[key]
+		if plot.has("zone"):
+			continue
+		var cell := Vector2i(int(plot.get("x", 0)), int(plot.get("y", 0)))
+		var zone := _V6_DEFAULT_ZONE
+		for entry in _V6_ZONE_OFFSETS:
+			var offset: Vector2i = entry[1]
+			if cell.x >= offset.x and cell.y >= offset.y:
+				zone = entry[0]
+				cell -= offset
+		plot["zone"] = zone
+		plot["x"] = cell.x
+		plot["y"] = cell.y
 	return data
 
 func _unhandled_input(event: InputEvent) -> void:

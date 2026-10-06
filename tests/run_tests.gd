@@ -136,6 +136,9 @@ func _run_all() -> void:
 	test_time_stops_at_two_in_the_morning()
 	test_sleeping_wakes_up_at_six()
 	test_time_of_day_save_load_roundtrip()
+	test_zones_have_separate_plot_grids()
+	test_zone_plots_save_load_roundtrip()
+	test_v5_save_migrates_plots_to_their_zone()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -947,4 +950,48 @@ func test_time_of_day_save_load_roundtrip() -> void:
 	_check(
 		fresh_sim.state.clock.minute_of_day == 6 * 60 + 200 and old_save_sim.state.clock.minute_of_day == GameClock.DAY_START_MINUTE,
 		"the time of day survives a save/load; a save from before it wakes up at 6:00"
+	)
+
+func test_zones_have_separate_plot_grids() -> void:
+	var sim := _make_sim()
+	var village := sim.add_tile(20, 20, "village")
+	var rice := sim.add_tile(20, 20, "rice_fields")
+	sim.till(rice)
+	_check(
+		village != -1 and rice != -1 and village != rice
+		and sim.get_plot_id_at(20, 20, "village") == village
+		and sim.get_plot_id_at(20, 20, "rice_fields") == rice
+		and sim.get_plot_id_at(20, 20) == -1
+		and sim.get_plot_zone(rice) == "rice_fields"
+		and not sim.get_plot(village).tilled,
+		"the same cell in two zones is two different plots"
+	)
+
+func test_zone_plots_save_load_roundtrip() -> void:
+	var sim := _make_sim()
+	sim.add_tile(2, 3, "rice_fields")
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var fresh_sim := _make_sim()
+	fresh_sim.load_save_data(data)
+	var plot_id := fresh_sim.get_plot_id_at(2, 3, "rice_fields")
+	_check(plot_id != -1 and fresh_sim.get_plot_zone(plot_id) == "rice_fields", "a plot's zone survives a save/load")
+
+func test_v5_save_migrates_plots_to_their_zone() -> void:
+	# A v5 save: one grid, the rice fields at x >= 100 (their old grid_offset).
+	var data := {"plots": {
+		"0": {"x": 3, "y": 4, "tilled": true},
+		"1": {"x": 104, "y": 6, "flooded": true},
+	}, "next_plot_id": 2}
+	var save_controller := SaveController.new()
+	data = save_controller._migrate(data, 5)
+	save_controller.free()
+	var sim := _make_sim()
+	sim.load_save_data(data)
+	var village_plot := sim.get_plot_id_at(3, 4, "village")
+	var rice_plot := sim.get_plot_id_at(4, 6, "rice_fields")
+	_check(
+		village_plot != -1 and sim.get_plot(village_plot).tilled
+		and rice_plot != -1 and sim.get_plot(rice_plot).flooded
+		and sim.get_plot_id_at(104, 6, "rice_fields") == -1,
+		"migrating a v5 save puts each plot in its zone, the rice fields shifted back by their old offset"
 	)

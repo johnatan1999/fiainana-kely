@@ -96,13 +96,9 @@ func get_cells() -> Array[Vector2i]:
 	_cells_read = true
 	return _cells
 
-## Where the field's cell (0, 0) is in the simulation's grid: its position
-## on the plot grid, plus its FarmView's grid_offset (each zone has its own
-## region of the shared grid).
+## Where the field's cell (0, 0) is in its zone's plot grid (FarmView's).
 func get_grid_origin() -> Vector2i:
-	var origin := Vector2i((position / CELL_SIZE).round())
-	var offset = get_parent().get("grid_offset") if get_parent() else null
-	return origin + offset if offset is Vector2i else origin
+	return Vector2i((position / CELL_SIZE).round())
 
 ## Redraws the soil. `owned`: set (Vector2i -> true) of the cells that have a
 ## plot, i.e. were bought; every other cell of the field is locked fallow.

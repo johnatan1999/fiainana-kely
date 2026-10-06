@@ -30,6 +30,13 @@ const GROUP := "world_trees"
 const INTERACT_REACH := Vector2(78, 64)
 const VISUAL_NODE_NAME := "Visual"
 
+## This tree's identity in the save (its fruit state) - unique within its
+## zone. Given once, in the editor, when the tree is placed; a copy made by
+## duplicating a tree gets a new one. Trees placed before ids existed carry
+## their old path-based id ("Trees/MangoTree"), so their saved state stays.
+## Never edit it once a save may reference it: the tree would start over.
+@export var tree_id := ""
+
 @export var tree_data: TreeData:
 	set(value):
 		if tree_data and tree_data.changed.is_connected(_rebuild_visual):
@@ -61,6 +68,7 @@ var _ripe := false
 func _ready() -> void:
 	_rebuild_visual()
 	if Engine.is_editor_hint():
+		_ensure_unique_id()
 		return
 	add_to_group(GROUP)
 	var reach := RectangleShape2D.new()
@@ -79,6 +87,29 @@ func show_state(prompt: String, ripe: bool) -> void:
 	_ripe = ripe
 	if _visual:
 		_visual.show_state(TreeVisual.State.FRUITING if ripe else TreeVisual.State.BARE)
+
+## Editor only: gives the tree an id if it has none, or a new one if an
+## earlier tree of the same scene already has it (a duplicate) - the first
+## one keeps it.
+func _ensure_unique_id() -> void:
+	var scene_root := owner
+	if scene_root == null:
+		return # editing world_tree.tscn itself
+	if tree_id != "" and not _id_taken_before(scene_root):
+		return
+	tree_id = "tree_%08x" % randi()
+	# Saved with the scene - make sure the editor knows it changed.
+	var editor = Engine.get_singleton(&"EditorInterface")
+	if editor:
+		editor.mark_scene_as_unsaved()
+
+func _id_taken_before(scene_root: Node) -> bool:
+	for node in scene_root.find_children("*", "", true, false):
+		if node == self:
+			return false
+		if node is WorldTree and node.tree_id == tree_id:
+			return true
+	return false
 
 ## Where a bird lands to hide in the foliage: the canopy's middle (the
 ## visual's FadeArea), or just above the trunk without one. Global.

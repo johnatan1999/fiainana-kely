@@ -12,7 +12,7 @@ extends Node2D
 ## Y-sorted, so birds on the ground sort with the player and the props;
 ## butterflies and flocks fly above everything (their own z_index).
 ##
-## Follows the time of day (DayNightController, "night_lights" group): at
+## Follows the light (DayNightController.LIGHT_GROUP - it's all looks): at
 ## night butterflies are gone, birds fly off to roost and no flock passes -
 ## fireflies come out instead.
 
@@ -44,7 +44,7 @@ var _butterflies: Array[Butterfly] = []
 var _fireflies: Array[Firefly] = []
 
 func _ready() -> void:
-	add_to_group(DayNightController.NIGHT_GROUP)
+	add_to_group(DayNightController.LIGHT_GROUP)
 	y_sort_enabled = true
 	_rng.randomize()
 	var zone := get_parent()

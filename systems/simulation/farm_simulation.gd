@@ -67,11 +67,16 @@ func _init(p_grid_width: int, p_grid_height: int, crop_registry: Dictionary, ani
 func get_plot(plot_id: int) -> PlotState:
 	return state.plots.get(plot_id)
 
-func get_plot_id_at(x: int, y: int) -> int:
-	return state.get_plot_id_at(x, y)
+## Plots are addressed by (cell, world zone) - see FarmState.DEFAULT_ZONE.
+func get_plot_id_at(x: int, y: int, zone_id := FarmState.DEFAULT_ZONE) -> int:
+	return state.get_plot_id_at(x, y, zone_id)
 
+## The plot's cell in its zone's grid.
 func get_plot_position(plot_id: int) -> Vector2i:
 	return state.plot_positions.get(plot_id, Vector2i(-1, -1))
+
+func get_plot_zone(plot_id: int) -> String:
+	return state.get_plot_zone(plot_id)
 
 func get_all_plot_ids() -> Array:
 	return state.plots.keys()
@@ -88,18 +93,18 @@ func expand_grid(new_width: int, new_height: int) -> void:
 	grid_width = target_width
 	grid_height = target_height
 
-## Adds a single empty, untilled plot at (x, y). Returns the new plot_id, or
-## -1 if a plot already exists there.
-func add_tile(x: int, y: int) -> int:
-	var plot_id := state.add_plot(x, y)
+## Adds a single empty, untilled plot at (x, y) of zone_id. Returns the new
+## plot_id, or -1 if a plot already exists there.
+func add_tile(x: int, y: int, zone_id := FarmState.DEFAULT_ZONE) -> int:
+	var plot_id := state.add_plot(x, y, zone_id)
 	if plot_id != -1:
 		plot_added.emit(plot_id)
 	return plot_id
 
 ## Permanently removes the plot at (x, y), including whatever crop was
 ## growing on it. Returns false if there was no plot there.
-func remove_tile(x: int, y: int) -> bool:
-	var plot_id := state.get_plot_id_at(x, y)
+func remove_tile(x: int, y: int, zone_id := FarmState.DEFAULT_ZONE) -> bool:
+	var plot_id := state.get_plot_id_at(x, y, zone_id)
 	if plot_id == -1:
 		return false
 	state.remove_plot(plot_id)
@@ -109,8 +114,8 @@ func remove_tile(x: int, y: int) -> bool:
 ## Marks the plot at (x, y) as a paddy (or not) - see PlotState.flooded.
 ## Set from the zone's FarmFields each time they register. Returns false if
 ## there's no plot there.
-func set_tile_flooded(x: int, y: int, flooded: bool) -> bool:
-	var plot_id := state.get_plot_id_at(x, y)
+func set_tile_flooded(x: int, y: int, flooded: bool, zone_id := FarmState.DEFAULT_ZONE) -> bool:
+	var plot_id := state.get_plot_id_at(x, y, zone_id)
 	var plot := get_plot(plot_id)
 	if plot == null:
 		return false
@@ -121,8 +126,8 @@ func set_tile_flooded(x: int, y: int, flooded: bool) -> bool:
 
 ## Resets the plot at (x, y) to empty/untilled without removing it from the
 ## grid - for reorganizing without changing the grid's shape.
-func clear_tile(x: int, y: int) -> bool:
-	var plot_id := state.get_plot_id_at(x, y)
+func clear_tile(x: int, y: int, zone_id := FarmState.DEFAULT_ZONE) -> bool:
+	var plot_id := state.get_plot_id_at(x, y, zone_id)
 	var plot := get_plot(plot_id)
 	if plot == null:
 		return false

@@ -7,12 +7,18 @@ extends Node
 ## dusk, blue night - while the UI (CanvasLayers) stays untouched. Indoor
 ## zones (ZoneRoot.indoor) get a warm, dim light at night instead of the sky.
 ##
-## Night-aware nodes join the "night_lights" group and get
-## set_night(amount) - 0 by day, 1 at full night - whenever it changes:
-## NightLight lanterns, AmbientLife (butterflies and birds off to bed,
-## fireflies out).
+## Two channels, kept apart on purpose:
+## - LIGHT_GROUP: set_night(amount) - 0 by day, 1 at full night - whenever
+##   the light changes. Looks only: NightLight lanterns, AmbientLife
+##   (fireflies, wildlife). It's derived from the sky colors, which are a
+##   look and may be retuned freely.
+## - CLOCK_GROUP: set_time_of_day(minute_of_day) on every new minute.
+##   Anything that *behaves* by the hour (chickens going in at 18:45...)
+##   listens to this one, so retuning the sky never moves gameplay.
+## Both are also sent when a zone loads, so its nodes start in the right state.
 
-const NIGHT_GROUP := "night_lights"
+const LIGHT_GROUP := "light_listeners"
+const CLOCK_GROUP := "clock_listeners"
 ## Real seconds per in-game minute: 6:00 to midnight takes ~12.5 minutes.
 const REAL_SECONDS_PER_MINUTE := 0.7
 
@@ -45,12 +51,14 @@ func setup(p_simulation: FarmSimulation, world_manager: WorldManager) -> void:
 	_canvas_modulate = CanvasModulate.new()
 	add_child(_canvas_modulate)
 	world_manager.zone_loaded.connect(_on_zone_loaded)
+	simulation.time_changed.connect(_broadcast_clock)
 
 func _on_zone_loaded(zone: ZoneRoot) -> void:
 	_indoor = zone.indoor
 	# Nodes of the new zone get the current state right away.
 	_night = -1.0
 	_apply.call_deferred()
+	_broadcast_clock.call_deferred(simulation.state.clock.minute_of_day)
 
 func _process(delta: float) -> void:
 	if simulation == null:
@@ -80,4 +88,7 @@ func _apply() -> void:
 	_canvas_modulate.color = INDOOR_DAY.lerp(INDOOR_NIGHT, night) if _indoor else sky_color(_minute())
 	if absf(night - _night) > 0.01:
 		_night = night
-		get_tree().call_group(NIGHT_GROUP, "set_night", night)
+		get_tree().call_group(LIGHT_GROUP, "set_night", night)
+
+func _broadcast_clock(minute_of_day: int) -> void:
+	get_tree().call_group(CLOCK_GROUP, "set_time_of_day", minute_of_day)

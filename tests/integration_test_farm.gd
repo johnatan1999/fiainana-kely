@@ -117,7 +117,7 @@ func _run_zone_manager_checks() -> void:
 		"FarmLandManager registered both zones and the progressive field with their painted cells"
 	)
 	_check(
-		simulation.get_plot_id_at(0, 0) != -1 and simulation.get_plot_id_at(3, 3) != -1,
+		simulation.get_plot_id_at(0, 0, "village") != -1 and simulation.get_plot_id_at(3, 3, "village") != -1,
 		"the starter field's cells are owned plots"
 	)
 
@@ -125,7 +125,7 @@ func _run_zone_manager_checks() -> void:
 	simulation.state.unlocked_zone_ids.erase("zone_east")
 	var ok = shop_controller.buy_zone("zone_east")
 	_check(
-		ok and simulation.get_plot_id_at(8, 9) != -1 and simulation.get_plot_id_at(11, 14) != -1,
+		ok and simulation.get_plot_id_at(8, 9, "village") != -1 and simulation.get_plot_id_at(11, 14, "village") != -1,
 		"buying a zone through ShopController turns its field's cells into plots"
 	)
 

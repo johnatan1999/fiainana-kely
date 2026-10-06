@@ -19,20 +19,35 @@
 
 ## Détails techniques
 **Une grille par zone**
-- La simulation n'a qu'une seule grille. `FarmView.grid_offset` (export) place chaque zone dans
-  sa propre région : le village est à `(0, 0)`, les rizières à `(100, 0)`.
-- `FarmField.get_grid_origin()` ajoute le `grid_offset` du parent.
-- Un `FarmView` n'affiche que les parcelles de ses propres champs (`_field_cells`).
-- Ne pas changer un `grid_offset` une fois des sauvegardes existantes : les parcelles
-  sauvegardées ne correspondraient plus.
+- Une parcelle est identifiée par **zone du monde + case** : `FarmState.plot_zones`
+  (plot_id → id de `ZoneData`) et `plot_positions` (case dans la grille de sa zone).
+  Deux zones peuvent donc utiliser les mêmes cases sans conflit.
+- **API** : `add_tile`, `remove_tile`, `clear_tile`, `get_plot_id_at`, `set_tile_flooded`
+  prennent un `zone_id` ; `get_plot_zone(plot_id)` renvoie la zone d'une parcelle.
+  - La **valeur par défaut** `FarmState.DEFAULT_ZONE` (`""`) est **réservée aux tests**,
+    qui ne manipulent qu'une seule zone.
+  - **Le code du jeu doit toujours passer un vrai `zone_id`.**
+- **`FarmView`** reçoit sa zone dans `setup(simulation, zone_id)`, appelé par
+  `FarmingController` avec `WorldManager.current_zone_id`. Il n'affiche que les parcelles de
+  cette zone.
+- **`FarmField.get_cells()`** renvoie des cases locales à la grille de sa zone : la position
+  du champ sous `FarmView`, en cases.
+- **`FarmLandManager`** distingue deux sortes de « zone » :
+  - le **terrain achetable** : `zone_id`, l'id de `FarmZoneData`, par exemple `zone_east` ;
+  - la **zone du monde** où il se trouve : `world_zone_id`.
+
+  `register_field(..., world_zone_id)` est appelé par `register_fields_in(zone, world_zone_id)`.
+- **Sauvegarde v6** : chaque parcelle sauvegarde sa `"zone"`. `_migrate_to_v6` convertit les
+  sauvegardes antérieures, où les rizières étaient à x ≥ 100 dans la grille unique : elles
+  deviennent `rice_fields` (x − 100), et toutes les autres parcelles deviennent `village`.
 
 **Rizières**
 - `FarmField.flooded` (export) : en jeu, ajoute des couches d'eau (`WaterLayer`,
   `LockedWaterLayer`) au-dessus du sol. Dans l'éditeur, les cases sont teintées en bleu et le
   champ s'appelle « Rizière ».
 - `PlotState.flooded` est sauvegardé (clé `"flooded"`) et conservé par `reset()`.
-- `FarmLandManager.register_field(kind, cells, zone_data, flooded)` marque les cellules, et
-  `FarmSimulation.set_tile_flooded()` les applique.
+- `FarmLandManager.register_field(kind, cells, zone_data, flooded, world_zone_id)` marque les
+  cases, et `FarmSimulation.set_tile_flooded()` les applique.
 - Règles dans `FarmSimulation` :
   - `can_water()` renvoie faux sur une rizière ;
   - `can_plant()` exige `CropData.grows_in_paddy` sur une rizière ;
@@ -64,6 +79,8 @@
 voisin » doivent rester vides (voir `CLAUDE.md`).
 
 ## À savoir
+- **Ajouter une zone de culture** : un `FarmView` et ses `FarmField` dans la scène de la zone.
+  Rien à régler : sa grille est la sienne.
 - Pour qu'une culture bloque le joueur à partir d'un stade, ajouter un `StaticBody2D` sous ce
   stade dans sa scène visuelle (voir `corn_visual.tscn`).
 - `rice.png` est un dessin provisoire généré. Pour le remplacer, garder la disposition : 4 cases

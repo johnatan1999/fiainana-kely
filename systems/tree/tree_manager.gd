@@ -7,10 +7,10 @@ extends Node
 ## on, even while the player is elsewhere) and kept in sync with its state.
 ## Never enforces rules itself: picking goes through FarmSimulation.
 ##
-## A tree's id is where it stands: "<zone_id>:<path from the zone root>",
-## e.g. "village:TreeGroup/Manguier". No id to type by hand when placing a
-## tree - but renaming or moving a tree node in its scene makes it a new tree
-## (its saved ripeness is left behind).
+## A tree's simulation id is "<zone_id>:<WorldTree.tree_id>" - the tree_id
+## is stable, given in the editor, so renaming or moving the node keeps its
+## saved state. Missing or duplicate ids are reported (and a duplicate isn't
+## registered twice).
 
 var simulation: FarmSimulation
 var item_db: ItemDatabase
@@ -33,7 +33,14 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 	for tree: WorldTree in _find_trees(zone):
 		if tree.tree_data == null or not tree.tree_data.bears_fruit():
 			continue # decor
-		var tree_id := "%s:%s" % [_world_manager.current_zone_id, zone.get_path_to(tree)]
+		var local_id := tree.tree_id
+		if local_id.is_empty():
+			local_id = str(zone.get_path_to(tree))
+			push_warning("TreeManager: %s has no tree_id - open its zone in the editor and save it. Using its path for now." % local_id)
+		var tree_id := "%s:%s" % [_world_manager.current_zone_id, local_id]
+		if _trees.has(tree_id):
+			push_error("TreeManager: two trees share the id '%s' (%s) - the second one won't bear fruit." % [tree_id, zone.get_path_to(tree)])
+			continue
 		if not simulation.register_tree(tree_id, tree.tree_data.id):
 			push_warning("TreeManager: species '%s' of %s isn't in World.TREE_RESOURCES - it won't bear fruit." % [tree.tree_data.id, tree_id])
 			continue

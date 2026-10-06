@@ -17,7 +17,7 @@ var _night := 0.0
 var _t := 0.0
 
 func _ready() -> void:
-	add_to_group(DayNightController.NIGHT_GROUP)
+	add_to_group(DayNightController.LIGHT_GROUP)
 	var unshaded := CanvasItemMaterial.new()
 	unshaded.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	material = unshaded

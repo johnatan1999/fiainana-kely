@@ -25,65 +25,76 @@ signal progressive_tiles_changed(unlocked_count: int)
 
 var simulation: FarmSimulation
 
-var _zones: Dictionary = {} # zone_id: String -> {"data": FarmZoneData, "cells": Array[Vector2i]}
+## Two kinds of "zone" meet here: a land zone (FarmZoneData id, e.g.
+## "zone_east" - what gets bought) and the world zone it lies in (ZoneData
+## id, e.g. "village" - whose plot grid its cells belong to, see
+## FarmState.DEFAULT_ZONE). The latter is always called world_zone_id.
+var _zones: Dictionary = {} # zone_id: String -> {"data": FarmZoneData, "cells": Array[Vector2i], "world_zone": String}
 var _progressive_sequence: Array[Vector2i] = [] # fixed unlock order
-## Cells of paddy fields (FarmField.flooded): their plots are flagged flooded
-## whenever they're added - bought later included.
-var _flooded_cells: Dictionary = {} # Vector2i -> true
+var _progressive_world_zone := FarmState.DEFAULT_ZONE
+## Cells of paddy fields (FarmField.flooded), per world zone: their plots
+## are flagged flooded whenever they're added - bought later included.
+var _flooded_cells: Dictionary = {} # world_zone_id: String -> {Vector2i -> true}
+var _world_manager: WorldManager
 
 ## p_world_manager is null in unit tests that construct FarmLandManager
 ## standalone (it's never added to a tree there, so there's no WorldManager
 ## to listen to) - they call register_field() themselves.
 func setup(p_simulation: FarmSimulation, p_world_manager: WorldManager = null) -> void:
 	simulation = p_simulation
+	_world_manager = p_world_manager
 	if p_world_manager:
 		p_world_manager.zone_loaded.connect(_on_zone_loaded)
 
 func _on_zone_loaded(zone: ZoneRoot) -> void:
-	register_fields_in(zone)
+	register_fields_in(zone, _world_manager.current_zone_id)
 	_setup_signs(zone)
 
-## Registers every FarmField anywhere under `zone`.
-func register_fields_in(zone: Node) -> void:
+## Registers every FarmField anywhere under `zone` (world zone world_zone_id).
+func register_fields_in(zone: Node, world_zone_id := FarmState.DEFAULT_ZONE) -> void:
 	for field in _find_descendants(zone, func(node: Node) -> bool: return node is FarmField):
-		register_field(field.kind, field.get_cells(), field.zone_data, field.flooded)
+		register_field(field.kind, field.get_cells(), field.zone_data, field.flooded, world_zone_id)
 
-## `cells` are in the simulation's grid space. Registering the same field
+## `cells` are cells of world_zone_id's plot grid. Registering the same field
 ## again (its zone reloaded) just refreshes it - `flooded` included, so a
 ## field turned into a paddy in the editor updates the plots already owned.
-func register_field(kind: FarmField.Kind, cells: Array[Vector2i], zone_data: FarmZoneData = null, flooded := false) -> void:
+func register_field(kind: FarmField.Kind, cells: Array[Vector2i], zone_data: FarmZoneData = null, flooded := false, world_zone_id := FarmState.DEFAULT_ZONE) -> void:
+	if not _flooded_cells.has(world_zone_id):
+		_flooded_cells[world_zone_id] = {}
 	for cell in cells:
 		if flooded:
-			_flooded_cells[cell] = true
+			_flooded_cells[world_zone_id][cell] = true
 		else:
-			_flooded_cells.erase(cell)
-		simulation.set_tile_flooded(cell.x, cell.y, flooded) # no-op until owned
+			_flooded_cells[world_zone_id].erase(cell)
+		simulation.set_tile_flooded(cell.x, cell.y, flooded, world_zone_id) # no-op until owned
 	match kind:
 		FarmField.Kind.STARTER:
-			_add_tiles(cells)
+			_add_tiles(cells, world_zone_id)
 		FarmField.Kind.ZONE:
 			if zone_data == null:
 				push_error("FarmLandManager: a ZONE FarmField has no zone_data - it can't be bought")
 				return
-			_zones[zone_data.id] = {"data": zone_data, "cells": cells.duplicate()}
+			_zones[zone_data.id] = {"data": zone_data, "cells": cells.duplicate(), "world_zone": world_zone_id}
 			if is_zone_unlocked(zone_data.id):
-				_add_tiles(cells)
+				_add_tiles(cells, world_zone_id)
 		FarmField.Kind.PROGRESSIVE:
 			# One progressive zone per game for now: its unlock count is a
 			# single number in FarmState.
 			_progressive_sequence = _row_by_row(cells)
-			_add_tiles(_progressive_sequence.slice(0, get_progressive_unlocked_count()))
+			_progressive_world_zone = world_zone_id
+			_add_tiles(_progressive_sequence.slice(0, get_progressive_unlocked_count()), world_zone_id)
 
 func _row_by_row(cells: Array[Vector2i]) -> Array[Vector2i]:
 	var sorted := cells.duplicate()
 	sorted.sort_custom(func(a: Vector2i, b: Vector2i) -> bool: return a.y < b.y or (a.y == b.y and a.x < b.x))
 	return sorted
 
-func _add_tiles(cells: Array) -> void:
+func _add_tiles(cells: Array, world_zone_id: String) -> void:
+	var flooded: Dictionary = _flooded_cells.get(world_zone_id, {})
 	for cell: Vector2i in cells:
-		simulation.add_tile(cell.x, cell.y) # no-op if a plot is already there
-		if _flooded_cells.has(cell):
-			simulation.set_tile_flooded(cell.x, cell.y, true)
+		simulation.add_tile(cell.x, cell.y, world_zone_id) # no-op if a plot is already there
+		if flooded.has(cell):
+			simulation.set_tile_flooded(cell.x, cell.y, true, world_zone_id)
 
 func get_zone_data(zone_id: String) -> FarmZoneData:
 	return _zones.get(zone_id, {}).get("data")
@@ -117,7 +128,7 @@ func buy_zone(zone_id: String) -> bool:
 		return false
 
 	simulation.state.unlocked_zone_ids[zone_id] = true
-	_add_tiles(get_zone_cells(zone_id))
+	_add_tiles(get_zone_cells(zone_id), _zones[zone_id]["world_zone"])
 	zone_unlocked.emit(zone_id)
 	return true
 
@@ -135,7 +146,7 @@ func buy_progressive_patch(patch_size: int, total_price: int) -> bool:
 	if not simulation.spend_money(total_price):
 		return false
 
-	_add_tiles(_progressive_sequence.slice(unlocked, unlocked + patch_size))
+	_add_tiles(_progressive_sequence.slice(unlocked, unlocked + patch_size), _progressive_world_zone)
 	simulation.state.progressive_tiles_unlocked = unlocked + patch_size
 	progressive_tiles_changed.emit(simulation.state.progressive_tiles_unlocked)
 	return true

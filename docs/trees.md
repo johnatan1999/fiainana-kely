@@ -25,7 +25,13 @@
   doivent figurer dans `World.TREE_RESOURCES`.
 
 **Arbre placé : `WorldTree`** (`entities/trees/world_tree.tscn`, `@tool`)
-- Exports : `tree_data`, `flip`, `size_scale`.
+- Exports : `tree_data`, `flip`, `size_scale`, **`tree_id`**.
+- **`tree_id`** : identité de l'arbre dans la sauvegarde, unique dans sa zone.
+  - Donné une fois dans l'éditeur, à la pose de l'arbre (`_ensure_unique_id()`, au format
+    `tree_xxxxxxxx`).
+  - Un arbre **dupliqué** reçoit un nouvel id : la copie l'aurait sinon hérité.
+  - Les arbres posés avant l'existence des ids gardent leur ancien id (`Trees/<nom>`), donc
+    les sauvegardes existantes sont conservées.
 - Instancie la scène visuelle de l'espèce comme enfant `Visual`, sans propriétaire, donc jamais
   sauvegardée dans la zone. Sans scène visuelle, un `TreeVisual` vide dessine un arbre
   provisoire.
@@ -46,7 +52,11 @@ d'UV, et réaction via l'uniforme global `player_position`.
 
 **Simulation et lien : `TreeManager`** (`systems/tree/tree_manager.gd`)
 - À chaque chargement de zone, enregistre les arbres fruitiers dans la simulation, sous l'id
-  `"<zone_id>:<chemin du nœud>"`.
+  `"<zone_id>:<tree_id>"`.
+- Signale un arbre sans `tree_id` (il utilise alors son chemin dans la scène) et un id en
+  double (le deuxième arbre n'est pas enregistré).
+- `tests/zone_wiring_test.gd` vérifie que, dans chaque zone, tous les arbres ont un
+  `tree_id` et qu'ils sont tous différents.
 - `FarmSimulation` : `register_tree`, `can_harvest_tree`, `harvest_tree`,
   `get_tree_days_until_fruit`, signal `tree_changed`. L'avancement se fait chaque jour dans
   `_advance_trees()`.
@@ -54,8 +64,11 @@ d'UV, et réaction via l'uniforme global `player_position`.
   (`fruit_ready`, `days_growing`).
 
 ## À savoir
-- **Renommer ou déplacer un nœud d'arbre dans l'arbre de scène** en fait un nouvel arbre, et
-  son état sauvegardé est perdu. Le déplacer sur la carte ne pose aucun problème.
+- **Ne jamais modifier un `tree_id` à la main** une fois qu'une sauvegarde peut le
+  référencer : l'arbre repartirait de zéro. Renommer ou déplacer le nœud, en revanche, ne
+  pose aucun problème.
+- Un id généré dans l'éditeur n'est conservé que si la scène est enregistrée. L'éditeur la
+  marque comme modifiée pour qu'on y pense.
 - Sprite sheet : laisser 1 à 2 px transparents entre les arbres, sinon le frémissement peut
   piocher des pixels de l'arbre voisin.
 - **Équilibrage** : 8 manguiers rapportent environ 4 800 Ar par jour en moyenne pendant
