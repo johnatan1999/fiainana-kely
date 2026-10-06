@@ -1,12 +1,28 @@
-[gd_resource type="Resource" script_class="VillagerData" load_steps=17 format=3 uid="uid://bod17r5d1u1cp"]
+[gd_resource type="Resource" script_class="VillagerData" load_steps=24 format=3 uid="uid://bod17r5d1u1cp"]
 
 [ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="1_1pk33"]
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_b5xdj"]
 [ext_resource type="Texture2D" uid="uid://dhq33khe5w4m5" path="res://assets/sprites/characters/villager/example_shorts.png" id="2_qncew"]
 [ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="3_rvxld"]
 [ext_resource type="Texture2D" uid="uid://c8fse4uenivl2" path="res://assets/sprites/characters/villager/example_hair.png" id="4_8lcjk"]
 [ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="5_55inb"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="6_a86px"]
 [ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="6_buc8i"]
 [ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="7_5ik46"]
+
+[sub_resource type="Resource" id="Resource_gv0fa"]
+script = ExtResource("1_b5xdj")
+hearts = 2
+item_id = "mango"
+quantity = 2
+line = "Je t'ai gardé des mangues ! Les plus belles !"
+
+[sub_resource type="Resource" id="Resource_meb82"]
+script = ExtResource("1_b5xdj")
+hearts = 4
+item_id = "groundnut_seed"
+quantity = 4
+line = "J'ai trouvé des graines d'arachide. C'est pour toi !"
 
 [sub_resource type="Resource" id="Resource_exn5m"]
 script = ExtResource("1_1pk33")
@@ -28,10 +44,38 @@ script = ExtResource("5_55inb")
 skin_color = Color(0.5, 0.33, 0.22, 1)
 layers = Array[ExtResource("1_1pk33")]([SubResource("Resource_exn5m"), SubResource("Resource_dgm5h"), SubResource("Resource_fuqbl")])
 
+[sub_resource type="Resource" id="Resource_oavf1"]
+script = ExtResource("6_a86px")
+item_id = "mango"
+quantity = Vector2i(1, 2)
+unit_reward = 1500
+days = 3
+request_line = "Tu as des mangues ? J'en voudrais %d, s'il te plaît !"
+thanks_line = "Youpi ! Merci !"
+
+[sub_resource type="Resource" id="Resource_8k1fd"]
+script = ExtResource("6_a86px")
+item_id = "corn"
+quantity = Vector2i(2, 3)
+unit_reward = 2000
+days = 6
+request_line = "Je veux faire griller %d épis de maïs avec mes copains !"
+thanks_line = "Trop bien, merci !"
+
+[sub_resource type="Resource" id="Resource_uxli7"]
+script = ExtResource("6_a86px")
+item_id = "egg"
+quantity = Vector2i(1, 2)
+unit_reward = 1200
+days = 3
+request_line = "Maman veut %d œufs. Tu en as ?"
+thanks_line = "Merci ! Maman va être contente."
+
 [sub_resource type="Resource" id="Resource_sdcgq"]
 script = ExtResource("6_buc8i")
 hour = 7
 minute = 30
+zone = ""
 spot = "Place"
 activity = 1
 rain_proof = false
@@ -40,6 +84,7 @@ rain_proof = false
 script = ExtResource("6_buc8i")
 hour = 12
 minute = 0
+zone = ""
 spot = "Maison_Sud"
 activity = 2
 rain_proof = true
@@ -48,6 +93,7 @@ rain_proof = true
 script = ExtResource("6_buc8i")
 hour = 14
 minute = 0
+zone = ""
 spot = "Marche"
 activity = 1
 rain_proof = false
@@ -56,6 +102,7 @@ rain_proof = false
 script = ExtResource("6_buc8i")
 hour = 17
 minute = 0
+zone = ""
 spot = "Place"
 activity = 1
 rain_proof = false
@@ -64,6 +111,7 @@ rain_proof = false
 script = ExtResource("6_buc8i")
 hour = 18
 minute = 30
+zone = ""
 spot = "Maison_Sud"
 activity = 2
 rain_proof = true
@@ -71,8 +119,12 @@ rain_proof = true
 [resource]
 script = ExtResource("7_5ik46")
 display_name = "Koto"
+role = "Un enfant du village, toujours à jouer"
 look = SubResource("Resource_le5a1")
 size = 0.8
+home_zone = "village"
 home = "Maison_Sud"
 routine = Array[ExtResource("6_buc8i")]([SubResource("Resource_sdcgq"), SubResource("Resource_m6ed3"), SubResource("Resource_1f5j3"), SubResource("Resource_2tsr1"), SubResource("Resource_wmb0n")])
 greetings = PackedStringArray("Salut ! On joue ?", "J\'ai vu un caméléon près du manguier !")
+orders = Array[ExtResource("6_a86px")]([SubResource("Resource_oavf1"), SubResource("Resource_8k1fd"), SubResource("Resource_uxli7")])
+friendship_rewards = Array[ExtResource("1_b5xdj")]([SubResource("Resource_gv0fa"), SubResource("Resource_meb82")])

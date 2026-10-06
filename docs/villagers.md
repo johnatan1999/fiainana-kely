@@ -38,6 +38,10 @@ Cinq villageois vivent au village, chacun avec sa journée :
 - **Quand il pleut**, chacun rentre chez soi, sauf la marchande (étal couvert) et les fermiers
   (le riz aime la pluie).
 - **En arrivant dans une zone**, chacun est déjà où l'heure le veut.
+- **Commandes** : un villageois peut avoir une commande à proposer (« ! » au-dessus de la tête)
+  ou à recevoir (« ? »). On lui parle pour la voir ou la livrer (voir `orders.md`).
+- **Amitié** : lui parler affiche les cœurs d'amitié au-dessus de sa tête. Elle grandit en lui
+  parlant, en livrant ses commandes et en aidant à la moisson (voir `friendship.md`).
 - **Avec le joueur** :
   - ils sont solides ;
   - si le joueur leur barre le chemin, ils s'arrêtent et attendent ;

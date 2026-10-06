@@ -41,6 +41,9 @@ func _ready() -> void:
 	await _test_grazing_zebus()
 	await _test_villager_visual()
 	await _test_villagers()
+	await _test_orders()
+	await _test_friendship()
+	await _test_inventory_villagers()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -479,6 +482,90 @@ func _test_farmers_in_the_rice_fields() -> void:
 			and rakoto.global_position.distance_to(VillagerRoads.of_zone(_zone()).get_spot("Vers_rice_fields")) < 80.0,
 		"farmers: he comes in by the road from the rice fields")
 	_set_time(10 * 60)
+
+# --- orders ----------------------------------------------------------------------------
+
+func _test_orders() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_set_time(10 * 60)
+	await _go_to_zone("rice_fields")
+	await _go_to_zone("village")
+	await _frames(3)
+	_player.global_position = Vector2(300, 300)
+	var ravao := _villager("Ravao")
+	var panel: OrderPanel = _world.get_node("UI/OrderPanel")
+	var tracker: OrdersTracker = _world.get_node("UI/OrdersTracker")
+	# Ravao offers 2 corn (her second order: corn).
+	_sim.state.orders.clear()
+	_sim.state.orders["ravao"] = {"item": "corn", "quantity": 2, "reward": 3400, "template": 1,
+		"since": _sim.state.day, "deadline": -1}
+	_sim.order_changed.emit("ravao")
+	await _frames(2)
+	var mark: Label = ravao.get_node("Mark")
+	_check(mark.visible and mark.text == "!", "orders: a '!' over the villager who has an order to offer")
+	_sim.state.inventory.erase("corn") # none yet: the order isn't deliverable
+	_sim.inventory_changed.emit("corn", 0)
+	ravao.interacted.emit()
+	await _frames(2)
+	_check(panel.is_open() and get_tree().paused and panel._item.text.contains("2"),
+		"orders: talking to her opens the order (2 corn), the game paused")
+	panel._accept.pressed.emit()
+	await _frames(2)
+	_check(not panel.is_open() and not get_tree().paused and _sim.is_order_active("ravao") and tracker.visible
+			and not mark.visible,
+		"orders: accepted - the panel closes, the order shows in the tracker, the '!' goes")
+	_sim.state.inventory.erase("corn")
+	_sim.state.add_inventory("corn", 2)
+	_sim.inventory_changed.emit("corn", 2)
+	await _frames(2)
+	_check(mark.visible and mark.text == "?", "orders: a '?' over her once the player has the 2 corn")
+	var money := _sim.state.money
+	ravao.interacted.emit()
+	await _frames(2)
+	_check(_sim.state.money == money + 3400 and _sim.state.get_inventory_count("corn") == 0
+			and not _sim.is_order_active("ravao") and not mark.visible and ravao.get_node("Bubble").visible
+			and not tracker.visible,
+		"orders: talking to her again delivers - 3 400 Ar, a thank-you, the tracker empties")
+	_sim.state.order_cooldowns.clear()
+
+# --- friendship -------------------------------------------------------------------------
+
+func _test_friendship() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_set_time(10 * 60)
+	await _go_to_zone("rice_fields")
+	await _go_to_zone("village")
+	await _frames(3)
+	_player.global_position = Vector2(300, 300)
+	var ravao := _villager("Ravao")
+	_sim.state.orders.erase("ravao")
+	_sim.state.friendship["ravao"] = 195 # 5 points short of 2 hearts
+	_sim.state.friendship_talk_day.erase("ravao")
+	var seeds := _sim.state.get_inventory_count("tomato_seed")
+	ravao.interacted.emit()
+	await _frames(3)
+	var hearts: HeartsDisplay = ravao.get_node("Hearts")
+	_check(hearts.visible and hearts.hearts == 2 and _sim.get_hearts("ravao") == 2,
+		"friendship: talking to her shows the hearts over her head - now 2")
+	_check(_sim.state.get_inventory_count("tomato_seed") == seeds + 5 and ravao.get_node("Bubble").visible,
+		"friendship: at 2 hearts she gives the player tomato seeds, with a word")
+
+func _test_inventory_villagers() -> void:
+	var inventory: InventoryUI = _world.get_node("UI/InventoryUI")
+	_sim.state.friendship["ravao"] = 235
+	inventory.open()
+	await _frames(3)
+	inventory._select_category(InventoryCatalog.Category.VILLAGERS)
+	await _frames(2)
+	inventory._select_item("villager:ravao")
+	await _frames(2)
+	var card: ItemInfoCard = inventory.info_card
+	var texts := card.find_children("*", "Label", true, false).map(func(label): return label.text)
+	_check(inventory._order.size() == 5 and inventory._entries["villager:ravao"].info.icon != null
+			and texts.has("Ravao") and texts.has("2/5 cœurs") and texts.has("35 %"),
+		"inventory: the Villageois tab lists the 5 villagers with their portrait; Ravao's card shows 2/5 hearts, 35 %")
+	inventory.close()
+	await _frames(15)
 
 # --- tall grass ----------------------------------------------------------------
 

@@ -52,6 +52,25 @@ var trees: Dictionary = {} # tree_id: String -> TreeState
 ## name>"): {"season": index of the season (0, 1, 2...), "cells": ["x,y"]}.
 ## A season's entry is ignored once the season is over.
 var neighbour_harvest: Dictionary = {}
+
+## Villagers' orders (FarmSimulation's order API), one at most per villager
+## (the VillagerData file's name): {"item": item id, "quantity": n,
+## "reward": Ariary for all, "template": index in VillagerData.orders (for
+## its lines), "since": day it was offered, "deadline": last day to deliver
+## - -1 while it's only offered, not accepted yet}.
+var orders: Dictionary = {}
+## Villager -> first day they may offer a new order (after a delivery, a
+## refusal, an order that ran out).
+var order_cooldowns: Dictionary = {}
+## The day new orders were last offered (once a day, in the morning).
+var order_roll_day: int = 0
+
+## Friendship with each villager (FarmSimulation's friendship API), in
+## points: FarmSimulation.FRIENDSHIP_PER_HEART per heart.
+var friendship: Dictionary = {} # villager_id -> points
+## The last day the player talked to each villager (talking counts once a
+## day).
+var friendship_talk_day: Dictionary = {} # villager_id -> day
 const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
@@ -211,6 +230,11 @@ func to_dict() -> Dictionary:
 		"hotbar": hotbar.duplicate(),
 		"trees": trees_data,
 		"neighbour_harvest": neighbour_harvest.duplicate(true),
+		"orders": orders.duplicate(true),
+		"order_cooldowns": order_cooldowns.duplicate(),
+		"order_roll_day": order_roll_day,
+		"friendship": friendship.duplicate(),
+		"friendship_talk_day": friendship_talk_day.duplicate(),
 	}
 
 ## JSON object keys are strings: species saved as "0", "4"...
@@ -294,6 +318,38 @@ func load_dict(data: Dictionary) -> void:
 		unlocked_zone_ids[zone_id] = true
 	progressive_tiles_unlocked = int(data.get("progressive_tiles_unlocked", 0))
 	hotbar = Array(data.get("hotbar", [])).map(func(item_id): return str(item_id))
+
+	# Optional keys (older saves have none): no orders yet.
+	orders.clear()
+	var orders_data = data.get("orders", {})
+	if orders_data is Dictionary:
+		for villager_id in orders_data:
+			var order: Dictionary = orders_data[villager_id]
+			orders[str(villager_id)] = {
+				"item": str(order.get("item", "")),
+				"quantity": int(order.get("quantity", 1)),
+				"reward": int(order.get("reward", 0)),
+				"template": int(order.get("template", -1)),
+				"since": int(order.get("since", 0)),
+				"deadline": int(order.get("deadline", -1)),
+			}
+	order_cooldowns.clear()
+	var cooldowns_data = data.get("order_cooldowns", {})
+	if cooldowns_data is Dictionary:
+		for villager_id in cooldowns_data:
+			order_cooldowns[str(villager_id)] = int(cooldowns_data[villager_id])
+	order_roll_day = int(data.get("order_roll_day", 0))
+	# Optional keys (older saves have none): strangers to everyone.
+	friendship.clear()
+	var friendship_data = data.get("friendship", {})
+	if friendship_data is Dictionary:
+		for villager_id in friendship_data:
+			friendship[str(villager_id)] = int(friendship_data[villager_id])
+	friendship_talk_day.clear()
+	var talk_data = data.get("friendship_talk_day", {})
+	if talk_data is Dictionary:
+		for villager_id in talk_data:
+			friendship_talk_day[str(villager_id)] = int(talk_data[villager_id])
 
 	# Optional key (older saves have none): no tufts cut yet.
 	neighbour_harvest.clear()

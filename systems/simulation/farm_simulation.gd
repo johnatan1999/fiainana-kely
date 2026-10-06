@@ -42,6 +42,15 @@ signal product_ready(animal_id: String, product_id: String)
 signal tree_changed(tree_id: String)
 ## The player cut a tuft in a neighbours' paddy (help_neighbour_harvest).
 signal neighbour_paddy_changed(paddy_id: String)
+## A villager's order changed: offered, accepted, declined, delivered...
+signal order_changed(villager_id: String)
+## An accepted order ran out before it was delivered.
+signal order_expired(villager_id: String)
+## Friendship with a villager grew (points); `hearts` is the new count.
+signal friendship_changed(villager_id: String, hearts: int)
+## A new heart was reached; `reward` is the gift for it (already in the
+## inventory), or null.
+signal friendship_level_up(villager_id: String, hearts: int, reward: FriendshipReward)
 
 const COOP_COST := 6000
 ## Chance of a rainy day, per season: Asara is the rainy season. A rainy day
@@ -62,6 +71,34 @@ const NEIGHBOUR_HARVEST_DAYS := 3
 const NEIGHBOUR_WORK_HOURS := Vector2i(6 * 60 + 30, 16 * 60)
 const NEIGHBOUR_HARVEST_REWARD := "rice_seed"
 
+## Villagers' orders (VillagerData.orders): every morning, a villager with
+## no order (and no cooldown) may offer one - only one the player can
+## fulfil in time. The player accepts or declines it, then has the
+## template's days to bring the items; it pays the template's unit_reward
+## each, above the shop's price. At most ORDER_MAX_ACTIVE accepted at once.
+## An offer not taken stays ORDER_OFFER_DAYS; after a delivery, a refusal or
+## an order that ran out, the villager waits ORDER_COOLDOWN_DAYS. Nothing
+## is lost when an order runs out - a cosy game rewards, it doesn't punish.
+const ORDER_MAX_ACTIVE := 3
+const ORDER_OFFER_DAYS := 2
+const ORDER_COOLDOWN_DAYS := 2
+const ORDER_OFFER_CHANCE := 0.5
+## How many offers can wait at once (not overwhelming the player).
+const ORDER_MAX_OFFERS := 2
+
+## Friendship with each villager: points, FRIENDSHIP_PER_HEART a heart, up
+## to FRIENDSHIP_MAX_HEARTS. Earned by talking to them (once a day), by
+## delivering their orders, and - for the farmers - by helping with the
+## neighbours' harvest. Never lost. Each heart: a gift at some levels
+## (VillagerData.friendship_rewards) and a better price on their orders
+## (ORDER_BONUS_PER_HEART).
+const FRIENDSHIP_PER_HEART := 100
+const FRIENDSHIP_MAX_HEARTS := 5
+const FRIENDSHIP_TALK := 10
+const FRIENDSHIP_ORDER := 60
+const FRIENDSHIP_HARVEST_HELP := 5
+const ORDER_BONUS_PER_HEART := 0.05
+
 ## Why an animal can or can't be settled right now - the UI turns it into a
 ## message ("Coop full (6/6)"...).
 enum PlaceCheck { OK, NO_BUILDING, FULL, NONE_WAITING }
@@ -79,6 +116,11 @@ var rain_chance: Dictionary = RAIN_CHANCE.duplicate()
 ## Fraction of a minute accumulated by advance_time(), not saved.
 var _minute_fraction := 0.0
 var _neighbour_paddies: Dictionary = {} # paddy_id: String -> size in cells (Vector2i)
+var _order_givers: Dictionary = {} # villager_id: String -> Array[OrderTemplate]
+var _friendship_rewards: Dictionary = {} # villager_id: String -> Array[FriendshipReward]
+## The chance a villager offers an order on a given morning (tests set 1.0
+## or 0.0 to make it certain).
+var order_offer_chance := ORDER_OFFER_CHANCE
 
 func _init(p_grid_width: int, p_grid_height: int, crop_registry: Dictionary, animal_registry: Dictionary = {}, tree_registry: Dictionary = {}) -> void:
 	grid_width = p_grid_width
@@ -278,6 +320,7 @@ func advance_day() -> void:
 	state.clock.advance_day()
 	_minute_fraction = 0.0
 	set_weather(_roll_weather())
+	_advance_orders()
 	day_changed.emit(state.day)
 	time_changed.emit(state.clock.minute_of_day)
 
@@ -427,6 +470,218 @@ func get_tree_days_until_fruit(tree_id: String) -> int:
 	if tree_data == null or not tree_data.is_in_season(state.clock.get_season()):
 		return -1
 	return maxi(1, tree_data.fruit_cycle_days - tree.days_growing)
+
+# --- Friendship ------------------------------------------------------------------------
+
+## Registered by FriendshipManager for every villager (their VillagerData
+## file's name and its gifts).
+func register_friend(villager_id: String, rewards: Array[FriendshipReward]) -> void:
+	_friendship_rewards[villager_id] = rewards
+
+func get_friendship(villager_id: String) -> int:
+	return state.friendship.get(villager_id, 0)
+
+func get_hearts(villager_id: String) -> int:
+	return mini(get_friendship(villager_id) / FRIENDSHIP_PER_HEART, FRIENDSHIP_MAX_HEARTS)
+
+## Progress towards the next heart, 0..1 (1 at the most hearts).
+func get_heart_progress(villager_id: String) -> float:
+	if get_hearts(villager_id) >= FRIENDSHIP_MAX_HEARTS:
+		return 1.0
+	return float(get_friendship(villager_id) % FRIENDSHIP_PER_HEART) / FRIENDSHIP_PER_HEART
+
+## Adds friendship points; each heart reached gives its gift (if any).
+func add_friendship(villager_id: String, points: int) -> void:
+	if points <= 0:
+		return
+	var before := get_hearts(villager_id)
+	var cap := FRIENDSHIP_PER_HEART * FRIENDSHIP_MAX_HEARTS
+	state.friendship[villager_id] = mini(get_friendship(villager_id) + points, cap)
+	var after := get_hearts(villager_id)
+	friendship_changed.emit(villager_id, after)
+	for hearts in range(before + 1, after + 1):
+		var reward := _friendship_reward(villager_id, hearts)
+		if reward != null:
+			state.add_inventory(reward.item_id, reward.quantity)
+			inventory_changed.emit(reward.item_id, state.get_inventory_count(reward.item_id))
+		friendship_level_up.emit(villager_id, hearts, reward)
+
+## Talking to a villager: friendship once a day. Returns whether it counted.
+func talk_to(villager_id: String) -> bool:
+	if state.friendship_talk_day.get(villager_id, 0) == state.day:
+		return false
+	state.friendship_talk_day[villager_id] = state.day
+	add_friendship(villager_id, FRIENDSHIP_TALK)
+	return true
+
+func _friendship_reward(villager_id: String, hearts: int) -> FriendshipReward:
+	for reward: FriendshipReward in _friendship_rewards.get(villager_id, []):
+		if reward != null and reward.hearts == hearts:
+			return reward
+	return null
+
+# --- Villagers' orders --------------------------------------------------------------
+
+## Registered by OrderManager for every villager (their VillagerData file's
+## name and its orders), at the start of the game.
+func register_order_giver(villager_id: String, templates: Array[OrderTemplate]) -> void:
+	_order_givers[villager_id] = templates
+
+## The order of `villager_id` ({} = none) - see FarmState.orders.
+func get_order(villager_id: String) -> Dictionary:
+	return state.orders.get(villager_id, {})
+
+func is_order_offered(villager_id: String) -> bool:
+	return get_order(villager_id).get("deadline", 0) == -1
+
+func is_order_active(villager_id: String) -> bool:
+	return get_order(villager_id).get("deadline", -1) >= 0
+
+## Villagers with an accepted order, oldest deadline first.
+func get_active_orders() -> Array[String]:
+	var active: Array[String] = []
+	for villager_id: String in state.orders:
+		if is_order_active(villager_id):
+			active.append(villager_id)
+	active.sort_custom(func(a, b): return state.orders[a]["deadline"] < state.orders[b]["deadline"])
+	return active
+
+## Days left to deliver, today included (1 = today is the last day).
+func get_order_days_left(villager_id: String) -> int:
+	return get_order(villager_id).get("deadline", -1) - state.day + 1
+
+func get_order_template(villager_id: String) -> OrderTemplate:
+	var templates: Array = _order_givers.get(villager_id, [])
+	var index: int = get_order(villager_id).get("template", -1)
+	return templates[index] if index >= 0 and index < templates.size() else null
+
+func can_accept_order(villager_id: String) -> bool:
+	return is_order_offered(villager_id) and get_active_orders().size() < ORDER_MAX_ACTIVE
+
+func accept_order(villager_id: String) -> bool:
+	if not can_accept_order(villager_id):
+		return false
+	var order: Dictionary = state.orders[villager_id]
+	var template := get_order_template(villager_id)
+	order["deadline"] = state.day + (template.days if template else 5) - 1
+	order_changed.emit(villager_id)
+	return true
+
+func decline_order(villager_id: String) -> bool:
+	if not is_order_offered(villager_id):
+		return false
+	_close_order(villager_id)
+	return true
+
+func can_deliver_order(villager_id: String) -> bool:
+	var order := get_order(villager_id)
+	return is_order_active(villager_id) and state.get_inventory_count(order["item"]) >= order["quantity"]
+
+## What delivering the order pays: its reward, plus the friendship bonus
+## (ORDER_BONUS_PER_HEART a heart), rounded to 100 Ar.
+func get_order_payment(villager_id: String) -> int:
+	var reward: int = get_order(villager_id).get("reward", 0)
+	var bonus := reward * ORDER_BONUS_PER_HEART * get_hearts(villager_id)
+	return reward + roundi(bonus / 100.0) * 100
+
+## Hands the items over. Returns the Ariary earned (0 if it can't be
+## delivered). A delivered order brings the villager closer
+## (FRIENDSHIP_ORDER).
+func deliver_order(villager_id: String) -> int:
+	if not can_deliver_order(villager_id):
+		return 0
+	var order := get_order(villager_id)
+	var payment := get_order_payment(villager_id)
+	state.add_inventory(order["item"], -order["quantity"])
+	inventory_changed.emit(order["item"], state.get_inventory_count(order["item"]))
+	state.money += payment
+	money_changed.emit(state.money)
+	_close_order(villager_id)
+	add_friendship(villager_id, FRIENDSHIP_ORDER)
+	return payment
+
+## Whether the player can have `quantity` of `item_id` within `days`:
+## already in the inventory, or growable in time - a crop of this season
+## (or of every season), quick enough, in a paddy if it needs one; eggs
+## with hens; fruit in season from a tree of theirs.
+func can_fulfil(item_id: String, quantity: int, days: int) -> bool:
+	if state.get_inventory_count(item_id) >= quantity:
+		return true
+	var season := state.clock.get_season()
+	var crop_data := get_crop_data(item_id)
+	if crop_data != null:
+		if crop_data.ideal_season != CropData.Season.TOUTE_SAISON and int(crop_data.ideal_season) != season:
+			return false
+		if crop_data.growth_days + 1 > days:
+			return false
+		if crop_data.grows_in_paddy:
+			return state.plots.values().any(func(plot: PlotState): return plot.flooded)
+		return true
+	for animal: AnimalState in state.animals.values():
+		var animal_data := get_animal_data(animal.species)
+		if animal_data != null and animal_data.product_id == item_id:
+			return true
+	for tree: TreeState in state.trees.values():
+		var tree_data := get_tree_data(tree.tree_type_id)
+		if tree_data != null and tree_data.fruit_item_id == item_id and tree_data.is_in_season(season):
+			return true
+	return false
+
+## Morning: expires what ran out, then offers new orders - once a day.
+## Also called by OrderManager when the givers are registered, so the very
+## first day has some.
+func refresh_order_offers() -> void:
+	if state.order_roll_day == state.day:
+		return
+	state.order_roll_day = state.day
+	var offers := state.orders.keys().filter(func(id): return is_order_offered(id)).size()
+	var givers := _order_givers.keys()
+	givers.shuffle()
+	for villager_id: String in givers:
+		if offers >= ORDER_MAX_OFFERS:
+			break
+		if state.orders.has(villager_id) or state.order_cooldowns.get(villager_id, 0) > state.day:
+			continue
+		if randf() >= order_offer_chance:
+			continue
+		if _offer_order(villager_id):
+			offers += 1
+
+func _offer_order(villager_id: String) -> bool:
+	var templates: Array = _order_givers[villager_id]
+	var candidates: Array[int] = []
+	for index in templates.size():
+		var template: OrderTemplate = templates[index]
+		if template != null and can_fulfil(template.item_id, template.quantity.x, template.days):
+			candidates.append(index)
+	if candidates.is_empty():
+		return false
+	var index: int = candidates.pick_random()
+	var template: OrderTemplate = templates[index]
+	var quantity := randi_range(template.quantity.x, template.quantity.y)
+	if not can_fulfil(template.item_id, quantity, template.days):
+		quantity = template.quantity.x
+	state.orders[villager_id] = {
+		"item": template.item_id, "quantity": quantity, "reward": template.unit_reward * quantity,
+		"template": index, "since": state.day, "deadline": -1,
+	}
+	order_changed.emit(villager_id)
+	return true
+
+func _close_order(villager_id: String) -> void:
+	state.orders.erase(villager_id)
+	state.order_cooldowns[villager_id] = state.day + ORDER_COOLDOWN_DAYS
+	order_changed.emit(villager_id)
+
+func _advance_orders() -> void:
+	for villager_id: String in state.orders.keys():
+		var order: Dictionary = state.orders[villager_id]
+		if order["deadline"] >= 0 and order["deadline"] < state.day:
+			_close_order(villager_id)
+			order_expired.emit(villager_id)
+		elif order["deadline"] == -1 and state.day - order["since"] >= ORDER_OFFER_DAYS:
+			_close_order(villager_id)
+	refresh_order_offers()
 
 # --- The neighbours' paddies -----------------------------------------------------
 

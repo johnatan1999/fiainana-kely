@@ -1,13 +1,29 @@
-[gd_resource type="Resource" script_class="VillagerData" load_steps=20 format=3 uid="uid://b62qh7l7qddam"]
+[gd_resource type="Resource" script_class="VillagerData" load_steps=28 format=3 uid="uid://b62qh7l7qddam"]
 
 [ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="1_o3y8q"]
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_ux6tl"]
 [ext_resource type="Texture2D" uid="uid://dhq33khe5w4m5" path="res://assets/sprites/characters/villager/example_shorts.png" id="2_wb3vd"]
 [ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="3_g7u7r"]
 [ext_resource type="Texture2D" uid="uid://c8fse4uenivl2" path="res://assets/sprites/characters/villager/example_hair.png" id="4_7aru7"]
 [ext_resource type="Texture2D" uid="uid://dlywe88eiapxn" path="res://assets/sprites/characters/villager/example_hat.png" id="5_b1ojg"]
 [ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="6_rck76"]
 [ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="7_837yk"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="7_epsoe"]
 [ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="8_ic6cu"]
+
+[sub_resource type="Resource" id="Resource_ot7ie"]
+script = ExtResource("1_ux6tl")
+hearts = 2
+item_id = "groundnut_seed"
+quantity = 5
+line = "Des graines d'arachide, pour la saison sèche."
+
+[sub_resource type="Resource" id="Resource_f6e5d"]
+script = ExtResource("1_ux6tl")
+hearts = 4
+item_id = "sweet_potato_seed"
+quantity = 6
+line = "Des boutures de patate douce. Tu es un bon voisin."
 
 [sub_resource type="Resource" id="Resource_11rv7"]
 script = ExtResource("1_o3y8q")
@@ -33,6 +49,42 @@ color = Color(0.8, 0.68, 0.42, 1)
 script = ExtResource("6_rck76")
 skin_color = Color(0.62, 0.42, 0.28, 1)
 layers = Array[ExtResource("1_o3y8q")]([SubResource("Resource_11rv7"), SubResource("Resource_22cqr"), SubResource("Resource_4o2gr"), SubResource("Resource_f1j5p")])
+
+[sub_resource type="Resource" id="Resource_m5ggx"]
+script = ExtResource("7_epsoe")
+item_id = "sweet_potato"
+quantity = Vector2i(5, 7)
+unit_reward = 1900
+days = 8
+request_line = "Il me faudrait %d patates douces pour la saison sèche."
+thanks_line = "Merci, voisin !"
+
+[sub_resource type="Resource" id="Resource_lblax"]
+script = ExtResource("7_epsoe")
+item_id = "groundnut"
+quantity = Vector2i(4, 6)
+unit_reward = 3900
+days = 10
+request_line = "Tu cultives des arachides ? J'en voudrais %d."
+thanks_line = "Parfait, merci !"
+
+[sub_resource type="Resource" id="Resource_2g2r4"]
+script = ExtResource("7_epsoe")
+item_id = "bean"
+quantity = Vector2i(4, 6)
+unit_reward = 3400
+days = 9
+request_line = "J'ai besoin de %d haricots pour ma femme."
+thanks_line = "Merci, elle sera contente !"
+
+[sub_resource type="Resource" id="Resource_048e6"]
+script = ExtResource("7_epsoe")
+item_id = "corn"
+quantity = Vector2i(5, 7)
+unit_reward = 1600
+days = 7
+request_line = "%d épis de maïs, tu peux m'en trouver ?"
+thanks_line = "Merci beaucoup !"
 
 [sub_resource type="Resource" id="Resource_4mo34"]
 script = ExtResource("7_837yk")
@@ -91,9 +143,12 @@ rain_proof = true
 [resource]
 script = ExtResource("8_ic6cu")
 display_name = "Naivo"
+role = "Fermier, il cultive la rizière des voisins"
 look = SubResource("Resource_0t22f")
 size = 1.05
 home_zone = "village"
 home = "Maison_Est"
 routine = Array[ExtResource("7_837yk")]([SubResource("Resource_4mo34"), SubResource("Resource_upke5"), SubResource("Resource_2ggm8"), SubResource("Resource_6i177"), SubResource("Resource_dij3e"), SubResource("Resource_crbbl")])
 greetings = PackedStringArray("Belle journée pour travailler la terre.", "Bonjour, voisin !", "Le repiquage, ça casse le dos !")
+orders = Array[ExtResource("7_epsoe")]([SubResource("Resource_m5ggx"), SubResource("Resource_lblax"), SubResource("Resource_2g2r4"), SubResource("Resource_048e6")])
+friendship_rewards = Array[ExtResource("1_ux6tl")]([SubResource("Resource_ot7ie"), SubResource("Resource_f6e5d")])

@@ -8,14 +8,33 @@ extends RefCounted
 ## already translated to the current language (the French texts in the
 ## tables below are the keys of localization/translations.csv).
 
-enum Category { CROPS, ANIMALS, TOOLS, FOOD }
+enum Category { CROPS, ANIMALS, TOOLS, FOOD, VILLAGERS }
 
 const CATEGORY_NAMES := {
 	Category.CROPS: "Cultures",
 	Category.ANIMALS: "Élevage",
 	Category.TOOLS: "Outils",
 	Category.FOOD: "Nourriture",
+	Category.VILLAGERS: "Villageois",
 }
+
+## Where a villager is, by the spot of their current step (VillagerRoads
+## markers) - "En ce moment : au marché". A spot missing here reads as
+## "quelque part au village".
+const SPOT_PLACES := {
+	"Marche": "au marché",
+	"Place": "sur la place",
+	"Banc_Est": "sur le banc, près de la maison de l'est",
+	"Cabane": "à la cabane des rizières",
+	"Riziere_Voisins_1": "dans la rizière des voisins",
+	"Riziere_Voisins_2": "dans la rizière des voisins",
+}
+const HOME_PLACES := {
+	"Maison_Ouest": "la maison de l'ouest",
+	"Maison_Est": "la maison de l'est",
+	"Maison_Sud": "la maison du sud",
+}
+const PLACEHOLDER_VILLAGER := Color(0.62, 0.45, 0.32)
 
 const SEASON_NAMES := {
 	CropData.Season.ASARA: "Asara",
@@ -132,6 +151,61 @@ static func describe_animal(db: ItemDatabase, animal: AnimalState) -> Dictionary
 	return entry
 
 ## French: singular for 0 and 1 ("0 jour", "1 jour", "2 jours").
+## A villager, for the Villageois tab: their portrait, who they are, and
+## the player's friendship, next gift, order and where to find them now.
+## `id` is their VillagerData file's name; the entry's id is
+## "villager:<id>".
+static func describe_villager(db: ItemDatabase, simulation: FarmSimulation, villager_id: String,
+		data: VillagerData) -> Dictionary:
+	var hearts := simulation.get_hearts(villager_id)
+	var max_hearts := FarmSimulation.FRIENDSHIP_MAX_HEARTS
+	# Short values (the card's right column is narrow); the longer texts go
+	# in the description, which wraps.
+	var details: Array = [[_t("Amitié"), _t("%d/%d cœurs") % [hearts, max_hearts]]]
+	if hearts < max_hearts:
+		details.append([_t("Prochain cœur"), "%d %%" % roundi(simulation.get_heart_progress(villager_id) * 100.0)])
+	if hearts > 0:
+		details.append([_t("Prix d'ami"), "+%d %%" % roundi(FarmSimulation.ORDER_BONUS_PER_HEART * 100.0 * hearts)])
+	var order := simulation.get_order(villager_id)
+	if order.is_empty():
+		details.append([_t("Commande"), _t("Aucune")])
+	else:
+		details.append([_t("Commande"), "%d %s" % [order["quantity"], db.get_display_name(order["item"]).to_lower()]])
+		if simulation.is_order_offered(villager_id):
+			details.append([_t("Délai"), _t("à voir")])
+		else:
+			details.append([_t("Délai"), _days(simulation.get_order_days_left(villager_id), "%d jour", "%d jours")])
+	details.append([_t("En ce moment"), _place_text(simulation, data)])
+	var description := _t(data.role)
+	var home: String = HOME_PLACES.get(data.home, "")
+	if not home.is_empty():
+		description += (". " if not description.is_empty() else "") + _t("Habite %s.") % _t(home)
+	for gift: FriendshipReward in data.friendship_rewards:
+		if gift != null and gift.hearts > hearts:
+			description += " " + _t("Son cadeau à %d cœurs : %d %s.") % [gift.hearts, gift.quantity, db.get_display_name(gift.item_id).to_lower()]
+			break
+	var entry := {
+		"id": "villager:" + villager_id,
+		"name": data.display_name,
+		"icon": VillagerPortrait.make(data.look),
+		"color": PLACEHOLDER_VILLAGER,
+		"category": Category.VILLAGERS,
+		"description": description,
+		"details": details,
+		"meta": _t("%d/%d cœurs") % [hearts, max_hearts],
+	}
+	return entry
+
+## Where they are now, by their routine (and the weather) - the same rule
+## as Villager, without needing their zone to be loaded.
+static func _place_text(simulation: FarmSimulation, data: VillagerData) -> String:
+	var stop := data.get_stop(simulation.state.clock.minute_of_day)
+	if stop != null and simulation.is_raining() and not stop.rain_proof:
+		stop = null
+	if stop == null or stop.spot == data.home:
+		return _t("à la maison")
+	return _t(SPOT_PLACES.get(stop.spot, "quelque part au village"))
+
 static func _days(count: int, singular: String, plural: String) -> String:
 	return _t(singular if count <= 1 else plural) % count
 

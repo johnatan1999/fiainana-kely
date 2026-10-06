@@ -154,6 +154,15 @@ func _run_all() -> void:
 	test_neighbour_harvest_follows_the_calendar()
 	test_helping_the_neighbours_harvest()
 	test_neighbour_harvest_save_load_and_new_season()
+	test_orders_only_what_the_player_can_get()
+	test_order_accept_and_deliver()
+	test_orders_run_out_without_penalty()
+	test_orders_at_most_three_at_once()
+	test_orders_save_load()
+	test_friendship_talking_counts_once_a_day()
+	test_friendship_hearts_and_gifts()
+	test_friendship_better_order_price()
+	test_friendship_save_load()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -1145,3 +1154,161 @@ func test_neighbour_harvest_save_load_and_new_season() -> void:
 	loaded.state.clock.current_day = 31 # the next season: replanted
 	_check(kept and not loaded.is_neighbour_tuft_cut(paddy, Vector2i(4, 3)) and loaded.get_neighbour_tufts_helped(paddy) == 0,
 		"the tufts the player cut survive a save/load, and the next season starts afresh")
+
+## A sim with corn (Asara), sweet potato (Asotry), cassava (all year) and
+## rice (paddy), every order offered (chance 1).
+func _make_sim_for_orders() -> FarmSimulation:
+	var crops := {}
+	for crop_id in ["corn", "sweet_potato", "cassava", "rice"]:
+		crops[crop_id] = load("res://data/crops/%s.tres" % crop_id)
+	var sim := FarmSimulation.new(4, 4, crops)
+	sim.rain_chance = {}
+	sim.order_offer_chance = 1.0
+	return sim
+
+func _order(item_id: String, quantity: int, unit_reward: int, days: int) -> OrderTemplate:
+	var template := OrderTemplate.new()
+	template.item_id = item_id
+	template.quantity = Vector2i(quantity, quantity)
+	template.unit_reward = unit_reward
+	template.days = days
+	return template
+
+func test_orders_only_what_the_player_can_get() -> void:
+	var sim := _make_sim_for_orders() # day 1: Asara, no paddy, no hens
+	var asotry_crop: Array[OrderTemplate] = [_order("sweet_potato", 3, 2000, 8)]
+	var needs_paddy: Array[OrderTemplate] = [_order("rice", 5, 5500, 14)]
+	var no_hens: Array[OrderTemplate] = [_order("egg", 2, 1000, 4)]
+	var too_slow: Array[OrderTemplate] = [_order("cassava", 4, 1500, 5)] # grows in 8 days
+	var fine: Array[OrderTemplate] = [_order("corn", 4, 1700, 7)]
+	sim.register_order_giver("a", asotry_crop)
+	sim.register_order_giver("b", needs_paddy)
+	sim.register_order_giver("c", no_hens)
+	sim.register_order_giver("d", too_slow)
+	sim.register_order_giver("e", fine)
+	sim.refresh_order_offers()
+	_check(sim.is_order_offered("e") and not sim.is_order_offered("a") and not sim.is_order_offered("b")
+			and not sim.is_order_offered("c") and not sim.is_order_offered("d"),
+		"orders: only offered when the player can get the items in time (in season, a paddy for rice, hens for eggs, time to grow)")
+
+func test_order_accept_and_deliver() -> void:
+	var sim := _make_sim_for_orders()
+	var templates: Array[OrderTemplate] = [_order("corn", 4, 1700, 7)]
+	sim.register_order_giver("ravao", templates)
+	sim.refresh_order_offers()
+	var money := sim.state.money
+	var accepted := sim.accept_order("ravao")
+	var deadline: int = sim.get_order("ravao")["deadline"]
+	var early := sim.deliver_order("ravao") # nothing to give yet
+	sim.state.add_inventory("corn", 5)
+	var paid := sim.deliver_order("ravao")
+	_check(accepted and deadline == 7 and early == 0 and paid == 4 * 1700 and sim.state.money == money + paid
+			and sim.state.get_inventory_count("corn") == 1 and sim.get_order("ravao").is_empty()
+			and sim.state.order_cooldowns["ravao"] == 1 + FarmSimulation.ORDER_COOLDOWN_DAYS,
+		"orders: accepted with 7 days to deliver, paid 1700 Ar a corn once the 4 are brought, then a pause")
+
+func test_orders_run_out_without_penalty() -> void:
+	var sim := _make_sim_for_orders()
+	var templates: Array[OrderTemplate] = [_order("corn", 4, 1700, 5)]
+	sim.register_order_giver("koto", templates)
+	sim.register_order_giver("neny", templates.duplicate())
+	sim.refresh_order_offers()
+	sim.accept_order("koto") # deadline: day 5
+	var expired := []
+	sim.order_expired.connect(func(id: String): expired.append(id))
+	var money := sim.state.money
+	sim.advance_day()
+	sim.advance_day() # day 3
+	var offer_gone := not sim.is_order_offered("neny") # offered day 1, not taken in 2 days
+	sim.advance_day()
+	sim.advance_day() # day 5: the last day
+	var still_on := sim.is_order_active("koto")
+	sim.advance_day() # day 6
+	_check(still_on and offer_gone and not sim.is_order_active("koto") and expired == ["koto"] and sim.state.money == money,
+		"orders: an offer not taken goes after 2 days; an accepted one runs out after its last day, with nothing lost")
+
+func test_orders_at_most_three_at_once() -> void:
+	var sim := _make_sim_for_orders()
+	for id in ["a", "b", "c", "d"]:
+		var templates: Array[OrderTemplate] = [_order("corn", 2, 1700, 7)]
+		sim.register_order_giver(id, templates)
+	var accepted := 0
+	for day in 3:
+		sim.refresh_order_offers()
+		for id in ["a", "b", "c", "d"]:
+			if sim.accept_order(id):
+				accepted += 1
+		sim.state.order_roll_day = 0 # offer again
+	_check(accepted == FarmSimulation.ORDER_MAX_ACTIVE and sim.get_active_orders().size() == 3,
+		"orders: at most 3 accepted at once")
+
+func test_orders_save_load() -> void:
+	var sim := _make_sim_for_orders()
+	var templates: Array[OrderTemplate] = [_order("corn", 4, 1700, 7)]
+	sim.register_order_giver("ravao", templates)
+	sim.refresh_order_offers()
+	sim.accept_order("ravao")
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var loaded := _make_sim_for_orders()
+	loaded.register_order_giver("ravao", templates)
+	loaded.load_save_data(data)
+	var order := loaded.get_order("ravao")
+	_check(loaded.is_order_active("ravao") and order["quantity"] == 4 and order["reward"] == 6800
+			and loaded.get_order_template("ravao") == templates[0],
+		"orders: an accepted order survives a save/load")
+
+func _gift(hearts: int, item_id: String, quantity: int) -> FriendshipReward:
+	var gift := FriendshipReward.new()
+	gift.hearts = hearts
+	gift.item_id = item_id
+	gift.quantity = quantity
+	return gift
+
+func test_friendship_talking_counts_once_a_day() -> void:
+	var sim := _make_sim_for_orders()
+	var first := sim.talk_to("ravao")
+	var again := sim.talk_to("ravao")
+	var points_today := sim.get_friendship("ravao")
+	sim.advance_day()
+	var tomorrow := sim.talk_to("ravao")
+	_check(first and not again and points_today == FarmSimulation.FRIENDSHIP_TALK and tomorrow
+			and sim.get_friendship("ravao") == 2 * FarmSimulation.FRIENDSHIP_TALK,
+		"friendship: talking to a villager counts once a day")
+
+func test_friendship_hearts_and_gifts() -> void:
+	var sim := _make_sim_for_orders()
+	var gifts: Array[FriendshipReward] = [_gift(2, "tomato_seed", 5)]
+	sim.register_friend("ravao", gifts)
+	var levels := []
+	sim.friendship_level_up.connect(func(_id: String, hearts: int, reward: FriendshipReward): levels.append([hearts, reward != null]))
+	sim.add_friendship("ravao", 250) # 2 hearts at once
+	var seeds := sim.state.get_inventory_count("tomato_seed")
+	sim.add_friendship("ravao", 10000)
+	_check(levels.slice(0, 2) == [[1, false], [2, true]] and seeds == 5 and sim.get_hearts("ravao") == 5
+			and sim.get_friendship("ravao") == 500 and sim.get_heart_progress("ravao") == 1.0,
+		"friendship: a heart every 100 points up to 5, each heart reached once, its gift handed over")
+
+func test_friendship_better_order_price() -> void:
+	var sim := _make_sim_for_orders()
+	var templates: Array[OrderTemplate] = [_order("corn", 4, 1700, 7)]
+	sim.register_order_giver("ravao", templates)
+	sim.refresh_order_offers()
+	sim.accept_order("ravao")
+	sim.state.add_inventory("corn", 4)
+	sim.add_friendship("ravao", 200) # 2 hearts: +10 %
+	var payment := sim.get_order_payment("ravao")
+	var before := sim.get_friendship("ravao")
+	var paid := sim.deliver_order("ravao")
+	_check(payment == 6800 + 700 and paid == payment
+			and sim.get_friendship("ravao") == before + FarmSimulation.FRIENDSHIP_ORDER,
+		"friendship: 5 % more on a friend's order per heart, and a delivered order brings you closer")
+
+func test_friendship_save_load() -> void:
+	var sim := _make_sim_for_orders()
+	sim.add_friendship("koto", 130)
+	sim.talk_to("neny_soa")
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var loaded := _make_sim_for_orders()
+	loaded.load_save_data(data)
+	_check(loaded.get_friendship("koto") == 130 and loaded.get_hearts("koto") == 1 and not loaded.talk_to("neny_soa"),
+		"friendship: points and today's talk survive a save/load")

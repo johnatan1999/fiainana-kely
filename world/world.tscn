@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3 uid="uid://fdjfwhhhgssy"]
+[gd_scene load_steps=25 format=3 uid="uid://fdjfwhhhgssy"]
 
 [ext_resource type="Script" path="res://world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://bf1stuuqjofir" path="res://entities/player/player.tscn" id="2_player"]
@@ -14,12 +14,16 @@
 [ext_resource type="Script" path="res://systems/farm/neighbour_paddy_manager.gd" id="12_1ym7i"]
 [ext_resource type="Script" path="res://systems/farm/farm_land_manager.gd" id="12_zonemanager"]
 [ext_resource type="Script" path="res://systems/hotbar/hotbar.gd" id="13_hotbar"]
+[ext_resource type="Script" path="res://systems/orders/order_manager.gd" id="13_jikkx"]
+[ext_resource type="Script" path="res://systems/villagers/friendship_manager.gd" id="14_eka1b"]
 [ext_resource type="PackedScene" path="res://ui/hotbar/hotbar_ui.tscn" id="14_hotbarui"]
 [ext_resource type="PackedScene" path="res://ui/prompts/action_prompt.tscn" id="15_prompt"]
 [ext_resource type="PackedScene" path="res://ui/notifications/toast.tscn" id="16_toast"]
 [ext_resource type="Script" path="res://systems/tree/tree_manager.gd" id="17_treemanager"]
 [ext_resource type="Script" path="res://systems/time/day_night_controller.gd" id="18_daynight"]
 [ext_resource type="Script" path="res://systems/weather/weather_controller.gd" id="20_weather"]
+[ext_resource type="Script" path="res://ui/orders/orders_tracker.gd" id="21_m3xco"]
+[ext_resource type="Script" path="res://ui/orders/order_panel.gd" id="22_qlvpc"]
 
 [node name="World" type="Node2D"]
 y_sort_enabled = true
@@ -60,6 +64,12 @@ script = ExtResource("13_hotbar")
 [node name="NeighbourPaddyManager" type="Node" parent="Gameplay"]
 script = ExtResource("12_1ym7i")
 
+[node name="OrderManager" type="Node" parent="Gameplay"]
+script = ExtResource("13_jikkx")
+
+[node name="FriendshipManager" type="Node" parent="Gameplay"]
+script = ExtResource("14_eka1b")
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="HUD" parent="UI" instance=ExtResource("7_hud")]
@@ -76,6 +86,16 @@ layout_mode = 3
 [node name="PauseMenu" parent="UI" instance=ExtResource("9_pausemenu")]
 
 [node name="Toast" parent="UI" instance=ExtResource("16_toast")]
+
+[node name="OrdersTracker" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("21_m3xco")
+
+[node name="OrderPanel" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("22_qlvpc")
 
 [node name="ZoneContainer" type="Node2D" parent="."]
 y_sort_enabled = true

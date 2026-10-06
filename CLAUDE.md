@@ -11,7 +11,7 @@ Scène principale : `res://world/world.tscn`.
   `smoke_test_world`, `zone_wiring_test`, `integration_test_farm`, `behaviour_test`.
   Code de sortie 1 si un test échoue.
   - `behaviour_test` : comportements du monde (poules, oiseaux, clôtures, falaises, lanternes,
-    herbe haute, zébus, villageois). À compléter quand un comportement visible est ajouté ou modifié.
+    herbe haute, zébus, villageois, commandes, amitié). À compléter quand un comportement visible est ajouté ou modifié.
 - Le mode `--script` ne charge pas les autoloads : n'y lancer que `run_tests.gd`. Tout ce qui
   touche aux scènes passe par `tests/runner.tscn`.
 - Planches provisoires : `tools/placeholder_art/` (voir son README).

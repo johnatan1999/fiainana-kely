@@ -42,6 +42,8 @@ const TREE_RESOURCES: Array[TreeData] = [
 @onready var farm_land_manager: FarmLandManager = $Gameplay/FarmLandManager
 @onready var tree_manager: TreeManager = $Gameplay/TreeManager
 @onready var neighbour_paddies: NeighbourPaddyManager = $Gameplay/NeighbourPaddyManager
+@onready var order_manager: OrderManager = $Gameplay/OrderManager
+@onready var friendship_manager: FriendshipManager = $Gameplay/FriendshipManager
 @onready var day_night: DayNightController = $Gameplay/DayNightController
 @onready var weather: WeatherController = $Gameplay/WeatherController
 @onready var hotbar: Hotbar = $Gameplay/Hotbar
@@ -51,6 +53,8 @@ const TREE_RESOURCES: Array[TreeData] = [
 @onready var shop_ui: ShopUI = $UI/ShopUI
 @onready var inventory_ui: InventoryUI = $UI/InventoryUI
 @onready var pause_menu: PauseMenu = $UI/PauseMenu
+@onready var orders_tracker: OrdersTracker = $UI/OrdersTracker
+@onready var order_panel: OrderPanel = $UI/OrderPanel
 
 var simulation: FarmSimulation
 var item_db: ItemDatabase
@@ -89,6 +93,8 @@ func _ready() -> void:
 	animal_manager.setup(simulation, world_manager)
 	tree_manager.setup(simulation, item_db, world_manager)
 	neighbour_paddies.setup(simulation, item_db, world_manager, player)
+	friendship_manager.setup(simulation, item_db, world_manager)
+	order_manager.setup(simulation, item_db, world_manager, player, order_panel, orders_tracker)
 	day_night.setup(simulation, world_manager)
 	weather.setup(simulation, world_manager, day_night, player)
 	save_controller.setup(simulation, world_manager, player)

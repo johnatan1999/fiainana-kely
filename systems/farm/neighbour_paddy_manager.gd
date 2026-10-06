@@ -5,7 +5,8 @@ extends Node
 ## whichever zone is loaded - mirrors TreeManager. Keeps their look in sync
 ## with the calendar (the rice's stage; the tufts cut, which move through
 ## the harvest days' working hours), lets the player cut a tuft
-## (FarmSimulation.help_neighbour_harvest) and announces the harvest on the
+## (FarmSimulation.help_neighbour_harvest) - which brings the farmers working
+## in it closer (FRIENDSHIP_HARVEST_HELP) - and announces the harvest on the
 ## morning it starts. Never enforces rules itself.
 ##
 ## A paddy's simulation id is "<zone_id>:<node name>". During the harvest,
@@ -68,6 +69,10 @@ func _on_paddy_interacted(paddy_id: String) -> void:
 	HarvestPopup.spawn(paddy, paddy.get_tuft_position(cell) + Vector2(0, -36),
 		reward.icon if reward else null,
 		tr("+%d %s") % [gained, reward.get_display_name() if reward else ""])
+	# The farmers working in it are grateful (FriendshipManager shows it).
+	for villager: Villager in get_tree().get_nodes_in_group(Villager.GROUP):
+		if not villager.is_inside() and paddy.get_rect().grow(8.0).has_point(villager.get_spot_position()):
+			simulation.add_friendship(villager.get_villager_id(), FarmSimulation.FRIENDSHIP_HARVEST_HELP)
 	_thank(paddy)
 
 ## A farmer at work in the paddy thanks the player - now and then, not for

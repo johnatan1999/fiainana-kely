@@ -1,12 +1,28 @@
-[gd_resource type="Resource" script_class="VillagerData" load_steps=16 format=3 uid="uid://c3g5a1rdm37xs"]
+[gd_resource type="Resource" script_class="VillagerData" load_steps=25 format=3 uid="uid://c3g5a1rdm37xs"]
 
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_7vgo8"]
 [ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="1_wi25m"]
 [ext_resource type="Texture2D" uid="uid://degyjvm0ywcdc" path="res://assets/sprites/characters/villager/example_skirt.png" id="2_xlkch"]
 [ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="3_yqbgj"]
 [ext_resource type="Texture2D" uid="uid://djnfoyu2methn" path="res://assets/sprites/characters/villager/example_hair_bun.png" id="4_4v30y"]
 [ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="5_6f7ob"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="6_1cud7"]
 [ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="6_7uxv6"]
 [ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="7_5ha4h"]
+
+[sub_resource type="Resource" id="Resource_pfako"]
+script = ExtResource("1_7vgo8")
+hearts = 2
+item_id = "tomato_seed"
+quantity = 5
+line = "Des graines de tomate de mon jardin. Elles se vendent bien au marché !"
+
+[sub_resource type="Resource" id="Resource_3qew7"]
+script = ExtResource("1_7vgo8")
+hearts = 4
+item_id = "potato_seed"
+quantity = 5
+line = "Des plants de pomme de terre, pour la saison sèche. Merci pour tout !"
 
 [sub_resource type="Resource" id="Resource_gspwn"]
 script = ExtResource("1_wi25m")
@@ -28,10 +44,56 @@ script = ExtResource("5_6f7ob")
 skin_color = Color(0.55, 0.36, 0.24, 1)
 layers = Array[ExtResource("1_wi25m")]([SubResource("Resource_gspwn"), SubResource("Resource_gxrdy"), SubResource("Resource_qwpyj")])
 
+[sub_resource type="Resource" id="Resource_nsxeo"]
+script = ExtResource("6_1cud7")
+item_id = "cassava"
+quantity = Vector2i(4, 6)
+unit_reward = 1500
+days = 10
+request_line = "Mes clients réclament du manioc. Il m'en faudrait %d racines."
+thanks_line = "Merci ! Mes clients vont être contents."
+
+[sub_resource type="Resource" id="Resource_5rhwn"]
+script = ExtResource("6_1cud7")
+item_id = "corn"
+quantity = Vector2i(5, 8)
+unit_reward = 1700
+days = 7
+request_line = "Le maïs grillé se vend bien en ce moment. Tu m'apportes %d épis ?"
+thanks_line = "Ils sont beaux ! Merci."
+
+[sub_resource type="Resource" id="Resource_vqj08"]
+script = ExtResource("6_1cud7")
+item_id = "tomato"
+quantity = Vector2i(3, 5)
+unit_reward = 6500
+days = 9
+request_line = "Il me faut %d tomates pour la sauce du marché. Tu en auras ?"
+thanks_line = "Merci, elles sont bien mûres !"
+
+[sub_resource type="Resource" id="Resource_lh3fn"]
+script = ExtResource("6_1cud7")
+item_id = "sweet_potato"
+quantity = Vector2i(4, 6)
+unit_reward = 2000
+days = 8
+request_line = "Les patates douces partent vite. J'en voudrais %d."
+thanks_line = "Merci ! Je les mets tout de suite à l'étal."
+
+[sub_resource type="Resource" id="Resource_wwumb"]
+script = ExtResource("6_1cud7")
+item_id = "potato"
+quantity = Vector2i(3, 5)
+unit_reward = 7000
+days = 12
+request_line = "Tu pourrais me vendre %d pommes de terre ?"
+thanks_line = "Merci beaucoup !"
+
 [sub_resource type="Resource" id="Resource_stcv8"]
 script = ExtResource("6_7uxv6")
 hour = 7
 minute = 0
+zone = ""
 spot = "Marche"
 activity = 0
 rain_proof = true
@@ -40,6 +102,7 @@ rain_proof = true
 script = ExtResource("6_7uxv6")
 hour = 12
 minute = 0
+zone = ""
 spot = "Banc_Est"
 activity = 0
 rain_proof = false
@@ -48,6 +111,7 @@ rain_proof = false
 script = ExtResource("6_7uxv6")
 hour = 13
 minute = 30
+zone = ""
 spot = "Marche"
 activity = 0
 rain_proof = true
@@ -56,6 +120,7 @@ rain_proof = true
 script = ExtResource("6_7uxv6")
 hour = 17
 minute = 30
+zone = ""
 spot = "Maison_Est"
 activity = 2
 rain_proof = true
@@ -63,8 +128,12 @@ rain_proof = true
 [resource]
 script = ExtResource("7_5ha4h")
 display_name = "Ravao"
+role = "Marchande, elle tient l'étal du marché"
 look = SubResource("Resource_u3177")
 size = 1.0
+home_zone = "village"
 home = "Maison_Est"
 routine = Array[ExtResource("6_7uxv6")]([SubResource("Resource_stcv8"), SubResource("Resource_3wnh4"), SubResource("Resource_vjn51"), SubResource("Resource_0h3cr")])
 greetings = PackedStringArray("Des légumes frais au marché !", "Bonjour ! Tu passes au marché ?")
+orders = Array[ExtResource("6_1cud7")]([SubResource("Resource_nsxeo"), SubResource("Resource_5rhwn"), SubResource("Resource_vqj08"), SubResource("Resource_lh3fn"), SubResource("Resource_wwumb")])
+friendship_rewards = Array[ExtResource("1_7vgo8")]([SubResource("Resource_pfako"), SubResource("Resource_3qew7")])

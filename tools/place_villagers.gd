@@ -18,6 +18,7 @@ extends SceneTree
 ## rerunning this resets them to the tables.
 
 const VILLAGER_SCENE := "res://entities/villager/villager.tscn"
+const INTERACTABLE := "res://components/interaction/interactable_component.tscn"
 const DATA_DIR := "res://data/villagers/"
 const LAYERS := "res://assets/sprites/characters/villager/example_%s.png"
 const TILE := 48
@@ -69,12 +70,14 @@ const ZONES := {
 	},
 }
 
-## id -> name, home (in the village), size, skin, layers [sheet, color],
+## id -> name, role, home (in the village), size, skin, layers [sheet, color],
 ## routine [hour, minute, zone ("" = home), spot, activity, rain_proof],
-## greetings.
+## greetings, orders [item, min, max, unit reward, days, request line (%d =
+## the quantity), thanks line] - see OrderTemplate - and friendship gifts
+## [hearts, item, quantity, line] - see FriendshipReward.
 const VILLAGERS := {
 	"rakoto": {
-		"name": "Rakoto", "home": "Maison_Ouest", "size": 1.0, "skin": Color(0.45, 0.29, 0.19),
+		"name": "Rakoto", "role": "Fermier, il cultive la rizière des voisins", "home": "Maison_Ouest", "size": 1.0, "skin": Color(0.45, 0.29, 0.19),
 		"layers": [["trousers", Color(0.45, 0.35, 0.25)], ["shirt", Color(0.92, 0.9, 0.82)], ["hair", Color(0.1, 0.08, 0.06)], ["hat", Color(0.86, 0.74, 0.46)]],
 		"routine": [
 			[6, 30, "rice_fields", "Riziere_Voisins_1", "WORK", true],
@@ -84,9 +87,18 @@ const VILLAGERS := {
 			[18, 0, "", "Maison_Ouest", "INSIDE", true],
 		],
 		"greetings": ["Bonjour ! Le riz pousse bien cette année.", "Les rizières ont besoin de bras, tu sais."],
+		"orders": [
+			["rice", 5, 8, 5500, 14, "Ma rizière ne suffira pas cette saison. Tu me vendrais %d mesures de riz ?", "Misaotra ! Avec ça, la famille mangera jusqu'à la récolte."],
+			["cassava", 6, 8, 1400, 10, "Il me faut %d racines de manioc pour la famille. Tu peux ?", "Merci, voisin !"],
+			["corn", 6, 8, 1600, 7, "Tu aurais %d épis de maïs pour moi ?", "Parfait, merci !"],
+		],
+		"gifts": [
+			[2, "rice_seed", 6, "Tiens, du riz de semence de ma récolte. Il pousse bien par ici."],
+			[4, "rice_seed", 12, "Tu es comme de la famille. Prends ce riz de semence, tu en feras bon usage."],
+		],
 	},
 	"ravao": {
-		"name": "Ravao", "home": "Maison_Est", "size": 1.0, "skin": Color(0.55, 0.36, 0.24),
+		"name": "Ravao", "role": "Marchande, elle tient l'étal du marché", "home": "Maison_Est", "size": 1.0, "skin": Color(0.55, 0.36, 0.24),
 		"layers": [["skirt", Color(0.75, 0.3, 0.25)], ["shirt", Color(0.95, 0.85, 0.55)], ["hair_bun", Color(0.12, 0.09, 0.07)]],
 		"routine": [
 			[7, 0, "", "Marche", "STAND", true],
@@ -95,9 +107,20 @@ const VILLAGERS := {
 			[17, 30, "", "Maison_Est", "INSIDE", true],
 		],
 		"greetings": ["Des légumes frais au marché !", "Bonjour ! Tu passes au marché ?"],
+		"orders": [
+			["cassava", 4, 6, 1500, 10, "Mes clients réclament du manioc. Il m'en faudrait %d racines.", "Merci ! Mes clients vont être contents."],
+			["corn", 5, 8, 1700, 7, "Le maïs grillé se vend bien en ce moment. Tu m'apportes %d épis ?", "Ils sont beaux ! Merci."],
+			["tomato", 3, 5, 6500, 9, "Il me faut %d tomates pour la sauce du marché. Tu en auras ?", "Merci, elles sont bien mûres !"],
+			["sweet_potato", 4, 6, 2000, 8, "Les patates douces partent vite. J'en voudrais %d.", "Merci ! Je les mets tout de suite à l'étal."],
+			["potato", 3, 5, 7000, 12, "Tu pourrais me vendre %d pommes de terre ?", "Merci beaucoup !"],
+		],
+		"gifts": [
+			[2, "tomato_seed", 5, "Des graines de tomate de mon jardin. Elles se vendent bien au marché !"],
+			[4, "potato_seed", 5, "Des plants de pomme de terre, pour la saison sèche. Merci pour tout !"],
+		],
 	},
 	"neny_soa": {
-		"name": "Neny Soa", "home": "Maison_Sud", "size": 0.95, "skin": Color(0.5, 0.33, 0.22),
+		"name": "Neny Soa", "role": "La grand-mère du village", "home": "Maison_Sud", "size": 0.95, "skin": Color(0.5, 0.33, 0.22),
 		"layers": [["skirt", Color(0.3, 0.35, 0.55)], ["shirt", Color(0.85, 0.85, 0.85)], ["hair_bun", Color(0.75, 0.75, 0.75)]],
 		"routine": [
 			[8, 0, "", "Place", "WANDER", false],
@@ -106,9 +129,20 @@ const VILLAGERS := {
 			[17, 30, "", "Maison_Sud", "INSIDE", true],
 		],
 		"greetings": ["Ah, mon enfant ! Tu travailles bien.", "Quand j'étais jeune, tout ce champ était à mon père."],
+		"orders": [
+			["mango", 3, 5, 1200, 4, "Mes petits-enfants adorent les mangues. Tu m'en apportes %d ?", "Que Dieu te bénisse, mon enfant."],
+			["egg", 2, 4, 1000, 4, "J'aimerais %d œufs pour faire un gâteau.", "Merci, mon enfant. Passe goûter le gâteau !"],
+			["bean", 4, 6, 3500, 9, "Je prépare des haricots pour la famille. Il m'en faudrait %d.", "Merci, tu es bien serviable."],
+			["groundnut", 3, 5, 4000, 10, "Avec %d arachides, je ferais de la pâte d'arachide !", "Merci, mon enfant !"],
+			["cassava", 3, 4, 1500, 10, "Un peu de manioc pour le repas : %d racines, ça m'irait.", "Merci, mon enfant."],
+		],
+		"gifts": [
+			[2, "food_vary_amin_anana", 1, "Je t'ai préparé du riz aux brèdes, mon enfant."],
+			[4, "food_vary_sy_laoka", 2, "Viens manger à la maison quand tu veux. En attendant, prends ça."],
+		],
 	},
 	"koto": {
-		"name": "Koto", "home": "Maison_Sud", "size": 0.8, "skin": Color(0.5, 0.33, 0.22),
+		"name": "Koto", "role": "Un enfant du village, toujours à jouer", "home": "Maison_Sud", "size": 0.8, "skin": Color(0.5, 0.33, 0.22),
 		"layers": [["shorts", Color(0.25, 0.35, 0.6)], ["shirt", Color(0.85, 0.3, 0.25)], ["hair", Color(0.12, 0.09, 0.07)]],
 		"routine": [
 			[7, 30, "", "Place", "WANDER", false],
@@ -118,9 +152,18 @@ const VILLAGERS := {
 			[18, 30, "", "Maison_Sud", "INSIDE", true],
 		],
 		"greetings": ["Salut ! On joue ?", "J'ai vu un caméléon près du manguier !"],
+		"orders": [
+			["mango", 1, 2, 1500, 3, "Tu as des mangues ? J'en voudrais %d, s'il te plaît !", "Youpi ! Merci !"],
+			["corn", 2, 3, 2000, 6, "Je veux faire griller %d épis de maïs avec mes copains !", "Trop bien, merci !"],
+			["egg", 1, 2, 1200, 3, "Maman veut %d œufs. Tu en as ?", "Merci ! Maman va être contente."],
+		],
+		"gifts": [
+			[2, "mango", 2, "Je t'ai gardé des mangues ! Les plus belles !"],
+			[4, "groundnut_seed", 4, "J'ai trouvé des graines d'arachide. C'est pour toi !"],
+		],
 	},
 	"naivo": {
-		"name": "Naivo", "home": "Maison_Est", "size": 1.05, "skin": Color(0.62, 0.42, 0.28),
+		"name": "Naivo", "role": "Fermier, il cultive la rizière des voisins", "home": "Maison_Est", "size": 1.05, "skin": Color(0.62, 0.42, 0.28),
 		"layers": [["shorts", Color(0.3, 0.4, 0.3)], ["shirt", Color(0.6, 0.45, 0.3)], ["hair", Color(0.1, 0.08, 0.06)], ["hat", Color(0.8, 0.68, 0.42)]],
 		"routine": [
 			[6, 15, "rice_fields", "Riziere_Voisins_2", "WORK", true],
@@ -131,6 +174,16 @@ const VILLAGERS := {
 			[18, 15, "", "Maison_Est", "INSIDE", true],
 		],
 		"greetings": ["Belle journée pour travailler la terre.", "Bonjour, voisin !", "Le repiquage, ça casse le dos !"],
+		"orders": [
+			["sweet_potato", 5, 7, 1900, 8, "Il me faudrait %d patates douces pour la saison sèche.", "Merci, voisin !"],
+			["groundnut", 4, 6, 3900, 10, "Tu cultives des arachides ? J'en voudrais %d.", "Parfait, merci !"],
+			["bean", 4, 6, 3400, 9, "J'ai besoin de %d haricots pour ma femme.", "Merci, elle sera contente !"],
+			["corn", 5, 7, 1600, 7, "%d épis de maïs, tu peux m'en trouver ?", "Merci beaucoup !"],
+		],
+		"gifts": [
+			[2, "groundnut_seed", 5, "Des graines d'arachide, pour la saison sèche."],
+			[4, "sweet_potato_seed", 6, "Des boutures de patate douce. Tu es un bon voisin."],
+		],
 	},
 }
 
@@ -138,9 +191,30 @@ func _initialize() -> void:
 	_build_villager_scene()
 	DirAccess.make_dir_recursive_absolute(DATA_DIR)
 	for id: String in VILLAGERS:
-		if not ResourceLoader.exists(DATA_DIR + id + ".tres"):
-			ResourceSaver.save(_make_data(VILLAGERS[id]), DATA_DIR + id + ".tres")
-			print("%s%s.tres written" % [DATA_DIR, id])
+		var path: String = DATA_DIR + id + ".tres"
+		if not ResourceLoader.exists(path):
+			ResourceSaver.save(_make_data(VILLAGERS[id]), path)
+			print("%s written" % path)
+		else:
+			# Missing what the table has (written before orders existed...):
+			# filled in from the table, only then.
+			var data: VillagerData = load(path)
+			var changed := false
+			if data.orders.is_empty() and not VILLAGERS[id].get("orders", []).is_empty():
+				data.orders = _make_orders(VILLAGERS[id])
+				changed = true
+			if data.role.is_empty() and not VILLAGERS[id].get("role", "").is_empty():
+				data.role = VILLAGERS[id]["role"]
+				changed = true
+			if data.greetings.is_empty():
+				data.greetings = PackedStringArray(VILLAGERS[id]["greetings"])
+				changed = true
+			if data.friendship_rewards.is_empty() and not VILLAGERS[id].get("gifts", []).is_empty():
+				data.friendship_rewards = _make_gifts(VILLAGERS[id])
+				changed = true
+			if changed:
+				ResourceSaver.save(data, path)
+				print("%s: completed from the table" % path)
 	for zone_id: String in ZONES:
 		_place_in_zone(zone_id)
 	quit()
@@ -183,6 +257,28 @@ func _build_villager_scene() -> void:
 	bubble.label_settings = settings
 	_add(villager, villager, bubble)
 
+	# Talking to them: the player's interaction detector finds this.
+	var talk: Area2D = (load(INTERACTABLE) as PackedScene).instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+	talk.name = "InteractableComponent"
+	_add(villager, villager, talk) # its reach is set by Villager (TALK_REACH)
+
+	# "!" / "?" over the head (orders).
+	var mark := Label.new()
+	mark.name = "Mark"
+	mark.visible = false
+	mark.position = Vector2(-12, -160)
+	mark.size = Vector2(24, 30)
+	mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mark.z_index = 41
+	mark.z_as_relative = false
+	var mark_settings := LabelSettings.new()
+	mark_settings.font_size = 24
+	mark_settings.font_color = Color(1.0, 0.82, 0.25)
+	mark_settings.outline_size = 6
+	mark_settings.outline_color = Color(0.25, 0.14, 0.05)
+	mark.label_settings = mark_settings
+	_add(villager, villager, mark)
+
 	_save(villager, VILLAGER_SCENE)
 	villager.free()
 
@@ -198,6 +294,7 @@ func _make_data(spec: Dictionary) -> VillagerData:
 	look.layers = layers
 	var data := VillagerData.new()
 	data.display_name = spec["name"]
+	data.role = spec.get("role", "")
 	data.home = spec["home"]
 	data.size = spec["size"]
 	data.look = look
@@ -213,7 +310,33 @@ func _make_data(spec: Dictionary) -> VillagerData:
 		routine.append(stop)
 	data.routine = routine
 	data.greetings = PackedStringArray(spec["greetings"])
+	data.orders = _make_orders(spec)
+	data.friendship_rewards = _make_gifts(spec)
 	return data
+
+func _make_orders(spec: Dictionary) -> Array[OrderTemplate]:
+	var orders: Array[OrderTemplate] = []
+	for entry: Array in spec.get("orders", []):
+		var order := OrderTemplate.new()
+		order.item_id = entry[0]
+		order.quantity = Vector2i(entry[1], entry[2])
+		order.unit_reward = entry[3]
+		order.days = entry[4]
+		order.request_line = entry[5]
+		order.thanks_line = entry[6]
+		orders.append(order)
+	return orders
+
+func _make_gifts(spec: Dictionary) -> Array[FriendshipReward]:
+	var gifts: Array[FriendshipReward] = []
+	for entry: Array in spec.get("gifts", []):
+		var gift := FriendshipReward.new()
+		gift.hearts = entry[0]
+		gift.item_id = entry[1]
+		gift.quantity = entry[2]
+		gift.line = entry[3]
+		gifts.append(gift)
+	return gifts
 
 func _place_in_zone(zone_id: String) -> void:
 	var table: Dictionary = ZONES[zone_id]

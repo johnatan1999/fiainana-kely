@@ -94,6 +94,23 @@ func get_item(item_id: String) -> ItemData:
 		return _seed_items[item_id]
 	return _items.get(item_id)
 
+## The name shown for any id - a seed, a harvested crop or an item -
+## translated; the id itself if it's unknown.
+func get_display_name(item_id: String) -> String:
+	var item := get_item(item_id)
+	if item != null:
+		return item.get_display_name()
+	var crop := get_crop(item_id)
+	return tr(crop.display_name) if crop != null else item_id
+
+## The icon for any id - a seed, a harvested crop or an item - or null.
+func get_icon(item_id: String) -> Texture2D:
+	var item := get_item(item_id)
+	if item != null:
+		return item.icon
+	var crop := get_crop(item_id)
+	return crop.icon if crop != null else null
+
 ## What a species is (name, icon, product cycle...), or null if unregistered.
 func get_animal(species: AnimalData.Species) -> AnimalData:
 	return _animals.get(species)

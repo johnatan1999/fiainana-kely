@@ -19,7 +19,12 @@ extends CharacterBody2D
 ##
 ## With the player: solid (the player walks around them); waits when the
 ## player is in the way; turns to the player who comes close and greets
-## them now and then (a speech bubble).
+## them now and then (a speech bubble). The player can talk to them
+## (InteractableComponent -> `interacted`): OrderManager answers - an order
+## to offer, to deliver, or just a greeting - and sets the mark over their
+## head (set_order_mark: "!" an order to offer, "?" one to deliver now).
+
+signal interacted
 
 const GROUP := "villagers"
 const SPEED := 55.0
@@ -41,12 +46,19 @@ const ARRIVAL_DELAY := 12.0
 ## Several villagers at one spot (the hut at noon) stand apart: each has
 ## its own place around it, up to this far.
 const SPOT_SPREAD := Vector2(20.0, 8.0)
+## Where the player can talk to them from: a box around the body.
+const TALK_REACH := Vector2(36, 44)
+## Friendship hearts over the head when the player talks to them.
+const HEARTS_TIME := 3.5
+const HEARTS_Y := -104.0
 
 @export var data: VillagerData
 
 @onready var _visual: VillagerVisual = $VillagerVisual
 @onready var _shape: CollisionShape2D = $CollisionShape2D
 @onready var _bubble: Label = $Bubble
+@onready var _interactable: InteractableComponent = $InteractableComponent
+@onready var _mark: Label = $Mark
 
 var _roads: VillagerRoads
 var _minute := 12 * 60
@@ -66,6 +78,10 @@ var _greet_cooldown := 0.0
 var _bubble_time := 0.0
 var _player: Node2D
 var _spot_offset := Vector2.ZERO
+var _mark_y := 0.0
+var _hearts: HeartsDisplay
+var _hearts_time := 0.0
+var _t := 0.0
 ## Said instead of a greeting while set (e.g. NeighbourPaddyManager: "help
 ## us with the harvest?").
 var call_out := ""
@@ -75,7 +91,23 @@ func _ready() -> void:
 	add_to_group(DayNightController.CLOCK_GROUP)
 	add_to_group(WeatherController.WEATHER_GROUP)
 	_bubble.visible = false
+	_mark.visible = false
+	_mark_y = _mark.position.y
+	_interactable.interacted.connect(interacted.emit)
+	_hearts = HeartsDisplay.new()
+	_hearts.name = "Hearts"
+	_hearts.position = Vector2(0, HEARTS_Y)
+	_hearts.z_index = 40
+	_hearts.z_as_relative = false
+	_hearts.visible = false
+	add_child(_hearts)
+	var reach: CollisionShape2D = _interactable.get_node("InteractableCollision2D")
+	var box := RectangleShape2D.new()
+	box.size = TALK_REACH
+	reach.shape = box
+	reach.position = Vector2(0, -TALK_REACH.y / 2.0)
 	if data != null:
+		set_prompt(tr("Parler à %s") % data.display_name)
 		_visual.look = data.look
 		_visual.scale = Vector2.ONE * data.size
 		# The same place every day for one villager, a different one for each.
@@ -182,7 +214,12 @@ func _set_plan(plan: Array) -> void:
 	_path.clear()
 
 func _physics_process(delta: float) -> void:
+	_t += delta
+	_mark.position.y = _mark_y + sin(_t * 4.0) * 2.0 # bobbing, to catch the eye
 	_bubble_time -= delta
+	_hearts_time -= delta
+	if _hearts.visible and _hearts_time <= 0.0:
+		_hearts.visible = false
 	if _bubble.visible and _bubble_time <= 0.0:
 		_bubble.visible = false
 	if _arrival_delay > 0.0:
@@ -259,6 +296,8 @@ func _set_inside(inside: bool) -> void:
 	_inside = inside
 	visible = not inside
 	_shape.set_deferred("disabled", inside)
+	_interactable.set_interactable(not inside)
+	_mark.visible = not inside and not _mark.text.is_empty()
 	if inside:
 		_bubble.visible = false
 
@@ -288,6 +327,44 @@ func _try_greet() -> void:
 		return
 	_greet_cooldown = GREET_COOLDOWN
 	say(call_out if not call_out.is_empty() else tr(data.greetings[randi() % data.greetings.size()]))
+
+# --- talking (OrderManager) ------------------------------------------------------------
+
+## The villager's id in the orders: their VillagerData file's name.
+func get_villager_id() -> String:
+	return data.resource_path.get_file().get_basename() if data != null else ""
+
+## "!" (an order to offer), "?" (an order the player can deliver now) or ""
+## over their head.
+func set_order_mark(mark: String) -> void:
+	_mark.text = mark
+	_mark.visible = not _inside and not mark.is_empty()
+
+## What talking to them does ("[E] <prompt>"), already translated.
+func set_prompt(prompt: String) -> void:
+	_interactable.prompt_message = prompt
+
+## Turns to the player who talks to them.
+func turn_to_player() -> void:
+	if _find_player() != null:
+		_face_player()
+
+## A greeting right now (the player talked to them).
+func greet() -> void:
+	turn_to_player()
+	_greet_cooldown = GREET_COOLDOWN
+	if not call_out.is_empty():
+		say(call_out)
+	elif not data.greetings.is_empty():
+		say(tr(data.greetings[randi() % data.greetings.size()]))
+
+## The player's friendship with them, over their head for a moment.
+func show_hearts(hearts: int, maximum: int, progress: float) -> void:
+	if _inside:
+		return
+	_hearts.set_hearts(hearts, maximum, progress)
+	_hearts.visible = true
+	_hearts_time = HEARTS_TIME
 
 ## Shows `text` (already translated) in the speech bubble for a moment.
 func say(text: String) -> void:

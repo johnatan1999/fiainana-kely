@@ -1,12 +1,28 @@
-[gd_resource type="Resource" script_class="VillagerData" load_steps=16 format=3 uid="uid://cy83136u5025f"]
+[gd_resource type="Resource" script_class="VillagerData" load_steps=25 format=3 uid="uid://cy83136u5025f"]
 
 [ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="1_8b6sb"]
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_8lrky"]
 [ext_resource type="Texture2D" uid="uid://degyjvm0ywcdc" path="res://assets/sprites/characters/villager/example_skirt.png" id="2_0otug"]
 [ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="3_bsrjd"]
 [ext_resource type="Texture2D" uid="uid://djnfoyu2methn" path="res://assets/sprites/characters/villager/example_hair_bun.png" id="4_jiuqr"]
 [ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="5_6lm13"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="6_egg3n"]
 [ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="6_h3mkw"]
 [ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="7_4rri3"]
+
+[sub_resource type="Resource" id="Resource_febgi"]
+script = ExtResource("1_8lrky")
+hearts = 2
+item_id = "food_vary_amin_anana"
+quantity = 1
+line = "Je t'ai préparé du riz aux brèdes, mon enfant."
+
+[sub_resource type="Resource" id="Resource_onku3"]
+script = ExtResource("1_8lrky")
+hearts = 4
+item_id = "food_vary_sy_laoka"
+quantity = 2
+line = "Viens manger à la maison quand tu veux. En attendant, prends ça."
 
 [sub_resource type="Resource" id="Resource_m13ef"]
 script = ExtResource("1_8b6sb")
@@ -28,10 +44,56 @@ script = ExtResource("5_6lm13")
 skin_color = Color(0.5, 0.33, 0.22, 1)
 layers = Array[ExtResource("1_8b6sb")]([SubResource("Resource_m13ef"), SubResource("Resource_5nfkt"), SubResource("Resource_pahtg")])
 
+[sub_resource type="Resource" id="Resource_qm80r"]
+script = ExtResource("6_egg3n")
+item_id = "mango"
+quantity = Vector2i(3, 5)
+unit_reward = 1200
+days = 4
+request_line = "Mes petits-enfants adorent les mangues. Tu m'en apportes %d ?"
+thanks_line = "Que Dieu te bénisse, mon enfant."
+
+[sub_resource type="Resource" id="Resource_snbnn"]
+script = ExtResource("6_egg3n")
+item_id = "egg"
+quantity = Vector2i(2, 4)
+unit_reward = 1000
+days = 4
+request_line = "J'aimerais %d œufs pour faire un gâteau."
+thanks_line = "Merci, mon enfant. Passe goûter le gâteau !"
+
+[sub_resource type="Resource" id="Resource_gtp0r"]
+script = ExtResource("6_egg3n")
+item_id = "bean"
+quantity = Vector2i(4, 6)
+unit_reward = 3500
+days = 9
+request_line = "Je prépare des haricots pour la famille. Il m'en faudrait %d."
+thanks_line = "Merci, tu es bien serviable."
+
+[sub_resource type="Resource" id="Resource_tg3sg"]
+script = ExtResource("6_egg3n")
+item_id = "groundnut"
+quantity = Vector2i(3, 5)
+unit_reward = 4000
+days = 10
+request_line = "Avec %d arachides, je ferais de la pâte d'arachide !"
+thanks_line = "Merci, mon enfant !"
+
+[sub_resource type="Resource" id="Resource_br4ym"]
+script = ExtResource("6_egg3n")
+item_id = "cassava"
+quantity = Vector2i(3, 4)
+unit_reward = 1500
+days = 10
+request_line = "Un peu de manioc pour le repas : %d racines, ça m'irait."
+thanks_line = "Merci, mon enfant."
+
 [sub_resource type="Resource" id="Resource_w6cux"]
 script = ExtResource("6_h3mkw")
 hour = 8
 minute = 0
+zone = ""
 spot = "Place"
 activity = 1
 rain_proof = false
@@ -40,6 +102,7 @@ rain_proof = false
 script = ExtResource("6_h3mkw")
 hour = 11
 minute = 0
+zone = ""
 spot = "Maison_Sud"
 activity = 2
 rain_proof = true
@@ -48,6 +111,7 @@ rain_proof = true
 script = ExtResource("6_h3mkw")
 hour = 15
 minute = 0
+zone = ""
 spot = "Banc_Est"
 activity = 0
 rain_proof = false
@@ -56,6 +120,7 @@ rain_proof = false
 script = ExtResource("6_h3mkw")
 hour = 17
 minute = 30
+zone = ""
 spot = "Maison_Sud"
 activity = 2
 rain_proof = true
@@ -63,8 +128,12 @@ rain_proof = true
 [resource]
 script = ExtResource("7_4rri3")
 display_name = "Neny Soa"
+role = "La grand-mère du village"
 look = SubResource("Resource_5bs12")
 size = 0.95
+home_zone = "village"
 home = "Maison_Sud"
 routine = Array[ExtResource("6_h3mkw")]([SubResource("Resource_w6cux"), SubResource("Resource_v6s0l"), SubResource("Resource_xmj2j"), SubResource("Resource_8bjkb")])
 greetings = PackedStringArray("Ah, mon enfant ! Tu travailles bien.", "Quand j\'étais jeune, tout ce champ était à mon père.")
+orders = Array[ExtResource("6_egg3n")]([SubResource("Resource_qm80r"), SubResource("Resource_snbnn"), SubResource("Resource_gtp0r"), SubResource("Resource_tg3sg"), SubResource("Resource_br4ym")])
+friendship_rewards = Array[ExtResource("1_8lrky")]([SubResource("Resource_febgi"), SubResource("Resource_onku3")])
