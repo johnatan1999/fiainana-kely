@@ -146,19 +146,8 @@ func _find_state_node(state: int) -> Node2D:
 func _anchor_sprites() -> void:
 	for state_name in STATE_NODE_NAMES:
 		var state := get_node_or_null(state_name)
-		if state == null:
-			continue
-		for child in state.get_children():
-			var sprite := child as Sprite2D
-			if sprite == null or sprite.texture == null:
-				continue
-			var height := sprite.region_rect.size.y if sprite.region_enabled else float(sprite.texture.get_height())
-			var anchored := Vector2(0, -height / 2.0)
-			# Only on change: in the editor, rewriting the same value every
-			# frame would keep flagging the scene as modified.
-			if not sprite.centered or sprite.offset != anchored:
-				sprite.centered = true
-				sprite.offset = anchored
+		if state:
+			SpriteAnchor.anchor_children(state)
 
 ## Whether the shown state has real art (a Sprite2D with a texture).
 func _has_art() -> bool:

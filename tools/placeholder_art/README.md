@@ -1,0 +1,19 @@
+# Planches provisoires
+
+Générateurs des dessins provisoires du jeu, en attendant les vrais sprites. Chacun réécrit
+sa planche :
+
+```
+godot --headless --path . --script res://tools/placeholder_art/gen_<nom>.gd
+```
+
+| Script | Planche écrite | Convention à garder si on la remplace |
+|---|---|---|
+| `gen_tall_grass.gd` | `assets/tileset/tall_grass_placeholder.png` | Une seule rangée, touffes posées sur le bord bas |
+| `gen_rice.gd` | `assets/sprites/crops/rice.png` | 4 cases de 96×128, plants sur le bord bas, double densité |
+| `gen_fence.gd` | `assets/tileset/fence_wood.png` | 16 tuiles de 48 px, index = N·1 + E·2 + S·4 + O·8 |
+| `gen_props.gd` | `assets/sprites/props/village_props.png` | Cases de 160×112, objet posé sur le bord bas, double densité |
+| `gen_water.gd` | `assets/tileset/water_placeholder.png` | Deux tuiles blanches : c'est le shader qui colore |
+
+Ces scripts ne touchent **qu'aux images**. Les scènes (zones, champs, arbres, clôtures,
+objets) s'éditent à la main dans l'éditeur : ce sont elles la référence.

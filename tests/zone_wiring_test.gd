@@ -1,4 +1,4 @@
-extends SceneTree
+extends Node
 
 ## Validates every ZoneTransition (door) in every registered zone against
 ## WorldManager's data-driven zone registry: target_zone must be a real,
@@ -7,30 +7,25 @@ extends SceneTree
 ## only surface when a player happens to walk through that one specific door
 ## - run this after adding or renaming any zone/spawn marker.
 ##
-## Deliberately untyped locals throughout, and never a bare ClassName.CONST
-## or ClassName.new() reference to a project class - matches run_tests.gd/
-## smoke_test_world.gd's style, for the same reason documented in their
-## headers (it avoids GDScript eagerly resolving a class whose script
-## transitively touches AudioManager before --script mode has finished
-## registering autoloads).
+## Runs through tests/runner.tscn (full game environment, autoloads loaded):
+##   godot --headless --path . res://tests/runner.tscn -- zone_wiring_test
 
 var _pass_count := 0
 var _fail_count := 0
 var _world
 var _frame := 0
 
-func _initialize() -> void:
+func _ready() -> void:
 	var packed = load("res://world/world.tscn")
 	_world = packed.instantiate()
-	root.add_child(_world)
+	add_child(_world)
 
-func _process(_delta: float) -> bool:
+func _process(_delta: float) -> void:
 	_frame += 1
 	if _frame == 3:
 		_run_checks()
 		print("\n%d passed, %d failed" % [_pass_count, _fail_count])
-		quit(1 if _fail_count > 0 else 0)
-	return false
+		get_tree().quit(1 if _fail_count > 0 else 0)
 
 func _check(condition: bool, description: String) -> void:
 	print(("PASS: " if condition else "FAIL: ") + description)

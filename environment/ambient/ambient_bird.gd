@@ -152,11 +152,7 @@ func _take_off(away: Vector2, startled := true) -> void:
 	# Airborne: over the props and trees around it.
 	z_index = 4
 	if startled:
-		# Looked up rather than named: ambience must also run where the
-		# autoloads aren't loaded (--script test runs) - it's just silent there.
-		var audio := get_node_or_null(^"/root/AudioManager")
-		if audio:
-			audio.play_bird_flight_sfx()
+		AudioManager.play_bird_flight_sfx()
 
 ## The closest tree lying away from the player (in `away`'s half-plane).
 func _find_perch(away: Vector2) -> void:

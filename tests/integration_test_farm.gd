@@ -1,4 +1,4 @@
-extends SceneTree
+extends Node
 
 ## Drives the real World.tscn through WorldManager into the Village zone
 ## (for the land-sign checks) and then the ChickenCoopInterior zone (which
@@ -9,34 +9,27 @@ extends SceneTree
 ## WorldManager/AnimalManager/Coop/Chicken that only breaks at integration
 ## time.
 ##
-## Deliberately untyped locals throughout, and NEVER a bare ClassName.CONST
-## or ClassName.new() reference to a project class (matching
-## smoke_test_world.gd's style) - either one forces GDScript to eagerly
-## resolve that class at parse time, before --script mode has finished
-## registering autoloads. Any project class whose script transitively calls
-## AudioManager.* then fails with "Identifier not found: AudioManager".
-## Always go through an existing instance instead (e.g. `sign.SOME_CONST`,
-## not `SignClassName.SOME_CONST`).
+## Runs through tests/runner.tscn (full game environment, autoloads loaded):
+##   godot --headless --path . res://tests/runner.tscn -- integration_test_farm
 
 var _world
 var _frame := 0
 
-func _initialize() -> void:
+func _ready() -> void:
 	var packed = load("res://world/world.tscn")
 	_world = packed.instantiate()
-	root.add_child(_world)
+	add_child(_world)
 
-func _process(_delta: float) -> bool:
+func _process(_delta: float) -> void:
 	_frame += 1
 	if _frame == 3:
 		_run_flow()
-		quit()
-	return false
+		get_tree().quit(1 if has_meta("failed") else 0)
 
 func _check(condition: bool, description: String) -> void:
 	print(("PASS: " if condition else "FAIL: ") + description)
 	if not condition:
-		root.set_meta("failed", true)
+		set_meta("failed", true)
 
 ## World.tscn auto-loads a real user://savegame.json if one exists on this
 ## machine (it does, from interactive playtesting) - so this can't assume a
@@ -94,7 +87,7 @@ func _run_flow() -> void:
 		"a full product cycle spawns at least one new Egg pickup in the world"
 	)
 
-	print("\n%s" % ("SOME CHECKS FAILED" if root.has_meta("failed") else "all integration checks passed"))
+	print("\n%s" % ("SOME CHECKS FAILED" if has_meta("failed") else "all integration checks passed"))
 
 ## Verifies FarmLandManager actually registered the FarmFields painted in
 ## the village scene - a field missing its zone_data or painted empty would

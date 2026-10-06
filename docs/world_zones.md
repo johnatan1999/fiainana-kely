@@ -63,6 +63,10 @@
   `ambient_life.md`).
 
 ## À savoir
+- Le tracé initial (herbe, chemins, falaises, clôtures, placements d'arbres et d'objets) a
+  été généré une seule fois. **Les scènes sont maintenant la référence** et s'éditent à la
+  main dans l'éditeur, sur les couches et nœuds décrits plus haut. Les planches provisoires,
+  elles, se régénèrent avec `tools/placeholder_art/`.
 - Les sorties est et sud du village sont dessinées mais ne mènent nulle part (bord de carte).
 - La paroi d'une falaise n'est visible que sur sa face sud, et les côtés du plateau ne bloquent
   pas : c'est ce qui permet d'accéder au gradin des rizières par l'est.

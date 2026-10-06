@@ -5,11 +5,16 @@ Scène principale : `res://world/world.tscn`.
 
 ## Commandes
 - Godot : `E:/DEV/Game/Godot_v4.3-stable_win64.exe~1/Godot_v4.3-stable_win64_console.exe`
-- Tests (headless) : `<godot> --headless --path . --script res://tests/<fichier>.gd`
-  - `run_tests.gd` : tests unitaires de la simulation
-  - `smoke_test_world.gd`, `zone_wiring_test.gd`, `integration_test_farm.gd` : tests d'intégration
-- En mode `--script`, les autoloads (AudioManager, UIEvents…) ne sont pas chargés : les erreurs
-  « Identifier not found » qui en découlent ne viennent pas forcément du code testé.
+- Tests unitaires (simulation pure) : `<godot> --headless --path . --script res://tests/run_tests.gd`
+- Tests d'intégration, dans l'environnement complet du jeu (autoloads chargés) :
+  `<godot> --headless --path . res://tests/runner.tscn -- <test>`, avec `<test>` parmi
+  `smoke_test_world`, `zone_wiring_test`, `integration_test_farm`, `behaviour_test`.
+  Code de sortie 1 si un test échoue.
+  - `behaviour_test` : comportements du monde (poules, oiseaux, clôtures, falaises, lanternes,
+    herbe haute). À compléter quand un comportement visible est ajouté ou modifié.
+- Le mode `--script` ne charge pas les autoloads : n'y lancer que `run_tests.gd`. Tout ce qui
+  touche aux scènes passe par `tests/runner.tscn`.
+- Planches provisoires : `tools/placeholder_art/` (voir son README).
 
 ## Conventions
 - Textes affichés au joueur : en français. Code et commentaires : en anglais.
@@ -24,6 +29,10 @@ Scène principale : `res://world/world.tscn`.
   0 (= Dirt). Sinon `set_cells_terrain_connect()` casse les champs au runtime.
 - Si Godot est ouvert, une modification de .tscn/.tres faite hors éditeur peut être écrasée :
   recharger le projet avant d'enregistrer.
+- Les scènes (.tscn) sont la référence et s'éditent dans l'éditeur. Pas de modification
+  textuelle d'une scène au-delà d'une propriété simple : pour générer ou repeindre (tuiles,
+  placements), passer par l'API de Godot (`set_cells_terrain_connect`, `PackedScene`…) dans un
+  outil versionné sous `tools/`, jamais par un script jetable hors du dépôt.
 
 ## Règles
 - Ne pas commit sans demande explicite.

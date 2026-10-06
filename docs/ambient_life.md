@@ -56,8 +56,6 @@
   - Volume `BIRD_FLIGHT_VOLUME_DB` (-6 dB), hauteur variée de 0,9 à 1,15.
   - Au plus un son toutes les `BIRD_FLIGHT_MIN_INTERVAL` (0,6 s), pour que plusieurs oiseaux
     qui s'envolent ensemble fassent un seul bruit.
-  - L'oiseau appelle l'autoload par `get_node_or_null("/root/AudioManager")`, pour rester
-    testable en mode `--script`, où il est alors muet.
 
 ## À savoir
 - Pas encore de chants d'oiseaux d'ambiance : seulement l'envol.

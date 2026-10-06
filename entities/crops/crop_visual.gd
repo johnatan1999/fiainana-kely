@@ -42,19 +42,8 @@ func _process(_delta: float) -> void:
 func _anchor_sprites() -> void:
 	for stage_name in STAGE_NODE_NAMES:
 		var stage := get_node_or_null(stage_name)
-		if stage == null:
-			continue
-		for child in stage.get_children():
-			var sprite := child as Sprite2D
-			if sprite == null or sprite.texture == null:
-				continue
-			var height := sprite.region_rect.size.y if sprite.region_enabled else float(sprite.texture.get_height())
-			var anchored := Vector2(0, -height / 2.0)
-			# Only on change: in the editor, rewriting the same value every
-			# frame would keep flagging the scene as modified.
-			if not sprite.centered or sprite.offset != anchored:
-				sprite.centered = true
-				sprite.offset = anchored
+		if stage:
+			SpriteAnchor.anchor_children(stage)
 
 func _apply_sway() -> void:
 	for stage_name in STAGE_NODE_NAMES:
