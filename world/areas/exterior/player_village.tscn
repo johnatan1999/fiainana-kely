@@ -1,4 +1,4 @@
-[gd_scene load_steps=49 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=50 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -44,6 +44,7 @@
 [ext_resource type="PackedScene" path="res://entities/props/zebu_cart.tscn" id="52_prop_zebu_cart"]
 [ext_resource type="PackedScene" path="res://entities/props/brick_shed.tscn" id="60_prop_brick_shed"]
 [ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
+[ext_resource type="Script" path="res://environment/lighting/night_light.gd" id="62_nightlight"]
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jeqll"]
 texture = ExtResource("4_ibrhb")
 texture_region_size = Vector2i(48, 48)
@@ -651,3 +652,30 @@ y_sort_enabled = true
 script = ExtResource("61_ambient")
 butterfly_count = 10
 ground_bird_count = 8
+
+[node name="NightLights" type="Node2D" parent="."]
+z_index = 1
+
+[node name="Lanterne_GrandeMaison" type="Node2D" parent="NightLights"]
+position = Vector2(1063, 392)
+script = ExtResource("62_nightlight")
+
+[node name="Lanterne_MaisonEst" type="Node2D" parent="NightLights"]
+position = Vector2(2028, 959)
+script = ExtResource("62_nightlight")
+
+[node name="Lanterne_MaisonOuest" type="Node2D" parent="NightLights"]
+position = Vector2(311, 1013)
+script = ExtResource("62_nightlight")
+
+[node name="Lanterne_MaisonSud" type="Node2D" parent="NightLights"]
+position = Vector2(1625, 1326)
+script = ExtResource("62_nightlight")
+
+[node name="Lanterne_Poulailler" type="Node2D" parent="NightLights"]
+position = Vector2(383, 527)
+script = ExtResource("62_nightlight")
+
+[node name="Lanterne_Marche" type="Node2D" parent="NightLights"]
+position = Vector2(1272, 722)
+script = ExtResource("62_nightlight")

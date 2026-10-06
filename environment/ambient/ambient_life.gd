@@ -11,6 +11,10 @@ extends Node2D
 ##
 ## Y-sorted, so birds on the ground sort with the player and the props;
 ## butterflies and flocks fly above everything (their own z_index).
+##
+## Follows the time of day (DayNightController, "night_lights" group): at
+## night butterflies are gone, birds fly off to roost and no flock passes -
+## fireflies come out instead.
 
 ## Butterflies spawn over the zone's GrassLayer, inside `area`.
 @export var butterfly_count := 8
@@ -22,6 +26,8 @@ extends Node2D
 @export var flocks := true
 ## Seconds between two flocks, picked in [x, y].
 @export var flock_interval := Vector2(25.0, 60.0)
+## Night only, over the grass like the butterflies.
+@export var firefly_count := 10
 
 ## Spawn spots are re-rolled this many times until they're clear of solid
 ## things (walls, trunks, fences, deep water).
@@ -32,8 +38,13 @@ const EDGE_MARGIN := 64.0
 var _rng := RandomNumberGenerator.new()
 var _rect: Rect2
 var _grass: TileMapLayer
+## 0 by day, 1 at full night - see set_night().
+var _night := 0.0
+var _butterflies: Array[Butterfly] = []
+var _fireflies: Array[Firefly] = []
 
 func _ready() -> void:
+	add_to_group(DayNightController.NIGHT_GROUP)
 	y_sort_enabled = true
 	_rng.randomize()
 	var zone := get_parent()
@@ -53,12 +64,35 @@ func _ready() -> void:
 		var butterfly := Butterfly.new()
 		add_child(butterfly)
 		butterfly.setup(_butterfly_spot(), _rng)
+		_butterflies.append(butterfly)
+	for i in firefly_count:
+		var firefly := Firefly.new()
+		add_child(firefly)
+		firefly.setup(_butterfly_spot(), _rng)
+		_fireflies.append(firefly)
+	set_night(_night)
 	for i in ground_bird_count:
 		var bird := AmbientBird.new()
 		add_child(bird)
 		bird.setup_ground(bird_species[_rng.randi() % bird_species.size()], self, _rng)
 	if flocks:
 		_schedule_flock()
+
+## Called by DayNightController as the light changes.
+func set_night(amount: float) -> void:
+	_night = amount
+	for butterfly in _butterflies:
+		butterfly.visible = not is_night()
+	for firefly in _fireflies:
+		firefly.visible = is_night()
+	if is_night():
+		for child in get_children():
+			if child is AmbientBird:
+				child.go_to_roost()
+
+## Too dark for butterflies and birds, time for fireflies.
+func is_night() -> bool:
+	return _night > 0.6
 
 ## A clear spot on the ground for a bird to land, at least `min_distance`
 ## from `away_from` (the player, so birds never land right on them).
@@ -97,6 +131,9 @@ func _schedule_flock() -> void:
 ## 4 to 7 birds crossing the whole area in a loose V, high in the sky.
 func _send_flock() -> void:
 	if not is_inside_tree():
+		return
+	if is_night():
+		_schedule_flock()
 		return
 	var going_right := _rng.randf() < 0.5
 	var y := _rng.randf_range(_rect.position.y, _rect.end.y)

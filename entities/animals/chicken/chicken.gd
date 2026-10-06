@@ -6,8 +6,13 @@ extends CharacterBody2D
 ## style (PlayerController also has no navmesh). Reads AnimalState each tick
 ## to decide what to do; only ever writes back to it via AnimalManager calls
 ## (feed_animal/water_animal), never directly.
+##
+## Follows the time of day (DayNightController's "night_lights" group): at
+## dusk a free-roaming chicken walks to its zone's coop door and goes in;
+## at dawn it comes back out and returns to its spot. Chickens kept in the
+## coop (simulated ones) just sleep through the night.
 
-enum State { IDLE, WALK, EAT, DRINK, SLEEP }
+enum State { IDLE, WALK, EAT, DRINK, SLEEP, ROOSTING }
 
 const SPEED := 40.0
 const WANDER_RADIUS := 60.0
@@ -43,6 +48,18 @@ const CRITICAL_NEED_THRESHOLD := 20.0
 ## toward its feet and back, PECK_PERIOD seconds per peck.
 const PECK_SQUASH := Vector2(1.06, 0.84)
 const PECK_PERIOD := 0.3
+## Night amount (DayNightController) at which chickens head in (~18:50),
+## and below which they come back out in the morning (~6:20).
+const ROOST_AT := 0.4
+const WAKE_AT := 0.25
+## Hurrying home.
+const HOME_SPEED := 55.0
+## Walking home has no pathfinding: one stuck behind a fence or a house for
+## this long slips away out of sight - it went round.
+const HOME_STUCK_TIME := 1.2
+## Coming out one by one, not as a block.
+const WAKE_DELAY_MAX := 6.0
+const FADE_TIME := 0.35
 
 ## Set start_wild = true on a Chicken instance placed directly in a zone
 ## scene (e.g. wandering free in the yard) instead of spawned by
@@ -77,8 +94,15 @@ var _walk_time_left: float = 0.0
 var _target_bowl
 var _need_bubble: NeedBubble
 var _peck_tween: Tween
+var _night := 0.0
+var _night_known := false
+## Walking to the coop door for the night.
+var _going_home := false
+var _stuck_time := 0.0
+var _wake_delay := 0.0
 
 func _ready() -> void:
+	add_to_group(DayNightController.NIGHT_GROUP)
 	anim.scale = Vector2(size_multiplier, size_multiplier)
 	collistion.scale = Vector2(size_multiplier, size_multiplier)
 	anim.modulate = tint_color
@@ -120,8 +144,22 @@ func _randomize_start() -> void:
 	animator.face([Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN].pick_random())
 	animator.play(Vector2.ZERO, "idle") # apply it now, not on the first physics tick
 
+## DayNightController, whenever the light changes.
+func set_night(amount: float) -> void:
+	_night = amount
+	if not _night_known:
+		_night_known = true
+		# Zone entered at night: the chickens are in already.
+		if _is_wild and amount >= ROOST_AT and _find_coop() != null:
+			_go_in(true)
+
 func _physics_process(delta: float) -> void:
 	if _is_wild:
+		if _state == State.ROOSTING:
+			_process_roosting(delta)
+			return
+		if _night >= ROOST_AT and not _going_home:
+			_head_home()
 		match _state:
 			State.WALK:
 				_process_walk(delta)
@@ -142,6 +180,10 @@ func _physics_process(delta: float) -> void:
 	_need_bubble.set_needs(not animal.fed_today, not animal.watered_today,
 		minf(animal.hunger, animal.thirst) <= CRITICAL_NEED_THRESHOLD)
 
+	if _night >= ROOST_AT and _state in [State.IDLE, State.WALK]:
+		# Shut in the coop already: just sleep through the night.
+		_state = State.SLEEP
+		_state_timer = 1.0
 	match _state:
 		State.EAT, State.DRINK, State.SLEEP:
 			velocity = Vector2.ZERO
@@ -167,7 +209,8 @@ func _move() -> void:
 func _separation_velocity() -> Vector2:
 	var push := Vector2.ZERO
 	for other in get_parent().get_children():
-		if other == self or not other is Chicken:
+		# Roosting ones are inside the coop, not in the way at its door.
+		if other == self or not other is Chicken or not other.visible:
 			continue
 		var away: Vector2 = global_position - other.global_position
 		var dist := away.length()
@@ -224,11 +267,66 @@ func _pick_wander_target() -> Vector2:
 		return target.clamp(_wander_area.position, _wander_area.end)
 	return _home_position + offset
 
+# --- Night: going in, coming out --------------------------------------------
+
+func _find_coop() -> Node2D:
+	var closest: Node2D = null
+	for coop in get_tree().get_nodes_in_group(Coop.GROUP):
+		if closest == null or global_position.distance_to(coop.global_position) < global_position.distance_to(closest.global_position):
+			closest = coop
+	return closest
+
+func _head_home() -> void:
+	var coop := _find_coop()
+	if coop == null:
+		return # no coop in this zone: it just carries on
+	_going_home = true
+	_stuck_time = 0.0
+	_walk_to(coop.get_door_position(), State.ROOSTING)
+	_walk_time_left = INF # it keeps going until it's in (or stuck)
+
+## Through the door, out of sight. `instantly`: no fade (zone just loaded).
+func _go_in(instantly := false) -> void:
+	_state = State.ROOSTING
+	_going_home = false
+	velocity = Vector2.ZERO
+	collistion.set_deferred("disabled", true)
+	_wake_delay = randf_range(0.0, WAKE_DELAY_MAX)
+	if instantly:
+		visible = false
+		return
+	var tween := create_tween()
+	tween.tween_property(self, "modulate:a", 0.0, FADE_TIME)
+	tween.tween_callback(hide)
+
+func _process_roosting(delta: float) -> void:
+	if _night > WAKE_AT:
+		return
+	_wake_delay -= delta
+	if _wake_delay > 0.0:
+		return
+	# Morning: out through the door, back to its spot.
+	var coop := _find_coop()
+	if coop:
+		global_position = coop.get_door_position()
+	visible = true
+	modulate.a = 0.0
+	create_tween().tween_property(self, "modulate:a", 1.0, FADE_TIME)
+	collistion.set_deferred("disabled", false)
+	_state = State.IDLE
+	_walk_to(_home_position + Vector2(randf_range(-20, 20), randf_range(-20, 20)), State.IDLE)
+
 func _process_walk(delta: float) -> void:
 	_walk_time_left -= delta
 	if _walk_time_left <= 0.0:
 		_give_up_walk()
 		return
+	if _going_home:
+		# No pathfinding: blocked for a while = it went round, out of sight.
+		_stuck_time = _stuck_time + delta if get_real_velocity().length() < SPEED * 0.25 and velocity != Vector2.ZERO else 0.0
+		if _stuck_time > HOME_STUCK_TIME:
+			_go_in()
+			return
 	if _target_bowl != null and global_position.distance_to(_target_bowl.get_center()) <= BOWL_REACH:
 		_on_arrived()
 		return
@@ -236,7 +334,7 @@ func _process_walk(delta: float) -> void:
 	if to_target.length() <= ARRIVE_DISTANCE:
 		_on_arrived()
 		return
-	velocity = to_target.normalized() * SPEED
+	velocity = to_target.normalized() * (HOME_SPEED if _going_home else SPEED)
 
 func _walk_to(target: Vector2, arrival_state: State) -> void:
 	_target_position = target
@@ -267,6 +365,8 @@ func _on_arrived() -> void:
 		_state = State.EAT
 		_start_peck()
 		_state_timer = EAT_DRINK_DURATION
+	elif _arrival_state == State.ROOSTING:
+		_go_in()
 	elif _arrival_state == State.DRINK:
 		var bowl := _animal_manager.get_water_bowl()
 		if bowl != null:

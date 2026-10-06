@@ -132,6 +132,10 @@ func _run_all() -> void:
 	test_paddy_only_takes_paddy_crops()
 	test_paddy_cannot_be_watered()
 	test_paddy_flag_set_on_purchase_and_saved()
+	test_time_of_day_advances_in_whole_minutes()
+	test_time_stops_at_two_in_the_morning()
+	test_sleeping_wakes_up_at_six()
+	test_time_of_day_save_load_roundtrip()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -903,3 +907,44 @@ func test_paddy_flag_set_on_purchase_and_saved() -> void:
 		"plots of a bought paddy field are flooded, and stay so after a save/load"
 	)
 	farm_land_manager.free()
+
+func test_time_of_day_advances_in_whole_minutes() -> void:
+	var sim := _make_sim()
+	var emitted: Array = []
+	sim.time_changed.connect(func(m: int): emitted.append(m))
+	sim.advance_time(0.4)
+	sim.advance_time(0.4) # 0.8: still no whole minute
+	sim.advance_time(0.4) # 1.2 -> one minute
+	sim.advance_time(2.0)
+	_check(
+		sim.state.clock.minute_of_day == 6 * 60 + 3 and emitted == [361, 363],
+		"advance_time() adds up fractions and moves the clock (from 6:00) one whole minute at a time"
+	)
+
+func test_time_stops_at_two_in_the_morning() -> void:
+	var sim := _make_sim()
+	sim.advance_time(24 * 60)
+	_check(
+		sim.state.clock.minute_of_day == GameClock.LATEST_MINUTE and sim.state.clock.get_hour() == 2 and sim.state.day == 1,
+		"time stops at 2:00 the night after, still the same day until the player sleeps"
+	)
+
+func test_sleeping_wakes_up_at_six() -> void:
+	var sim := _make_sim()
+	sim.advance_time(15 * 60)
+	sim.advance_day()
+	_check(sim.state.clock.minute_of_day == GameClock.DAY_START_MINUTE and sim.state.day == 2, "a new day starts at 6:00")
+
+func test_time_of_day_save_load_roundtrip() -> void:
+	var sim := _make_sim()
+	sim.advance_time(200)
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var fresh_sim := _make_sim()
+	fresh_sim.load_save_data(data)
+	data.erase("minute")
+	var old_save_sim := _make_sim()
+	old_save_sim.load_save_data(data)
+	_check(
+		fresh_sim.state.clock.minute_of_day == 6 * 60 + 200 and old_save_sim.state.clock.minute_of_day == GameClock.DAY_START_MINUTE,
+		"the time of day survives a save/load; a save from before it wakes up at 6:00"
+	)

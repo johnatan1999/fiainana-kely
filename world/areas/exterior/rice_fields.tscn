@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=3]
+[gd_scene load_steps=34 format=3]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_zone"]
 [ext_resource type="Script" path="res://environment/ground/ground_layer.gd" id="2_ground"]
@@ -30,6 +30,7 @@
 [ext_resource type="PackedScene" path="res://entities/props/thatched_hut.tscn" id="44_prop_thatched_hut"]
 [ext_resource type="PackedScene" path="res://entities/props/zebu_cart.tscn" id="45_prop_zebu_cart"]
 [ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
+[ext_resource type="Script" path="res://environment/lighting/night_light.gd" id="62_nightlight"]
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ground"]
 texture = ExtResource("4_groundtex")
 texture_region_size = Vector2i(48, 48)
@@ -343,3 +344,10 @@ ground_bird_count = 5
 bird_species = PackedStringArray("egret")
 area = Rect2(192, 240, 672, 528)
 flocks = false
+
+[node name="NightLights" type="Node2D" parent="."]
+z_index = 1
+
+[node name="Lanterne_Cabane" type="Node2D" parent="NightLights"]
+position = Vector2(1152, 1050)
+script = ExtResource("62_nightlight")

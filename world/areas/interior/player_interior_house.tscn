@@ -29,6 +29,7 @@ size = Vector2(82, 106)
 
 [node name="InteriorHouse" type="Node2D"]
 script = ExtResource("1_r400i")
+indoor = true
 camera_limit_left = -256
 camera_limit_top = -256
 camera_limit_right = 256

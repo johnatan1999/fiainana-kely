@@ -11,6 +11,18 @@ extends Node2D
 @onready var interactable_component: InteractableComponent = $InteractableComponent
 var _animal_manager: AnimalManager
 
+## Free-roaming chickens of the zone find the coop through this group to go
+## in for the night - see Chicken.set_night().
+const GROUP := "chicken_coops"
+
+func _ready() -> void:
+	add_to_group(GROUP)
+
+## Just in front of the door: where chickens go in at dusk and come out at dawn.
+func get_door_position() -> Vector2:
+	var door := get_node_or_null("EntranceDoor") as Node2D
+	return (door.global_position if door else global_position) + Vector2(0, 12)
+
 func setup(animal_manager: AnimalManager) -> void:
 	_animal_manager = animal_manager
 	interactable_component.interacted.connect(_on_interacted)

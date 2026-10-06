@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://fdjfwhhhgssy"]
+[gd_scene load_steps=19 format=3 uid="uid://fdjfwhhhgssy"]
 
 [ext_resource type="Script" path="res://world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://bf1stuuqjofir" path="res://entities/player/player.tscn" id="2_player"]
@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" path="res://ui/prompts/action_prompt.tscn" id="15_prompt"]
 [ext_resource type="PackedScene" path="res://ui/notifications/toast.tscn" id="16_toast"]
 [ext_resource type="Script" path="res://systems/tree/tree_manager.gd" id="17_treemanager"]
+[ext_resource type="Script" path="res://systems/time/day_night_controller.gd" id="18_daynight"]
 
 [node name="World" type="Node2D"]
 y_sort_enabled = true
@@ -44,6 +45,9 @@ script = ExtResource("12_zonemanager")
 
 [node name="TreeManager" type="Node" parent="Gameplay"]
 script = ExtResource("17_treemanager")
+
+[node name="DayNightController" type="Node" parent="Gameplay"]
+script = ExtResource("18_daynight")
 
 [node name="Hotbar" type="Node" parent="Gameplay"]
 script = ExtResource("13_hotbar")

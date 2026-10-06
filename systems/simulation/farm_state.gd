@@ -166,6 +166,7 @@ func to_dict() -> Dictionary:
 	return {
 		"money": money,
 		"day": day,
+		"minute": clock.minute_of_day,
 		"inventory": inventory.duplicate(),
 		"plots": plots_data,
 		"next_plot_id": _next_plot_id,
@@ -194,6 +195,8 @@ func _pending_animals_to_dict() -> Dictionary:
 func load_dict(data: Dictionary) -> void:
 	money = int(data.get("money", money))
 	clock.current_day = int(data.get("day", clock.current_day))
+	# Optional key (older saves have none): they wake up at dawn.
+	clock.minute_of_day = clampi(int(data.get("minute", GameClock.DAY_START_MINUTE)), 0, GameClock.LATEST_MINUTE)
 
 	inventory.clear()
 	var saved_inventory: Dictionary = data.get("inventory", {})

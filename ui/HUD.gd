@@ -2,7 +2,8 @@ class_name HUD
 extends Control
 
 ## Top-left panel: the date as players plan around it (season, day of the
-## season, year, and how far into the season we are) and the money. What
+## season, year, and how far into the season we are), the time of day, and
+## the money. What
 ## the player holds is shown by the HotbarUI.
 ##
 ## Money reacts to changes: the number counts up/down to its new value and
@@ -31,6 +32,7 @@ const DELTA_TIME := 1.1
 @onready var season_glyph: HudGlyph = %SeasonGlyph
 @onready var date_label: Label = %DateLabel
 @onready var year_label: Label = %YearLabel
+@onready var time_label: Label = %TimeLabel
 @onready var season_bar: ProgressBar = %SeasonBar
 @onready var days_label: Label = %DaysLabel
 @onready var money_label: Label = %MoneyLabel
@@ -49,6 +51,8 @@ func setup(simulation: FarmSimulation) -> void:
 	_simulation = simulation
 	simulation.money_changed.connect(_on_money_changed)
 	simulation.day_changed.connect(func(_day: int): _refresh_date())
+	simulation.time_changed.connect(_refresh_time)
+	_refresh_time(simulation.state.clock.minute_of_day)
 	season_bar.max_value = GameClock.DAYS_PER_SEASON
 	season_bar.add_theme_stylebox_override("fill", season_bar.get_theme_stylebox("fill").duplicate())
 	delta_label.modulate.a = 0.0
@@ -72,6 +76,11 @@ func _refresh_date() -> void:
 	season_bar.value = clock.get_day_of_season()
 	(season_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = SEASON_COLORS[season]
 	days_label.text = "%d/%d" % [clock.get_day_of_season(), GameClock.DAYS_PER_SEASON]
+
+## Shown in 10-minute steps, like a village clock - not a ticking stopwatch.
+func _refresh_time(_minute_of_day: int) -> void:
+	var clock := _simulation.state.clock
+	time_label.text = "%02d:%02d" % [clock.get_hour(), clock.get_minute() / 10 * 10]
 
 func _on_money_changed(money: int) -> void:
 	var delta := money - roundi(_shown_money)

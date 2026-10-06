@@ -25,6 +25,9 @@ const EDGE_WALL_THICKNESS := 32.0
 ## of place - the player's on-screen size shouldn't jump around.
 @export var camera_zoom: float = 1.05
 @export var bgm: BGM = BGM.NONE
+## Lit from inside (DayNightController): no sky tint, a warm dim light at
+## night instead of the blue outdoors.
+@export var indoor := false
 
 func _ready() -> void:
 	var ground := _ground_rect()

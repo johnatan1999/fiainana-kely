@@ -45,6 +45,11 @@ func setup_ground(species: String, life: AmbientLife, rng: RandomNumberGenerator
 	_facing = 1.0 if rng.randf() < 0.5 else -1.0
 	_timer = rng.randf_range(0.3, 2.0)
 	_t = rng.randf() * 5.0
+	if life.is_night():
+		# Roosting already: shows up in the morning.
+		_state = State.AWAY
+		visible = false
+		_timer = rng.randf_range(RESPAWN_DELAY.x, RESPAWN_DELAY.y)
 
 func setup_flock(species: String, start: Vector2, direction: Vector2, bounds: Rect2, rng: RandomNumberGenerator) -> void:
 	_species = SPECIES.get(species, SPECIES["fody"])
@@ -77,6 +82,8 @@ func _process(delta: float) -> void:
 			_timer -= delta
 			if _timer <= 0.0:
 				_start_landing()
+				if _state == State.AWAY:
+					return # still night: no redraw needed while hidden
 		State.LANDING:
 			_height = maxf(0.0, _height - 60.0 * delta)
 			modulate.a = minf(1.0, modulate.a + delta * 2.0)
@@ -115,6 +122,12 @@ func _on_ground(delta: float) -> void:
 		_velocity = Vector2(_facing * step, _rng.randf_range(-3.0, 3.0)) / 0.2
 		_height = 3.0 if _species["neck"] == 0.0 else 0.5
 
+## Nightfall: a bird on the ground flies off, and stays away until morning
+## (see _start_landing()).
+func go_to_roost() -> void:
+	if _state == State.GROUND or _state == State.LANDING:
+		_take_off(Vector2.from_angle(_rng.randf() * TAU))
+
 func _take_off(away: Vector2) -> void:
 	_state = State.FLEEING
 	if away == Vector2.ZERO:
@@ -126,6 +139,9 @@ func _take_off(away: Vector2) -> void:
 	z_index = 4
 
 func _start_landing() -> void:
+	if _life.is_night():
+		_timer = _rng.randf_range(RESPAWN_DELAY.x, RESPAWN_DELAY.y)
+		return
 	var player_pos := _player.global_position - _life.global_position if is_instance_valid(_player) else Vector2.INF
 	position = _life.pick_landing_spot(player_pos, 220.0)
 	_height = 60.0

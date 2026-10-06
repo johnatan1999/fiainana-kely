@@ -41,6 +41,7 @@ const TREE_RESOURCES: Array[TreeData] = [
 @onready var animal_manager: AnimalManager = $Gameplay/AnimalManager
 @onready var farm_land_manager: FarmLandManager = $Gameplay/FarmLandManager
 @onready var tree_manager: TreeManager = $Gameplay/TreeManager
+@onready var day_night: DayNightController = $Gameplay/DayNightController
 @onready var hotbar: Hotbar = $Gameplay/Hotbar
 @onready var hud: HUD = $UI/HUD
 @onready var hotbar_ui: HotbarUI = $UI/HotbarUI
@@ -85,6 +86,7 @@ func _ready() -> void:
 	pause_menu.setup(shop_ui, inventory_ui)
 	animal_manager.setup(simulation, world_manager)
 	tree_manager.setup(simulation, item_db, world_manager)
+	day_night.setup(simulation, world_manager)
 	save_controller.setup(simulation, world_manager, player)
 
 	pause_menu.save_requested.connect(save_controller.save_game)

@@ -6,6 +6,8 @@ extends RefCounted
 
 signal money_changed(money: int)
 signal day_changed(day: int)
+## The time of day moved on to a new minute (GameClock.minute_of_day).
+signal time_changed(minute_of_day: int)
 signal plot_changed(plot_id: int)
 ## A new plot came into existence (grid expansion, or a loaded save) - the
 ## presentation layer should create a PlotView for it. Distinct from
@@ -46,6 +48,8 @@ var grid_height: int
 var _crop_registry: Dictionary = {} # crop_id: String -> CropData
 var _animal_registry: Dictionary = {} # AnimalData.Species -> AnimalData
 var _tree_registry: Dictionary = {} # tree_type_id: String -> TreeData
+## Fraction of a minute accumulated by advance_time(), not saved.
+var _minute_fraction := 0.0
 
 func _init(p_grid_width: int, p_grid_height: int, crop_registry: Dictionary, animal_registry: Dictionary = {}, tree_registry: Dictionary = {}) -> void:
 	grid_width = p_grid_width
@@ -236,7 +240,9 @@ func advance_day() -> void:
 	_advance_animals()
 	_advance_trees()
 	state.clock.advance_day()
+	_minute_fraction = 0.0
 	day_changed.emit(state.day)
+	time_changed.emit(state.clock.minute_of_day)
 
 ## Ticks hunger/thirst decay, the product cycle, and breeding for every
 ## animal. Called once per advance_day() - fed_today/watered_today (set
@@ -292,6 +298,20 @@ func _attempt_breeding(species: AnimalData.Species) -> void:
 		if animal.species == species and animal.days_well_cared >= animal_data.breeding_days_required:
 			animal.days_well_cared = 0
 	animal_added.emit(baby_id)
+
+## Moves the time of day on by `minutes` (fractions add up across calls) -
+## driven by DayNightController from real time. Stops at
+## GameClock.LATEST_MINUTE.
+func advance_time(minutes: float) -> void:
+	_minute_fraction += minutes
+	var whole := int(_minute_fraction)
+	if whole <= 0:
+		return
+	_minute_fraction -= whole
+	if state.clock.advance_minutes(whole):
+		time_changed.emit(state.clock.minute_of_day)
+	else:
+		_minute_fraction = 0.0
 
 # --- Fruit trees --------------------------------------------------------------
 # Trees are placed in the zone scenes (WorldTree); TreeManager registers each
@@ -550,6 +570,8 @@ func load_save_data(data: Dictionary) -> void:
 
 	money_changed.emit(state.money)
 	day_changed.emit(state.day)
+	_minute_fraction = 0.0
+	time_changed.emit(state.clock.minute_of_day)
 	# plot_added, not plot_changed: load_dict() rebuilt the plot set from
 	# scratch, so as far as any listener is concerned every plot is new.
 	for plot_id in state.plots:
