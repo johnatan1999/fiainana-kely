@@ -19,6 +19,6 @@ la fiche concernée, ou en crée une nouvelle ajoutée à cet index.
 | [ambient_life.md](ambient_life.md) | `AmbientLife` : papillons, oiseaux, lucioles |
 | [world_zones.md](world_zones.md) | `WorldManager` et scènes de zone : village, rizières, décor |
 | [zebu_cart.md](zebu_cart.md) | `ZebuCart` : charrettes à zébus sur les routes |
-| [zebus.md](zebus.md) | `GrazingZebu` : zébus en liberté qui paissent |
+| [zebus.md](zebus.md) | `GrazingZebu`, `ZebuPen` : zébus en liberté, parc à zébus |
 | [weather.md](weather.md) | `WeatherController` : pluie, ciel couvert, arrosage par la pluie |
 | [hud.md](hud.md) | `HUD`, `HotbarUI`, retours visuels : interface en jeu |

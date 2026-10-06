@@ -261,6 +261,10 @@ func _test_grazing_zebus() -> void:
 	_player.global_position = Vector2(300, 300) # far from the herd
 	_set_time(10 * 60)
 	var herd: Array = _zone().get_node("ZebuHerd").get_children()
+	# The day may have started in the pen (before 6:30): let them get out first.
+	var commuting := [GrazingZebu.Activity.GO_IN, GrazingZebu.Activity.PENNED, GrazingZebu.Activity.GO_OUT]
+	var out_grazing := func() -> bool: return herd.all(func(z): return z._activity not in commuting)
+	await _wait_for(out_grazing, 40.0)
 	await _frames(600)
 	var stray := herd.filter(func(z): return z.global_position.distance_to(z._home) > z.wander_radius + 8.0).size()
 	_check(herd.size() >= 3 and stray == 0, "zebus: the herd wanders around its pasture, not off it")
@@ -274,13 +278,36 @@ func _test_grazing_zebus() -> void:
 	var end := await _walk(zebu.global_position + Vector2(-60, 0), zebu.global_position + Vector2(60, 0), 3.0)
 	_check(end.x < zebu.global_position.x, "zebus: solid, the player can't walk through one")
 	_player.global_position = Vector2(300, 300)
-	_set_time(21 * 60)
-	await _frames(5)
-	_check(herd.all(func(z): return z.get_node("Sprite2D").frame == GrazingZebu.FRAME_REST),
-		"zebus: the herd lies down for the night")
+	# Village herd: into the pen at dusk, out in the morning.
+	_check(herd.all(func(z): return z.has_pen()), "zebus: the village herd has its pen")
+	_set_time(GrazingZebu.PEN_FROM)
+	var all_penned := func() -> bool: return herd.all(func(z): return z.is_penned())
+	_check(await _wait_for(all_penned, 40.0), "zebus: the herd walks into its pen at dusk")
+	await _frames(2)
+	var pen: ZebuPen = _zone().get_node("ZebuPen")
+	var pen_area := Rect2(pen.global_position, Vector2(6, 4) * 48.0)
+	var lying_inside := func(z) -> bool:
+		return pen_area.has_point(z.global_position) and z.get_node("Sprite2D").frame == GrazingZebu.FRAME_REST
+	_check(herd.all(lying_inside), "zebus: they lie down inside the fence for the night")
+	_set_time(GrazingZebu.PEN_UNTIL)
+	var all_out := func() -> bool: return herd.all(func(z): return not pen_area.has_point(z.global_position))
+	_check(await _wait_for(all_out, 40.0), "zebus: they walk back out to the pasture in the morning")
+	# Arriving at night: already in.
+	_set_time(22 * 60)
+	await _go_to_zone("rice_fields")
+	await _go_to_zone("village")
+	await _frames(3)
+	herd = _zone().get_node("ZebuHerd").get_children()
+	_check(herd.all(func(z): return z.is_penned()), "zebus: arriving at night, the herd is already in its pen")
+	# A herd without a pen sleeps in the field.
+	await _go_to_zone("rice_fields")
+	await _frames(3)
+	var field_herd: Array = _zone().get_node("ZebuHerd").get_children()
+	_check(field_herd.all(func(z): return not z.has_pen() and z.get_node("Sprite2D").frame == GrazingZebu.FRAME_REST),
+		"zebus: a herd without a pen lies down in the field for the night")
 	_set_time(10 * 60)
 	await _frames(90)
-	_check(herd.all(func(z): return z.get_node("Sprite2D").frame != GrazingZebu.FRAME_REST),
+	_check(field_herd.all(func(z): return z.get_node("Sprite2D").frame != GrazingZebu.FRAME_REST),
 		"zebus: back up in the morning")
 
 # --- tall grass ----------------------------------------------------------------
