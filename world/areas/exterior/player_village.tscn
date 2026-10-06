@@ -1,4 +1,4 @@
-[gd_scene load_steps=50 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=52 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -45,6 +45,7 @@
 [ext_resource type="PackedScene" path="res://entities/props/brick_shed.tscn" id="60_prop_brick_shed"]
 [ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
 [ext_resource type="Script" path="res://environment/lighting/night_light.gd" id="62_nightlight"]
+[ext_resource type="PackedScene" path="res://entities/zebu_cart/zebu_cart.tscn" id="63_zebucart"]
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jeqll"]
 texture = ExtResource("4_ibrhb")
 texture_region_size = Vector2i(48, 48)
@@ -68,6 +69,12 @@ size = Vector2(1440, 144)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hill_east"]
 size = Vector2(768, 144)
+
+[sub_resource type="Curve2D" id="Curve2D_cart_east"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 2440, 948, 61.6, -9.24, -61.6, 9.24, 2250, 945, 28.6, -33, -28.6, 33, 2160, 990, 37.4, -26.84, -37.4, 26.84, 2120, 1095, 57.2, 1.54, -57.2, -1.54, 1990, 1112, 63.8, 15.84, -63.8, -15.84, 1860, 1088, 66, 21.56, -66, -21.56, 1700, 1040, 55, 35.2, -55, -35.2, 1560, 990, 0, 0, 0, 0, 1450, 880)
+}
+point_count = 9
 
 [node name="PlayerVillage" type="Node2D"]
 y_sort_enabled = true
@@ -673,17 +680,15 @@ position = Vector2(446, 1150)
 [node name="MaisonOuest_NatteRiz" parent="Props" instance=ExtResource("44_prop_drying_mat")]
 position = Vector2(140, 1252)
 
-[node name="MaisonEst_Sarety" parent="Props" instance=ExtResource("52_prop_zebu_cart")]
-position = Vector2(1716, 1004)
 
 [node name="MaisonEst_Banc" parent="Props" instance=ExtResource("42_prop_bench")]
 position = Vector2(1890, 1062)
 
 [node name="MaisonEst_Panier" parent="Props" instance=ExtResource("40_prop_basket")]
-position = Vector2(2140, 1004)
+position = Vector2(1806, 1036)
 
 [node name="MaisonEst_PetitPanier" parent="Props" instance=ExtResource("41_prop_basket_small")]
-position = Vector2(2164, 1012)
+position = Vector2(1828, 1044)
 
 [node name="MaisonSud_Bois" parent="Props" instance=ExtResource("51_prop_woodpile")]
 position = Vector2(1885, 1425)
@@ -744,3 +749,9 @@ script = ExtResource("62_nightlight")
 [node name="Lanterne_Marche" type="Node2D" parent="NightLights"]
 position = Vector2(1272, 722)
 script = ExtResource("62_nightlight")
+
+[node name="CartRoute_Est" type="Path2D" parent="."]
+y_sort_enabled = true
+curve = SubResource("Curve2D_cart_east")
+
+[node name="ZebuCart" parent="CartRoute_Est" instance=ExtResource("63_zebucart")]

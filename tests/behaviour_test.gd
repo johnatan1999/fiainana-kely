@@ -37,6 +37,7 @@ func _ready() -> void:
 	await _test_tall_grass_rustles()
 	await _test_harvest_popup()
 	await _test_rain()
+	await _test_zebu_cart()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -224,6 +225,33 @@ func _test_rain() -> void:
 	await _go_to_zone("village")
 	await _frames(150)
 	_check(not rain.visible and dn.get_overcast() < 0.05, "rain: stops when the weather clears")
+
+# --- zebu cart -------------------------------------------------------------------
+
+func _test_zebu_cart() -> void:
+	await _go_to_zone("village")
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	var cart: ZebuCart = _zone().get_node("CartRoute_Est/ZebuCart")
+	_player.global_position = Vector2(300, 300) # well out of the way
+	_set_time(22 * 60)
+	cart._go_away()
+	cart._timer = 0.0
+	await _frames(30)
+	_check(not cart.is_driving(), "zebu cart: doesn't set off at night")
+	_set_time(10 * 60)
+	cart._timer = 0.0
+	var started := func() -> bool: return cart.is_driving() and cart.progress_ratio > 0.1
+	_check(await _wait_for(started, 8.0), "zebu cart: sets off by day and drives along its road")
+	# Stand in its way, a little ahead of the zebus.
+	var ahead: Vector2 = cart.get_node("Ahead/CollisionShape2D").global_position
+	_player.global_position = ahead
+	await _frames(10)
+	var stopped_at := cart.progress
+	await _frames(60)
+	_check(cart.is_driving() and absf(cart.progress - stopped_at) < 0.5, "zebu cart: waits while the player is in its way")
+	_player.global_position = Vector2(300, 300)
+	await _frames(60)
+	_check(cart.progress - stopped_at > 10.0, "zebu cart: drives on once the way is clear")
 
 # --- tall grass ----------------------------------------------------------------
 

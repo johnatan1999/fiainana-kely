@@ -1,0 +1,99 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://entities/zebu_cart/zebu_cart.gd" id="1_cart"]
+[ext_resource type="Texture2D" path="res://assets/sprites/animals/zebu_cart.png" id="2_art"]
+[ext_resource type="Script" path="res://environment/lighting/night_light.gd" id="3_lantern"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+resource_local_to_scene = true
+size = Vector2(150, 14)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ahead"]
+resource_local_to_scene = true
+size = Vector2(40, 36)
+
+[node name="ZebuCart" type="PathFollow2D"]
+rotates = false
+loop = false
+script = ExtResource("1_cart")
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="FarWheel" type="Sprite2D" parent="Visual"]
+self_modulate = Color(0.7, 0.7, 0.7, 1)
+texture_filter = 4
+position = Vector2(-4, -23)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_art")
+region_enabled = true
+region_rect = Rect2(160, 96, 80, 80)
+
+[node name="FarZebu" type="Sprite2D" parent="Visual"]
+self_modulate = Color(0.75, 0.75, 0.75, 1)
+texture_filter = 4
+position = Vector2(68, -5)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_art")
+offset = Vector2(0, -48)
+hframes = 4
+vframes = 2
+
+[node name="Yoke" type="Line2D" parent="Visual"]
+points = PackedVector2Array(36, -26, 92, -30)
+width = 3.0
+default_color = Color(0.36, 0.23, 0.12, 1)
+
+[node name="Body" type="Sprite2D" parent="Visual"]
+texture_filter = 4
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_art")
+offset = Vector2(0, -48)
+region_enabled = true
+region_rect = Rect2(0, 96, 160, 96)
+
+[node name="Driver" type="Sprite2D" parent="Visual"]
+texture_filter = 4
+position = Vector2(16, -26)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_art")
+offset = Vector2(0, -48)
+region_enabled = true
+region_rect = Rect2(256, 96, 64, 96)
+
+[node name="NearWheel" type="Sprite2D" parent="Visual"]
+texture_filter = 4
+position = Vector2(-8, -19)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_art")
+region_enabled = true
+region_rect = Rect2(160, 96, 80, 80)
+
+[node name="NearZebu" type="Sprite2D" parent="Visual"]
+texture_filter = 4
+position = Vector2(74, 0)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_art")
+offset = Vector2(0, -48)
+hframes = 4
+vframes = 2
+
+[node name="Lantern" type="Node2D" parent="Visual"]
+position = Vector2(34, -40)
+script = ExtResource("3_lantern")
+energy = 0.7
+radius = 70.0
+
+[node name="Body" type="AnimatableBody2D" parent="."]
+sync_to_physics = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Body"]
+position = Vector2(32, -7)
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Ahead" type="Area2D" parent="."]
+collision_layer = 0
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Ahead"]
+position = Vector2(128, -14)
+shape = SubResource("RectangleShape2D_ahead")

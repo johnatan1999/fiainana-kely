@@ -58,6 +58,9 @@
   collision limitée à la base). Dessins dans `assets/sprites/props/village_props.png`
   (générés, échelle 0,7 à 0,9) et `assets/tileset/exterior.png`. Rangés sous un nœud `Props`
   y-sorté dans chaque zone.
+- **Routes des charrettes** : `Path2D` y-sortés (`CartRoute_Est`) avec un `ZebuCart` (voir
+  `zebu_cart.md`). La charrette garée de la maison de l'est a été retirée, et ses paniers
+  déplacés hors de la route.
 - **Arbres** : sous un nœud `Trees` y-sorté (voir `trees.md`). **Lanternes** : sous un nœud
   `NightLights` (voir `day_night.md`). **Faune** : nœuds `AmbientLife` (voir
   `ambient_life.md`).
