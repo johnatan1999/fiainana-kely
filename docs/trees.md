@@ -8,8 +8,9 @@
   plus trapus (environ 188 px) et portent leurs mangues quand elles sont mûres.
 - Le joueur passe derrière le feuillage, qui devient transparent quand il est dessous. Seul le
   tronc bloque.
-- Le **feuillage bouge** : balancement lent, frémissement des feuilles, et réaction plus forte
-  quand le joueur passe dessous.
+- Le **feuillage bouge avec le vent** : balancement lent de la couronne, frémissement des
+  feuilles. Il ne réagit pas au passage du joueur : un arbre ne bouge pas quand on passe à
+  côté (seules l'herbe haute et les cultures réagissent, car on les frôle).
 - **Manguier** :
   - en **Asara**, un lot de 2 à 4 mangues mûrit tous les 4 jours ; on les cueille avec E
     (« Cueillir (Mangue) ») ;
@@ -66,7 +67,7 @@
 
 **Feuillage** : `entities/trees/tree_foliage.gdshader` et `tree_foliage_material.tres`,
 appliqués en jeu seulement. Balancement par les sommets, frémissement par une déformation
-d'UV, et réaction via l'uniforme global `player_position`.
+d'UV. Pas de réaction au joueur : le shader n'utilise pas `player_position`.
 
 **Simulation et lien : `TreeManager`** (`systems/tree/tree_manager.gd`)
 - À chaque chargement de zone, enregistre les arbres fruitiers dans la simulation, sous l'id
