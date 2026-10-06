@@ -5,8 +5,12 @@
   petite ombre au sol. Ils s'écartent quand le joueur approche.
 - **Oiseaux au sol** :
   - le **fody rouge** et le **martin** picorent et sautillent ;
-  - à l'approche du joueur (environ 70 px), ils s'envolent, puis reviennent se poser ailleurs
-    8 à 20 s plus tard, jamais à côté de lui ;
+  - à l'approche du joueur (environ 70 px), ils s'envolent **avec un bruit d'ailes** :
+    - s'il y a un arbre à portée, à l'opposé du joueur, ils vont **se cacher dans son
+      feuillage** ;
+    - sinon, ils filent en accélérant et en montant, et ne disparaissent qu'une fois **sortis
+      de l'écran** ;
+  - ils reviennent se poser ailleurs 8 à 20 s plus tard, jamais à côté du joueur ;
   - dans les rizières, des **aigrettes** (vorompotsy), plus grandes, marchent lentement dans
     les bassins.
 - **Vols de passage** : toutes les 25 à 60 s, 4 à 7 oiseaux traversent le ciel en V, avec leurs
@@ -32,15 +36,29 @@
   - états `GROUND`, `FLEEING`, `AWAY`, `LANDING`, `FLOCK` ;
   - table `SPECIES` (couleurs, taille, cou) ;
   - origine = l'ombre au sol (y-sort), corps dessiné `_height` px au-dessus ;
-  - `go_to_roost()` à la nuit ; pas d'atterrissage tant qu'il fait nuit.
+  - `go_to_roost()` à la nuit, sans bruit ; pas d'atterrissage tant qu'il fait nuit ;
+  - fuite (`_flee`) :
+    - `_find_perch()` cherche l'arbre le plus proche (groupe `WorldTree.GROUP`) à moins de
+      `PERCH_SEARCH_DISTANCE`, dans la direction opposée au joueur ;
+    - l'oiseau vole jusqu'à `WorldTree.get_perch_position()` (centre de la `FadeArea` du
+      feuillage), puis s'efface en `PERCH_FADE_TIME` ;
+    - sans arbre : il accélère jusqu'à `FLEE_MAX_SPEED`, monte jusqu'à `FLEE_HEIGHT`, et
+      disparaît hors du champ de la caméra ;
+    - garde-fou : `FLEE_MAX_TIME`.
 - **`firefly.gd`** : lueur pulsée en *unshaded*, visible seulement la nuit.
 - **Placement** :
   - village : un `AmbientLife` (10 papillons, 8 oiseaux) ;
   - rizières : un `AmbientLife` général, plus `Aigrettes` (5 aigrettes limitées aux bassins,
     sans vols).
+- **Son d'envol** : `AudioManager.play_bird_flight_sfx()`, avec le slot `sfx_bird_flight` →
+  `assets/audio/SFX/Audio_SFX_Flying_Bird.wav`.
+  - Volume `BIRD_FLIGHT_VOLUME_DB` (-6 dB), hauteur variée de 0,9 à 1,15.
+  - Au plus un son toutes les `BIRD_FLIGHT_MIN_INTERVAL` (0,6 s), pour que plusieurs oiseaux
+    qui s'envolent ensemble fassent un seul bruit.
+  - L'oiseau appelle l'autoload par `get_node_or_null("/root/AudioManager")`, pour rester
+    testable en mode `--script`, où il est alors muet.
 
 ## À savoir
-- Aucun son pour l'instant (chants, battements d'ailes) : à ajouter quand il y aura des
-  fichiers audio.
+- Pas encore de chants d'oiseaux d'ambiance : seulement l'envol.
 - Tous les animaux sont dessinés par le code (provisoire). Ils pourront être remplacés par des
   sprites sans changer leur comportement.

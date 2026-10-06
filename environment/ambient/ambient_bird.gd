@@ -3,7 +3,8 @@ extends Node2D
 
 ## A small bird, drawn in code. Two lives:
 ## - on the ground (setup_ground): pecks, hops about, and flies off when the
-##   player comes close - up and away, fading out - then lands again
+##   player comes close - into the foliage of a nearby tree (away from the
+##   player), or else up and away until it's off-screen - then lands again
 ##   somewhere else a little later (AmbientLife picks the spot);
 ## - in a flock (setup_flock): crosses the sky high above, its shadow sliding
 ##   over the ground, and frees itself once out of the area.
@@ -20,6 +21,15 @@ enum State { GROUND, FLEEING, AWAY, LANDING, FLOCK }
 
 const FLEE_DISTANCE := 72.0
 const FLEE_SPEED := 150.0
+## Flying off-screen: it speeds up to this and climbs to FLEE_HEIGHT.
+const FLEE_MAX_SPEED := 230.0
+const FLEE_HEIGHT := 130.0
+## A startled bird hides in a tree up to this far, if one lies away from the player.
+const PERCH_SEARCH_DISTANCE := 360.0
+## Fading into the foliage.
+const PERCH_FADE_TIME := 0.25
+## Safety net: gone after this long whatever happens.
+const FLEE_MAX_TIME := 6.0
 const FLOCK_SPEED := 110.0
 const FLOCK_HEIGHT := 150.0
 const RESPAWN_DELAY := Vector2(8.0, 20.0)
@@ -36,6 +46,13 @@ var _t := 0.0
 var _timer := 0.0
 var _peck := 0.0 # > 0 while the head is down
 var _bounds: Rect2
+## Fleeing into a tree: where its shadow ends up (under the canopy) and the
+## height of the perch above it. _has_perch false = flying off-screen.
+var _has_perch := false
+var _perch_ground := Vector2.ZERO
+var _perch_height := 0.0
+var _flee_from := Vector2.ZERO
+var _perching := false
 
 func setup_ground(species: String, life: AmbientLife, rng: RandomNumberGenerator) -> void:
 	_species = SPECIES.get(species, SPECIES["fody"])
@@ -70,14 +87,7 @@ func _process(delta: float) -> void:
 		State.GROUND:
 			_on_ground(delta)
 		State.FLEEING:
-			position += _velocity * delta
-			_height = minf(_height + 90.0 * delta, 80.0)
-			_timer -= delta
-			modulate.a = clampf(_timer / 0.6, 0.0, 1.0)
-			if _timer <= 0.0:
-				_state = State.AWAY
-				visible = false
-				_timer = _rng.randf_range(RESPAWN_DELAY.x, RESPAWN_DELAY.y)
+			_flee(delta)
 		State.AWAY:
 			_timer -= delta
 			if _timer <= 0.0:
@@ -126,17 +136,82 @@ func _on_ground(delta: float) -> void:
 ## (see _start_landing()).
 func go_to_roost() -> void:
 	if _state == State.GROUND or _state == State.LANDING:
-		_take_off(Vector2.from_angle(_rng.randf() * TAU))
+		_take_off(Vector2.from_angle(_rng.randf() * TAU), false)
 
-func _take_off(away: Vector2) -> void:
+func _take_off(away: Vector2, startled := true) -> void:
 	_state = State.FLEEING
 	if away == Vector2.ZERO:
 		away = Vector2.UP
-	_velocity = (away + Vector2(0, -0.3)).normalized() * FLEE_SPEED
+	_timer = FLEE_MAX_TIME
+	_perching = false
+	_flee_from = position
+	_find_perch(away)
+	var direction := (_perch_ground - position).normalized() if _has_perch else (away + Vector2(0, -0.3)).normalized()
+	_velocity = direction * FLEE_SPEED
 	_facing = signf(_velocity.x) if _velocity.x != 0.0 else _facing
-	_timer = 1.4
 	# Airborne: over the props and trees around it.
 	z_index = 4
+	if startled:
+		# Looked up rather than named: ambience must also run where the
+		# autoloads aren't loaded (--script test runs) - it's just silent there.
+		var audio := get_node_or_null(^"/root/AudioManager")
+		if audio:
+			audio.play_bird_flight_sfx()
+
+## The closest tree lying away from the player (in `away`'s half-plane).
+func _find_perch(away: Vector2) -> void:
+	_has_perch = false
+	var best := PERCH_SEARCH_DISTANCE
+	for tree in get_tree().get_nodes_in_group(WorldTree.GROUP):
+		var to_tree: Vector2 = tree.global_position - global_position
+		var distance := to_tree.length()
+		if distance < best and distance > 24.0 and to_tree.normalized().dot(away) > 0.2:
+			best = distance
+			var perch: Vector2 = tree.get_perch_position() + Vector2(_rng.randf_range(-12, 12), _rng.randf_range(-8, 8))
+			# Shadow under the canopy, at the tree's foot line; the body up at the perch.
+			_perch_ground = get_parent().to_local(Vector2(perch.x, tree.global_position.y))
+			_perch_height = tree.global_position.y - perch.y
+			_has_perch = true
+
+func _flee(delta: float) -> void:
+	_timer -= delta
+	if _perching:
+		modulate.a = maxf(0.0, modulate.a - delta / PERCH_FADE_TIME)
+		if modulate.a <= 0.0:
+			_gone()
+		return
+	if _has_perch:
+		# Up into the canopy: height follows the progress towards the tree.
+		var total := _flee_from.distance_to(_perch_ground)
+		position = position.move_toward(_perch_ground, FLEE_SPEED * delta)
+		var progress := 1.0 - position.distance_to(_perch_ground) / maxf(total, 1.0)
+		_height = lerpf(_height, _perch_height * sin(progress * PI * 0.5), minf(1.0, delta * 8.0))
+		if position.distance_to(_perch_ground) < 2.0:
+			_height = _perch_height
+			_perching = true
+	else:
+		# Away and up, speeding, until it's out of sight.
+		_velocity = _velocity.normalized() * minf(_velocity.length() + 120.0 * delta, FLEE_MAX_SPEED)
+		position += _velocity * delta
+		_height = minf(_height + 70.0 * delta, FLEE_HEIGHT)
+		if not _camera_view().grow(32.0).has_point(global_position + Vector2(0, -_height)):
+			_gone()
+			return
+	if _timer <= 0.0:
+		_gone()
+
+## Hidden until it lands again somewhere else.
+func _gone() -> void:
+	_state = State.AWAY
+	visible = false
+	modulate.a = 1.0
+	_timer = _rng.randf_range(RESPAWN_DELAY.x, RESPAWN_DELAY.y)
+
+## What the camera shows, in global coordinates.
+func _camera_view() -> Rect2:
+	var canvas := get_viewport().get_canvas_transform()
+	var scale := canvas.get_scale()
+	return Rect2(-canvas.origin / scale, get_viewport().get_visible_rect().size / scale)
 
 func _start_landing() -> void:
 	if _life.is_night():

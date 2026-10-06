@@ -21,6 +21,10 @@ extends Node2D
 
 signal interacted
 
+## Every tree in game (not in the editor): birds startled nearby fly into one
+## to hide - see AmbientBird.
+const GROUP := "world_trees"
+
 ## Where the player can press interact from: a box around the foot of the
 ## trunk, the same for every species.
 const INTERACT_REACH := Vector2(78, 64)
@@ -58,6 +62,7 @@ func _ready() -> void:
 	_rebuild_visual()
 	if Engine.is_editor_hint():
 		return
+	add_to_group(GROUP)
 	var reach := RectangleShape2D.new()
 	reach.size = INTERACT_REACH
 	var reach_shape: CollisionShape2D = _interactable.get_node("InteractableCollision2D")
@@ -74,6 +79,14 @@ func show_state(prompt: String, ripe: bool) -> void:
 	_ripe = ripe
 	if _visual:
 		_visual.show_state(TreeVisual.State.FRUITING if ripe else TreeVisual.State.BARE)
+
+## Where a bird lands to hide in the foliage: the canopy's middle (the
+## visual's FadeArea), or just above the trunk without one. Global.
+func get_perch_position() -> Vector2:
+	var fade_area := _visual.get_fade_area() if _visual else null
+	if fade_area and fade_area.get_child_count() > 0:
+		return (fade_area.get_child(0) as Node2D).global_position
+	return global_position + Vector2(0, -60.0 * size_scale)
 
 ## Swaps in the species' visual - or a bare TreeVisual (placeholder drawing,
 ## no collision) for a species with no visual_scene yet.

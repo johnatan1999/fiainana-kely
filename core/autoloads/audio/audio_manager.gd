@@ -29,6 +29,10 @@ const FOOTSTEP_RUN_VOLUME_DB := -7.0
 ## The denied sound is mastered hot (peaks at 0 dBFS) and can be spammed by
 ## pressing E repeatedly - kept well under the regular SFX.
 const ACTION_DENIED_VOLUME_DB := -8.0
+## Birds taking off (AmbientBird). Several startled at once make one
+## flutter, not a pile-up: at most one every BIRD_FLIGHT_MIN_INTERVAL.
+const BIRD_FLIGHT_VOLUME_DB := -6.0
+const BIRD_FLIGHT_MIN_INTERVAL := 0.6
 
 ## Assign these in the AudioManager.tscn inspector once SFX files exist.
 ## play_*_sfx() is a safe no-op while a slot is empty.
@@ -44,6 +48,7 @@ const ACTION_DENIED_VOLUME_DB := -8.0
 @export var sfx_footstep_walk: AudioStream
 @export var sfx_footstep_run: AudioStream
 @export var sfx_action_denied: AudioStream
+@export var sfx_bird_flight: AudioStream
 
 @onready var _bgm_players: Array[AudioStreamPlayer] = [$BGMPlayerA, $BGMPlayerB]
 
@@ -51,6 +56,7 @@ var _sfx_pool: Array[AudioStreamPlayer] = []
 var _active_bgm_index := 0
 var _current_bgm_stream: AudioStream
 var _bgm_tween: Tween
+var _last_bird_flight_msec := -100000
 
 
 func _ready() -> void:
@@ -178,6 +184,14 @@ func play_interact_sfx() -> void:
 	
 func play_click_menu_sfx() -> void:
 	play_sfx(sfx_menu_click)
+
+
+func play_bird_flight_sfx() -> void:
+	var now := Time.get_ticks_msec()
+	if now - _last_bird_flight_msec < BIRD_FLIGHT_MIN_INTERVAL * 1000.0:
+		return
+	_last_bird_flight_msec = now
+	play_sfx(sfx_bird_flight, BIRD_FLIGHT_VOLUME_DB, randf_range(0.9, 1.15))
 
 
 func play_chicken_sfx() -> void:
