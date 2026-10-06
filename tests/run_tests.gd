@@ -150,6 +150,7 @@ func _run_all() -> void:
 	test_crops_grow_on_a_rainy_day_without_watering()
 	test_weather_save_load_roundtrip()
 	test_rain_is_much_more_likely_in_asara()
+	test_villager_routine_steps()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -1071,3 +1072,20 @@ func test_rain_is_much_more_likely_in_asara() -> void:
 	var asotry: float = rainy[GameClock.Season.ASOTRY] / 2000.0
 	_check(absf(asara - 0.45) < 0.04 and absf(asotry - 0.08) < 0.03,
 		"it rains on ~45%% of Asara days and ~8%% of Asotry days (%.2f / %.2f)" % [asara, asotry])
+
+func test_villager_routine_steps() -> void:
+	var data := VillagerData.new()
+	var routine: Array[VillagerStop] = []
+	for entry in [[7, 0, "Marche"], [12, 30, "Banc"], [22, 0, "Maison"]]:
+		var stop := VillagerStop.new()
+		stop.hour = entry[0]
+		stop.minute = entry[1]
+		stop.spot = entry[2]
+		routine.append(stop)
+	data.routine = routine
+	var at := func(minute: int) -> String:
+		var stop := data.get_stop(minute)
+		return stop.spot if stop != null else "home"
+	_check(at.call(6 * 60 + 30) == "home" and at.call(7 * 60) == "Marche" and at.call(12 * 60 + 29) == "Marche"
+			and at.call(15 * 60) == "Banc" and at.call(23 * 60) == "Maison" and at.call(60) == "Maison",
+		"a villager's routine: home before the first step, each step until the next, the evening's last one past midnight")

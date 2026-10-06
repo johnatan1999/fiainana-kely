@@ -55,12 +55,17 @@ const WALK := [
 ## Sheet -> [body parts it covers, how much wider than the body (px)].
 ## Body parts: head, face (ears, eyes, nose, nape), neck, torso, pelvis
 ## (the bottom of the torso), arm_upper, arm_lower, hand, leg_upper,
-## leg_lower, foot; and hair (only drawn on a layer).
+## leg_lower, foot; and what's only drawn on a layer: hair, bun, skirt (long,
+## to mid-calf, over both legs), hat (a straw satroka).
 const SHEETS := {
 	"base_body": [[], 0.0],
 	"example_shorts": [["pelvis", "leg_upper"], 2.0],
 	"example_shirt": [["torso", "pelvis", "arm_upper"], 2.5],
 	"example_hair": [["hair"], 0.0],
+	"example_trousers": [["pelvis", "leg_upper", "leg_lower"], 2.0],
+	"example_skirt": [["skirt"], 0.0],
+	"example_hair_bun": [["hair", "bun"], 0.0],
+	"example_hat": [["hat"], 0.0],
 }
 
 enum View { FRONT, SIDE, BACK }
@@ -181,6 +186,7 @@ func _front(pose: Array, view: View) -> void:
 		_limb("leg_lower", knee, foot, 12, 9, SHADED)
 		_ellipse(foot.x + side * 1, foot.y + 1, 7, 4, _col("foot", SHADED))
 	_torso(SHOULDER + bob - 4, hip + 4, Vector3(22, 16, 18), 0.0)
+	_skirt(hip, 0.0, Vector2(20, 26), 0.0)
 	# Arms at the sides, swinging a little.
 	for side in [-1.0, 1.0]:
 		var swing: float = pose[3] * side
@@ -204,8 +210,10 @@ func _front(pose: Array, view: View) -> void:
 		_hair(head, func(x: float, y: float) -> bool:
 			# A cap down to the brow, and down the sides to the ears.
 			return y < EYES + bob - 6 or (absf(x - head.x) > 11 and y < EYES + bob + 4))
+		_headwear(head, Vector2(0, -19), 26.0)
 	else:
 		_hair(head, func(_x: float, y: float) -> bool: return y < CHIN + bob - 7)
+		_headwear(head, Vector2(0, -4), 26.0)
 
 ## Seen from the side, facing left (the right row is this one mirrored).
 func _side(pose: Array) -> void:
@@ -218,6 +226,7 @@ func _side(pose: Array) -> void:
 	_side_leg(-stride, pose[1], hip, FAR)
 	_torso(SHOULDER + bob - 4, hip + 4, Vector3(12, 11, 13), -1.0)
 	_side_leg(stride, pose[0], hip, SHADED)
+	_skirt(hip, -1.0, Vector2(13, 20), stride)
 	# Neck and head, the face to the left.
 	_limb("neck", Vector2(CX - 1, CHIN + bob - 4), Vector2(CX, SHOULDER + bob), 11, 12, SHADED)
 	var head := Vector2(CX - 2, (HEAD_TOP + CHIN) / 2.0 + bob)
@@ -228,6 +237,7 @@ func _side(pose: Array) -> void:
 	_hair(head, func(x: float, y: float) -> bool:
 		# The top down to the brow, the back of the head down to the nape.
 		return y < EYES + bob - 6 or (x > head.x - 1 and y < CHIN + bob - 7))
+	_headwear(head, Vector2(15, -10), 24.0)
 	_side_arm(swing, bob, SHADED)
 
 ## stride < 0: this foot ahead (to the left); `lift` raises it, knee forward.
@@ -257,6 +267,33 @@ func _hair(head: Vector2, covers: Callable) -> void:
 		for xx in range(int(head.x - rx), int(head.x + rx) + 1):
 			if pow((xx - head.x) / rx, 2) + pow((yy - head.y) / ry, 2) <= 1.0 and covers.call(xx, yy):
 				_px(xx, yy, CLOTH[NEAR])
+
+## A long skirt, from the hips to mid-calf: `half` = half-width at the top
+## and at the hem, swaying with the stride (side view).
+func _skirt(hip: float, lean: float, half: Vector2, stride: float) -> void:
+	if not "skirt" in _parts:
+		return
+	var top := hip - 6.0
+	var hem := GROUND - 34.0
+	for y in range(int(top), int(hem) + 1):
+		var t := (y - top) / (hem - top)
+		var w := lerpf(half.x, half.y, t)
+		var x0 := CX + lean - w + stride * 4.0 * t
+		var x1 := CX + lean + w - stride * 4.0 * t
+		for x in range(int(minf(x0, x1)), int(maxf(x0, x1)) + 1):
+			_px(x, y, CLOTH[NEAR] if t < 0.85 else CLOTH[SHADED])
+
+## A bun (`bun_offset` from the head's center) and a straw hat with a brim
+## `brim` px wide (half), each when the layer has it.
+func _headwear(head: Vector2, bun_offset: Vector2, brim: float) -> void:
+	if "bun" in _parts:
+		_ellipse(head.x + bun_offset.x, head.y + bun_offset.y, 9, 8, CLOTH[SHADED])
+	if "hat" in _parts:
+		var top := HEAD_TOP + (head.y - (HEAD_TOP + CHIN) / 2.0)
+		_ellipse(head.x, top + 12, brim, 7, CLOTH[SHADED]) # brim
+		_ellipse(head.x, top + 4, 15, 11, CLOTH[NEAR]) # crown
+		for x in range(int(head.x - 15), int(head.x + 16)):
+			_px(x, top + 9, CLOTH[FAR]) # band
 
 # --- post-processing ----------------------------------------------------------
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=53 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=60 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -36,11 +36,18 @@
 [ext_resource type="PackedScene" uid="uid://cs8uqmupoimko" path="res://entities/zebu/zebu_pen.tscn" id="45_kbl0q"]
 [ext_resource type="PackedScene" path="res://entities/props/hay_pile.tscn" id="45_prop_hay_pile"]
 [ext_resource type="PackedScene" path="res://entities/props/hay_sheaf.tscn" id="46_prop_hay_sheaf"]
+[ext_resource type="Script" path="res://entities/villager/villager_roads.gd" id="47_euky7"]
 [ext_resource type="PackedScene" path="res://entities/props/laundry_line.tscn" id="47_prop_laundry_line"]
+[ext_resource type="PackedScene" uid="uid://ctd2newmp7phc" path="res://entities/villager/villager.tscn" id="48_mi770"]
 [ext_resource type="PackedScene" path="res://entities/props/mortar.tscn" id="48_prop_mortar"]
+[ext_resource type="Resource" uid="uid://drvn7wmcrhal5" path="res://data/villagers/rakoto.tres" id="49_0e82w"]
 [ext_resource type="PackedScene" path="res://entities/props/thatched_hut.tscn" id="49_prop_thatched_hut"]
+[ext_resource type="Resource" uid="uid://c3g5a1rdm37xs" path="res://data/villagers/ravao.tres" id="50_faawv"]
 [ext_resource type="PackedScene" path="res://entities/props/water_jar.tscn" id="50_prop_water_jar"]
+[ext_resource type="Resource" uid="uid://cy83136u5025f" path="res://data/villagers/neny_soa.tres" id="51_hn14n"]
 [ext_resource type="PackedScene" path="res://entities/props/woodpile.tscn" id="51_prop_woodpile"]
+[ext_resource type="Resource" uid="uid://bod17r5d1u1cp" path="res://data/villagers/koto.tres" id="52_hjw3q"]
+[ext_resource type="Resource" uid="uid://cta6x601i8ja5" path="res://data/villagers/naivo.tres" id="53_pd4mh"]
 [ext_resource type="PackedScene" path="res://entities/props/brick_shed.tscn" id="60_prop_brick_shed"]
 [ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
 [ext_resource type="Script" path="res://environment/lighting/night_light.gd" id="62_nightlight"]
@@ -773,3 +780,89 @@ position = Vector2(1960, 705)
 
 [node name="Zebu4" parent="ZebuHerd" instance=ExtResource("64_zebu")]
 position = Vector2(1860, 745)
+
+[node name="VillagerRoads" type="Node2D" parent="."]
+script = ExtResource("47_euky7")
+
+[node name="Route_Ouest" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(274, 1108, 450, 1100, 480, 900, 480, 620, 560, 560)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Route_Place" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(560, 560, 950, 575, 1150, 555, 1300, 575, 1460, 640, 1520, 720)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Route_Nord" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(1520, 720, 1530, 450, 1510, 200, 1505, 30)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Route_Marche" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(1460, 640, 1430, 780, 1290, 850)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Route_Est" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(1520, 720, 1650, 880, 1760, 1030, 1850, 1030, 1986, 1025)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Route_Sud" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(1430, 780, 1450, 960, 1370, 1150, 1370, 1440, 1584, 1440)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Spots" type="Node2D" parent="VillagerRoads"]
+
+[node name="Maison_Ouest" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(274, 1108)
+gizmo_extents = 16.0
+
+[node name="Maison_Est" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1986, 1025)
+gizmo_extents = 16.0
+
+[node name="Maison_Sud" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1584, 1440)
+gizmo_extents = 16.0
+
+[node name="Marche" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1290, 850)
+gizmo_extents = 16.0
+
+[node name="Place" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(950, 600)
+gizmo_extents = 16.0
+
+[node name="Banc_Est" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1850, 1040)
+gizmo_extents = 16.0
+
+[node name="Sortie_Nord" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1505, 30)
+gizmo_extents = 16.0
+
+[node name="Villagers" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Rakoto" parent="Villagers" instance=ExtResource("48_mi770")]
+position = Vector2(274, 1108)
+data = ExtResource("49_0e82w")
+
+[node name="Ravao" parent="Villagers" instance=ExtResource("48_mi770")]
+position = Vector2(1986, 1025)
+data = ExtResource("50_faawv")
+
+[node name="NenySoa" parent="Villagers" instance=ExtResource("48_mi770")]
+position = Vector2(1584, 1440)
+data = ExtResource("51_hn14n")
+
+[node name="Koto" parent="Villagers" instance=ExtResource("48_mi770")]
+position = Vector2(1584, 1440)
+data = ExtResource("52_hjw3q")
+
+[node name="Naivo" parent="Villagers" instance=ExtResource("48_mi770")]
+position = Vector2(1986, 1025)
+data = ExtResource("53_pd4mh")

@@ -40,6 +40,7 @@ func _ready() -> void:
 	await _test_zebu_cart()
 	await _test_grazing_zebus()
 	await _test_villager_visual()
+	await _test_villagers()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -339,6 +340,63 @@ func _test_villager_visual() -> void:
 	_check(recolored.size() == 2 and recolored[1].self_modulate == Color.BLUE,
 		"villager visual: editing the look updates the sprite")
 	visual.queue_free()
+
+# --- villagers ------------------------------------------------------------------------
+
+func _villager(villager_name: String) -> Villager:
+	return _zone().get_node("Villagers/" + villager_name)
+
+func _test_villagers() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_player.global_position = Vector2(300, 300)
+	_set_time(10 * 60)
+	await _go_to_zone("rice_fields")
+	await _go_to_zone("village")
+	await _frames(3)
+	var roads := VillagerRoads.of_zone(_zone())
+	var ravao := _villager("Ravao")
+	var rakoto := _villager("Rakoto")
+	_check(not ravao.is_inside() and ravao.global_position.distance_to(roads.get_spot("Marche")) < 60.0
+			and rakoto.is_inside(),
+		"villagers: arriving at 10:00, the merchant is at her stall and the farmer is away in the rice fields")
+	# Off home at the end of the day, along the roads.
+	_set_time(17 * 60 + 30)
+	await _frames(30)
+	_check(ravao.is_walking() and not ravao.is_inside(), "villagers: she sets off home when her day at the market ends")
+	var home := func() -> bool: return ravao.is_inside()
+	_check(await _wait_for(home, 60.0), "villagers: she walks home and goes in")
+	# The player in the way: she waits, and says hello.
+	_set_time(10 * 60)
+	await _frames(30)
+	var direction := (ravao._path[0] - ravao.global_position).normalized() if ravao.is_walking() else Vector2.LEFT
+	_player.global_position = ravao.global_position + direction * 20.0
+	await _frames(5)
+	var stopped_at := ravao.global_position
+	await _frames(60)
+	_check(ravao.global_position.distance_to(stopped_at) < 1.0 and ravao.get_node("Bubble").visible,
+		"villagers: one waits for the player in the way, and greets them")
+	_player.global_position = Vector2(300, 300)
+	# Rain: home, unless the step is rain-proof.
+	_set_time(9 * 60)
+	await _go_to_zone("rice_fields")
+	await _go_to_zone("village")
+	await _frames(3)
+	var koto := _villager("Koto")
+	_check(not koto.is_inside(), "villagers: the child plays on the square in the morning")
+	_sim.set_weather(FarmState.Weather.RAIN)
+	var sheltered := func() -> bool: return koto.is_inside()
+	_check(await _wait_for(sheltered, 60.0) and not _villager("Ravao").is_inside(),
+		"villagers: when it rains the child runs home, the merchant keeps her (covered) stall")
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	# Night: everyone's in.
+	_set_time(22 * 60)
+	await _go_to_zone("rice_fields")
+	await _go_to_zone("village")
+	await _frames(3)
+	var villagers := _zone().get_node("Villagers").get_children()
+	_check(villagers.size() >= 5 and villagers.all(func(v): return v.is_inside()),
+		"villagers: arriving at night, everyone is in")
+	_set_time(10 * 60)
 
 # --- tall grass ----------------------------------------------------------------
 
