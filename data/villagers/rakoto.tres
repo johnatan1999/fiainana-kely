@@ -1,68 +1,90 @@
-[gd_resource type="Resource" script_class="VillagerData" load_steps=17 format=3 uid="uid://drvn7wmcrhal5"]
+[gd_resource type="Resource" script_class="VillagerData" load_steps=19 format=3 uid="uid://d2q8xu7ebuh4t"]
 
-[ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="1_qnv1l"]
-[ext_resource type="Texture2D" uid="uid://dbudckdywttlh" path="res://assets/sprites/characters/villager/example_trousers.png" id="2_ut636"]
-[ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="3_28dn5"]
-[ext_resource type="Texture2D" uid="uid://c8fse4uenivl2" path="res://assets/sprites/characters/villager/example_hair.png" id="4_vb3eb"]
-[ext_resource type="Texture2D" uid="uid://dlywe88eiapxn" path="res://assets/sprites/characters/villager/example_hat.png" id="5_0xv8m"]
-[ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="6_v3x3a"]
-[ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="7_hcpo2"]
-[ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="8_0qvqa"]
+[ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="1_burl6"]
+[ext_resource type="Texture2D" uid="uid://dbudckdywttlh" path="res://assets/sprites/characters/villager/example_trousers.png" id="2_jse1d"]
+[ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="3_d53mn"]
+[ext_resource type="Texture2D" uid="uid://c8fse4uenivl2" path="res://assets/sprites/characters/villager/example_hair.png" id="4_d1xp4"]
+[ext_resource type="Texture2D" uid="uid://dlywe88eiapxn" path="res://assets/sprites/characters/villager/example_hat.png" id="5_dbery"]
+[ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="6_rr5eg"]
+[ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="7_414ec"]
+[ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="8_rt60m"]
 
-[sub_resource type="Resource" id="Resource_tb7q8"]
-script = ExtResource("1_qnv1l")
-texture = ExtResource("2_ut636")
+[sub_resource type="Resource" id="Resource_fraeb"]
+script = ExtResource("1_burl6")
+texture = ExtResource("2_jse1d")
 color = Color(0.45, 0.35, 0.25, 1)
 
-[sub_resource type="Resource" id="Resource_7qo5b"]
-script = ExtResource("1_qnv1l")
-texture = ExtResource("3_28dn5")
+[sub_resource type="Resource" id="Resource_0ccvm"]
+script = ExtResource("1_burl6")
+texture = ExtResource("3_d53mn")
 color = Color(0.92, 0.9, 0.82, 1)
 
-[sub_resource type="Resource" id="Resource_4klso"]
-script = ExtResource("1_qnv1l")
-texture = ExtResource("4_vb3eb")
+[sub_resource type="Resource" id="Resource_alhvk"]
+script = ExtResource("1_burl6")
+texture = ExtResource("4_d1xp4")
 color = Color(0.1, 0.08, 0.06, 1)
 
-[sub_resource type="Resource" id="Resource_scxs6"]
-script = ExtResource("1_qnv1l")
-texture = ExtResource("5_0xv8m")
+[sub_resource type="Resource" id="Resource_fh0ow"]
+script = ExtResource("1_burl6")
+texture = ExtResource("5_dbery")
 color = Color(0.86, 0.74, 0.46, 1)
 
-[sub_resource type="Resource" id="Resource_6x56f"]
-script = ExtResource("6_v3x3a")
+[sub_resource type="Resource" id="Resource_p75c2"]
+script = ExtResource("6_rr5eg")
 skin_color = Color(0.45, 0.29, 0.19, 1)
-layers = Array[ExtResource("1_qnv1l")]([SubResource("Resource_tb7q8"), SubResource("Resource_7qo5b"), SubResource("Resource_4klso"), SubResource("Resource_scxs6")])
+layers = Array[ExtResource("1_burl6")]([SubResource("Resource_fraeb"), SubResource("Resource_0ccvm"), SubResource("Resource_alhvk"), SubResource("Resource_fh0ow")])
 
-[sub_resource type="Resource" id="Resource_qn1cl"]
-script = ExtResource("7_hcpo2")
+[sub_resource type="Resource" id="Resource_vbq3e"]
+script = ExtResource("7_414ec")
 hour = 6
 minute = 30
-spot = "Sortie_Nord"
-activity = 2
+zone = "rice_fields"
+spot = "Riziere_Voisins_1"
+activity = 3
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_c41f3"]
-script = ExtResource("7_hcpo2")
+[sub_resource type="Resource" id="Resource_lgpkw"]
+script = ExtResource("7_414ec")
+hour = 12
+minute = 0
+zone = "rice_fields"
+spot = "Cabane"
+activity = 0
+rain_proof = true
+
+[sub_resource type="Resource" id="Resource_ynr4w"]
+script = ExtResource("7_414ec")
+hour = 13
+minute = 0
+zone = "rice_fields"
+spot = "Riziere_Voisins_1"
+activity = 3
+rain_proof = true
+
+[sub_resource type="Resource" id="Resource_osqkq"]
+script = ExtResource("7_414ec")
 hour = 16
 minute = 0
+zone = ""
 spot = "Place"
 activity = 0
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_mms0e"]
-script = ExtResource("7_hcpo2")
+[sub_resource type="Resource" id="Resource_u82gh"]
+script = ExtResource("7_414ec")
 hour = 18
 minute = 0
+zone = ""
 spot = "Maison_Ouest"
 activity = 2
 rain_proof = true
 
 [resource]
-script = ExtResource("8_0qvqa")
+script = ExtResource("8_rt60m")
 display_name = "Rakoto"
-look = SubResource("Resource_6x56f")
+look = SubResource("Resource_p75c2")
 size = 1.0
+home_zone = "village"
 home = "Maison_Ouest"
-routine = Array[ExtResource("7_hcpo2")]([SubResource("Resource_qn1cl"), SubResource("Resource_c41f3"), SubResource("Resource_mms0e")])
+routine = Array[ExtResource("7_414ec")]([SubResource("Resource_vbq3e"), SubResource("Resource_lgpkw"), SubResource("Resource_ynr4w"), SubResource("Resource_osqkq"), SubResource("Resource_u82gh")])
 greetings = PackedStringArray("Bonjour ! Le riz pousse bien cette année.", "Les rizières ont besoin de bras, tu sais.")

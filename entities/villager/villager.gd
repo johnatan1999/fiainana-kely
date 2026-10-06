@@ -3,10 +3,16 @@ extends CharacterBody2D
 
 ## A villager going about their day (VillagerData.routine): walks along the
 ## zone's roads (VillagerRoads) to each step's spot when its time comes,
-## then stands, strolls around, or goes in (a house, a zone exit). Keeps the
-## clock (DayNightController.CLOCK_GROUP) and the weather
+## then stands, strolls around, works bent over, or goes in (a house).
+## Keeps the clock (DayNightController.CLOCK_GROUP) and the weather
 ## (WeatherController.WEATHER_GROUP): in the rain, only rain_proof steps
 ## happen - otherwise they stay home.
+##
+## Across zones: a villager who appears in several zones (the farmers, in
+## the village and the rice fields) has one Villager node in each, with the
+## same VillagerData. In a zone, a step elsewhere means walking out by the
+## road to that zone ("Vers_<zone>") and disappearing; a step here after one
+## elsewhere means coming in by that road, after ARRIVAL_DELAY (the trip).
 ##
 ## When the zone loads they're already where the hour says (no one walks
 ## from home at 15:00). Pure ambience: nothing saved.
@@ -23,10 +29,18 @@ const BLOCK_DISTANCE := 30.0
 const GREET_DISTANCE := 60.0
 const GREET_COOLDOWN := 45.0
 const BUBBLE_TIME := 3.0
-## STAND: turns every so often. WANDER: a few steps around the spot.
+## STAND: turns every so often. WANDER: a few steps around the spot. WORK:
+## a step along the row every so often, staying around the spot.
 const TURN_EVERY := Vector2(3.0, 8.0)
 const WANDER_RADIUS := 45.0
 const WANDER_EVERY := Vector2(2.0, 6.0)
+const WORK_STEP := 18.0
+const WORK_EVERY := Vector2(5.0, 10.0)
+## Coming in from another zone: the time the trip takes (seconds).
+const ARRIVAL_DELAY := 12.0
+## Several villagers at one spot (the hut at noon) stand apart: each has
+## its own place around it, up to this far.
+const SPOT_SPREAD := Vector2(20.0, 8.0)
 
 @export var data: VillagerData
 
@@ -38,14 +52,20 @@ var _roads: VillagerRoads
 var _minute := 12 * 60
 var _raining := false
 var _clock_known := false
-## The step being done (or walked to); null = at home.
-var _stop: VillagerStop
+## Where the villager is (or is going): the world zone, the spot there, what
+## they do there. Not this zone = gone out by the road to it.
+var _zone := ""
+var _spot := ""
+var _activity := VillagerStop.Activity.INSIDE
 var _path := PackedVector2Array()
 var _inside := false
+var _arrival_delay := 0.0
 var _timer := 0.0
+var _work_direction := 1.0
 var _greet_cooldown := 0.0
 var _bubble_time := 0.0
 var _player: Node2D
+var _spot_offset := Vector2.ZERO
 
 func _ready() -> void:
 	add_to_group(GROUP)
@@ -55,6 +75,10 @@ func _ready() -> void:
 	if data != null:
 		_visual.look = data.look
 		_visual.scale = Vector2.ONE * data.size
+		# The same place every day for one villager, a different one for each.
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(data.display_name)
+		_spot_offset = Vector2(rng.randf_range(-1.0, 1.0), rng.randf_range(-1.0, 1.0)) * SPOT_SPREAD
 	_set_inside(true) # until the clock says where they are
 
 func set_time_of_day(minute_of_day: int) -> void:
@@ -72,19 +96,35 @@ func is_inside() -> bool:
 func is_walking() -> bool:
 	return not _path.is_empty()
 
-## The spot of the current step (home when there's none).
+func is_working() -> bool:
+	return not _inside and _path.is_empty() and _activity == VillagerStop.Activity.WORK
+
+## The spot they're at or going to, in this zone ("" = none).
 func get_spot_name() -> String:
-	return _stop.spot if _stop != null else data.home
+	return _spot
 
-func _activity() -> VillagerStop.Activity:
-	return _stop.activity if _stop != null else VillagerStop.Activity.INSIDE
-
-## The step for now, the weather allowing; null = home.
-func _wanted_stop() -> VillagerStop:
+## [zone, spot, activity] for now, the weather allowing - in this zone's
+## terms: a step in another zone is the road there, going out.
+func _plan() -> Array:
 	var stop := data.get_stop(_minute)
 	if stop != null and _raining and not stop.rain_proof:
-		return null
-	return stop
+		stop = null
+	var zone := data.home_zone
+	var spot := data.home
+	var activity := VillagerStop.Activity.INSIDE
+	if stop != null:
+		zone = stop.zone if not stop.zone.is_empty() else data.home_zone
+		spot = stop.spot
+		activity = stop.activity
+	if zone != _roads.zone_id:
+		spot = _road_to(zone)
+		activity = VillagerStop.Activity.INSIDE
+	return [zone, spot, activity]
+
+## The exit towards `zone` - or, with no road there, the one towards home.
+func _road_to(zone: String) -> String:
+	var exit := _roads.exit_to(zone)
+	return exit if not exit.is_empty() else _roads.exit_to(data.home_zone)
 
 func _update_plan() -> void:
 	if data == null:
@@ -94,25 +134,55 @@ func _update_plan() -> void:
 		if _roads == null:
 			push_warning("Villager %s: no VillagerRoads in the zone." % name)
 			return
-	var stop := _wanted_stop()
+	var plan := _plan()
 	if not _clock_known:
 		# First tick after the zone loads: already there.
 		_clock_known = true
-		_stop = stop
-		global_position = _roads.get_spot(get_spot_name())
+		_set_plan(plan)
+		if not _spot.is_empty():
+			global_position = _spot_position()
 		_arrive()
 		return
-	if stop == _stop:
+	if plan == [_zone, _spot, _activity]:
 		return
-	_stop = stop
-	# Comes out of where they were (a door, an exit) if they were in.
-	_set_inside(false)
-	_path = _roads.find_path(global_position, get_spot_name())
+	var coming_from := _zone
+	_set_plan(plan)
+	var here := _roads.zone_id
+	if _inside and coming_from != here:
+		if _zone != here:
+			return # from one elsewhere to another: never passes by
+		# Back from another zone: comes in by the road from there, after the trip.
+		var entry := _road_to(coming_from)
+		if not entry.is_empty():
+			global_position = _roads.get_spot(entry)
+		_arrival_delay = ARRIVAL_DELAY
+	elif _inside:
+		_set_inside(false) # out of the door
+	if _spot.is_empty():
+		_set_inside(true)
+		return
+	_path = _roads.find_path(global_position, _spot)
+	_path[_path.size() - 1] = _spot_position()
+
+## This villager's own place at the spot.
+func _spot_position() -> Vector2:
+	return _roads.get_spot(_spot) + _spot_offset
+
+func _set_plan(plan: Array) -> void:
+	_zone = plan[0]
+	_spot = plan[1]
+	_activity = plan[2]
+	_path.clear()
 
 func _physics_process(delta: float) -> void:
 	_bubble_time -= delta
 	if _bubble.visible and _bubble_time <= 0.0:
 		_bubble.visible = false
+	if _arrival_delay > 0.0:
+		_arrival_delay -= delta
+		if _arrival_delay <= 0.0:
+			_set_inside(false)
+		return
 	if _inside:
 		return
 	_greet_cooldown -= delta
@@ -139,30 +209,43 @@ func _walk(delta: float) -> void:
 
 func _linger(delta: float) -> void:
 	if _player_close():
+		# Straightens up, turns to the player.
 		_face_player()
 		_try_greet()
 		return
-	_visual.play(Vector2.ZERO, false)
+	_visual.play(Vector2.ZERO, false, _activity == VillagerStop.Activity.WORK)
 	_timer -= delta
 	if _timer > 0.0:
 		return
-	match _activity():
+	var spot := _roads.get_spot(_spot)
+	match _activity:
 		VillagerStop.Activity.STAND:
-			# Looks around - mostly towards the camera, never long away.
+			# Looks around - mostly towards the camera.
 			var directions := [Vector2.DOWN, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]
 			_visual.play(directions.pick_random(), false)
 			_timer = randf_range(TURN_EVERY.x, TURN_EVERY.y)
 		VillagerStop.Activity.WANDER:
-			var spot := _roads.get_spot(get_spot_name())
 			_path = PackedVector2Array([spot + Vector2.from_angle(randf() * TAU) * randf_range(10.0, WANDER_RADIUS)])
 			_timer = randf_range(WANDER_EVERY.x, WANDER_EVERY.y)
+		VillagerStop.Activity.WORK:
+			# Along the row, turning back at its end.
+			var next := global_position + Vector2(_work_direction * WORK_STEP, 0.0)
+			if absf(next.x - spot.x) > WANDER_RADIUS:
+				_work_direction = -_work_direction
+				next = global_position + Vector2(_work_direction * WORK_STEP, 0.0)
+			_path = PackedVector2Array([next])
+			_timer = randf_range(WORK_EVERY.x, WORK_EVERY.y)
 
 func _arrive() -> void:
-	if _activity() == VillagerStop.Activity.INSIDE:
+	if _activity == VillagerStop.Activity.INSIDE or _spot.is_empty():
 		_set_inside(true)
 		return
 	_set_inside(false)
-	_visual.play(Vector2.DOWN, false)
+	if _activity == VillagerStop.Activity.WORK:
+		# Facing along the row (the work art reads best from the side).
+		_visual.play(Vector2(_work_direction, 0.0), false, true)
+	else:
+		_visual.play(Vector2.DOWN, false)
 	_timer = randf_range(TURN_EVERY.x, TURN_EVERY.y)
 
 func _set_inside(inside: bool) -> void:

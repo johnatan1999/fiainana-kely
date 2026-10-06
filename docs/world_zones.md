@@ -22,6 +22,9 @@
   rizière basse est en contrebas, sous une paroi rocheuse.
 - Deux **terres fertiles** clôturées, des panneaux d'achat, une cabane, des gerbes de riz et une
   charrette.
+- La **rizière des voisins**, à droite de la cabane, où Rakoto et Naivo repiquent le riz (voir
+  `villagers.md`). Décor seulement, non achetable. Les trois eucalyptus ouest de la haie sud
+  (`Haie_Sud_3_*`) ont été retirés pour qu'on la voie depuis le chemin.
 
 ## Détails techniques
 **Zones**

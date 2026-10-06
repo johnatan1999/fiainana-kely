@@ -397,6 +397,50 @@ func _test_villagers() -> void:
 	_check(villagers.size() >= 5 and villagers.all(func(v): return v.is_inside()),
 		"villagers: arriving at night, everyone is in")
 	_set_time(10 * 60)
+	await _test_farmers_in_the_rice_fields()
+
+func _test_farmers_in_the_rice_fields() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_set_time(9 * 60)
+	await _go_to_zone("village")
+	await _go_to_zone("rice_fields")
+	await _frames(3)
+	_player.global_position = Vector2(300, 300) # off their road (the spawn is on it)
+	var paddy: VillagePaddy = _zone().get_node("RizieresVoisins/Riziere1")
+	var area := paddy.get_rect().grow(4.0)
+	var farmers: Array = _zone().get_node("Villagers").get_children()
+	var at_work := func() -> bool:
+		return farmers.all(func(f): return area.has_point(f.global_position) and not f.is_inside())
+	_check(farmers.size() == 2 and at_work.call(), "farmers: at 9:00 they're in the neighbours' paddy")
+	var bent := func() -> bool: return farmers.any(func(f): return f.is_working() and f._visual.working)
+	_check(await _wait_for(bent, 5.0), "farmers: bent over, planting rice")
+	_sim.set_weather(FarmState.Weather.RAIN)
+	await _frames(30)
+	_check(at_work.call(), "farmers: they keep working in the rain")
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	paddy.set_date(3, GameClock.Season.ASARA)
+	var young := paddy.get_stage()
+	paddy.set_date(25, GameClock.Season.ASARA)
+	_check(young == 1 and paddy.get_stage() == 3, "farmers: the neighbours' rice grows over the season")
+	# Home time: off by the road to the village.
+	_set_time(16 * 60)
+	var gone := func() -> bool: return farmers.all(func(f): return f.is_inside())
+	_check(await _wait_for(gone, 60.0), "farmers: at 16:00 they walk off towards the village")
+	# ...and in the village, they come in by the north road, after the trip.
+	_set_time(15 * 60 + 55)
+	await _go_to_zone("village")
+	await _frames(3)
+	_player.global_position = Vector2(300, 300)
+	var rakoto := _villager("Rakoto")
+	_check(rakoto.is_inside(), "farmers: in the village at 15:55, Rakoto is still away")
+	_set_time(16 * 60)
+	await _frames(30)
+	_check(rakoto.is_inside(), "farmers: ...and not back yet right at 16:00 (the trip takes a while)")
+	var back := func() -> bool: return not rakoto.is_inside()
+	_check(await _wait_for(back, Villager.ARRIVAL_DELAY + 2.0)
+			and rakoto.global_position.distance_to(VillagerRoads.of_zone(_zone()).get_spot("Vers_rice_fields")) < 80.0,
+		"farmers: he comes in by the road from the rice fields")
+	_set_time(10 * 60)
 
 # --- tall grass ----------------------------------------------------------------
 

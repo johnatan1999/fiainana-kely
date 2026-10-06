@@ -3,7 +3,8 @@ extends SceneTree
 ## layer is drawn over - plus a few example layers. Twice the on-screen
 ## density, cells of 128 x 256:
 ##   columns: 0-1 idle (breathing), 2-5 walk (contact, passing, contact,
-##            passing)
+##            passing), 6-7 work (bent over, hands down to the ground and
+##            back up - planting rice, weeding)
 ##   rows:    0 down (facing the camera), 1 left, 2 right, 3 up (back view)
 ## The right row is the left one mirrored. Feet on y = 252, centered on x = 64.
 ## Everything is drawn light: VillagerVisual tints the body with the skin
@@ -20,7 +21,7 @@ extends SceneTree
 ##   arm swinging in front of the shirt).
 ##   godot --headless --path . --script res://tools/placeholder_art/gen_villager_base.gd
 const CELL := Vector2i(128, 256)
-const COLUMNS := 6
+const COLUMNS := 8
 const ROWS := 4
 const OUT_DIR := "res://assets/sprites/characters/villager/"
 
@@ -96,10 +97,17 @@ func _draw_sheet() -> void:
 		var pose: Array
 		if column < 2:
 			pose = [0.0, 0.0, 0.0, 0.0, -2.0 * column] # breathing in
-		else:
+		elif column < 6:
 			pose = WALK[column - 2]
 		for row: int in [0, 1, 3]:
 			o = Vector2(column * CELL.x, row * CELL.y)
+			if column >= 6:
+				var reach := 8.0 * (column - 6) # hands down to the ground
+				match row:
+					0: _work_front(reach, View.FRONT)
+					1: _work_side(reach)
+					3: _work_front(reach, View.BACK)
+				continue
 			match row:
 				0: _front(pose, View.FRONT)
 				1: _side(pose)
@@ -239,6 +247,78 @@ func _side(pose: Array) -> void:
 		return y < EYES + bob - 6 or (x > head.x - 1 and y < CHIN + bob - 7))
 	_headwear(head, Vector2(15, -10), 24.0)
 	_side_arm(swing, bob, SHADED)
+
+## Bent over, facing the camera (FRONT: the head low in front of the
+## shoulders, the arms hanging down in front of the legs) or seen from
+## behind (BACK: the back and the hips, the head hidden below them).
+func _work_front(reach: float, view: View) -> void:
+	var hip := HIP
+	var shoulder_y := 136.0
+	var head := Vector2(CX, 120.0 + reach * 0.4)
+	if view == View.BACK:
+		# Arms and head first: the back hides them.
+		_work_front_arms(reach, shoulder_y)
+		_ellipse(head.x, head.y + 14, 15, 18, _col("head", NEAR))
+	for side in [-1.0, 1.0]:
+		var hip_point := Vector2(CX + side * 9, hip)
+		var foot := Vector2(CX + side * 13, GROUND - 4)
+		var knee := Vector2(CX + side * 12, KNEE)
+		_limb("leg_upper", hip_point, knee, 15, 12, SHADED)
+		_limb("leg_lower", knee, foot, 12, 9, SHADED)
+		_ellipse(foot.x + side * 1, foot.y + 1, 7, 4, _col("foot", SHADED))
+	_torso(shoulder_y - 4, hip + 4, Vector3(23, 20, 19), 0.0)
+	_skirt(hip, 0.0, Vector2(20, 26), 0.0)
+	if view == View.FRONT:
+		# Looking down: more of the top of the head, the eyes lower.
+		_ellipse(head.x - 15, head.y + 4, 3, 5, _col("face", SHADED))
+		_ellipse(head.x + 15, head.y + 4, 3, 5, _col("face", SHADED))
+		_ellipse(head.x, head.y, 15, 18, _col("head", NEAR))
+		for side in [-1.0, 1.0]:
+			_ellipse(CX + side * 6, head.y + 6, 1.6, 2.0, OUTLINE if _body() else ERASE)
+		_hair(head, func(x: float, y: float) -> bool:
+			return y < head.y + 1 or (absf(x - head.x) > 11 and y < head.y + 8))
+		_headwear(head, Vector2(0, -19), 26.0)
+		_work_front_arms(reach, shoulder_y)
+
+func _work_front_arms(reach: float, shoulder_y: float) -> void:
+	for side in [-1.0, 1.0]:
+		var shoulder := Vector2(CX + side * 20, shoulder_y + 4)
+		var elbow := Vector2(CX + side * 21, 184 + reach * 0.5)
+		var hand := Vector2(CX + side * 18, 220 + reach)
+		# Lighter than the legs behind them, to read in front of them.
+		_limb("arm_upper", shoulder, elbow, 10, 9, NEAR)
+		_limb("arm_lower", elbow, hand, 9, 8, NEAR)
+		_ellipse(hand.x, hand.y + 2, 5, 6, _col("hand", NEAR))
+
+## Bent over, seen from the side (facing left): the back slanting down to
+## the shoulders, the head low and forward, the arms hanging to the ground.
+func _work_side(reach: float) -> void:
+	var hip := Vector2(CX + 10, HIP - 2)
+	var shoulder := Vector2(CX - 26, 132)
+	var head := Vector2(CX - 40, 128 + reach * 0.4)
+	_work_side_arm(shoulder + Vector2(4, 0), Vector2(CX - 28, 180 + reach * 0.5), Vector2(CX - 22, 226 + reach), FAR)
+	_limb("leg_upper", hip, Vector2(CX + 14, KNEE), 15, 12, FAR)
+	_limb("leg_lower", Vector2(CX + 14, KNEE), Vector2(CX + 16, GROUND - 4), 12, 9, FAR)
+	_ellipse(CX + 12, GROUND - 3, 9, 4, _col("foot", FAR))
+	_limb("pelvis", hip, hip.lerp(shoulder, 0.3), 30, 28, NEAR)
+	_limb("torso", hip.lerp(shoulder, 0.25), shoulder, 28, 24, NEAR)
+	_limb("leg_upper", hip, Vector2(CX + 6, KNEE), 15, 12, SHADED)
+	_limb("leg_lower", Vector2(CX + 6, KNEE), Vector2(CX + 4, GROUND - 4), 12, 9, SHADED)
+	_ellipse(CX, GROUND - 3, 9, 4, _col("foot", SHADED))
+	_skirt(HIP, 10.0, Vector2(14, 20), 0.0)
+	_limb("neck", shoulder, head + Vector2(10, 2), 12, 11, SHADED)
+	_ellipse(head.x, head.y, 14, 17, _col("head", NEAR))
+	_ellipse(head.x - 10, head.y + 9, 5, 4, _col("face", NEAR)) # nose and chin
+	_ellipse(head.x + 4, head.y, 3, 5, _col("face", SHADED)) # ear
+	_ellipse(head.x - 7, head.y + 3, 1.6, 2.0, OUTLINE if _body() else ERASE)
+	_hair(head, func(x: float, y: float) -> bool: return y < head.y - 4 or x > head.x)
+	_headwear(head, Vector2(13, -8), 24.0)
+	_work_side_arm(shoulder, Vector2(CX - 34, 178 + reach * 0.5), Vector2(CX - 30, 226 + reach), SHADED)
+
+func _work_side_arm(shoulder: Vector2, elbow: Vector2, hand: Vector2, shade: int) -> void:
+	_limb("arm_upper", shoulder, elbow, 11, 9, shade)
+	_limb("arm_lower", elbow, hand, 9, 8, shade)
+	_ellipse(hand.x, hand.y + 2, 5, 6, _col("hand", shade))
 
 ## stride < 0: this foot ahead (to the left); `lift` raises it, knee forward.
 func _side_leg(stride: float, lift: float, hip: float, shade: int) -> void:

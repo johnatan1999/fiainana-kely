@@ -20,6 +20,6 @@ la fiche concernée, ou en crée une nouvelle ajoutée à cet index.
 | [world_zones.md](world_zones.md) | `WorldManager` et scènes de zone : village, rizières, décor |
 | [zebu_cart.md](zebu_cart.md) | `ZebuCart` : charrettes à zébus sur les routes |
 | [zebus.md](zebus.md) | `GrazingZebu`, `ZebuPen` : zébus en liberté, parc à zébus |
-| [villagers.md](villagers.md) | `Villager`, `VillagerRoads`, `VillagerVisual` : villageois, journées, chemins, apparence par calques |
+| [villagers.md](villagers.md) | `Villager`, `VillagerRoads`, `VillagerVisual`, `VillagePaddy` : villageois, journées, fermiers aux rizières, apparence par calques |
 | [weather.md](weather.md) | `WeatherController` : pluie, ciel couvert, arrosage par la pluie |
 | [hud.md](hud.md) | `HUD`, `HotbarUI`, retours visuels : interface en jeu |

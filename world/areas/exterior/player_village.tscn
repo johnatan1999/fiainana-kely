@@ -40,14 +40,14 @@
 [ext_resource type="PackedScene" path="res://entities/props/laundry_line.tscn" id="47_prop_laundry_line"]
 [ext_resource type="PackedScene" uid="uid://ctd2newmp7phc" path="res://entities/villager/villager.tscn" id="48_mi770"]
 [ext_resource type="PackedScene" path="res://entities/props/mortar.tscn" id="48_prop_mortar"]
-[ext_resource type="Resource" uid="uid://drvn7wmcrhal5" path="res://data/villagers/rakoto.tres" id="49_0e82w"]
+[ext_resource type="Resource" uid="uid://d2q8xu7ebuh4t" path="res://data/villagers/rakoto.tres" id="49_0e82w"]
 [ext_resource type="PackedScene" path="res://entities/props/thatched_hut.tscn" id="49_prop_thatched_hut"]
 [ext_resource type="Resource" uid="uid://c3g5a1rdm37xs" path="res://data/villagers/ravao.tres" id="50_faawv"]
 [ext_resource type="PackedScene" path="res://entities/props/water_jar.tscn" id="50_prop_water_jar"]
 [ext_resource type="Resource" uid="uid://cy83136u5025f" path="res://data/villagers/neny_soa.tres" id="51_hn14n"]
 [ext_resource type="PackedScene" path="res://entities/props/woodpile.tscn" id="51_prop_woodpile"]
 [ext_resource type="Resource" uid="uid://bod17r5d1u1cp" path="res://data/villagers/koto.tres" id="52_hjw3q"]
-[ext_resource type="Resource" uid="uid://cta6x601i8ja5" path="res://data/villagers/naivo.tres" id="53_pd4mh"]
+[ext_resource type="Resource" uid="uid://b62qh7l7qddam" path="res://data/villagers/naivo.tres" id="53_pd4mh"]
 [ext_resource type="PackedScene" path="res://entities/props/brick_shed.tscn" id="60_prop_brick_shed"]
 [ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
 [ext_resource type="Script" path="res://environment/lighting/night_light.gd" id="62_nightlight"]
@@ -783,6 +783,7 @@ position = Vector2(1860, 745)
 
 [node name="VillagerRoads" type="Node2D" parent="."]
 script = ExtResource("47_euky7")
+zone_id = "village"
 
 [node name="Route_Ouest" type="Line2D" parent="VillagerRoads"]
 points = PackedVector2Array(274, 1108, 450, 1100, 480, 900, 480, 620, 560, 560)
@@ -840,7 +841,7 @@ gizmo_extents = 16.0
 position = Vector2(1850, 1040)
 gizmo_extents = 16.0
 
-[node name="Sortie_Nord" type="Marker2D" parent="VillagerRoads/Spots"]
+[node name="Vers_rice_fields" type="Marker2D" parent="VillagerRoads/Spots"]
 position = Vector2(1505, 30)
 gizmo_extents = 16.0
 

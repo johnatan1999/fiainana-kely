@@ -8,8 +8,9 @@ extends Resource
 @export var look: VillagerLook
 ## Drawn size: 1 = an adult, about 0.8 = a child.
 @export_range(0.6, 1.2, 0.05) var size := 1.0
-## The spot of their house door (a VillagerRoads marker): where they sleep,
-## and where they go when it rains.
+## The world zone they live in, and the spot of their house door there (a
+## VillagerRoads marker): where they sleep, and go when it rains.
+@export var home_zone := "village"
 @export var home := ""
 ## Their day, in order of time (see VillagerStop).
 @export var routine: Array[VillagerStop] = []

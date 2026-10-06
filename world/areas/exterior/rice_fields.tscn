@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=4 uid="uid://c5velu0qg7ft6"]
+[gd_scene load_steps=40 format=4 uid="uid://c5velu0qg7ft6"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_zone"]
 [ext_resource type="Script" path="res://environment/ground/ground_layer.gd" id="2_ground"]
@@ -22,6 +22,11 @@
 [ext_resource type="Resource" path="res://data/zones/riziere_basse.tres" id="21_zb"]
 [ext_resource type="Resource" path="res://data/zones/tany_lonaka_nord.tres" id="22_tn"]
 [ext_resource type="Resource" path="res://data/zones/tany_lonaka_sud.tres" id="23_ts"]
+[ext_resource type="Script" path="res://entities/villager/villager_roads.gd" id="32_nk0pf"]
+[ext_resource type="Script" path="res://structures/farm/village_paddy/village_paddy.gd" id="33_fe14c"]
+[ext_resource type="PackedScene" uid="uid://ctd2newmp7phc" path="res://entities/villager/villager.tscn" id="34_2txwo"]
+[ext_resource type="Resource" uid="uid://d2q8xu7ebuh4t" path="res://data/villagers/rakoto.tres" id="35_ek1n3"]
+[ext_resource type="Resource" uid="uid://b62qh7l7qddam" path="res://data/villagers/naivo.tres" id="36_5v2cg"]
 [ext_resource type="PackedScene" path="res://entities/props/basket.tscn" id="40_prop_basket"]
 [ext_resource type="PackedScene" path="res://entities/props/drying_mat.tscn" id="41_prop_drying_mat"]
 [ext_resource type="PackedScene" path="res://entities/props/hay_bundle.tscn" id="42_prop_hay_bundle"]
@@ -149,25 +154,6 @@ size_scale = 0.9
 position = Vector2(447, 1255)
 tree_id = "Trees/Haie_Sud_2_03"
 tree_data = ExtResource("11_euca")
-
-[node name="Haie_Sud_3_01" parent="Trees" instance=ExtResource("9_tree")]
-position = Vector2(1405, 1305)
-tree_id = "Trees/Haie_Sud_3_01"
-tree_data = ExtResource("11_euca")
-flip = true
-size_scale = 0.85
-
-[node name="Haie_Sud_3_02" parent="Trees" instance=ExtResource("9_tree")]
-position = Vector2(1489, 1324)
-tree_id = "Trees/Haie_Sud_3_02"
-tree_data = ExtResource("11_euca")
-size_scale = 0.85
-
-[node name="Haie_Sud_3_03" parent="Trees" instance=ExtResource("9_tree")]
-position = Vector2(1324, 1275)
-tree_id = "Trees/Haie_Sud_3_03"
-tree_data = ExtResource("11_euca")
-size_scale = 0.9
 
 [node name="Haie_Sud_4_01" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1726, 1260)
@@ -385,10 +371,57 @@ script = ExtResource("62_nightlight")
 y_sort_enabled = true
 
 [node name="Zebu1" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1420, 1130)
+position = Vector2(1600, 1160)
 
 [node name="Zebu2" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1560, 1180)
+position = Vector2(1720, 1090)
 
 [node name="Zebu3" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1680, 1110)
+position = Vector2(1650, 1240)
+
+[node name="VillagerRoads" type="Node2D" parent="."]
+script = ExtResource("32_nk0pf")
+zone_id = "rice_fields"
+
+[node name="Route_Village" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(960, 1320, 960, 1180, 1135, 1150, 1235, 1150)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Spots" type="Node2D" parent="VillagerRoads"]
+
+[node name="Vers_village" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(960, 1320)
+gizmo_extents = 16.0
+
+[node name="Cabane" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1135, 1125)
+gizmo_extents = 16.0
+
+[node name="Riziere_Voisins_1" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1310, 1115)
+gizmo_extents = 16.0
+
+[node name="Riziere_Voisins_2" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1420, 1205)
+gizmo_extents = 16.0
+
+[node name="RizieresVoisins" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Riziere1" type="Node2D" parent="RizieresVoisins"]
+y_sort_enabled = true
+position = Vector2(1248, 1056)
+script = ExtResource("33_fe14c")
+size = Vector2i(5, 4)
+
+[node name="Villagers" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Rakoto" parent="Villagers" instance=ExtResource("34_2txwo")]
+position = Vector2(960, 1320)
+data = ExtResource("35_ek1n3")
+
+[node name="Naivo" parent="Villagers" instance=ExtResource("34_2txwo")]
+position = Vector2(960, 1320)
+data = ExtResource("36_5v2cg")

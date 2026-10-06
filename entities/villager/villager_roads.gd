@@ -6,6 +6,10 @@ extends Node2D
 ## places they go to are the Marker2Ds under Spots (house doors, the
 ## market, a bench, a zone exit...) - VillagerStop.spot names one.
 ##
+## A spot named "Vers_<zone id>" is the way to that zone (where the road
+## leaves the map): villagers headed there walk to it and go out, and come
+## back in by it.
+##
 ## Line points closer than MERGE_DISTANCE are one crossroads, so roads join
 ## by sharing a point. A spot hooks onto the nearest road point. Villagers
 ## walk the shortest way along the roads (AStar2D) - no navmesh: they keep
@@ -13,6 +17,10 @@ extends Node2D
 
 const GROUP := "villager_roads"
 const MERGE_DISTANCE := 12.0
+const EXIT_PREFIX := "Vers_"
+
+## The world zone these roads are in (a WorldManager zone id).
+@export var zone_id := ""
 
 var _astar := AStar2D.new()
 var _spots := {}
@@ -26,6 +34,10 @@ func _ready() -> void:
 		if road is Line2D:
 			_add_road(road)
 			road.visible = false # a guide for the editor only
+
+## The spot leading to `zone`, or "" when there's none.
+func exit_to(zone: String) -> String:
+	return EXIT_PREFIX + zone if has_spot(EXIT_PREFIX + zone) else ""
 
 func has_spot(spot_name: String) -> bool:
 	return _spots.has(spot_name)

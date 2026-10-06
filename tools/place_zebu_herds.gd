@@ -23,7 +23,7 @@ const ZONES := {
 		"pen_cell": Vector2i(43, 12),
 	},
 	"res://world/areas/exterior/rice_fields.tscn": {
-		"homes": [Vector2(1420, 1130), Vector2(1560, 1180), Vector2(1680, 1110)],
+		"homes": [Vector2(1600, 1160), Vector2(1720, 1090), Vector2(1650, 1240)],
 	},
 }
 
