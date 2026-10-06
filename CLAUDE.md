@@ -28,6 +28,15 @@ Scène principale : `res://world/world.tscn`.
 ## Règles
 - Ne pas commit sans demande explicite.
 
+## Documentation (`docs/`)
+- Après chaque changement de gameplay, de visuel ou de système, mettre à jour la fiche du
+  contrôleur/système concerné dans `docs/` (index : `docs/README.md`). Système nouveau : créer
+  sa fiche et l'ajouter à l'index.
+- Chaque fiche suit le même plan : **Ce que voit le joueur**, puis **Détails techniques**
+  (fichiers, nœuds, signaux, réglages exportés, conventions), puis **À savoir** (limites,
+  pièges, pistes).
+- La fiche décrit l'état actuel : réécrire ce qui a changé plutôt qu'ajouter un historique.
+
 ## Réponses
 - Répondre en français.
 - Pour toute feature, raisonner aussi en game design : impact sur la boucle de jeu,
