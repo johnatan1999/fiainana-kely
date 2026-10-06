@@ -22,6 +22,10 @@ var _fields: Array[FarmField] = []
 ## zone's plots - FarmSimulation addresses plots by (cell, zone).
 var _zone_id := FarmState.DEFAULT_ZONE
 var _soil_dirty := false
+## The fields to repaint on the next _redraw_soil() (FarmField -> true).
+var _dirty_fields: Dictionary = {}
+## Each field's cells, as a set, to find the field holding a plot.
+var _field_cells: Dictionary = {} # FarmField -> {Vector2i -> true}
 
 ## y-sorted so the player walks behind a crop's upper part and in front of
 ## its base (PlotViews sort by their bottom-center origin). The fields' soil
@@ -129,23 +133,41 @@ func _refresh_plot_view(plot_view: PlotView, plot_id: int) -> void:
 	var plot := _simulation.get_plot(plot_id)
 	var crop_data: CropData = _simulation.get_crop_data(plot.crop.crop_id) if plot.crop != null else null
 	plot_view.update_view(plot, crop_data)
-	_queue_soil_redraw()
+	_queue_soil_redraw(plot_id)
 
-## One plot's autotile depends on its 8 neighbours, so each field's soil is
-## repainted as a whole rather than cell by cell - batched to once per frame,
-## since a save load or a new day changes every plot in a row.
-func _queue_soil_redraw() -> void:
+## One plot's autotile depends on its 8 neighbours, so a field's soil is
+## repainted as a whole rather than cell by cell - only the field holding
+## `plot_id` (all of them when -1), batched to once per frame since a save
+## load or a new day changes every plot in a row. Repainting every field for
+## one plot froze the game for a few hundred ms (terrain autotiling is slow).
+func _queue_soil_redraw(plot_id := -1) -> void:
+	var cell: Variant = _plot_positions.get(plot_id)
+	for field in _fields:
+		if cell == null or _cells_of(field).has(cell):
+			_dirty_fields[field] = true
 	if _soil_dirty:
 		return
 	_soil_dirty = true
 	_redraw_soil.call_deferred()
 
+func _cells_of(field: FarmField) -> Dictionary:
+	if not _field_cells.has(field):
+		var cells := {}
+		for cell in field.get_cells():
+			cells[cell] = true
+		_field_cells[field] = cells
+	return _field_cells[field]
+
 ## A field cell with a plot is owned (bought); one without is still locked.
 func _redraw_soil() -> void:
 	_soil_dirty = false
+	var dirty := _dirty_fields
+	_dirty_fields = {}
 	if _simulation == null:
 		return
-	for field in _fields:
+	for field: FarmField in dirty:
+		if not is_instance_valid(field):
+			continue
 		var owned := {}
 		var tilled: Array[Vector2i] = []
 		var wet: Array[Vector2i] = []

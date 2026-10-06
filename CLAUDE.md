@@ -36,6 +36,9 @@ Scène principale : `res://world/world.tscn`.
 - Une image régénérée hors de l'éditeur (planches provisoires) n'est réimportée qu'à
   l'ouverture de l'éditeur (ou `<godot> --headless --editor --path . --quit`) : le jeu lancé
   seul affiche encore l'ancienne texture.
+- Performance : ne pas reconstruire une interface fermée sur chaque signal (l'inventaire
+  change souvent), et ne pas relancer `set_cells_terrain_connect` sur de grandes zones à
+  chaque action (lent). Mesurer d'abord (temps par image) avant d'optimiser.
 - Un outil qui réenregistre une scène se lance avec `--editor`
   (`<godot> --headless --editor --path . --script res://tools/<outil>.gd`). Sans ce mode,
   Godot ne connaît pas les valeurs par défaut des scripts et écrit toutes les propriétés

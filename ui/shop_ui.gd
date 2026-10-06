@@ -155,14 +155,19 @@ func _notification(what: int) -> void:
 ## Crop unlock_day gates can flip while the shop happens to be open; cheapest
 ## correct fix is to just re-lock/unlock the currently visible grid.
 func _on_day_changed(_day: int) -> void:
-	_rebuild_item_grid()
+	if visible:
+		_rebuild_item_grid()
 
 ## Keeps "Tu as : N" and the Sell button's enabled state live while the shop
 ## is open (e.g. selling one egg should immediately grey out Sell at 0 left).
+## Only while open: rebuilding the grid takes ~150 ms, and planting or
+## harvesting (which change the inventory) froze the game for that long.
 func _on_inventory_changed(_item_id: String, _amount: int) -> void:
-	_rebuild_item_grid()
+	if visible:
+		_rebuild_item_grid()
 
 func open() -> void:
+	_rebuild_item_grid() # up to date: it isn't rebuilt while closed
 	visible = true
 	get_tree().paused = true
 	AudioManager.play_click_menu_sfx()

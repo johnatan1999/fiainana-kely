@@ -35,6 +35,17 @@
   cette zone.
 - **`FarmField.get_cells()`** renvoie des cases locales à la grille de sa zone : la position
   du champ sous `FarmView`, en cases.
+- **Dessin du sol** (terre arable, verrouillée, labourée, mouillée, eau) : le raccord
+  automatique des tuiles (`set_cells_terrain_connect`) est coûteux. On ne repeint donc que le
+  nécessaire :
+  - `FarmView._queue_soil_redraw(plot_id)` ne marque que **le champ qui contient la
+    parcelle** (tous les champs sans `plot_id` : chargement, achat) ;
+  - le rendu est groupé une fois par image ;
+  - `FarmField._paint()` saute un calque dont les cases n'ont pas changé. Quand des cases
+    sont seulement ajoutées (labourer, arroser), il ne raccorde que celles-là.
+
+  Avant cette correction, repeindre tous les champs figeait le jeu 250 à 450 ms à chaque
+  labour ou arrosage.
 - **`FarmLandManager`** distingue deux sortes de « zone » :
   - le **terrain achetable** : `zone_id`, l'id de `FarmZoneData`, par exemple `zone_east` ;
   - la **zone du monde** où il se trouve : `world_zone_id`.

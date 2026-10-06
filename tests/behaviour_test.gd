@@ -44,6 +44,7 @@ func _ready() -> void:
 	await _test_orders()
 	await _test_friendship()
 	await _test_inventory_villagers()
+	await _test_tilling_repaints_one_field()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -566,6 +567,34 @@ func _test_inventory_villagers() -> void:
 		"inventory: the Villageois tab lists the 5 villagers with their portrait; Ravao's card shows 2/5 hearts, 35 %")
 	inventory.close()
 	await _frames(15)
+
+# --- performance: soil ------------------------------------------------------------------
+
+## Tilling one plot used to repaint every field's soil (terrain autotiling)
+## and froze the game for 250-450 ms. Now: only its field, only the layer
+## that changed.
+func _test_tilling_repaints_one_field() -> void:
+	await _go_to_zone("village")
+	await _frames(2)
+	var farm_view: FarmView = _world.get_node("Gameplay/FarmingController").farm_view
+	var plot_id := -1
+	for id in _sim.state.plots:
+		if _sim.can_till(id):
+			plot_id = id
+			break
+	_sim.till(plot_id)
+	var dirty := farm_view._dirty_fields.size()
+	await _frames(2)
+	var shop: ShopUI = _world.get_node("UI/ShopUI")
+	var rebuilt := [false]
+	var watcher := func(_child): rebuilt[0] = true
+	shop.item_grid.child_entered_tree.connect(watcher)
+	_sim.state.add_inventory("corn", 1)
+	_sim.inventory_changed.emit("corn", _sim.state.get_inventory_count("corn"))
+	await _frames(2)
+	shop.item_grid.child_entered_tree.disconnect(watcher)
+	_check(farm_view.get_fields().size() > 1 and dirty == 1 and not rebuilt[0],
+		"performance: tilling repaints only its own field, and the closed shop isn't rebuilt on an inventory change")
 
 # --- tall grass ----------------------------------------------------------------
 
