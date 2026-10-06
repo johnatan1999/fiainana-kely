@@ -39,6 +39,7 @@ func _ready() -> void:
 	await _test_rain()
 	await _test_zebu_cart()
 	await _test_grazing_zebus()
+	await _test_villager_visual()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -309,6 +310,35 @@ func _test_grazing_zebus() -> void:
 	await _frames(90)
 	_check(field_herd.all(func(z): return z.get_node("Sprite2D").frame != GrazingZebu.FRAME_REST),
 		"zebus: back up in the morning")
+
+# --- villager visual ---------------------------------------------------------------
+
+func _test_villager_visual() -> void:
+	var shirt := VillagerLayer.new()
+	shirt.texture = load("res://assets/sprites/characters/villager/example_shirt.png")
+	shirt.color = Color.RED
+	var look := VillagerLook.new()
+	var layers: Array[VillagerLayer] = [shirt]
+	look.layers = layers
+	var visual := VillagerVisual.new()
+	add_child(visual)
+	visual.look = look
+	await _frames(1)
+	var sprites := visual.get_children().filter(func(c): return c is Sprite2D and not c.is_queued_for_deletion())
+	_check(sprites.size() == 2 and sprites[0].self_modulate == look.skin_color and sprites[1].self_modulate == Color.RED,
+		"villager visual: the body tinted with the skin color, each layer with its color")
+	visual.play(Vector2.LEFT, true)
+	await _frames(2)
+	var frame: int = sprites[0].frame
+	_check(frame / VillagerVisual.COLUMNS == VillagerVisual.Facing.LEFT and frame % VillagerVisual.COLUMNS >= 2
+			and sprites.all(func(s): return s.frame == frame),
+		"villager visual: walking left plays the walk row, every layer on the same frame")
+	shirt.color = Color.BLUE
+	await _frames(1)
+	var recolored := visual.get_children().filter(func(c): return c is Sprite2D and not c.is_queued_for_deletion())
+	_check(recolored.size() == 2 and recolored[1].self_modulate == Color.BLUE,
+		"villager visual: editing the look updates the sprite")
+	visual.queue_free()
 
 # --- tall grass ----------------------------------------------------------------
 
