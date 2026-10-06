@@ -13,7 +13,9 @@
   - les mangues non cueillies pourrissent à la fin d'Asara, et rien ne pousse en Asotry ;
   - un arbre découvert en saison est déjà chargé de fruits ;
   - hors saison, le prompt indique « Manguier : fruits dans N jours », « …demain » ou
-    « …en Asara ».
+    « …en Asara » ;
+  - à la cueillette, « +3 Mangue » apparaît au-dessus du feuillage : même retour que pour
+    les cultures (voir `farming.md`).
 - La mangue se vend 800 Ar au marché (catégorie Nourriture, vente seulement).
 
 ## Détails techniques

@@ -35,6 +35,7 @@ func _ready() -> void:
 	await _test_rice_terrace()
 	await _test_lanterns()
 	await _test_tall_grass_rustles()
+	await _test_harvest_popup()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -175,6 +176,27 @@ func _test_lanterns() -> void:
 	dn._apply()
 	await _frames(5)
 	_check(lanterns.all(func(l): return not l.visible), "lanterns: out by day")
+
+# --- harvest feedback ----------------------------------------------------------
+
+func _test_harvest_popup() -> void:
+	await _go_to_zone("village")
+	var plot_id := _sim.get_plot_id_at(0, 1, "village")
+	var plot := _sim.get_plot(plot_id)
+	plot.crop = null
+	_sim.till(plot_id)
+	_sim.state.add_inventory("corn_seed", 1)
+	_sim.plant(plot_id, "corn")
+	plot.crop.age = plot.crop.growth_days
+	_sim.harvest(plot_id)
+	await _frames(2)
+	var popups := _zone().find_children("*", "HarvestPopup", true, false)
+	var texts: Array = []
+	for popup in popups:
+		for label in popup.find_children("*", "Label", true, false):
+			texts.append(label.text)
+	_check(popups.size() == 1 and texts.any(func(t): return t.begins_with("+")),
+		"harvest: a \"+N\" popup shows over the harvested plot (%s)" % ", ".join(texts))
 
 # --- tall grass ----------------------------------------------------------------
 

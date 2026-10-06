@@ -139,6 +139,7 @@ func _run_all() -> void:
 	test_zones_have_separate_plot_grids()
 	test_zone_plots_save_load_roundtrip()
 	test_v5_save_migrates_plots_to_their_zone()
+	test_harvest_reports_quantity_and_penalties()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -994,4 +995,25 @@ func test_v5_save_migrates_plots_to_their_zone() -> void:
 		and rice_plot != -1 and sim.get_plot(rice_plot).flooded
 		and sim.get_plot_id_at(104, 6, "rice_fields") == -1,
 		"migrating a v5 save puts each plot in its zone, the rice fields shifted back by their old offset"
+	)
+
+func test_harvest_reports_quantity_and_penalties() -> void:
+	var sim := _make_sim()
+	sim.till(0)
+	sim.state.add_inventory("corn_seed", 1)
+	sim.plant(0, "corn")
+	var crop := sim.get_plot(0).crop
+	crop.age = crop.growth_days
+	crop.days_total = crop.growth_days
+	crop.days_watered = 0 # never watered
+	var reported: Array = []
+	# Filled, not reassigned: a lambda can't reassign a local of its caller.
+	sim.crop_harvested.connect(func(plot_id, crop_id, quantity, under_watered, off_season): reported.append_array([plot_id, crop_id, quantity, under_watered, off_season]))
+	var before := sim.state.get_inventory_count("corn")
+	sim.harvest(0)
+	_check(
+		reported.size() == 5 and reported[0] == 0 and reported[1] == "corn"
+		and reported[2] == sim.state.get_inventory_count("corn") - before
+		and reported[3] == true,
+		"a harvest reports how much went into the bag, and that an under-watered crop was cut"
 	)

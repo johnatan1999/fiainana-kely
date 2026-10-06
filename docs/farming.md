@@ -16,6 +16,9 @@
   - récolter : le plant sort du sol en s'étirant et disparaît en fondu.
 - **Riz** : 4 stades dessinés (jeunes plants repiqués → touffe dorée avec panicules). Il ne
   bloque pas le joueur, qui peut entrer dans une rizière.
+- **Récolte** : « +3 Maïs » avec l'icône de la culture apparaît au-dessus de la parcelle, monte
+  et s'efface. Si la récolte a été réduite, la raison s'affiche dessous en orange (« peu
+  arrosé », « hors saison »).
 
 ## Détails techniques
 **Une grille par zone**
@@ -71,6 +74,15 @@
 - `FarmView.react_to_action(plot_id, action)` relaie, et `FarmingController` appelle après une
   action réussie. Pour la récolte, l'appel se fait **avant** `harvest()`, pour que le plant
   soit arraché au lieu de disparaître.
+
+**Retour de récolte**
+- `FarmSimulation.crop_harvested(plot_id, crop_id, quantity, under_watered, off_season)` :
+  émis par `harvest()`. La simulation donne des faits, pas de texte.
+- `FarmView._on_crop_harvested()` (parcelles de sa zone seulement) fait apparaître un
+  `HarvestPopup` (`ui/world/harvest_popup.gd`) au-dessus de la parcelle.
+- `HarvestPopup.spawn(parent, global_pos, icon, text, note)` : icône et texte, avec une note
+  optionnelle. Dessiné en *unshaded* (lisible la nuit), avec `z_index` 50 en absolu. Il monte,
+  s'efface et se libère tout seul. Réutilisé par les arbres.
 
 **Riz** : `assets/sprites/crops/rice.png` (4 cases de 96×128, dessinées à double densité) et
 `entities/crops/rice/rice_visual.tscn` (échelle 0,5, sans `Blocker`).

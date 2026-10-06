@@ -41,6 +41,7 @@ func get_fields() -> Array[FarmField]:
 func setup(simulation: FarmSimulation, zone_id := FarmState.DEFAULT_ZONE) -> void:
 	_simulation = simulation
 	_zone_id = zone_id
+	simulation.crop_harvested.connect(_on_crop_harvested)
 	grid_width = simulation.grid_width
 	grid_height = simulation.grid_height
 	_build_grid()
@@ -72,6 +73,23 @@ func show_highlight_for_plot(plot_id: int, can_use: bool, can_harvest: bool) -> 
 	_highlight.can_act = can_use or can_harvest
 	_highlight.show_hand = can_harvest
 	_highlight.visible = true
+
+## "+3 Maïs" over the plot just harvested, with why it came out small if it
+## did - the player sees the yield where it happened.
+func _on_crop_harvested(plot_id: int, crop_id: String, quantity: int, under_watered: bool, off_season: bool) -> void:
+	if _simulation.get_plot_zone(plot_id) != _zone_id:
+		return
+	var crop_data := _simulation.get_crop_data(crop_id)
+	var notes: PackedStringArray = []
+	if under_watered:
+		notes.append(tr("peu arrosé"))
+	if off_season:
+		notes.append(tr("hors saison"))
+	var rect := get_plot_global_rect(plot_id)
+	HarvestPopup.spawn(get_parent(), Vector2(rect.get_center().x, rect.position.y - 4.0),
+		crop_data.icon if crop_data else null,
+		tr("+%d %s") % [quantity, tr(crop_data.display_name) if crop_data else crop_id],
+		", ".join(notes))
 
 ## Plays the plot's feedback for an action that just succeeded on it - see
 ## PlotView.react().

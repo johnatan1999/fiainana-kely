@@ -17,6 +17,10 @@ signal plot_added(plot_id: int)
 ## PlotView.
 signal plot_removed(plot_id: int)
 signal inventory_changed(item_id: String, amount: int)
+## A crop was harvested: `quantity` went into the inventory. under_watered /
+## off_season say which penalties cut it (see _compute_harvest_quantity()),
+## so the player can be told why a harvest came out small.
+signal crop_harvested(plot_id: int, crop_id: String, quantity: int, under_watered: bool, off_season: bool)
 
 signal animal_added(animal_id: String)
 ## Animals bought and waiting to be settled changed (see place_animal()).
@@ -211,24 +215,26 @@ func harvest(plot_id: int) -> bool:
 	var plot := get_plot(plot_id)
 	var crop_id := plot.crop.crop_id
 	var crop_data := get_crop_data(crop_id)
-	var quantity := _compute_harvest_quantity(plot.crop, crop_data)
+	var under_watered := plot.crop.get_watered_ratio() < crop_data.min_watered_ratio_for_quality
+	var off_season := crop_data.ideal_season != CropData.Season.TOUTE_SAISON 			and int(crop_data.ideal_season) != state.clock.get_season()
+	var quantity := _compute_harvest_quantity(crop_data, under_watered, off_season)
 	state.add_inventory(crop_id, quantity)
 	plot.crop = null
 	plot.watered = false
 	inventory_changed.emit(crop_id, state.get_inventory_count(crop_id))
 	plot_changed.emit(plot_id)
+	crop_harvested.emit(plot_id, crop_id, quantity, under_watered, off_season)
 	return true
 
 ## Base yield is a random amount in [yield_min, yield_max]. Watering the crop
 ## less than its min_watered_ratio_for_quality caps it a notch lower, and
 ## harvesting outside its ideal_season shrinks it further - both floored at 1
 ## so a successful harvest never returns nothing.
-func _compute_harvest_quantity(crop: CropState, crop_data: CropData) -> int:
+func _compute_harvest_quantity(crop_data: CropData, under_watered: bool, off_season: bool) -> int:
 	var quantity := randi_range(crop_data.yield_min, crop_data.yield_max)
-	if crop.get_watered_ratio() < crop_data.min_watered_ratio_for_quality:
+	if under_watered:
 		quantity = max(1, quantity - 1)
-	var ideal_season := crop_data.ideal_season
-	if ideal_season != CropData.Season.TOUTE_SAISON and int(ideal_season) != state.clock.get_season():
+	if off_season:
 		quantity = max(1, int(round(quantity * crop_data.off_season_yield_multiplier)))
 	return quantity
 

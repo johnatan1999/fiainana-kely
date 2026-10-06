@@ -53,7 +53,10 @@ func _on_tree_interacted(tree_id: String) -> void:
 	if quantity > 0:
 		# harvest_tree() fires tree_changed -> _refresh(): the fruit disappears.
 		AudioManager.play_harvest_sfx()
-		UIEvents.notify(tr("+%d %s") % [quantity, _fruit_name(tree_id)])
+		var tree: WorldTree = _trees[tree_id]
+		var fruit := item_db.get_item(_tree_data(tree_id).fruit_item_id)
+		HarvestPopup.spawn(tree, tree.get_perch_position() + Vector2(0, -24),
+			fruit.icon if fruit else null, tr("+%d %s") % [quantity, _fruit_name(tree_id)])
 	else:
 		AudioManager.play_action_denied_sfx()
 		UIEvents.notify(_waiting_text(tree_id))
