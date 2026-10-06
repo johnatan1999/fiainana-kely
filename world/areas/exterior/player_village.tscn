@@ -1,4 +1,4 @@
-[gd_scene load_steps=52 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=53 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -46,6 +46,7 @@
 [ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
 [ext_resource type="Script" path="res://environment/lighting/night_light.gd" id="62_nightlight"]
 [ext_resource type="PackedScene" path="res://entities/zebu_cart/zebu_cart.tscn" id="63_zebucart"]
+[ext_resource type="PackedScene" path="res://entities/zebu/grazing_zebu.tscn" id="64_zebu"]
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jeqll"]
 texture = ExtResource("4_ibrhb")
 texture_region_size = Vector2i(48, 48)
@@ -755,3 +756,18 @@ y_sort_enabled = true
 curve = SubResource("Curve2D_cart_east")
 
 [node name="ZebuCart" parent="CartRoute_Est" instance=ExtResource("63_zebucart")]
+
+[node name="ZebuHerd" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Zebu1" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(1880, 560)
+
+[node name="Zebu2" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(1990, 630)
+
+[node name="Zebu3" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(2060, 700)
+
+[node name="Zebu4" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(1920, 740)

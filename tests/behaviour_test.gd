@@ -38,6 +38,7 @@ func _ready() -> void:
 	await _test_harvest_popup()
 	await _test_rain()
 	await _test_zebu_cart()
+	await _test_grazing_zebus()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -252,6 +253,35 @@ func _test_zebu_cart() -> void:
 	_player.global_position = Vector2(300, 300)
 	await _frames(60)
 	_check(cart.progress - stopped_at > 10.0, "zebu cart: drives on once the way is clear")
+
+# --- grazing zebus ----------------------------------------------------------------
+
+func _test_grazing_zebus() -> void:
+	await _go_to_zone("village")
+	_player.global_position = Vector2(300, 300) # far from the herd
+	_set_time(10 * 60)
+	var herd: Array = _zone().get_node("ZebuHerd").get_children()
+	await _frames(600)
+	var stray := herd.filter(func(z): return z.global_position.distance_to(z._home) > z.wander_radius + 8.0).size()
+	_check(herd.size() >= 3 and stray == 0, "zebus: the herd wanders around its pasture, not off it")
+	var zebu: GrazingZebu = herd[0]
+	zebu._start(GrazingZebu.Activity.GRAZE)
+	_player.global_position = zebu.global_position + Vector2(-50, 0)
+	await _frames(5)
+	var sprite: Sprite2D = zebu.get_node("Sprite2D")
+	_check(sprite.frame == GrazingZebu.FRAME_WATCH and sprite.flip_h,
+		"zebus: one raises its head and watches the player who comes close")
+	var end := await _walk(zebu.global_position + Vector2(-60, 0), zebu.global_position + Vector2(60, 0), 3.0)
+	_check(end.x < zebu.global_position.x, "zebus: solid, the player can't walk through one")
+	_player.global_position = Vector2(300, 300)
+	_set_time(21 * 60)
+	await _frames(5)
+	_check(herd.all(func(z): return z.get_node("Sprite2D").frame == GrazingZebu.FRAME_REST),
+		"zebus: the herd lies down for the night")
+	_set_time(10 * 60)
+	await _frames(90)
+	_check(herd.all(func(z): return z.get_node("Sprite2D").frame != GrazingZebu.FRAME_REST),
+		"zebus: back up in the morning")
 
 # --- tall grass ----------------------------------------------------------------
 
