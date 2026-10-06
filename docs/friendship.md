@@ -12,6 +12,8 @@
   - **aider à la moisson** dans la rizière des voisins : chaque touffe coupée rapproche un peu
     les fermiers qui y travaillent (Rakoto, Naivo).
 - **L'amitié ne baisse jamais** : une commande ratée ne fait rien perdre (jeu cosy).
+- **Pas d'amitié avec la famille** (mère, père, sœur) : leur fiche a `family` coché, et
+  `FriendshipManager` les ignore (pas de cœurs, pas de points).
 - **Nouveau cœur** :
   - une notification (« Ravao et toi êtes plus proches : 2 cœur(s). ») ;
   - **à 2 et à 4 cœurs, un cadeau** : il apparaît au-dessus du villageois (« +5 Graine de

@@ -46,6 +46,7 @@ const ZONES := {
 			"Fantsakana": Vector2(575, 905),
 			"Hotely": Vector2(775, 1300),
 			"Epicerie": Vector2(1150, 1035),
+			"Vers_farm": Vector2(15, 505),
 		},
 		"roads": {
 			"Route_Ouest": [Vector2(274, 1108), Vector2(450, 1100), Vector2(480, 900), Vector2(480, 620), Vector2(560, 560)],
@@ -56,6 +57,29 @@ const ZONES := {
 			"Route_Sud": [Vector2(1430, 780), Vector2(1450, 960), Vector2(1370, 1150), Vector2(1370, 1440), Vector2(1584, 1440)],
 			"Route_Hotely": [Vector2(450, 1100), Vector2(560, 1250), Vector2(775, 1300)],
 			"Route_Epicerie": [Vector2(1290, 850), Vector2(1180, 1035)],
+			"Route_Ferme": [Vector2(560, 560), Vector2(300, 515), Vector2(15, 505)],
+		},
+		"paddies": [],
+		"remove_trees": [],
+	},
+	"farm": {
+		"scene": "res://world/areas/exterior/player_farm.tscn",
+		"spots": {
+			"Trano": Vector2(1022, 500),
+			"Vers_village": Vector2(1430, 560),
+			"Fanoto": Vector2(875, 560),
+			"Cuisine": Vector2(1190, 560),
+			"Bois": Vector2(1265, 565),
+			"Linge": Vector2(1290, 690),
+			"Poulailler": Vector2(420, 650),
+			"Verger": Vector2(360, 1360),
+		},
+		"roads": {
+			"Route_Cour": [Vector2(1430, 560), Vector2(1265, 565), Vector2(1190, 560), Vector2(1022, 540),
+				Vector2(875, 560), Vector2(560, 555), Vector2(470, 560), Vector2(420, 650)],
+			"Route_Maison": [Vector2(1022, 540), Vector2(1022, 500)],
+			"Route_Linge": [Vector2(1265, 565), Vector2(1290, 690)],
+			"Route_Verger": [Vector2(470, 560), Vector2(460, 1100), Vector2(360, 1360)],
 		},
 		"paddies": [],
 		"remove_trees": [],
@@ -78,7 +102,8 @@ const ZONES := {
 	},
 }
 
-## id -> name, role, home (in the village), size, skin, layers [sheet, color],
+## id -> name, role, home (a spot of home_zone - the village unless set;
+## "family": the player's own, on the farm), size, skin, layers [sheet, color],
 ## routine [hour, minute, zone ("" = home), spot, activity, rain_proof],
 ## greetings, orders [item, min, max, unit reward, days, request line (%d =
 ## the quantity), thanks line] - see OrderTemplate - and friendship gifts
@@ -194,6 +219,64 @@ const VILLAGERS := {
 			[4, "sweet_potato_seed", 6, "Des boutures de patate douce. Tu es un bon voisin."],
 		],
 	},
+	# The player's family, on the farm.
+	"mother": {
+		"name": "Neny", "role": "Ta mère", "home": "Trano", "home_zone": "farm", "family": true,
+		"size": 1.0, "skin": Color(0.5, 0.33, 0.22),
+		"layers": [["skirt", Color(0.25, 0.45, 0.35)], ["shirt", Color(0.95, 0.92, 0.8)], ["hair_bun", Color(0.12, 0.09, 0.07)]],
+		"routine": [
+			[6, 0, "", "Fanoto", "STAND", true],
+			[9, 0, "village", "Fantsakana", "STAND", false],
+			[10, 30, "", "Linge", "STAND", false],
+			[12, 0, "", "Cuisine", "STAND", true],
+			[14, 0, "", "Poulailler", "WANDER", false],
+			[16, 0, "", "Fanoto", "STAND", true],
+			[18, 0, "", "Trano", "INSIDE", true],
+		],
+		"greetings": [
+			"Arrose tes cultures chaque jour, sauf quand il pleut.",
+			"Les graines s'achètent au marché du village, à l'est.",
+			"Les villageois te passeront des commandes : regarde au-dessus de leur tête.",
+			"Les poules ont besoin d'eau et de grain chaque jour.",
+			"Ne te couche pas trop tard, le travail commence tôt !",
+		],
+	},
+	"father": {
+		"name": "Dada", "role": "Ton père", "home": "Trano", "home_zone": "farm", "family": true,
+		"size": 1.05, "skin": Color(0.45, 0.29, 0.19),
+		"layers": [["trousers", Color(0.35, 0.32, 0.28)], ["shirt", Color(0.75, 0.6, 0.4)], ["hair", Color(0.1, 0.08, 0.06)], ["hat", Color(0.84, 0.72, 0.45)]],
+		"routine": [
+			[6, 30, "", "Verger", "WORK", true],
+			[11, 30, "", "Trano", "INSIDE", true],
+			[13, 30, "", "Bois", "WORK", false],
+			[16, 0, "village", "Hotely", "STAND", false],
+			[18, 30, "", "Trano", "INSIDE", true],
+		],
+		"greetings": [
+			"Le manioc pousse en toute saison : c'est une valeur sûre.",
+			"En Asara, plante du riz et du maïs ; en Asotry, des patates douces et des arachides.",
+			"Garde un peu d'argent pour agrandir nos terres.",
+			"Aide les voisins à la moisson, ils te le rendront.",
+		],
+	},
+	"fara": {
+		"name": "Fara", "role": "Ta petite sœur", "home": "Trano", "home_zone": "farm", "family": true,
+		"size": 0.75, "skin": Color(0.5, 0.33, 0.22),
+		"layers": [["skirt", Color(0.85, 0.4, 0.55)], ["shirt", Color(0.98, 0.95, 0.9)], ["hair", Color(0.12, 0.09, 0.07)]],
+		"routine": [
+			[7, 15, "village", "Sekoly", "STAND", true],
+			[12, 15, "", "Poulailler", "WANDER", false],
+			[14, 30, "", "Trano", "INSIDE", true],
+			[16, 0, "village", "Kianja", "WANDER", false],
+			[17, 45, "", "Trano", "INSIDE", true],
+		],
+		"greetings": [
+			"Tu joues avec moi ?",
+			"Koto est trop fort au foot !",
+			"Les poules m'ont suivie jusqu'au poulailler !",
+			"Maman dit que tu travailles bien.",
+		],
+	},
 }
 
 func _initialize() -> void:
@@ -304,6 +387,8 @@ func _make_data(spec: Dictionary) -> VillagerData:
 	var data := VillagerData.new()
 	data.display_name = spec["name"]
 	data.role = spec.get("role", "")
+	data.home_zone = spec.get("home_zone", "village")
+	data.family = spec.get("family", false)
 	data.home = spec["home"]
 	data.size = spec["size"]
 	data.look = look
@@ -429,9 +514,10 @@ func _place_in_zone(zone_id: String) -> void:
 	_save(zone, path)
 	zone.free()
 
-## Whether a villager's day passes through `zone_id` (home is the village).
+## Whether a villager's day passes through `zone_id`: their home zone, or
+## a step there.
 func _passes_through(spec: Dictionary, zone_id: String) -> bool:
-	if zone_id == "village":
+	if spec.get("home_zone", "village") == zone_id:
 		return true
 	for entry: Array in spec["routine"]:
 		if entry[2] == zone_id:

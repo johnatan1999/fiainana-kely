@@ -11,6 +11,18 @@ Cinq villageois vivent au village, chacun avec sa journée :
 | **Neny Soa**, grand-mère | sud | Va chercher l'eau au point d'eau au lever, se promène sur la place, fait la sieste, va au banc l'après-midi |
 | **Koto**, enfant | sud | Va à l'école le matin (même sous la pluie), traîne au marché l'après-midi, joue au foot en fin de journée |
 
+- **La famille du joueur**, à la ferme :
+
+| Qui | Sa journée |
+|---|---|
+| **Neny**, la mère | Pile le riz au mortier devant la maison dès 6:00, va chercher l'eau au point d'eau du village vers 9:00, étend le linge, cuisine, nourrit les poules, rentre à 18:00 |
+| **Dada**, le père | Travaille au verger le matin, déjeune à la maison, coupe du bois l'après-midi, rejoint les hommes à la gargote du village à 16:00, rentre à 18:30 |
+| **Fara**, la petite sœur | Va à l'école du village le matin, joue avec les poules à midi, au foot au village l'après-midi, rentre vers 17:45 |
+
+  - Leurs répliques sont des **conseils** : arroser, acheter les graines au marché, les
+    commandes, les saisons, les poules. Elles servent de tutoriel naturel.
+  - Pas de cœurs d'amitié ni de commandes avec eux : c'est la famille. Dans l'inventaire, ils
+    sont en tête de l'onglet Villageois (« Famille ») et on y voit où ils sont.
 - Ils marchent **sur les chemins de terre**, sortent de leur porte le matin et rentrent le
   soir. La nuit, le village est vide.
 - **Les fermiers vont aux rizières** :
@@ -76,6 +88,8 @@ Cinq villageois vivent au village, chacun avec sa journée :
     `Epicerie` (routes `Route_Hotely`, `Route_Epicerie`). Les noms affichés dans l'inventaire
     sont dans `InventoryCatalog.SPOT_PLACES`.
   - **Rizières** : `Vers_village`, `Cabane`, `Riziere_Voisins_1`, `Riziere_Voisins_2`.
+  - **Ferme** : `Trano` (la porte de la maison), `Fanoto`, `Cuisine`, `Bois`, `Linge`,
+    `Poulailler`, `Verger`, `Vers_village`. Le village a `Vers_farm`, au bout de `Route_Ferme`.
 - **`Vers_<zone>`** : le repère où le chemin quitte la carte vers cette zone. `exit_to(zone)`
   le renvoie.
 - Deux points de route à moins de 12 px forment un carrefour. Un repère s'accroche au point de

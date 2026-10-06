@@ -13,6 +13,7 @@ var simulation: FarmSimulation
 var item_db: ItemDatabase
 
 var _names: Dictionary = {} # villager_id -> display name
+var _family: Dictionary = {} # villager_id -> true: no friendship with them
 
 func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase, world_manager: WorldManager) -> void:
 	simulation = p_simulation
@@ -24,6 +25,9 @@ func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase, world_manager:
 	for villager_id: String in villagers:
 		var data: VillagerData = villagers[villager_id]
 		_names[villager_id] = data.display_name
+		if data.family:
+			_family[villager_id] = true
+			continue
 		simulation.register_friend(villager_id, data.friendship_rewards)
 
 func _on_zone_loaded(_zone: ZoneRoot) -> void:
@@ -34,6 +38,8 @@ func _on_zone_loaded(_zone: ZoneRoot) -> void:
 ## Talking: friendship once a day, and the hearts shown either way.
 func _on_talk(villager: Villager) -> void:
 	var villager_id := villager.get_villager_id()
+	if _family.has(villager_id):
+		return
 	simulation.talk_to(villager_id)
 	_show_hearts(villager_id)
 
@@ -56,6 +62,8 @@ func _on_level_up(villager_id: String, hearts: int, reward: FriendshipReward) ->
 			item_db.get_icon(reward.item_id), "+%d %s" % [reward.quantity, item_db.get_display_name(reward.item_id)])
 
 func _show_hearts(villager_id: String) -> void:
+	if _family.has(villager_id):
+		return
 	var villager := _villager(villager_id)
 	if villager != null:
 		villager.show_hearts(simulation.get_hearts(villager_id), FarmSimulation.FRIENDSHIP_MAX_HEARTS,

@@ -33,6 +33,12 @@ const SPOT_PLACES := {
 	"Fantsakana": "au point d'eau",
 	"Hotely": "à la gargote",
 	"Epicerie": "à l'épicerie",
+	"Fanoto": "au mortier, devant la maison",
+	"Linge": "à la corde à linge",
+	"Cuisine": "à la cuisine",
+	"Poulailler": "au poulailler",
+	"Verger": "au verger",
+	"Bois": "au tas de bois",
 }
 const HOME_PLACES := {
 	"Maison_Ouest": "la maison de l'ouest",
@@ -162,6 +168,8 @@ static func describe_animal(db: ItemDatabase, animal: AnimalState) -> Dictionary
 ## "villager:<id>".
 static func describe_villager(db: ItemDatabase, simulation: FarmSimulation, villager_id: String,
 		data: VillagerData) -> Dictionary:
+	if data.family:
+		return _describe_family(villager_id, data, simulation)
 	var hearts := simulation.get_hearts(villager_id)
 	var max_hearts := FarmSimulation.FRIENDSHIP_MAX_HEARTS
 	# Short values (the card's right column is narrow); the longer texts go
@@ -200,6 +208,21 @@ static func describe_villager(db: ItemDatabase, simulation: FarmSimulation, vill
 		"meta": _t("%d/%d cœurs") % [hearts, max_hearts],
 	}
 	return entry
+
+## The player's family: who they are and where they are now - no
+## friendship or orders with them.
+static func _describe_family(villager_id: String, data: VillagerData, simulation: FarmSimulation) -> Dictionary:
+	return {
+		"id": "villager:" + villager_id,
+		"name": data.display_name,
+		"icon": VillagerPortrait.make(data.look),
+		"color": PLACEHOLDER_VILLAGER,
+		"category": Category.VILLAGERS,
+		"description": _t(data.role),
+		"details": [[_t("En ce moment"), _place_text(simulation, data)]],
+		"meta": _t("Famille"),
+		"sort_group": 0, # the family first
+	}
 
 ## Where they are now, by their routine (and the weather) - the same rule
 ## as Villager, without needing their zone to be loaded.

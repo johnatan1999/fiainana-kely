@@ -1,4 +1,4 @@
-[gd_scene load_steps=39 format=4 uid="uid://qasuyowkducw"]
+[gd_scene load_steps=44 format=4 uid="uid://qasuyowkducw"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_3ta8c"]
 [ext_resource type="Texture2D" uid="uid://cxd7faagbgttd" path="res://assets/tileset/farm01_48.png" id="2_on25c"]
@@ -34,6 +34,11 @@
 [ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="32_shk1h"]
 [ext_resource type="Script" path="res://environment/lighting/night_light.gd" id="33_xas4q"]
 [ext_resource type="Script" path="res://components/zone_transition.gd" id="34_3v148"]
+[ext_resource type="Script" path="res://entities/villager/villager_roads.gd" id="35_wo4is"]
+[ext_resource type="PackedScene" uid="uid://ctd2newmp7phc" path="res://entities/villager/villager.tscn" id="36_njy7y"]
+[ext_resource type="Resource" uid="uid://drbvvsm7ly0da" path="res://data/villagers/mother.tres" id="37_m52lt"]
+[ext_resource type="Resource" uid="uid://dihinkmtik154" path="res://data/villagers/father.tres" id="38_pm2s2"]
+[ext_resource type="Resource" uid="uid://bogw8wg2husan" path="res://data/villagers/fara.tres" id="39_l5svl"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jeqll"]
 texture = ExtResource("2_on25c")
@@ -499,3 +504,76 @@ target_spawn = "SpawnFrom_FARM"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ToVillage"]
 position = Vector2(1428, 560)
 shape = SubResource("RectangleShape2D_v05g3")
+
+[node name="VillagerRoads" type="Node2D" parent="."]
+script = ExtResource("35_wo4is")
+zone_id = "farm"
+
+[node name="Route_Cour" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(1430, 560, 1265, 565, 1190, 560, 1022, 540, 875, 560, 560, 555, 470, 560, 420, 650)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Route_Maison" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(1022, 540, 1022, 500)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Route_Linge" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(1265, 565, 1290, 690)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Route_Verger" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(470, 560, 460, 1100, 360, 1360)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Spots" type="Node2D" parent="VillagerRoads"]
+
+[node name="Trano" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1022, 500)
+gizmo_extents = 16.0
+
+[node name="Vers_village" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1430, 560)
+gizmo_extents = 16.0
+
+[node name="Fanoto" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(875, 560)
+gizmo_extents = 16.0
+
+[node name="Cuisine" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1190, 560)
+gizmo_extents = 16.0
+
+[node name="Bois" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1265, 565)
+gizmo_extents = 16.0
+
+[node name="Linge" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1290, 690)
+gizmo_extents = 16.0
+
+[node name="Poulailler" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(420, 650)
+gizmo_extents = 16.0
+
+[node name="Verger" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(360, 1360)
+gizmo_extents = 16.0
+
+[node name="Villagers" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Neny" parent="Villagers" instance=ExtResource("36_njy7y")]
+position = Vector2(1022, 500)
+data = ExtResource("37_m52lt")
+
+[node name="Dada" parent="Villagers" instance=ExtResource("36_njy7y")]
+position = Vector2(1022, 500)
+data = ExtResource("38_pm2s2")
+
+[node name="Fara" parent="Villagers" instance=ExtResource("36_njy7y")]
+position = Vector2(1022, 500)
+data = ExtResource("39_l5svl")

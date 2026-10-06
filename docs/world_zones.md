@@ -3,7 +3,9 @@
 ## Ce que voit le joueur
 **Ferme du joueur (`farm`)**, à l'ouest du village. C'est là que commence une nouvelle
 partie :
-- la maison du joueur (avec son intérieur), le poulailler et ses poules en liberté ;
+- la maison du joueur (avec son intérieur), où vit **sa famille** : la mère, le père et la
+  petite sœur, avec leur journée (voir `villagers.md`) ;
+- le poulailler et ses poules en liberté ;
 - les quatre terrains de culture, clôturés, avec leurs panneaux d'achat ;
 - le verger de manguiers ;
 - au nord, la colline ; à l'est, une haie d'eucalyptus avec la trouée du chemin vers le

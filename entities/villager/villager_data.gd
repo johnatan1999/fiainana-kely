@@ -9,6 +9,9 @@ const DIR := "res://data/villagers/"
 @export var display_name := ""
 ## Who they are in the village, in French (tr()) - "Marchande au marché".
 @export var role := ""
+## The player's own family (living on the farm): no friendship hearts or
+## orders with them - they're family.
+@export var family := false
 @export var look: VillagerLook
 ## Drawn size: 1 = an adult, about 0.8 = a child.
 @export_range(0.6, 1.2, 0.05) var size := 1.0

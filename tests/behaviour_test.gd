@@ -46,6 +46,7 @@ func _ready() -> void:
 	await _test_inventory_villagers()
 	await _test_tilling_repaints_one_field()
 	await _test_farm_and_village_paths()
+	await _test_family()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -565,9 +566,9 @@ func _test_inventory_villagers() -> void:
 	await _frames(2)
 	var card: ItemInfoCard = inventory.info_card
 	var texts := card.find_children("*", "Label", true, false).map(func(label): return label.text)
-	_check(inventory._order.size() == 5 and inventory._entries["villager:ravao"].info.icon != null
+	_check(inventory._order.size() == 8 and inventory._entries["villager:ravao"].info.icon != null
 			and texts.has("Ravao") and texts.has("2/5 cœurs") and texts.has("35 %"),
-		"inventory: the Villageois tab lists the 5 villagers with their portrait; Ravao's card shows 2/5 hearts, 35 %")
+		"inventory: the Villageois tab lists the 8 villagers (family included) with their portrait; Ravao's card shows 2/5 hearts, 35 %")
 	inventory.close()
 	await _frames(15)
 
@@ -615,6 +616,36 @@ func _test_farm_and_village_paths() -> void:
 	await _frames(30)
 	_check(_zone().get_node_or_null("FarmView") == null and _zone().get_node_or_null("Villagers") != null,
 		"farm: the fields are on the farm now, the villagers in the village")
+
+# --- family ----------------------------------------------------------------------------
+
+func _test_family() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_set_time(8 * 60)
+	await _go_to_zone("village")
+	await _go_to_zone("farm")
+	await _frames(3)
+	_player.global_position = Vector2(700, 1500)
+	var mother: Villager = _zone().get_node("Villagers/Neny")
+	var father: Villager = _zone().get_node("Villagers/Dada")
+	var sister: Villager = _zone().get_node("Villagers/Fara")
+	_check(not mother.is_inside() and mother.get_spot_name() == "Fanoto" and father.get_spot_name() == "Verger"
+			and sister.is_inside(),
+		"family: at 8:00 the mother pounds rice, the father works the orchard, the sister is off to school")
+	var points := _sim.get_friendship("mother")
+	mother.interacted.emit()
+	await _frames(3)
+	_check(mother.get_node("Bubble").visible and not mother.get_node("Hearts").visible
+			and _sim.get_friendship("mother") == points,
+		"family: talking to the mother gives a tip - no friendship hearts with family")
+	_set_time(9 * 60)
+	await _go_to_zone("farm")
+	await _go_to_zone("village")
+	await _frames(3)
+	var at_school: Villager = _zone().get_node("Villagers/Fara")
+	_check(not at_school.is_inside() and at_school.get_spot_name() == "Sekoly",
+		"family: in the village at 9:00, the sister is at school")
+	_set_time(10 * 60)
 
 # --- tall grass ----------------------------------------------------------------
 

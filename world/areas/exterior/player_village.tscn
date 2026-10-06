@@ -1,4 +1,4 @@
-[gd_scene load_steps=57 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=60 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -38,11 +38,14 @@
 [ext_resource type="Resource" uid="uid://wodptj1vp74l" path="res://data/villagers/rakoto.tres" id="49_0e82w"]
 [ext_resource type="PackedScene" uid="uid://wupyrhpoi8jh" path="res://entities/props/grocery_kiosk.tscn" id="49_fhvxm"]
 [ext_resource type="PackedScene" path="res://entities/props/thatched_hut.tscn" id="49_prop_thatched_hut"]
+[ext_resource type="Resource" uid="uid://drbvvsm7ly0da" path="res://data/villagers/mother.tres" id="50_7prko"]
 [ext_resource type="Resource" uid="uid://c3g5a1rdm37xs" path="res://data/villagers/ravao.tres" id="50_faawv"]
 [ext_resource type="PackedScene" path="res://entities/props/water_jar.tscn" id="50_prop_water_jar"]
 [ext_resource type="Resource" uid="uid://ntk4nbaxdhe0" path="res://data/villagers/neny_soa.tres" id="51_hn14n"]
+[ext_resource type="Resource" uid="uid://dihinkmtik154" path="res://data/villagers/father.tres" id="51_m2nm3"]
 [ext_resource type="PackedScene" path="res://entities/props/woodpile.tscn" id="51_prop_woodpile"]
 [ext_resource type="Resource" uid="uid://bvfoa1n3x2ndx" path="res://data/villagers/koto.tres" id="52_hjw3q"]
+[ext_resource type="Resource" uid="uid://bogw8wg2husan" path="res://data/villagers/fara.tres" id="52_s2hsk"]
 [ext_resource type="Resource" uid="uid://b8ua56irvcthp" path="res://data/villagers/naivo.tres" id="53_pd4mh"]
 [ext_resource type="PackedScene" path="res://entities/props/brick_shed.tscn" id="60_prop_brick_shed"]
 [ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
@@ -664,6 +667,56 @@ target_spawn = "SpawnFrom_VILLAGE"
 position = Vector2(12, 505)
 shape = SubResource("RectangleShape2D_mef77")
 
+[node name="CentreVillage" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Sekoly" parent="CentreVillage" instance=ExtResource("8_53hp2")]
+position = Vector2(760, 470)
+locked = true
+
+[node name="Sekoly_Drapeau" parent="CentreVillage" instance=ExtResource("42_wpk36")]
+position = Vector2(1195, 470)
+
+[node name="Sekoly_Panneau" parent="CentreVillage" instance=ExtResource("43_5fvhf")]
+position = Vector2(700, 520)
+text = "SEKOLY"
+
+[node name="Kianja_But_Ouest" parent="CentreVillage" instance=ExtResource("44_3yv18")]
+position = Vector2(640, 790)
+
+[node name="Kianja_But_Est" parent="CentreVillage" instance=ExtResource("44_3yv18")]
+position = Vector2(1110, 790)
+
+[node name="Fantsakana" parent="CentreVillage" instance=ExtResource("45_oetw0")]
+position = Vector2(575, 870)
+
+[node name="Fantsakana_Lavoir" parent="CentreVillage" instance=ExtResource("46_jvq7t")]
+position = Vector2(720, 875)
+
+[node name="Hotely" parent="CentreVillage" instance=ExtResource("5_wftrh")]
+position = Vector2(620, 1170)
+locked = true
+
+[node name="Hotely_Panneau" parent="CentreVillage" instance=ExtResource("43_5fvhf")]
+position = Vector2(575, 1215)
+text = "HOTELY"
+
+[node name="Hotely_Table_1" parent="CentreVillage" instance=ExtResource("47_8t75o")]
+position = Vector2(690, 1265)
+
+[node name="Hotely_Table_2" parent="CentreVillage" instance=ExtResource("47_8t75o")]
+position = Vector2(860, 1270)
+
+[node name="Hotely_Foyer" parent="CentreVillage" instance=ExtResource("48_uvxrs")]
+position = Vector2(985, 1210)
+
+[node name="Epicerie" parent="CentreVillage" instance=ExtResource("49_fhvxm")]
+position = Vector2(1150, 985)
+
+[node name="Epicerie_Panneau" parent="CentreVillage" instance=ExtResource("43_5fvhf")]
+position = Vector2(1040, 1010)
+text = "ÉPICERIE"
+
 [node name="VillagerRoads" type="Node2D" parent="."]
 script = ExtResource("47_euky7")
 zone_id = "village"
@@ -705,6 +758,11 @@ default_color = Color(1, 0.85, 0.3, 0.6)
 
 [node name="Route_Epicerie" type="Line2D" parent="VillagerRoads"]
 points = PackedVector2Array(1290, 850, 1180, 1035)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Route_Ferme" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(560, 560, 300, 515, 15, 505)
 width = 6.0
 default_color = Color(1, 0.85, 0.3, 0.6)
 
@@ -758,6 +816,10 @@ gizmo_extents = 16.0
 position = Vector2(1150, 1035)
 gizmo_extents = 16.0
 
+[node name="Vers_farm" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(15, 505)
+gizmo_extents = 16.0
+
 [node name="Villagers" type="Node2D" parent="."]
 y_sort_enabled = true
 
@@ -781,52 +843,14 @@ data = ExtResource("52_hjw3q")
 position = Vector2(1986, 1025)
 data = ExtResource("53_pd4mh")
 
-[node name="CentreVillage" type="Node2D" parent="."]
-y_sort_enabled = true
+[node name="Neny" parent="Villagers" instance=ExtResource("48_mi770")]
+position = Vector2(274, 1108)
+data = ExtResource("50_7prko")
 
-[node name="Sekoly" parent="CentreVillage" instance=ExtResource("8_53hp2")]
-position = Vector2(760, 470)
-locked = true
+[node name="Dada" parent="Villagers" instance=ExtResource("48_mi770")]
+position = Vector2(274, 1108)
+data = ExtResource("51_m2nm3")
 
-[node name="Sekoly_Drapeau" parent="CentreVillage" instance=ExtResource("42_wpk36")]
-position = Vector2(1195, 470)
-
-[node name="Sekoly_Panneau" parent="CentreVillage" instance=ExtResource("43_5fvhf")]
-position = Vector2(700, 520)
-text = "SEKOLY"
-
-[node name="Kianja_But_Ouest" parent="CentreVillage" instance=ExtResource("44_3yv18")]
-position = Vector2(640, 790)
-
-[node name="Kianja_But_Est" parent="CentreVillage" instance=ExtResource("44_3yv18")]
-position = Vector2(1110, 790)
-
-[node name="Fantsakana" parent="CentreVillage" instance=ExtResource("45_oetw0")]
-position = Vector2(575, 870)
-
-[node name="Fantsakana_Lavoir" parent="CentreVillage" instance=ExtResource("46_jvq7t")]
-position = Vector2(720, 875)
-
-[node name="Hotely" parent="CentreVillage" instance=ExtResource("5_wftrh")]
-position = Vector2(620, 1170)
-locked = true
-
-[node name="Hotely_Panneau" parent="CentreVillage" instance=ExtResource("43_5fvhf")]
-position = Vector2(575, 1215)
-text = "HOTELY"
-
-[node name="Hotely_Table_1" parent="CentreVillage" instance=ExtResource("47_8t75o")]
-position = Vector2(690, 1265)
-
-[node name="Hotely_Table_2" parent="CentreVillage" instance=ExtResource("47_8t75o")]
-position = Vector2(860, 1270)
-
-[node name="Hotely_Foyer" parent="CentreVillage" instance=ExtResource("48_uvxrs")]
-position = Vector2(985, 1210)
-
-[node name="Epicerie" parent="CentreVillage" instance=ExtResource("49_fhvxm")]
-position = Vector2(1150, 985)
-
-[node name="Epicerie_Panneau" parent="CentreVillage" instance=ExtResource("43_5fvhf")]
-position = Vector2(1040, 1010)
-text = "ÉPICERIE"
+[node name="Fara" parent="Villagers" instance=ExtResource("48_mi770")]
+position = Vector2(274, 1108)
+data = ExtResource("52_s2hsk")
