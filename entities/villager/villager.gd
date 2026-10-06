@@ -66,6 +66,9 @@ var _greet_cooldown := 0.0
 var _bubble_time := 0.0
 var _player: Node2D
 var _spot_offset := Vector2.ZERO
+## Said instead of a greeting while set (e.g. NeighbourPaddyManager: "help
+## us with the harvest?").
+var call_out := ""
 
 func _ready() -> void:
 	add_to_group(GROUP)
@@ -167,6 +170,10 @@ func _update_plan() -> void:
 ## This villager's own place at the spot.
 func _spot_position() -> Vector2:
 	return _roads.get_spot(_spot) + _spot_offset
+
+## Where they are or are going (global), their position when nowhere.
+func get_spot_position() -> Vector2:
+	return _spot_position() if _roads != null and not _spot.is_empty() else global_position
 
 func _set_plan(plan: Array) -> void:
 	_zone = plan[0]
@@ -277,9 +284,15 @@ func _face_player() -> void:
 	_visual.play(_find_player().global_position - global_position, false)
 
 func _try_greet() -> void:
-	if _greet_cooldown > 0.0 or data.greetings.is_empty():
+	if _greet_cooldown > 0.0 or (data.greetings.is_empty() and call_out.is_empty()):
 		return
 	_greet_cooldown = GREET_COOLDOWN
-	_bubble.text = tr(data.greetings[randi() % data.greetings.size()])
+	say(call_out if not call_out.is_empty() else tr(data.greetings[randi() % data.greetings.size()]))
+
+## Shows `text` (already translated) in the speech bubble for a moment.
+func say(text: String) -> void:
+	if _inside:
+		return
+	_bubble.text = text
 	_bubble.visible = true
 	_bubble_time = BUBBLE_TIME

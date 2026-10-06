@@ -33,6 +33,9 @@ Scène principale : `res://world/world.tscn`.
   textuelle d'une scène au-delà d'une propriété simple : pour générer ou repeindre (tuiles,
   placements), passer par l'API de Godot (`set_cells_terrain_connect`, `PackedScene`…) dans un
   outil versionné sous `tools/`, jamais par un script jetable hors du dépôt.
+- Une image régénérée hors de l'éditeur (planches provisoires) n'est réimportée qu'à
+  l'ouverture de l'éditeur (ou `<godot> --headless --editor --path . --quit`) : le jeu lancé
+  seul affiche encore l'ancienne texture.
 - Un outil qui réenregistre une scène se lance avec `--editor`
   (`<godot> --headless --editor --path . --script res://tools/<outil>.gd`). Sans ce mode,
   Godot ne connaît pas les valeurs par défaut des scripts et écrit toutes les propriétés

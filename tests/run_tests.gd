@@ -151,6 +151,9 @@ func _run_all() -> void:
 	test_weather_save_load_roundtrip()
 	test_rain_is_much_more_likely_in_asara()
 	test_villager_routine_steps()
+	test_neighbour_harvest_follows_the_calendar()
+	test_helping_the_neighbours_harvest()
+	test_neighbour_harvest_save_load_and_new_season()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -1089,3 +1092,56 @@ func test_villager_routine_steps() -> void:
 	_check(at.call(6 * 60 + 30) == "home" and at.call(7 * 60) == "Marche" and at.call(12 * 60 + 29) == "Marche"
 			and at.call(15 * 60) == "Banc" and at.call(23 * 60) == "Maison" and at.call(60) == "Maison",
 		"a villager's routine: home before the first step, each step until the next, the evening's last one past midnight")
+
+func _make_sim_with_neighbour_paddy() -> FarmSimulation:
+	var sim := _make_sim()
+	sim.register_neighbour_paddy("rice_fields:Riziere1", Vector2i(5, 4))
+	return sim
+
+func test_neighbour_harvest_follows_the_calendar() -> void:
+	var sim := _make_sim_with_neighbour_paddy()
+	var clock := sim.state.clock
+	clock.current_day = 5
+	var young := sim.get_neighbour_rice_stage()
+	clock.current_day = 24
+	var ripe := sim.get_neighbour_rice_stage()
+	var before := sim.get_neighbour_harvest_progress()
+	clock.current_day = 27
+	clock.minute_of_day = 6 * 60 + 30
+	var mid := sim.get_neighbour_harvest_progress()
+	clock.current_day = 29
+	var done := sim.get_neighbour_harvest_progress()
+	_check(young == 1 and ripe == 3 and before == 0.0 and absf(mid - 1.0 / 3.0) < 0.01 and done == 1.0
+			and not sim.is_neighbour_harvest_on(),
+		"the neighbours' rice: planted out, ripe late in the season, cut over the harvest days")
+
+func test_helping_the_neighbours_harvest() -> void:
+	var sim := _make_sim_with_neighbour_paddy()
+	var paddy := "rice_fields:Riziere1"
+	var clock := sim.state.clock
+	clock.current_day = 20
+	var too_early := sim.help_neighbour_harvest(paddy, Vector2i(4, 3))
+	clock.current_day = 27
+	clock.minute_of_day = 6 * 60 + 30 # the farmers have cut the first third
+	var by_farmers := sim.help_neighbour_harvest(paddy, Vector2i(0, 0))
+	var seeds := sim.state.get_inventory_count("rice_seed")
+	var helped := sim.help_neighbour_harvest(paddy, Vector2i(4, 3))
+	var twice := sim.help_neighbour_harvest(paddy, Vector2i(4, 3))
+	var outside := sim.help_neighbour_harvest(paddy, Vector2i(9, 9))
+	_check(too_early == 0 and by_farmers == 0 and helped == 1 and twice == 0 and outside == 0
+			and sim.state.get_inventory_count("rice_seed") == seeds + 1
+			and sim.is_neighbour_tuft_cut(paddy, Vector2i(4, 3)) and not sim.is_neighbour_tuft_cut(paddy, Vector2i(4, 2)),
+		"helping the neighbours: a standing tuft cut at harvest time earns seed rice, once")
+
+func test_neighbour_harvest_save_load_and_new_season() -> void:
+	var sim := _make_sim_with_neighbour_paddy()
+	var paddy := "rice_fields:Riziere1"
+	sim.state.clock.current_day = 26
+	sim.help_neighbour_harvest(paddy, Vector2i(4, 3))
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var loaded := _make_sim_with_neighbour_paddy()
+	loaded.load_save_data(data)
+	var kept := loaded.is_neighbour_tuft_cut(paddy, Vector2i(4, 3))
+	loaded.state.clock.current_day = 31 # the next season: replanted
+	_check(kept and not loaded.is_neighbour_tuft_cut(paddy, Vector2i(4, 3)) and loaded.get_neighbour_tufts_helped(paddy) == 0,
+		"the tufts the player cut survive a save/load, and the next season starts afresh")

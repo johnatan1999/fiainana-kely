@@ -46,6 +46,12 @@ var progressive_tiles_unlocked: int = 0
 ## Fruit trees, keyed by their place in the world ("<zone_id>:<node path>",
 ## see TreeManager) - registered the first time their zone loads.
 var trees: Dictionary = {} # tree_id: String -> TreeState
+
+## The tufts the player cut in the neighbours' paddies
+## (FarmSimulation.help_neighbour_harvest), per paddy ("<zone_id>:<node
+## name>"): {"season": index of the season (0, 1, 2...), "cells": ["x,y"]}.
+## A season's entry is ignored once the season is over.
+var neighbour_harvest: Dictionary = {}
 const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
@@ -204,6 +210,7 @@ func to_dict() -> Dictionary:
 		"progressive_tiles_unlocked": progressive_tiles_unlocked,
 		"hotbar": hotbar.duplicate(),
 		"trees": trees_data,
+		"neighbour_harvest": neighbour_harvest.duplicate(true),
 	}
 
 ## JSON object keys are strings: species saved as "0", "4"...
@@ -287,6 +294,17 @@ func load_dict(data: Dictionary) -> void:
 		unlocked_zone_ids[zone_id] = true
 	progressive_tiles_unlocked = int(data.get("progressive_tiles_unlocked", 0))
 	hotbar = Array(data.get("hotbar", [])).map(func(item_id): return str(item_id))
+
+	# Optional key (older saves have none): no tufts cut yet.
+	neighbour_harvest.clear()
+	var harvest_data = data.get("neighbour_harvest", {})
+	if harvest_data is Dictionary:
+		for paddy_id in harvest_data:
+			var entry: Dictionary = harvest_data[paddy_id]
+			neighbour_harvest[str(paddy_id)] = {
+				"season": int(entry.get("season", -1)),
+				"cells": Array(entry.get("cells", [])).map(func(cell): return str(cell)),
+			}
 
 	# Optional key (older saves have none): their trees register fresh on load.
 	trees.clear()

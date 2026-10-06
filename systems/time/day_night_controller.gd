@@ -15,14 +15,10 @@ extends Node
 ## - CLOCK_GROUP: set_time_of_day(minute_of_day) on every new minute.
 ##   Anything that *behaves* by the hour (chickens going in at 18:45...)
 ##   listens to this one, so retuning the sky never moves gameplay.
-## A third one for the calendar: CALENDAR_GROUP gets set_date(day_of_season,
-## season) on every new day (decor that follows the seasons: the
-## neighbours' rice growing...).
-## All are also sent when a zone loads, so its nodes start in the right state.
+## Both are also sent when a zone loads, so its nodes start in the right state.
 
 const LIGHT_GROUP := "light_listeners"
 const CLOCK_GROUP := "clock_listeners"
-const CALENDAR_GROUP := "calendar_listeners"
 ## Real seconds per in-game minute: 6:00 to midnight takes ~12.5 minutes.
 const REAL_SECONDS_PER_MINUTE := 0.7
 
@@ -60,7 +56,6 @@ func setup(p_simulation: FarmSimulation, world_manager: WorldManager) -> void:
 	add_child(_canvas_modulate)
 	world_manager.zone_loaded.connect(_on_zone_loaded)
 	simulation.time_changed.connect(_broadcast_clock)
-	simulation.day_changed.connect(func(_day: int): _broadcast_date())
 
 func _on_zone_loaded(zone: ZoneRoot) -> void:
 	_indoor = zone.indoor
@@ -68,7 +63,6 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 	_night = -1.0
 	_apply.call_deferred()
 	_broadcast_clock.call_deferred(simulation.state.clock.minute_of_day)
-	_broadcast_date.call_deferred()
 
 func _process(delta: float) -> void:
 	if simulation == null:
@@ -112,7 +106,3 @@ func get_overcast() -> float:
 
 func _broadcast_clock(minute_of_day: int) -> void:
 	get_tree().call_group(CLOCK_GROUP, "set_time_of_day", minute_of_day)
-
-func _broadcast_date() -> void:
-	var clock := simulation.state.clock
-	get_tree().call_group(CALENDAR_GROUP, "set_date", clock.get_day_of_season(), clock.get_season())

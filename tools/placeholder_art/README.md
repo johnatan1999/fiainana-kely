@@ -15,7 +15,8 @@ godot --headless --path . --script res://tools/placeholder_art/gen_<nom>.gd
 | `gen_props.gd` | `assets/sprites/props/village_props.png` | Cases de 160×112, objet posé sur le bord bas, double densité |
 | `gen_zebu_cart.gd` | `assets/sprites/animals/zebu_cart.png` | Profil vers la droite, densité 2× : zébu en 4 cases de 128×96, puis caisse, roue (à part) et conducteur |
 | `gen_zebu.gd` | `assets/sprites/animals/zebu.png` | Profil vers la droite, densité 2×, cases de 128×96 : 0–3 marche, 4–5 broute, 6 couché, 7 regarde. Robe claire (teintée en jeu) |
-| `gen_villager_base.gd` | `assets/sprites/characters/villager/base_body.png`, `villager_guide.png`, `example_*.png` (shirt, shorts, trousers, skirt, hair, hair_bun, hat) | Cases de 128×256, densité 2×, 8 colonnes (0–1 repos, 2–5 marche, 6–7 travail penché) × 4 rangées (bas, gauche, droite, haut), pieds sur y = 252. Dessin clair (teinté en jeu) |
+| `gen_villager_from_player.gd` | `assets/sprites/characters/villager/base_body.png`, `villager_guide.png`, `example_*.png` (shirt, shorts, trousers, skirt, hair, hair_bun, hat) | **Planches actuelles**, calquées sur `player2.png`. Cases de 128×256, densité 2×, 8 colonnes (0–1 repos, 2–5 marche, 6–7 travail accroupi) × 4 rangées (bas, gauche, droite, haut), pieds sur y = 252. Gris clair teinté en jeu |
+| `gen_villager_base.gd` | Les mêmes fichiers | Ancien mannequin dessiné par code : le lancer remplace les planches calquées sur le joueur |
 | `gen_water.gd` | `assets/tileset/water_placeholder.png` | Deux tuiles blanches : c'est le shader qui colore |
 
 Ces scripts ne touchent **qu'aux images**. Les scènes (zones, champs, arbres, clôtures,

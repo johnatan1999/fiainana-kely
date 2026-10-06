@@ -243,6 +243,15 @@ func _test_zebu_cart() -> void:
 	_check(not cart.is_driving(), "zebu cart: doesn't set off at night")
 	_set_time(10 * 60)
 	cart._timer = 0.0
+	await _frames(3)
+	var ground: TileMapLayer = _zone().get_node("GroundLayer")
+	var map_right := ground.to_global(Vector2(ground.get_used_rect().end * 48)).x
+	var nearest_x := INF
+	for sprite in cart.get_node("Visual").get_children():
+		if sprite is Sprite2D:
+			nearest_x = minf(nearest_x, (sprite.get_global_transform() * sprite.get_rect()).position.x)
+	_check(cart.is_driving() and nearest_x > map_right,
+		"zebu cart: sets off from beyond the map's edge, not popping up on it (%d > %d)" % [nearest_x, map_right])
 	var started := func() -> bool: return cart.is_driving() and cart.progress_ratio > 0.1
 	_check(await _wait_for(started, 8.0), "zebu cart: sets off by day and drives along its road")
 	# Stand in its way, a little ahead of the zebus.
@@ -398,6 +407,39 @@ func _test_villagers() -> void:
 		"villagers: arriving at night, everyone is in")
 	_set_time(10 * 60)
 	await _test_farmers_in_the_rice_fields()
+	await _test_neighbours_harvest()
+
+func _test_neighbours_harvest() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	var clock := _sim.state.clock
+	var day_before := clock.current_day
+	clock.current_day = 27
+	_set_time(10 * 60)
+	await _go_to_zone("village")
+	await _go_to_zone("rice_fields")
+	await _frames(3)
+	var paddy: VillagePaddy = _zone().get_node("RizieresVoisins/Riziere1")
+	var interactable: InteractableComponent = paddy._interactable
+	_check(not interactable.get_prompt().is_empty() and paddy.get_sheaf_count() > 0,
+		"neighbours' harvest: half cut on day 27, sheaves drying, and the player is offered to help")
+	_player.global_position = paddy.get_tuft_position(Vector2i(paddy.size.x - 1, paddy.size.y - 1))
+	var seeds := _sim.state.get_inventory_count("rice_seed")
+	var sheaves := paddy.get_sheaf_count()
+	var cell := paddy.tuft_near(_player.global_position)
+	interactable.interact()
+	await _frames(3)
+	_check(_sim.state.get_inventory_count("rice_seed") == seeds + 1 and paddy._cut.has(cell),
+		"neighbours' harvest: the player cuts the tuft next to them and gets seed rice")
+	var callers := _zone().get_node("Villagers").get_children().filter(func(v): return not v.call_out.is_empty())
+	_check(callers.size() == 2, "neighbours' harvest: the farmers call out for help")
+	clock.current_day = 29
+	_set_time(10 * 60)
+	await _frames(2)
+	_check(interactable.get_prompt().is_empty() and paddy._cut.size() == paddy.size.x * paddy.size.y
+			and paddy.get_sheaf_count() >= sheaves,
+		"neighbours' harvest: all cut by day 29, nothing left to help with")
+	clock.current_day = day_before
+	_set_time(10 * 60)
 
 func _test_farmers_in_the_rice_fields() -> void:
 	_sim.set_weather(FarmState.Weather.CLEAR)
@@ -418,10 +460,6 @@ func _test_farmers_in_the_rice_fields() -> void:
 	await _frames(30)
 	_check(at_work.call(), "farmers: they keep working in the rain")
 	_sim.set_weather(FarmState.Weather.CLEAR)
-	paddy.set_date(3, GameClock.Season.ASARA)
-	var young := paddy.get_stage()
-	paddy.set_date(25, GameClock.Season.ASARA)
-	_check(young == 1 and paddy.get_stage() == 3, "farmers: the neighbours' rice grows over the season")
 	# Home time: off by the road to the village.
 	_set_time(16 * 60)
 	var gone := func() -> bool: return farmers.all(func(f): return f.is_inside())
