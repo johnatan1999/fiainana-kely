@@ -47,7 +47,7 @@ position = Vector2(2, 169)
 [node name="DoorTransition" type="Area2D" parent="."]
 position = Vector2(1, -218)
 script = ExtResource("3_40t3b")
-target_zone = "village"
+target_zone = "farm"
 target_spawn = "SpawnDefault"
 back_to_entrance = true
 

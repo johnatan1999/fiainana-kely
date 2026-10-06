@@ -19,6 +19,8 @@ Scène principale : `res://world/world.tscn`.
 ## Conventions
 - Textes affichés au joueur : en français. Code et commentaires : en anglais.
 - Contenu data-driven (villages, zones, maisons) : un village aujourd'hui, jusqu'à 7 plus tard.
+  La ferme du joueur est une zone à part (`farm`), reliée au village : les villages n'ont pas
+  de champs du joueur.
 - Grille : cases de 48 px. Les nœuds posés sur la carte (FarmView, champs…) doivent tomber sur
   la grille du sol (`GroundLayer` est à `(1, -1)`).
 

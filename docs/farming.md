@@ -53,7 +53,8 @@
   `register_field(..., world_zone_id)` est appelé par `register_fields_in(zone, world_zone_id)`.
 - **Sauvegarde v6** : chaque parcelle sauvegarde sa `"zone"`. `_migrate_to_v6` convertit les
   sauvegardes antérieures, où les rizières étaient à x ≥ 100 dans la grille unique : elles
-  deviennent `rice_fields` (x − 100), et toutes les autres parcelles deviennent `village`.
+  deviennent `rice_fields` (x − 100), et toutes les autres parcelles deviennent `village`. La v7
+  les fait passer à la ferme (`farm`), où sont maintenant les champs (voir `world_zones.md`).
 
 **Rizières**
 - `FarmField.flooded` (export) : en jeu, ajoute des couches d'eau (`WaterLayer`,

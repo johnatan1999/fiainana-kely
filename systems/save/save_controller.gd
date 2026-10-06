@@ -12,7 +12,7 @@ const DEFAULT_ZONE_ID := "village"
 ## shipped, only append new ones. This is the single place format drift gets
 ## fixed, instead of runtime code scattered across load_game() staying
 ## permanently tolerant of every historical format.
-const SAVE_VERSION := 6
+const SAVE_VERSION := 7
 
 var simulation: FarmSimulation
 var world_manager: WorldManager
@@ -85,6 +85,8 @@ func _migrate(data: Dictionary, from_version: int) -> Dictionary:
 		data = _migrate_to_v5(data)
 	if from_version < 6:
 		data = _migrate_to_v6(data)
+	if from_version < 7:
+		data = _migrate_to_v7(data)
 	return data
 
 ## v0 (unversioned save, predates this field entirely) -> v1: zone_id was
@@ -205,6 +207,39 @@ func _migrate_to_v6(data: Dictionary) -> Dictionary:
 		plot["zone"] = zone
 		plot["x"] = cell.x
 		plot["y"] = cell.y
+	return data
+
+## v6 -> v7: the player's farm left the village for a zone of its own
+## ("farm", tools/split_farm.gd), at the same coordinates. What was the farm
+## goes with it: every village plot (all were farm fields), the orchard's
+## trees, a way back out of the house or the coop, and a player saved in the
+## village's west part (where the farm was). Hardcoded snapshot, same reason
+## as v1.
+const _V7_FARM_WIDTH := 1440.0
+const _V7_FARM_TREES := "village:Trees/Verger_Manguier_"
+const _V7_FARM_DOORS := ["HouseGroup/House", "ChickenCoopBuilding"]
+func _migrate_to_v7(data: Dictionary) -> Dictionary:
+	var plots = data.get("plots")
+	if plots is Dictionary:
+		for key in plots:
+			var plot: Dictionary = plots[key]
+			if plot.get("zone", "village") == "village":
+				plot["zone"] = "farm"
+	var trees = data.get("trees")
+	if trees is Dictionary:
+		for tree_id in trees.keys():
+			if str(tree_id).begins_with(_V7_FARM_TREES):
+				trees[str(tree_id).replace("village:", "farm:")] = trees[tree_id]
+				trees.erase(tree_id)
+	var back = data.get("return_point")
+	if back is Dictionary and back.get("zone") == "village":
+		for door: String in _V7_FARM_DOORS:
+			if str(back.get("spawn", "")).begins_with(door):
+				back["zone"] = "farm"
+	var position = data.get("player_position")
+	if data.get("zone_id", DEFAULT_ZONE_ID) == "village" and position is Dictionary \
+			and float(position.get("x", 0.0)) < _V7_FARM_WIDTH:
+		data["zone_id"] = "farm"
 	return data
 
 func _unhandled_input(event: InputEvent) -> void:

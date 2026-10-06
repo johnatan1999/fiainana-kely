@@ -45,6 +45,7 @@ func _ready() -> void:
 	await _test_friendship()
 	await _test_inventory_villagers()
 	await _test_tilling_repaints_one_field()
+	await _test_farm_and_village_paths()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -96,8 +97,8 @@ func _hens() -> Array:
 	return _zone().find_children("*", "Chicken", true, false)
 
 func _test_chickens_keep_their_hours() -> void:
-	await _go_to_zone("village")
-	_player.global_position = Vector2(2000, 1500) # out of their way
+	await _go_to_zone("farm")
+	_player.global_position = Vector2(1300, 1500) # out of their way
 	_set_time(15 * 60)
 	var all_out := func() -> bool: return _hens().all(func(h): return h.visible and h._state != Chicken.State.ROOSTING)
 	_check(await _wait_for(all_out, 12.0), "chickens: out in the yard in the afternoon")
@@ -126,7 +127,7 @@ func _test_startled_birds() -> void:
 	if bird == null:
 		return
 	for case in [
-		[Vector2(380, 1060), Vector2(430, 1070), true, "hides in a nearby tree"],
+		[Vector2(1560, 600), Vector2(1610, 610), true, "hides in a nearby tree"],
 		[Vector2(1230, 640), Vector2(1280, 650), false, "flies off-screen when no tree is near"],
 	]:
 		bird._state = AmbientBird.State.GROUND
@@ -142,7 +143,7 @@ func _test_startled_birds() -> void:
 # --- fences --------------------------------------------------------------------
 
 func _test_fences() -> void:
-	await _go_to_zone("village")
+	await _go_to_zone("farm")
 	var stopped := await _walk(Vector2(440, 900), Vector2(700, 900), 1.5)
 	_check(stopped.x < 500.0, "fences: the west fence of the field blocks the player")
 	var through := await _walk(Vector2(440, 1200), Vector2(700, 1200), 2.0)
@@ -189,8 +190,8 @@ func _test_lanterns() -> void:
 # --- harvest feedback ----------------------------------------------------------
 
 func _test_harvest_popup() -> void:
-	await _go_to_zone("village")
-	var plot_id := _sim.get_plot_id_at(0, 1, "village")
+	await _go_to_zone("farm")
+	var plot_id := _sim.get_plot_id_at(0, 1, "farm")
 	var plot := _sim.get_plot(plot_id)
 	plot.crop = null
 	_sim.till(plot_id)
@@ -210,12 +211,12 @@ func _test_harvest_popup() -> void:
 # --- rain ----------------------------------------------------------------------
 
 func _test_rain() -> void:
-	await _go_to_zone("village")
+	await _go_to_zone("farm")
 	_set_time(12 * 60)
 	var weather: WeatherController = _world.get_node("Gameplay/WeatherController")
 	var dn: DayNightController = _world.get_node("Gameplay/DayNightController")
 	var life: AmbientLife = _zone().get_node("AmbientLife")
-	var plot_id := _sim.get_plot_id_at(1, 1, "village")
+	var plot_id := _sim.get_plot_id_at(1, 1, "farm")
 	_sim.till(plot_id)
 	_sim.get_plot(plot_id).watered = false
 	_sim.set_weather(FarmState.Weather.RAIN)
@@ -229,7 +230,7 @@ func _test_rain() -> void:
 	await _frames(3)
 	_check(not rain.visible and dn.get_overcast() < 0.5, "rain: not falling indoors, only a greyer light")
 	_sim.set_weather(FarmState.Weather.CLEAR)
-	await _go_to_zone("village")
+	await _go_to_zone("farm")
 	await _frames(150)
 	_check(not rain.visible and dn.get_overcast() < 0.05, "rain: stops when the weather clears")
 
@@ -395,11 +396,13 @@ func _test_villagers() -> void:
 	await _go_to_zone("village")
 	await _frames(3)
 	var koto := _villager("Koto")
-	_check(not koto.is_inside(), "villagers: the child plays on the square in the morning")
+	var grandmother := _villager("NenySoa")
+	_check(koto.get_spot_name() == "Sekoly" and not grandmother.is_inside(),
+		"villagers: in the morning the child is at school, the grandmother strolls on the square")
 	_sim.set_weather(FarmState.Weather.RAIN)
-	var sheltered := func() -> bool: return koto.is_inside()
-	_check(await _wait_for(sheltered, 60.0) and not _villager("Ravao").is_inside(),
-		"villagers: when it rains the child runs home, the merchant keeps her (covered) stall")
+	var sheltered := func() -> bool: return grandmother.is_inside()
+	_check(await _wait_for(sheltered, 60.0) and not _villager("Ravao").is_inside() and not koto.is_inside(),
+		"villagers: when it rains the grandmother goes home; the merchant (covered stall) and the child (school) stay")
 	_sim.set_weather(FarmState.Weather.CLEAR)
 	# Night: everyone's in.
 	_set_time(22 * 60)
@@ -574,7 +577,7 @@ func _test_inventory_villagers() -> void:
 ## and froze the game for 250-450 ms. Now: only its field, only the layer
 ## that changed.
 func _test_tilling_repaints_one_field() -> void:
-	await _go_to_zone("village")
+	await _go_to_zone("farm")
 	await _frames(2)
 	var farm_view: FarmView = _world.get_node("Gameplay/FarmingController").farm_view
 	var plot_id := -1
@@ -595,6 +598,23 @@ func _test_tilling_repaints_one_field() -> void:
 	shop.item_grid.child_entered_tree.disconnect(watcher)
 	_check(farm_view.get_fields().size() > 1 and dirty == 1 and not rebuilt[0],
 		"performance: tilling repaints only its own field, and the closed shop isn't rebuilt on an inventory change")
+
+# --- farm <-> village -------------------------------------------------------------------
+
+func _test_farm_and_village_paths() -> void:
+	await _go_to_zone("village")
+	_player.global_position = Vector2(300, 505)
+	_player.auto_walk_to(Vector2(-60, 505), 6.0)
+	var at_farm := func() -> bool: return _wm.current_zone_id == "farm"
+	_check(await _wait_for(at_farm, 7.0), "farm: the village's west road leads to the farm")
+	await _frames(30)
+	_player.global_position = Vector2(1250, 560)
+	_player.auto_walk_to(Vector2(1500, 560), 6.0)
+	var at_village := func() -> bool: return _wm.current_zone_id == "village"
+	_check(await _wait_for(at_village, 7.0), "farm: its east road leads back to the village")
+	await _frames(30)
+	_check(_zone().get_node_or_null("FarmView") == null and _zone().get_node_or_null("Villagers") != null,
+		"farm: the fields are on the farm now, the villagers in the village")
 
 # --- tall grass ----------------------------------------------------------------
 

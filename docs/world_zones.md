@@ -1,7 +1,26 @@
 # Monde et zones : `WorldManager` et scènes de zone
 
 ## Ce que voit le joueur
-**Village (`village`)**
+**Ferme du joueur (`farm`)**, à l'ouest du village. C'est là que commence une nouvelle
+partie :
+- la maison du joueur (avec son intérieur), le poulailler et ses poules en liberté ;
+- les quatre terrains de culture, clôturés, avec leurs panneaux d'achat ;
+- le verger de manguiers ;
+- au nord, la colline ; à l'est, une haie d'eucalyptus avec la trouée du chemin vers le
+  village.
+
+**Village (`village`)**, à l'est de la ferme : les villageois, le marché, leurs maisons, le parc
+à zébus, la charrette. Son côté ouest, où se trouvait la ferme, est devenu le **centre du
+village** :
+- l'**école (sekoly)**, avec son mât et le drapeau malgache, et un **terrain de foot (kianja)**
+  devant ;
+- le **point d'eau (fantsakana)**, avec ses bidons jaunes, et le **lavoir** en pierres plates ;
+- la **gargote (hotely)**, avec ses tables et son foyer à trois pierres ;
+- le **kiosque d'épicerie**, près du marché ;
+- des panneaux en bois : « SEKOLY », « HOTELY », « ÉPICERIE ».
+
+Les villageois s'en servent : Koto va à l'école, Neny Soa chercher l'eau, les fermiers boivent un
+verre à la gargote (voir `villagers.md`).
 - Centre habité en **terre rouge** (cours des maisons, place du marché, abords des champs),
   entouré d'une **prairie d'herbe sèche**.
 - **Chemins** de deux cases reliant les portes à la place, aux champs et aux sorties nord, est
@@ -11,7 +30,6 @@
 - **Haies et bosquets d'eucalyptus**, manguiers près des maisons et un petit verger.
 - **Herbe haute** qui ondule au vent et s'écarte au passage du joueur, avec des brins qui
   jaillissent.
-- **Clôtures** autour des champs, avec des portails aux arrivées des chemins.
 - **Vie autour des maisons** : mortiers (fanoto), jarres, sinibe, tas de bois, nattes de riz
   qui sèche, corde à linge avec lambas, charrette à zébus (sarety), bancs, paniers, foin,
   grenier, remise en brique.
@@ -33,9 +51,30 @@
 - `ZoneRoot` (`world/zone_root.gd`) : la taille de la zone vient du `GroundLayer` peint.
   Exports : `bgm`, `camera_zoom` (0.9 par défaut en extérieur, soit environ 27 × 15 cases visibles ;
   1.4 dans les intérieurs), `indoor`.
-- **Transitions** : `ToRiceFields` en haut du sentier nord du village, vers
-  `SpawnFrom_VILLAGE`, et `ToVillage` en bas des rizières, vers `SpawnFrom_RICE_FIELDS`.
-  Vérifiées par `tests/zone_wiring_test.gd`.
+- **Transitions** (vérifiées par `tests/zone_wiring_test.gd`, et à pied par
+  `behaviour_test.gd`) :
+  - village ↔ rizières : `ToRiceFields` en haut du sentier nord du village (vers
+    `SpawnFrom_VILLAGE`), `ToVillage` en bas des rizières (vers `SpawnFrom_RICE_FIELDS`) ;
+  - village ↔ ferme : `ToFarm` sur le bord ouest du village (vers `SpawnFrom_VILLAGE` de la
+    ferme), `ToVillage` sur le bord est de la ferme (vers `SpawnFrom_FARM` du village).
+- **Centre du village** : `tools/place_village_center.gd` reconstruit le nœud `CentreVillage`
+  depuis sa table.
+  - L'école et la gargote sont des modèles de maison existants (`trano_kely_02`,
+    `trano_kely_01`), porte fermée (`locked`), en attendant de vrais bâtiments.
+  - Les décors viennent de la planche `assets/sprites/props/village_center.png`
+    (`gen_village_center.gd`) : `water_point`, `washing_stones`, `grocery_kiosk`,
+    `eatery_table`, `flagpole`, `football_goal`, `hearth`.
+  - Le panneau `signboard` (`Signboard`) écrit son texte (export `text`) avec un `Label`.
+- **Découpage ferme / village** (`tools/split_farm.gd`, fait une fois) : les deux zones viennent
+  de l'ancienne carte du village, **aux mêmes coordonnées**.
+  - La ferme en garde la partie ouest (30 cases, 1 440 px), avec la maison, le poulailler, les
+    champs, le verger et les lanternes de la maison et du poulailler.
+  - Le village garde tout le reste. Les clôtures des champs y sont retirées.
+  - Les sorties de la maison et du poulailler mènent à la ferme, et une nouvelle partie démarre
+    à la ferme (`World`).
+  - **Sauvegardes v7** (`SaveController._migrate_to_v7`) : les parcelles du village, les
+    manguiers du verger, un retour vers la maison ou le poulailler, et un joueur sauvegardé dans
+    l'ouest du village passent à la ferme.
 
 **Couches de tuiles** (ordre de dessin)
 | Couche | z_index | Rôle |

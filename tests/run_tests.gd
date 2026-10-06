@@ -145,6 +145,7 @@ func _run_all() -> void:
 	test_zones_have_separate_plot_grids()
 	test_zone_plots_save_load_roundtrip()
 	test_v5_save_migrates_plots_to_their_zone()
+	test_v6_save_moves_the_farm_out_of_the_village()
 	test_harvest_reports_quantity_and_penalties()
 	test_rain_waters_tilled_plots_only()
 	test_crops_grow_on_a_rainy_day_without_watering()
@@ -1012,14 +1013,40 @@ func test_v5_save_migrates_plots_to_their_zone() -> void:
 	save_controller.free()
 	var sim := _make_sim()
 	sim.load_save_data(data)
-	var village_plot := sim.get_plot_id_at(3, 4, "village")
+	# v6 put it in the village, v7 moved the village's fields to the farm.
+	var farm_plot := sim.get_plot_id_at(3, 4, "farm")
 	var rice_plot := sim.get_plot_id_at(4, 6, "rice_fields")
 	_check(
-		village_plot != -1 and sim.get_plot(village_plot).tilled
+		farm_plot != -1 and sim.get_plot(farm_plot).tilled
 		and rice_plot != -1 and sim.get_plot(rice_plot).flooded
 		and sim.get_plot_id_at(104, 6, "rice_fields") == -1,
 		"migrating a v5 save puts each plot in its zone, the rice fields shifted back by their old offset"
 	)
+
+func test_v6_save_moves_the_farm_out_of_the_village() -> void:
+	var data := {
+		"plots": {
+			"0": {"x": 3, "y": 4, "zone": "village", "tilled": true},
+			"1": {"x": 4, "y": 6, "zone": "rice_fields", "flooded": true},
+		},
+		"next_plot_id": 2,
+		"trees": {
+			"village:Trees/Verger_Manguier_02": {"type": "mango_tree", "fruit_ready": true, "days_growing": 0},
+			"village:Trees/MangoTree": {"type": "mango_tree", "fruit_ready": false, "days_growing": 3},
+		},
+		"return_point": {"zone": "village", "spawn": "HouseGroup/House/ExitSpawn"},
+		"zone_id": "village",
+		"player_position": {"x": 900.0, "y": 600.0},
+	}
+	var save_controller := SaveController.new()
+	data = save_controller._migrate(data, 6)
+	save_controller.free()
+	var trees: Dictionary = data["trees"]
+	_check(data["plots"]["0"]["zone"] == "farm" and data["plots"]["1"]["zone"] == "rice_fields"
+			and trees.has("farm:Trees/Verger_Manguier_02") and trees.has("village:Trees/MangoTree")
+			and not trees.has("village:Trees/Verger_Manguier_02")
+			and data["return_point"]["zone"] == "farm" and data["zone_id"] == "farm",
+		"migrating a v6 save moves the farm's plots, orchard, house exit and the player in it to the farm zone")
 
 func test_harvest_reports_quantity_and_penalties() -> void:
 	var sim := _make_sim()

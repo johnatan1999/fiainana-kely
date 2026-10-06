@@ -17,7 +17,7 @@ la fiche concernée, ou en crée une nouvelle ajoutée à cet index.
 | [trees.md](trees.md) | `TreeManager` : arbres, arbres fruitiers, feuillage |
 | [animals.md](animals.md) | `AnimalManager` / `Chicken` : poules et poulailler |
 | [ambient_life.md](ambient_life.md) | `AmbientLife` : papillons, oiseaux, lucioles |
-| [world_zones.md](world_zones.md) | `WorldManager` et scènes de zone : village, rizières, décor |
+| [world_zones.md](world_zones.md) | `WorldManager` et scènes de zone : ferme du joueur, village, rizières, décor |
 | [zebu_cart.md](zebu_cart.md) | `ZebuCart` : charrettes à zébus sur les routes |
 | [zebus.md](zebus.md) | `GrazingZebu`, `ZebuPen` : zébus en liberté, parc à zébus |
 | [villagers.md](villagers.md) | `Villager`, `VillagerRoads`, `VillagerVisual`, `VillagePaddy`, `NeighbourPaddyManager` : villageois, journées, fermiers et moisson chez les voisins, apparence par calques |

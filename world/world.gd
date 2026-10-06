@@ -105,4 +105,4 @@ func _ready() -> void:
 	if save_controller.has_save():
 		save_controller.load_game()
 	else:
-		world_manager.change_zone("village", "SpawnDefault")
+		world_manager.change_zone("farm", "SpawnDefault")

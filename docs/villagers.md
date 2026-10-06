@@ -5,11 +5,11 @@ Cinq villageois vivent au village, chacun avec sa journée :
 
 | Villageois | Maison | Sa journée |
 |---|---|---|
-| **Rakoto**, fermier | ouest | Repique le riz dans la rizière des voisins de 6:30 à 16:00, avec une pause à la cabane à midi. Puis discute sur la place et rentre à 18:00 |
-| **Naivo**, fermier | est | Même chose de 6:15 à 15:30 (pause à 11:30), puis passe au marché et sur la place, rentre à 18:15 |
+| **Rakoto**, fermier | ouest | Repique le riz dans la rizière des voisins de 6:30 à 16:00, avec une pause à la cabane à midi. Puis va à la gargote et rentre à 18:00 |
+| **Naivo**, fermier | est | Même chose de 6:15 à 15:30 (pause à 11:30), puis passe à l'épicerie et à la gargote, rentre à 18:15 |
 | **Ravao**, marchande | est | Tient son étal au marché de 7:00 à 17:30, avec une pause sur le banc près de chez elle à midi |
-| **Neny Soa**, grand-mère | sud | Se promène sur la place le matin, fait la sieste, va au banc l'après-midi |
-| **Koto**, enfant | sud | Joue sur la place le matin et le soir, traîne au marché l'après-midi |
+| **Neny Soa**, grand-mère | sud | Va chercher l'eau au point d'eau au lever, se promène sur la place, fait la sieste, va au banc l'après-midi |
+| **Koto**, enfant | sud | Va à l'école le matin (même sous la pluie), traîne au marché l'après-midi, joue au foot en fin de journée |
 
 - Ils marchent **sur les chemins de terre**, sortent de leur porte le matin et rentrent le
   soir. La nuit, le village est vide.
@@ -72,7 +72,9 @@ Cinq villageois vivent au village, chacun avec sa journée :
 - Les **routes** sont ses enfants `Line2D`, visibles dans l'éditeur et cachés en jeu.
 - Les **repères** sont des `Marker2D` sous `Spots`.
   - **Village** : `Maison_Ouest`, `Maison_Est`, `Maison_Sud`, `Marche`, `Place`, `Banc_Est`,
-    `Vers_rice_fields`.
+    `Vers_rice_fields`, et au centre du village `Sekoly`, `Kianja`, `Fantsakana`, `Hotely`,
+    `Epicerie` (routes `Route_Hotely`, `Route_Epicerie`). Les noms affichés dans l'inventaire
+    sont dans `InventoryCatalog.SPOT_PLACES`.
   - **Rizières** : `Vers_village`, `Cabane`, `Riziere_Voisins_1`, `Riziere_Voisins_2`.
 - **`Vers_<zone>`** : le repère où le chemin quitte la carte vers cette zone. `exit_to(zone)`
   le renvoie.

@@ -1,18 +1,18 @@
 [gd_scene load_steps=7 format=3 uid="uid://ctd2newmp7phc"]
 
-[ext_resource type="Script" path="res://entities/villager/villager.gd" id="1_aueyd"]
-[ext_resource type="Script" path="res://entities/villager/villager_visual.gd" id="2_pe78i"]
-[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="3_a6ovb"]
+[ext_resource type="Script" path="res://entities/villager/villager.gd" id="1_ufxru"]
+[ext_resource type="Script" path="res://entities/villager/villager_visual.gd" id="2_2jhjb"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="3_4xolm"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_84ktb"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lg1fl"]
 size = Vector2(22, 10)
 
-[sub_resource type="LabelSettings" id="LabelSettings_tyhb0"]
+[sub_resource type="LabelSettings" id="LabelSettings_mmaw7"]
 font_size = 13
 outline_size = 5
 outline_color = Color(0.1, 0.07, 0.05, 1)
 
-[sub_resource type="LabelSettings" id="LabelSettings_rxs5u"]
+[sub_resource type="LabelSettings" id="LabelSettings_1i014"]
 font_size = 24
 font_color = Color(1, 0.82, 0.25, 1)
 outline_size = 6
@@ -22,14 +22,14 @@ outline_color = Color(0.25, 0.14, 0.05, 1)
 collision_layer = 8
 collision_mask = 0
 motion_mode = 1
-script = ExtResource("1_aueyd")
+script = ExtResource("1_ufxru")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -5)
-shape = SubResource("RectangleShape2D_84ktb")
+shape = SubResource("RectangleShape2D_lg1fl")
 
 [node name="VillagerVisual" type="Node2D" parent="."]
-script = ExtResource("2_pe78i")
+script = ExtResource("2_2jhjb")
 
 [node name="Bubble" type="Label" parent="."]
 visible = false
@@ -39,10 +39,10 @@ offset_left = -90.0
 offset_top = -136.0
 offset_right = 90.0
 offset_bottom = -113.0
-label_settings = SubResource("LabelSettings_tyhb0")
+label_settings = SubResource("LabelSettings_mmaw7")
 horizontal_alignment = 1
 
-[node name="InteractableComponent" parent="." instance=ExtResource("3_a6ovb")]
+[node name="InteractableComponent" parent="." instance=ExtResource("3_4xolm")]
 
 [node name="Mark" type="Label" parent="."]
 visible = false
@@ -52,5 +52,5 @@ offset_left = -12.0
 offset_top = -160.0
 offset_right = 12.0
 offset_bottom = -130.0
-label_settings = SubResource("LabelSettings_rxs5u")
+label_settings = SubResource("LabelSettings_1i014")
 horizontal_alignment = 1

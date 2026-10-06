@@ -10,7 +10,7 @@ extends Node2D
 ## village is just painting more ground. Zones without one (interiors, a
 ## single room image) set camera_limit_* by hand instead.
 
-enum BGM { NONE, EXTERIOR, INTERIOR }
+enum BGM {NONE, EXTERIOR, INTERIOR}
 
 ## Thickness of the invisible walls around the painted ground.
 const EDGE_WALL_THICKNESS := 32.0

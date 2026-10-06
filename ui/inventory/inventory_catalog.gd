@@ -28,6 +28,11 @@ const SPOT_PLACES := {
 	"Cabane": "à la cabane des rizières",
 	"Riziere_Voisins_1": "dans la rizière des voisins",
 	"Riziere_Voisins_2": "dans la rizière des voisins",
+	"Sekoly": "à l'école",
+	"Kianja": "sur le terrain de foot",
+	"Fantsakana": "au point d'eau",
+	"Hotely": "à la gargote",
+	"Epicerie": "à l'épicerie",
 }
 const HOME_PLACES := {
 	"Maison_Ouest": "la maison de l'ouest",

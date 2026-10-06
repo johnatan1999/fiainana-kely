@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=3 format=3 uid="uid://wexinij5xhga"]
+
+[ext_resource type="PackedScene" uid="uid://qasuyowkducw" path="res://world/areas/exterior/player_farm.tscn" id="1_2ysd2"]
+[ext_resource type="Script" path="res://core/data/zone_data.gd" id="2_lu1rb"]
+
+[resource]
+script = ExtResource("2_lu1rb")
+id = "farm"
+display_name = "Ferme"
+scene = ExtResource("1_2ysd2")

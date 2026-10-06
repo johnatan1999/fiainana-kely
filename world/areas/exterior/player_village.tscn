@@ -1,24 +1,14 @@
-[gd_scene load_steps=60 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=57 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
 [ext_resource type="TileSet" path="res://assets/tileset/cliff_tileset.tres" id="2_y4et6"]
 [ext_resource type="Script" path="res://environment/ground/ground_layer.gd" id="3_cjp5c"]
 [ext_resource type="Texture2D" uid="uid://cxd7faagbgttd" path="res://assets/tileset/farm01_48.png" id="4_ibrhb"]
-[ext_resource type="PackedScene" uid="uid://dd2hvqpppgxdw" path="res://structures/farm/farm/farm_view.tscn" id="4_w2nlg"]
-[ext_resource type="PackedScene" uid="uid://xycao8wn8a4p" path="res://structures/houses/models/trano_gasy_01.tscn" id="5_bvnba"]
 [ext_resource type="PackedScene" uid="uid://c5aeyv64qw26" path="res://structures/houses/models/trano_kely_01.tscn" id="5_wftrh"]
-[ext_resource type="PackedScene" uid="uid://41pmy102xlbk" path="res://structures/chicken_coop/chicken_coop.tscn" id="6_eobbd"]
-[ext_resource type="PackedScene" path="res://structures/farm/field/farm_field.tscn" id="6_m12qa"]
 [ext_resource type="PackedScene" uid="uid://g1qr3qbmi5k1" path="res://structures/houses/models/trano_lava_01.tscn" id="7_ddh6d"]
-[ext_resource type="Resource" path="res://data/zones/zone_east.tres" id="7_q8aug"]
-[ext_resource type="Resource" path="res://data/zones/zone_south.tres" id="8_6bq6v"]
 [ext_resource type="PackedScene" uid="uid://c5y5kwfe6g5qh" path="res://structures/houses/models/trano_kely_02.tscn" id="8_53hp2"]
-[ext_resource type="PackedScene" uid="uid://dgak5cew5n3hy" path="res://entities/animals/chicken/chicken.tscn" id="9_5wie0"]
-[ext_resource type="SpriteFrames" uid="uid://c8b1vmmb21c3e" path="res://data/rooster.tres" id="10_dyv0b"]
 [ext_resource type="PackedScene" uid="uid://inwmcutpcvys" path="res://entities/trees/world_tree.tscn" id="10_uqot4"]
-[ext_resource type="PackedScene" path="res://structures/modular_farm_zone_sign.tscn" id="11_vq4vc"]
-[ext_resource type="PackedScene" uid="uid://yyodnuua7d7i" path="res://structures/farm_zone_sign.tscn" id="12_armmf"]
 [ext_resource type="PackedScene" uid="uid://dv8rtwpbrtee0" path="res://structures/shop/shop.tscn" id="13_okjkt"]
 [ext_resource type="Resource" path="res://data/trees/mango_tree.tres" id="21_4uh7k"]
 [ext_resource type="Resource" path="res://data/trees/eucalyptus.tres" id="22_euca"]
@@ -31,23 +21,29 @@
 [ext_resource type="PackedScene" path="res://entities/props/basket.tscn" id="40_prop_basket"]
 [ext_resource type="PackedScene" path="res://entities/props/basket_small.tscn" id="41_prop_basket_small"]
 [ext_resource type="PackedScene" path="res://entities/props/bench.tscn" id="42_prop_bench"]
+[ext_resource type="PackedScene" uid="uid://twarxf7lad28" path="res://entities/props/flagpole.tscn" id="42_wpk36"]
+[ext_resource type="PackedScene" uid="uid://bub176arlv6dd" path="res://entities/props/signboard.tscn" id="43_5fvhf"]
 [ext_resource type="PackedScene" path="res://entities/props/clay_jars.tscn" id="43_prop_clay_jars"]
+[ext_resource type="PackedScene" uid="uid://bgph12l2t2yfh" path="res://entities/props/football_goal.tscn" id="44_3yv18"]
 [ext_resource type="PackedScene" path="res://entities/props/drying_mat.tscn" id="44_prop_drying_mat"]
 [ext_resource type="PackedScene" uid="uid://cs8uqmupoimko" path="res://entities/zebu/zebu_pen.tscn" id="45_kbl0q"]
-[ext_resource type="PackedScene" path="res://entities/props/hay_pile.tscn" id="45_prop_hay_pile"]
-[ext_resource type="PackedScene" path="res://entities/props/hay_sheaf.tscn" id="46_prop_hay_sheaf"]
+[ext_resource type="PackedScene" uid="uid://sk51sbvqw77e" path="res://entities/props/water_point.tscn" id="45_oetw0"]
+[ext_resource type="PackedScene" uid="uid://cakcpyhmnv5n8" path="res://entities/props/washing_stones.tscn" id="46_jvq7t"]
+[ext_resource type="PackedScene" uid="uid://ctdybcaaruxwi" path="res://entities/props/eatery_table.tscn" id="47_8t75o"]
 [ext_resource type="Script" path="res://entities/villager/villager_roads.gd" id="47_euky7"]
 [ext_resource type="PackedScene" path="res://entities/props/laundry_line.tscn" id="47_prop_laundry_line"]
 [ext_resource type="PackedScene" uid="uid://ctd2newmp7phc" path="res://entities/villager/villager.tscn" id="48_mi770"]
 [ext_resource type="PackedScene" path="res://entities/props/mortar.tscn" id="48_prop_mortar"]
-[ext_resource type="Resource" uid="uid://d2q8xu7ebuh4t" path="res://data/villagers/rakoto.tres" id="49_0e82w"]
+[ext_resource type="PackedScene" uid="uid://w3vpdysrqvwk" path="res://entities/props/hearth.tscn" id="48_uvxrs"]
+[ext_resource type="Resource" uid="uid://wodptj1vp74l" path="res://data/villagers/rakoto.tres" id="49_0e82w"]
+[ext_resource type="PackedScene" uid="uid://wupyrhpoi8jh" path="res://entities/props/grocery_kiosk.tscn" id="49_fhvxm"]
 [ext_resource type="PackedScene" path="res://entities/props/thatched_hut.tscn" id="49_prop_thatched_hut"]
 [ext_resource type="Resource" uid="uid://c3g5a1rdm37xs" path="res://data/villagers/ravao.tres" id="50_faawv"]
 [ext_resource type="PackedScene" path="res://entities/props/water_jar.tscn" id="50_prop_water_jar"]
-[ext_resource type="Resource" uid="uid://cy83136u5025f" path="res://data/villagers/neny_soa.tres" id="51_hn14n"]
+[ext_resource type="Resource" uid="uid://ntk4nbaxdhe0" path="res://data/villagers/neny_soa.tres" id="51_hn14n"]
 [ext_resource type="PackedScene" path="res://entities/props/woodpile.tscn" id="51_prop_woodpile"]
-[ext_resource type="Resource" uid="uid://bod17r5d1u1cp" path="res://data/villagers/koto.tres" id="52_hjw3q"]
-[ext_resource type="Resource" uid="uid://b62qh7l7qddam" path="res://data/villagers/naivo.tres" id="53_pd4mh"]
+[ext_resource type="Resource" uid="uid://bvfoa1n3x2ndx" path="res://data/villagers/koto.tres" id="52_hjw3q"]
+[ext_resource type="Resource" uid="uid://b8ua56irvcthp" path="res://data/villagers/naivo.tres" id="53_pd4mh"]
 [ext_resource type="PackedScene" path="res://entities/props/brick_shed.tscn" id="60_prop_brick_shed"]
 [ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
 [ext_resource type="Script" path="res://environment/lighting/night_light.gd" id="62_nightlight"]
@@ -84,6 +80,9 @@ _data = {
 }
 point_count = 9
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_mef77"]
+size = Vector2(24, 130)
+
 [node name="PlayerVillage" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_o0l50")
@@ -97,8 +96,8 @@ position = Vector2(1038, 520)
 [node name="SpawnFrom_RICE_FIELDS" type="Marker2D" parent="Spawns"]
 position = Vector2(1505, 110)
 
-[node name="SpawnFrom_CHICKEN_COOP" type="Marker2D" parent="Spawns"]
-position = Vector2(340, 612)
+[node name="SpawnFrom_FARM" type="Marker2D" parent="Spawns"]
+position = Vector2(70, 505)
 
 [node name="GroundLayer" type="TileMapLayer" parent="."]
 z_index = -10
@@ -125,35 +124,8 @@ tile_set = ExtResource("2_y4et6")
 [node name="ClifLayer2" type="TileMapLayer" parent="."]
 tile_set = ExtResource("2_y4et6")
 
-[node name="FarmView" parent="." instance=ExtResource("4_w2nlg")]
-position = Vector2(577, 335)
-
-[node name="Field_Starter" parent="FarmView" instance=ExtResource("6_m12qa")]
-tile_map_data = PackedByteArray("AAADAAMABQALAAcAAAACAAMABQAJAAcAAAABAAMABQAJAAcAAAAAAAMABQAIAAcAAAADAAIABQALAAYAAAACAAIABQAJAAYAAAABAAIABQAJAAYAAAAAAAIABQAIAAUAAAADAAEABQALAAYAAAACAAEABQAJAAYAAAABAAEABQAJAAYAAAAAAAEABQAIAAUAAAADAAAABQALAAQAAAACAAAABQAKAAQAAAABAAAABQAKAAQAAAAAAAAABQAIAAQAAAA=")
-kind = 0
-
-[node name="Field_Progressive" parent="FarmView" instance=ExtResource("6_m12qa")]
-position = Vector2(0, 432)
-tile_map_data = PackedByteArray("AAAHAAUABQALAAcAAAAGAAUABQAJAAcAAAAFAAUABQAJAAcAAAAEAAUABQAJAAcAAAADAAUABQAJAAcAAAACAAUABQAJAAcAAAABAAUABQAJAAcAAAAAAAUABQAIAAcAAAAHAAQABQALAAYAAAAGAAQABQAJAAYAAAAFAAQABQAJAAYAAAAEAAQABQAJAAYAAAADAAQABQAJAAYAAAACAAQABQAJAAYAAAABAAQABQAJAAYAAAAAAAQABQAIAAUAAAAHAAMABQALAAYAAAAGAAMABQAJAAYAAAAFAAMABQAJAAYAAAAEAAMABQAJAAYAAAADAAMABQAJAAYAAAACAAMABQAJAAYAAAABAAMABQAJAAYAAAAAAAMABQAIAAUAAAAHAAIABQALAAYAAAAGAAIABQAJAAYAAAAFAAIABQAJAAYAAAAEAAIABQAJAAYAAAADAAIABQAJAAYAAAACAAIABQAJAAYAAAABAAIABQAJAAYAAAAAAAIABQAIAAUAAAAHAAEABQALAAYAAAAGAAEABQAJAAYAAAAFAAEABQAJAAYAAAAEAAEABQAJAAYAAAADAAEABQAJAAYAAAACAAEABQAJAAYAAAABAAEABQAJAAYAAAAAAAEABQAIAAUAAAAHAAAABQALAAQAAAAGAAAABQAKAAQAAAAFAAAABQAKAAQAAAAEAAAABQAKAAQAAAADAAAABQAKAAQAAAACAAAABQAKAAQAAAABAAAABQAKAAQAAAAAAAAABQAIAAQAAAA=")
-kind = 2
-
-[node name="Field_zone_east" parent="FarmView" instance=ExtResource("6_m12qa")]
-position = Vector2(384, 432)
-tile_map_data = PackedByteArray("AAADAAUABQALAAcAAAACAAUABQAJAAcAAAABAAUABQAJAAcAAAAAAAUABQAIAAcAAAADAAQABQALAAYAAAACAAQABQAJAAYAAAABAAQABQAJAAYAAAAAAAQABQAIAAUAAAADAAMABQALAAYAAAACAAMABQAJAAYAAAABAAMABQAJAAYAAAAAAAMABQAIAAUAAAADAAIABQALAAYAAAACAAIABQAJAAYAAAABAAIABQAJAAYAAAAAAAIABQAIAAUAAAADAAEABQALAAYAAAACAAEABQAJAAYAAAABAAEABQAJAAYAAAAAAAEABQAIAAUAAAADAAAABQALAAQAAAACAAAABQAKAAQAAAABAAAABQAKAAQAAAAAAAAABQAIAAQAAAA=")
-zone_data = ExtResource("7_q8aug")
-
-[node name="Field_zone_south" parent="FarmView" instance=ExtResource("6_m12qa")]
-position = Vector2(0, 720)
-tile_map_data = PackedByteArray("AAALAAMABQALAAcAAAAKAAMABQAJAAcAAAAJAAMABQAJAAcAAAAIAAMABQAJAAcAAAAHAAMABQAJAAcAAAAGAAMABQAJAAcAAAAFAAMABQAJAAcAAAAEAAMABQAJAAcAAAADAAMABQAJAAcAAAACAAMABQAJAAcAAAABAAMABQAJAAcAAAAAAAMABQAIAAcAAAALAAIABQALAAYAAAAKAAIABQAJAAYAAAAJAAIABQAJAAYAAAAIAAIABQAJAAYAAAAHAAIABQAJAAYAAAAGAAIABQAJAAYAAAAFAAIABQAJAAYAAAAEAAIABQAJAAYAAAADAAIABQAJAAYAAAACAAIABQAJAAYAAAABAAIABQAJAAYAAAAAAAIABQAIAAUAAAALAAEABQALAAYAAAAKAAEABQAJAAYAAAAJAAEABQAJAAYAAAAIAAEABQAJAAYAAAAHAAEABQAJAAYAAAAGAAEABQAJAAYAAAAFAAEABQAJAAYAAAAEAAEABQAJAAYAAAADAAEABQAJAAYAAAACAAEABQAJAAYAAAABAAEABQAJAAYAAAAAAAEABQAIAAUAAAALAAAABQALAAQAAAAKAAAABQAKAAQAAAAJAAAABQAKAAQAAAAIAAAABQAKAAQAAAAHAAAABQAKAAQAAAAGAAAABQAKAAQAAAAFAAAABQAKAAQAAAAEAAAABQAKAAQAAAADAAAABQAKAAQAAAACAAAABQAKAAQAAAABAAAABQAKAAQAAAAAAAAABQAIAAQAAAA=")
-zone_data = ExtResource("8_6bq6v")
-
 [node name="HouseGroup" type="Node2D" parent="."]
 y_sort_enabled = true
-
-[node name="House" parent="HouseGroup" instance=ExtResource("5_bvnba")]
-position = Vector2(768, 480)
-interior_zone = "player_house"
-interior_spawn = "HouseSpawnEntry"
 
 [node name="TranoKely01" parent="HouseGroup" instance=ExtResource("5_wftrh")]
 position = Vector2(1749, 1002)
@@ -163,38 +135,6 @@ position = Vector2(56, 1088)
 
 [node name="TranoKely02" parent="HouseGroup" instance=ExtResource("8_53hp2")]
 position = Vector2(1408, 1408)
-
-[node name="ChickenCoopBuilding" parent="." instance=ExtResource("6_eobbd")]
-position = Vector2(232, 580)
-
-[node name="AnimalContainer" type="Node2D" parent="."]
-y_sort_enabled = true
-
-[node name="Hen" parent="." instance=ExtResource("9_5wie0")]
-position = Vector2(480, 486)
-start_wild = true
-
-[node name="NiggaHen" parent="." instance=ExtResource("9_5wie0")]
-position = Vector2(150, 716)
-start_wild = true
-tint_color = Color(0.881657, 0.541035, 0.265833, 1)
-
-[node name="Rooster" parent="." instance=ExtResource("9_5wie0")]
-position = Vector2(700, 768)
-start_wild = true
-sprite_frames = ExtResource("10_dyv0b")
-size_multiplier = 0.55
-
-[node name="ModularFarmZoneSign" parent="." instance=ExtResource("11_vq4vc")]
-position = Vector2(650, 960)
-
-[node name="FarmZoneSign_zone_east" parent="." instance=ExtResource("12_armmf")]
-position = Vector2(1150, 960)
-zone_id = "zone_east"
-
-[node name="FarmZoneSign_zone_south" parent="." instance=ExtResource("12_armmf")]
-position = Vector2(984, 1352)
-zone_id = "zone_south"
 
 [node name="Shop" parent="." instance=ExtResource("13_okjkt")]
 position = Vector2(1170, 809)
@@ -215,7 +155,7 @@ script = ExtResource("26_grassscript")
 [node name="FenceLayer" type="TileMapLayer" parent="."]
 y_sort_enabled = true
 position = Vector2(1, -1)
-tile_map_data = PackedByteArray("AAAZABsAAAABAAIAAAAZABoAAAABAAEAAAAZABkAAAABAAEAAAAZABgAAAABAAEAAAAZABcAAAABAAEAAAAZABYAAAABAAEAAAAZABUAAAABAAEAAAAZABQAAAABAAEAAAAZABMAAAAAAAEAAAAYABsAAAACAAIAAAAXABsAAAACAAIAAAAXAA4AAAAAAAIAAAAWABsAAAACAAAAAAAWAA4AAAACAAIAAAAVAA4AAAACAAIAAAAUAA4AAAACAAIAAAATABsAAAAAAAIAAAATAA4AAAACAAIAAAASABsAAAACAAIAAAASAA4AAAACAAIAAAARABsAAAACAAIAAAARAA4AAAACAAIAAAAQABsAAAACAAIAAAAQAA4AAAACAAIAAAAQAAwAAAABAAIAAAAQAAsAAAAAAAEAAAAPABsAAAACAAIAAAAPAA4AAAACAAAAAAAPAAwAAAACAAAAAAAPAAUAAAAAAAIAAAAOABsAAAACAAIAAAAOAAUAAAACAAIAAAANABsAAAACAAIAAAANAAUAAAACAAIAAAAMABsAAAACAAIAAAAMAA4AAAAAAAIAAAAMAAwAAAAAAAIAAAAMAAUAAAACAAIAAAALABsAAAACAAAAAAALAA4AAAACAAIAAAALAAwAAAACAAIAAAALAAUAAAACAAIAAAAKABoAAAAAAAAAAAAKABcAAAABAAAAAAAKABYAAAABAAEAAAAKABUAAAABAAEAAAAKABQAAAABAAEAAAAKABMAAAABAAEAAAAKABIAAAABAAEAAAAKABEAAAABAAEAAAAKABAAAAABAAEAAAAKAA8AAAABAAEAAAAKAA4AAAACAAEAAAAKAAwAAAADAAAAAAAKAAsAAAABAAEAAAAKAAoAAAABAAEAAAAKAAkAAAABAAEAAAAKAAgAAAABAAEAAAAKAAcAAAABAAEAAAAKAAYAAAABAAEAAAAKAAUAAAACAAEAAAA=")
+tile_map_data = PackedByteArray("AAAZABsA//////////8ZABoA//////////8ZABkA//////////8ZABgA//////////8ZABcA//////////8ZABYA//////////8ZABUA//////////8ZABQA//////////8ZABMA//////////8YABsA//////////8XABsA//////////8XAA4A//////////8WABsA//////////8WAA4A//////////8VAA4A//////////8UAA4A//////////8TABsA//////////8TAA4A//////////8SABsA//////////8SAA4A//////////8RABsA//////////8RAA4A//////////8QABsA//////////8QAA4A//////////8QAAwA//////////8QAAsA//////////8PABsA//////////8PAA4A//////////8PAAwA//////////8PAAUA//////////8OABsA//////////8OAAUA//////////8NABsA//////////8NAAUA//////////8MABsA//////////8MAA4A//////////8MAAwA//////////8MAAUA//////////8LABsA//////////8LAA4A//////////8LAAwA//////////8LAAUA//////////8KABoA//////////8KABcA//////////8KABYA//////////8KABUA//////////8KABQA//////////8KABMA//////////8KABIA//////////8KABEA//////////8KABAA//////////8KAA8A//////////8KAA4A//////////8KAAwA//////////8KAAsA//////////8KAAoA//////////8KAAkA//////////8KAAgA//////////8KAAcA//////////8KAAYA//////////8KAAUA//////////8=")
 tile_set = ExtResource("28_fence")
 
 [node name="Trees" type="Node2D" parent="."]
@@ -592,40 +532,6 @@ tree_data = ExtResource("22_euca")
 flip = true
 size_scale = 1.05
 
-[node name="Verger_Manguier_01" parent="Trees" instance=ExtResource("10_uqot4")]
-position = Vector2(194, 1296)
-tree_id = "Trees/Verger_Manguier_01"
-tree_data = ExtResource("21_4uh7k")
-flip = true
-
-[node name="Verger_Manguier_02" parent="Trees" instance=ExtResource("10_uqot4")]
-position = Vector2(351, 1270)
-tree_id = "Trees/Verger_Manguier_02"
-tree_data = ExtResource("21_4uh7k")
-flip = true
-size_scale = 0.9
-
-[node name="Verger_Manguier_03" parent="Trees" instance=ExtResource("10_uqot4")]
-position = Vector2(496, 1298)
-tree_id = "Trees/Verger_Manguier_03"
-tree_data = ExtResource("21_4uh7k")
-flip = true
-size_scale = 0.95
-
-[node name="Verger_Manguier_04" parent="Trees" instance=ExtResource("10_uqot4")]
-position = Vector2(267, 1437)
-tree_id = "Trees/Verger_Manguier_04"
-tree_data = ExtResource("21_4uh7k")
-flip = true
-size_scale = 1.1
-
-[node name="Verger_Manguier_05" parent="Trees" instance=ExtResource("10_uqot4")]
-position = Vector2(437, 1452)
-tree_id = "Trees/Verger_Manguier_05"
-tree_data = ExtResource("21_4uh7k")
-flip = true
-size_scale = 0.9
-
 [node name="Manguier_MaisonOuest" parent="Trees" instance=ExtResource("10_uqot4")]
 position = Vector2(452, 1000)
 tree_id = "Trees/Manguier_MaisonOuest"
@@ -661,21 +567,6 @@ shape = SubResource("RectangleShape2D_hill_east")
 [node name="Props" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="GrandeMaison_Fanoto" parent="Props" instance=ExtResource("48_prop_mortar")]
-position = Vector2(900, 528)
-
-[node name="GrandeMaison_Jarres" parent="Props" instance=ExtResource("43_prop_clay_jars")]
-position = Vector2(1218, 518)
-
-[node name="GrandeMaison_Bois" parent="Props" instance=ExtResource("51_prop_woodpile")]
-position = Vector2(1300, 524)
-
-[node name="GrandeMaison_NatteRiz" parent="Props" instance=ExtResource("44_prop_drying_mat")]
-position = Vector2(1182, 612)
-
-[node name="GrandeMaison_Linge" parent="Props" instance=ExtResource("47_prop_laundry_line")]
-position = Vector2(1330, 650)
-
 [node name="Grenier" parent="Props" instance=ExtResource("49_prop_thatched_hut")]
 position = Vector2(1648, 372)
 
@@ -709,15 +600,6 @@ position = Vector2(1530, 1470)
 [node name="MaisonSud_Remise" parent="Props" instance=ExtResource("60_prop_brick_shed")]
 position = Vector2(1935, 1232)
 
-[node name="Poulailler_Foin" parent="Props" instance=ExtResource("45_prop_hay_pile")]
-position = Vector2(196, 642)
-
-[node name="Poulailler_Gerbe" parent="Props" instance=ExtResource("46_prop_hay_sheaf")]
-position = Vector2(452, 606)
-
-[node name="Poulailler_Panier" parent="Props" instance=ExtResource("40_prop_basket")]
-position = Vector2(424, 650)
-
 [node name="Marche_Panier" parent="Props" instance=ExtResource("40_prop_basket")]
 position = Vector2(1374, 792)
 
@@ -733,10 +615,6 @@ ground_bird_count = 8
 [node name="NightLights" type="Node2D" parent="."]
 z_index = 1
 
-[node name="Lanterne_GrandeMaison" type="Node2D" parent="NightLights"]
-position = Vector2(1063, 392)
-script = ExtResource("62_nightlight")
-
 [node name="Lanterne_MaisonEst" type="Node2D" parent="NightLights"]
 position = Vector2(2028, 959)
 script = ExtResource("62_nightlight")
@@ -747,10 +625,6 @@ script = ExtResource("62_nightlight")
 
 [node name="Lanterne_MaisonSud" type="Node2D" parent="NightLights"]
 position = Vector2(1625, 1326)
-script = ExtResource("62_nightlight")
-
-[node name="Lanterne_Poulailler" type="Node2D" parent="NightLights"]
-position = Vector2(383, 527)
 script = ExtResource("62_nightlight")
 
 [node name="Lanterne_Marche" type="Node2D" parent="NightLights"]
@@ -780,6 +654,15 @@ position = Vector2(1960, 705)
 
 [node name="Zebu4" parent="ZebuHerd" instance=ExtResource("64_zebu")]
 position = Vector2(1860, 745)
+
+[node name="ToFarm" type="Area2D" parent="."]
+script = ExtResource("27_transition")
+target_zone = "farm"
+target_spawn = "SpawnFrom_VILLAGE"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ToFarm"]
+position = Vector2(12, 505)
+shape = SubResource("RectangleShape2D_mef77")
 
 [node name="VillagerRoads" type="Node2D" parent="."]
 script = ExtResource("47_euky7")
@@ -815,6 +698,16 @@ points = PackedVector2Array(1430, 780, 1450, 960, 1370, 1150, 1370, 1440, 1584, 
 width = 6.0
 default_color = Color(1, 0.85, 0.3, 0.6)
 
+[node name="Route_Hotely" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(450, 1100, 560, 1250, 775, 1300)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Route_Epicerie" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(1290, 850, 1180, 1035)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
 [node name="Spots" type="Node2D" parent="VillagerRoads"]
 
 [node name="Maison_Ouest" type="Marker2D" parent="VillagerRoads/Spots"]
@@ -845,6 +738,26 @@ gizmo_extents = 16.0
 position = Vector2(1505, 30)
 gizmo_extents = 16.0
 
+[node name="Sekoly" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(936, 535)
+gizmo_extents = 16.0
+
+[node name="Kianja" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(875, 760)
+gizmo_extents = 16.0
+
+[node name="Fantsakana" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(575, 905)
+gizmo_extents = 16.0
+
+[node name="Hotely" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(775, 1300)
+gizmo_extents = 16.0
+
+[node name="Epicerie" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1150, 1035)
+gizmo_extents = 16.0
+
 [node name="Villagers" type="Node2D" parent="."]
 y_sort_enabled = true
 
@@ -867,3 +780,53 @@ data = ExtResource("52_hjw3q")
 [node name="Naivo" parent="Villagers" instance=ExtResource("48_mi770")]
 position = Vector2(1986, 1025)
 data = ExtResource("53_pd4mh")
+
+[node name="CentreVillage" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Sekoly" parent="CentreVillage" instance=ExtResource("8_53hp2")]
+position = Vector2(760, 470)
+locked = true
+
+[node name="Sekoly_Drapeau" parent="CentreVillage" instance=ExtResource("42_wpk36")]
+position = Vector2(1195, 470)
+
+[node name="Sekoly_Panneau" parent="CentreVillage" instance=ExtResource("43_5fvhf")]
+position = Vector2(700, 520)
+text = "SEKOLY"
+
+[node name="Kianja_But_Ouest" parent="CentreVillage" instance=ExtResource("44_3yv18")]
+position = Vector2(640, 790)
+
+[node name="Kianja_But_Est" parent="CentreVillage" instance=ExtResource("44_3yv18")]
+position = Vector2(1110, 790)
+
+[node name="Fantsakana" parent="CentreVillage" instance=ExtResource("45_oetw0")]
+position = Vector2(575, 870)
+
+[node name="Fantsakana_Lavoir" parent="CentreVillage" instance=ExtResource("46_jvq7t")]
+position = Vector2(720, 875)
+
+[node name="Hotely" parent="CentreVillage" instance=ExtResource("5_wftrh")]
+position = Vector2(620, 1170)
+locked = true
+
+[node name="Hotely_Panneau" parent="CentreVillage" instance=ExtResource("43_5fvhf")]
+position = Vector2(575, 1215)
+text = "HOTELY"
+
+[node name="Hotely_Table_1" parent="CentreVillage" instance=ExtResource("47_8t75o")]
+position = Vector2(690, 1265)
+
+[node name="Hotely_Table_2" parent="CentreVillage" instance=ExtResource("47_8t75o")]
+position = Vector2(860, 1270)
+
+[node name="Hotely_Foyer" parent="CentreVillage" instance=ExtResource("48_uvxrs")]
+position = Vector2(985, 1210)
+
+[node name="Epicerie" parent="CentreVillage" instance=ExtResource("49_fhvxm")]
+position = Vector2(1150, 985)
+
+[node name="Epicerie_Panneau" parent="CentreVillage" instance=ExtResource("43_5fvhf")]
+position = Vector2(1040, 1010)
+text = "ÉPICERIE"
