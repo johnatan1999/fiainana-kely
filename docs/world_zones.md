@@ -31,7 +31,8 @@
 - Chaque zone est déclarée par un `ZoneData` dans `data/world_zones/`, découvert
   automatiquement par `WorldManager`.
 - `ZoneRoot` (`world/zone_root.gd`) : la taille de la zone vient du `GroundLayer` peint.
-  Exports : `bgm`, `camera_zoom`, `indoor`.
+  Exports : `bgm`, `camera_zoom` (0.9 par défaut en extérieur, soit environ 27 × 15 cases visibles ;
+  1.4 dans les intérieurs), `indoor`.
 - **Transitions** : `ToRiceFields` en haut du sentier nord du village, vers
   `SpawnFrom_VILLAGE`, et `ToVillage` en bas des rizières, vers `SpawnFrom_RICE_FIELDS`.
   Vérifiées par `tests/zone_wiring_test.gd`.

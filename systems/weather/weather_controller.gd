@@ -97,7 +97,7 @@ func _build_rain() -> void:
 	# curtain that doesn't need to "fill in" from the top. Move with the view.
 	_streaks = CPUParticles2D.new()
 	_streaks.emitting = false
-	_streaks.amount = 420
+	_streaks.amount = 560 # sized for the exterior view (ZoneRoot.camera_zoom 0.9)
 	_streaks.lifetime = 0.55
 	_streaks.preprocess = 0.6
 	_streaks.local_coords = true
@@ -118,7 +118,7 @@ func _build_rain() -> void:
 	# space), under the trees and the player.
 	_splashes = CPUParticles2D.new()
 	_splashes.emitting = false
-	_splashes.amount = 110
+	_splashes.amount = 150
 	_splashes.lifetime = 0.32
 	_splashes.preprocess = 0.4
 	_splashes.local_coords = false
