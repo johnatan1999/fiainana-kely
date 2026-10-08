@@ -15,6 +15,8 @@ extends Control
 ## "use_item" verb per FarmAction (translation keys).
 const USE_VERBS := {
 	FarmAction.Type.TILL: "Labourer",
+	FarmAction.Type.PLOUGH: "Labourer (zébus)",
+	FarmAction.Type.FERTILIZE: "Fumer",
 	FarmAction.Type.WATER: "Arroser",
 	FarmAction.Type.PLANT: "Planter",
 }

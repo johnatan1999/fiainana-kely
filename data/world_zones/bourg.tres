@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ZoneData" load_steps=3 format=3 uid="uid://c8em10cyw3kuj"]
+
+[ext_resource type="PackedScene" uid="uid://tr5aptiq624g" path="res://world/areas/exterior/bourg.tscn" id="1_qtnu5"]
+[ext_resource type="Script" path="res://core/data/zone_data.gd" id="2_jwhva"]
+
+[resource]
+script = ExtResource("2_jwhva")
+id = "bourg"
+display_name = "Bourg"
+scene = ExtResource("1_qtnu5")

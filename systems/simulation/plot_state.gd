@@ -8,6 +8,9 @@ var crop: CropState = null
 ## watering - and only takes crops that grow in paddies (CropData.grows_in_paddy).
 ## A property of the land, not of what's growing: reset() keeps it.
 var flooded: bool = false
+## Zebu manure spread on it (FarmSimulation.fertilize): the next harvest
+## here is bigger, and uses it up.
+var fertilized: bool = false
 
 ## Vision only for now: meant to fall with monoculture and recover with
 ## rotation/fallow. Not yet consumed by FarmSimulation.
@@ -22,4 +25,5 @@ func reset() -> void:
 	tilled = false
 	watered = false
 	crop = null
+	fertilized = false
 	soil_fertility = 1.0

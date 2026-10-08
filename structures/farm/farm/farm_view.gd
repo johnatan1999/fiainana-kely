@@ -56,6 +56,21 @@ func setup(simulation: FarmSimulation, zone_id := FarmState.DEFAULT_ZONE) -> voi
 	# Even with no plot at all, locked fields still need drawing.
 	_queue_soil_redraw()
 
+## The zone is being left (WorldManager takes it out of the tree before
+## freeing it): stop following the simulation, or a plot added in between
+## would get a PlotView that never becomes ready.
+func _exit_tree() -> void:
+	if _simulation == null:
+		return
+	for connection in [
+		[_simulation.crop_harvested, _on_crop_harvested],
+		[_simulation.plot_changed, _on_plot_changed],
+		[_simulation.plot_added, _on_plot_added],
+		[_simulation.plot_removed, _on_plot_removed],
+	]:
+		if (connection[0] as Signal).is_connected(connection[1]):
+			(connection[0] as Signal).disconnect(connection[1])
+
 ## Built in code rather than as a .tscn node - see WorldManager's fade
 ## overlay for why (avoids scene-file edits getting clobbered by a
 ## concurrently open editor).

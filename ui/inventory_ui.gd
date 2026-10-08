@@ -144,6 +144,8 @@ func _collect_items() -> Dictionary:
 		livestock.append({"info": InventoryCatalog.describe_pending(_item_db, species, count), "quantity": count})
 	for animal_id in _simulation.get_all_animal_ids():
 		livestock.append({"info": InventoryCatalog.describe_animal(_item_db, _simulation.get_animal(animal_id)), "quantity": 1})
+	for zebu_id: String in _simulation.get_zebu_ids():
+		livestock.append({"info": InventoryCatalog.describe_zebu(_simulation, zebu_id), "quantity": 1})
 	for villager_id: String in _villagers:
 		by_category[InventoryCatalog.Category.VILLAGERS].append({
 			"info": InventoryCatalog.describe_villager(_item_db, _simulation, villager_id, _villagers[villager_id]),

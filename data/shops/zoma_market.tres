@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ShopProfile" load_steps=2 format=3 uid="uid://dxsvcvo8o7adm"]
+
+[ext_resource type="Script" path="res://core/data/shop_profile.gd" id="1_vm7ug"]
+
+[resource]
+script = ExtResource("1_vm7ug")
+title = "Tsena du zoma"
+seeds = 2
+sells_tools = false
+sells_food = true
+sells_animals = false
+sell_multiplier = 1.25
+open_days = 16
+opens_at = 360
+closes_at = 1020
+closed_message = "Le tsena n'ouvre que le zoma, de 6:00 à 17:00."

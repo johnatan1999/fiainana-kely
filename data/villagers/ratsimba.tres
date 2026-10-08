@@ -1,0 +1,101 @@
+[gd_resource type="Resource" script_class="VillagerData" load_steps=21 format=3 uid="uid://bhopv7yxv4x8r"]
+
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_s3217"]
+[ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_cjmx6"]
+[ext_resource type="Texture2D" uid="uid://dbudckdywttlh" path="res://assets/sprites/characters/villager/example_trousers.png" id="3_p1ys7"]
+[ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="4_frat6"]
+[ext_resource type="Texture2D" uid="uid://c8fse4uenivl2" path="res://assets/sprites/characters/villager/example_hair.png" id="5_74mdv"]
+[ext_resource type="Texture2D" uid="uid://dlywe88eiapxn" path="res://assets/sprites/characters/villager/example_hat.png" id="6_eq2pj"]
+[ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="7_iicdj"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="8_yeeqj"]
+[ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="9_d0sjg"]
+[ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="10_hjlk1"]
+
+[sub_resource type="Resource" id="Resource_pc2hp"]
+script = ExtResource("2_cjmx6")
+texture = ExtResource("3_p1ys7")
+color = Color(0.4, 0.33, 0.22, 1)
+
+[sub_resource type="Resource" id="Resource_shbb6"]
+script = ExtResource("2_cjmx6")
+texture = ExtResource("4_frat6")
+color = Color(0.7, 0.25, 0.2, 1)
+
+[sub_resource type="Resource" id="Resource_qg7y1"]
+script = ExtResource("2_cjmx6")
+texture = ExtResource("5_74mdv")
+color = Color(0.1, 0.08, 0.06, 1)
+
+[sub_resource type="Resource" id="Resource_k2m5c"]
+script = ExtResource("2_cjmx6")
+texture = ExtResource("6_eq2pj")
+color = Color(0.84, 0.72, 0.45, 1)
+
+[sub_resource type="Resource" id="Resource_55c4x"]
+script = ExtResource("7_iicdj")
+skin_color = Color(0.42, 0.27, 0.17, 1)
+layers = Array[ExtResource("2_cjmx6")]([SubResource("Resource_pc2hp"), SubResource("Resource_shbb6"), SubResource("Resource_qg7y1"), SubResource("Resource_k2m5c")])
+
+[sub_resource type="Resource" id="Resource_nreqh"]
+script = ExtResource("9_d0sjg")
+hour = 6
+minute = 0
+zone = ""
+spot = "Tsena_Omby"
+activity = 0
+days = 16
+rain_proof = true
+
+[sub_resource type="Resource" id="Resource_b4rl0"]
+script = ExtResource("9_d0sjg")
+hour = 9
+minute = 0
+zone = ""
+spot = "Taxi"
+activity = 0
+days = 111
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_bo8wp"]
+script = ExtResource("9_d0sjg")
+hour = 13
+minute = 0
+zone = ""
+spot = "Trano_Ratsimba"
+activity = 2
+days = 111
+rain_proof = true
+
+[sub_resource type="Resource" id="Resource_bnj8c"]
+script = ExtResource("9_d0sjg")
+hour = 15
+minute = 30
+zone = ""
+spot = "Tsena"
+activity = 1
+days = 111
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_dcwpm"]
+script = ExtResource("9_d0sjg")
+hour = 17
+minute = 0
+zone = ""
+spot = "Trano_Ratsimba"
+activity = 2
+days = 0
+rain_proof = true
+
+[resource]
+script = ExtResource("10_hjlk1")
+display_name = "Ratsimba"
+role = "Marchand de zébus, au tsena omby du bourg"
+family = false
+look = SubResource("Resource_55c4x")
+size = 1.1
+home_zone = "bourg"
+home = "Trano_Ratsimba"
+routine = Array[ExtResource("9_d0sjg")]([SubResource("Resource_nreqh"), SubResource("Resource_b4rl0"), SubResource("Resource_bo8wp"), SubResource("Resource_bnj8c"), SubResource("Resource_dcwpm")])
+greetings = PackedStringArray("Un zébu, c\'est une banque qui broute !", "Le zoma, je vends mes zébus au parc, au nord de la rivière.", "Un zébu bien abreuvé prend du poids chaque jour.", "Achète-le jeune, revends-le adulte : il aura doublé de prix.")
+orders = Array[ExtResource("8_yeeqj")]([])
+friendship_rewards = Array[ExtResource("1_s3217")]([])

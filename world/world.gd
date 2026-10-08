@@ -55,6 +55,8 @@ const TREE_RESOURCES: Array[TreeData] = [
 @onready var pause_menu: PauseMenu = $UI/PauseMenu
 @onready var orders_tracker: OrdersTracker = $UI/OrdersTracker
 @onready var order_panel: OrderPanel = $UI/OrderPanel
+@onready var zebu_manager: ZebuManager = $Gameplay/ZebuManager
+@onready var zebu_market_panel: ZebuMarketPanel = $UI/ZebuMarketPanel
 
 var simulation: FarmSimulation
 var item_db: ItemDatabase
@@ -95,6 +97,7 @@ func _ready() -> void:
 	neighbour_paddies.setup(simulation, item_db, world_manager, player)
 	friendship_manager.setup(simulation, item_db, world_manager)
 	order_manager.setup(simulation, item_db, world_manager, player, order_panel, orders_tracker)
+	zebu_manager.setup(simulation, world_manager, zebu_market_panel)
 	day_night.setup(simulation, world_manager)
 	weather.setup(simulation, world_manager, day_night, player)
 	save_controller.setup(simulation, world_manager, player)

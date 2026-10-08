@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="VillagerData" load_steps=19 format=3 uid="uid://bogw8wg2husan"]
+[gd_resource type="Resource" script_class="VillagerData" load_steps=20 format=3 uid="uid://bogw8wg2husan"]
 
 [ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_8atsl"]
 [ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_k2s0d"]
@@ -30,49 +30,64 @@ script = ExtResource("6_m1sru")
 skin_color = Color(0.5, 0.33, 0.22, 1)
 layers = Array[ExtResource("2_k2s0d")]([SubResource("Resource_j3bag"), SubResource("Resource_n46tt"), SubResource("Resource_gimfs")])
 
-[sub_resource type="Resource" id="Resource_tmnfj"]
+[sub_resource type="Resource" id="Resource_fcqmd"]
 script = ExtResource("8_7nemj")
 hour = 7
 minute = 15
 zone = "village"
 spot = "Sekoly"
 activity = 0
+days = 31
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_kg6gu"]
+[sub_resource type="Resource" id="Resource_6erh4"]
+script = ExtResource("8_7nemj")
+hour = 9
+minute = 0
+zone = ""
+spot = "Poulailler"
+activity = 1
+days = 96
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_yhla0"]
 script = ExtResource("8_7nemj")
 hour = 12
 minute = 15
 zone = ""
 spot = "Poulailler"
 activity = 1
+days = 0
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_nmwo5"]
+[sub_resource type="Resource" id="Resource_v66d0"]
 script = ExtResource("8_7nemj")
 hour = 14
 minute = 30
 zone = ""
 spot = "Trano"
 activity = 2
+days = 0
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_r4pny"]
+[sub_resource type="Resource" id="Resource_mmd7g"]
 script = ExtResource("8_7nemj")
 hour = 16
 minute = 0
 zone = "village"
 spot = "Kianja"
 activity = 1
+days = 0
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_j67ak"]
+[sub_resource type="Resource" id="Resource_ehfap"]
 script = ExtResource("8_7nemj")
 hour = 17
 minute = 45
 zone = ""
 spot = "Trano"
 activity = 2
+days = 0
 rain_proof = true
 
 [resource]
@@ -84,7 +99,7 @@ look = SubResource("Resource_il8fm")
 size = 0.75
 home_zone = "farm"
 home = "Trano"
-routine = Array[ExtResource("8_7nemj")]([SubResource("Resource_tmnfj"), SubResource("Resource_kg6gu"), SubResource("Resource_nmwo5"), SubResource("Resource_r4pny"), SubResource("Resource_j67ak")])
+routine = Array[ExtResource("8_7nemj")]([SubResource("Resource_fcqmd"), SubResource("Resource_6erh4"), SubResource("Resource_yhla0"), SubResource("Resource_v66d0"), SubResource("Resource_mmd7g"), SubResource("Resource_ehfap")])
 greetings = PackedStringArray("Tu joues avec moi ?", "Koto est trop fort au foot !", "Les poules m\'ont suivie jusqu\'au poulailler !", "Maman dit que tu travailles bien.")
 orders = Array[ExtResource("7_jcfn5")]([])
 friendship_rewards = Array[ExtResource("1_8atsl")]([])

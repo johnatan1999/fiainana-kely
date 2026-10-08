@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=4 format=3 uid="uid://bhqet00ma23cu"]
+
+[ext_resource type="Texture2D" uid="uid://bdvn3mdbejbd" path="res://assets/sprites/props/manure.png" id="1_l6kem"]
+[ext_resource type="Script" path="res://core/data/item_data.gd" id="2_kojpn"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2t2hp"]
+atlas = ExtResource("1_l6kem")
+region = Rect2(400, 70, 160, 122)
+
+[resource]
+script = ExtResource("2_kojpn")
+id = "manure"
+display_name = "Fumier de zébu"
+malagasy_name = "Zezik'omby"
+description = "Ramassé au parc des zébus. Épandu sur une parcelle labourée ou plantée, il donne une récolte plus grosse de moitié."
+category = 3
+price = 0
+sell_price = 200
+icon = SubResource("AtlasTexture_2t2hp")
+crop_id = ""
+animal_species = 0
+tool_action = 6
+sold_in_shop = true

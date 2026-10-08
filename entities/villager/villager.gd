@@ -4,7 +4,8 @@ extends CharacterBody2D
 ## A villager going about their day (VillagerData.routine): walks along the
 ## zone's roads (VillagerRoads) to each step's spot when its time comes,
 ## then stands, strolls around, works bent over, or goes in (a house).
-## Keeps the clock (DayNightController.CLOCK_GROUP) and the weather
+## Keeps the clock (DayNightController.CLOCK_GROUP), the day of the week
+## (CALENDAR_GROUP: some steps only happen on some weekdays) and the weather
 ## (WeatherController.WEATHER_GROUP): in the rain, only rain_proof steps
 ## happen - otherwise they stay home.
 ##
@@ -62,6 +63,7 @@ const HEARTS_Y := -104.0
 
 var _roads: VillagerRoads
 var _minute := 12 * 60
+var _weekday := GameClock.Weekday.ALATSINAINY
 var _raining := false
 var _clock_known := false
 ## Where the villager is (or is going): the world zone, the spot there, what
@@ -89,6 +91,7 @@ var call_out := ""
 func _ready() -> void:
 	add_to_group(GROUP)
 	add_to_group(DayNightController.CLOCK_GROUP)
+	add_to_group(DayNightController.CALENDAR_GROUP)
 	add_to_group(WeatherController.WEATHER_GROUP)
 	_bubble.visible = false
 	_mark.visible = false
@@ -120,6 +123,11 @@ func set_time_of_day(minute_of_day: int) -> void:
 	_minute = minute_of_day
 	_update_plan()
 
+func set_weekday(weekday: int) -> void:
+	_weekday = weekday as GameClock.Weekday
+	if _clock_known:
+		_update_plan()
+
 func set_raining(raining: bool) -> void:
 	_raining = raining
 	if _clock_known:
@@ -141,7 +149,7 @@ func get_spot_name() -> String:
 ## [zone, spot, activity] for now, the weather allowing - in this zone's
 ## terms: a step in another zone is the road there, going out.
 func _plan() -> Array:
-	var stop := data.get_stop(_minute)
+	var stop := data.get_stop(_minute, _weekday)
 	if stop != null and _raining and not stop.rain_proof:
 		stop = null
 	var zone := data.home_zone

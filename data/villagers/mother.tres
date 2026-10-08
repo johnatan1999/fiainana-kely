@@ -30,67 +30,74 @@ script = ExtResource("6_amj23")
 skin_color = Color(0.5, 0.33, 0.22, 1)
 layers = Array[ExtResource("2_2c5f0")]([SubResource("Resource_k8ouu"), SubResource("Resource_8kuy8"), SubResource("Resource_chr6v")])
 
-[sub_resource type="Resource" id="Resource_tdvlx"]
+[sub_resource type="Resource" id="Resource_ai1gm"]
 script = ExtResource("8_x8oaa")
 hour = 6
 minute = 0
 zone = ""
 spot = "Fanoto"
 activity = 0
+days = 0
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_t2shl"]
+[sub_resource type="Resource" id="Resource_fsaiv"]
 script = ExtResource("8_x8oaa")
 hour = 9
 minute = 0
 zone = "village"
 spot = "Fantsakana"
 activity = 0
+days = 0
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_n8bxd"]
+[sub_resource type="Resource" id="Resource_iptjq"]
 script = ExtResource("8_x8oaa")
 hour = 10
 minute = 30
 zone = ""
 spot = "Linge"
 activity = 0
+days = 0
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_jefcx"]
+[sub_resource type="Resource" id="Resource_had0q"]
 script = ExtResource("8_x8oaa")
 hour = 12
 minute = 0
 zone = ""
 spot = "Cuisine"
 activity = 0
+days = 0
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_l4vsd"]
+[sub_resource type="Resource" id="Resource_n1lkh"]
 script = ExtResource("8_x8oaa")
 hour = 14
 minute = 0
 zone = ""
 spot = "Poulailler"
 activity = 1
+days = 0
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_f5684"]
+[sub_resource type="Resource" id="Resource_1wkyk"]
 script = ExtResource("8_x8oaa")
 hour = 16
 minute = 0
 zone = ""
 spot = "Fanoto"
 activity = 0
+days = 0
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_26afc"]
+[sub_resource type="Resource" id="Resource_4w4ou"]
 script = ExtResource("8_x8oaa")
 hour = 18
 minute = 0
 zone = ""
 spot = "Trano"
 activity = 2
+days = 0
 rain_proof = true
 
 [resource]
@@ -102,7 +109,7 @@ look = SubResource("Resource_8atsb")
 size = 1.0
 home_zone = "farm"
 home = "Trano"
-routine = Array[ExtResource("8_x8oaa")]([SubResource("Resource_tdvlx"), SubResource("Resource_t2shl"), SubResource("Resource_n8bxd"), SubResource("Resource_jefcx"), SubResource("Resource_l4vsd"), SubResource("Resource_f5684"), SubResource("Resource_26afc")])
+routine = Array[ExtResource("8_x8oaa")]([SubResource("Resource_ai1gm"), SubResource("Resource_fsaiv"), SubResource("Resource_iptjq"), SubResource("Resource_had0q"), SubResource("Resource_n1lkh"), SubResource("Resource_1wkyk"), SubResource("Resource_4w4ou")])
 greetings = PackedStringArray("Arrose tes cultures chaque jour, sauf quand il pleut.", "Les graines s\'achètent au marché du village, à l\'est.", "Les villageois te passeront des commandes : regarde au-dessus de leur tête.", "Les poules ont besoin d\'eau et de grain chaque jour.", "Ne te couche pas trop tard, le travail commence tôt !")
 orders = Array[ExtResource("7_46y7m")]([])
 friendship_rewards = Array[ExtResource("1_gout2")]([])

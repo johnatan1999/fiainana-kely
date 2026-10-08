@@ -6,7 +6,8 @@ extends SceneTree
 ## 2. writes data/villagers/<id>.tres for each villager - only the missing
 ##    ones: once written, a villager is edited in the inspector (look,
 ##    routine, greetings) and this tool leaves it alone (delete the file to
-##    have it rewritten from the table);
+##    have it rewritten from the table, or pass "-- --routines" to rewrite
+##    every villager's routine from the table, the rest untouched);
 ## 3. rebuilds, in each zone of ZONES, the VillagerRoads (roads + spots),
 ##    the neighbours' paddies (VillagePaddy) and the Villagers nodes - one
 ##    Villager per villager whose day passes through that zone - leaving the
@@ -22,6 +23,12 @@ const INTERACTABLE := "res://components/interaction/interactable_component.tscn"
 const DATA_DIR := "res://data/villagers/"
 const LAYERS := "res://assets/sprites/characters/villager/example_%s.png"
 const TILE := 48
+## Weekdays for the routine entries' optional 7th element (none = every day).
+const SCHOOL_DAYS := ["ALATSINAINY", "TALATA", "ALAROBIA", "ALAKAMISY", "ZOMA"]
+const WEEKEND := ["SABOTSY", "ALAHADY"]
+## The zoma market in the bourg (GameClock.MARKET_DAY), and the other days.
+const MARKET := ["ZOMA"]
+const NOT_MARKET := ["ALATSINAINY", "TALATA", "ALAROBIA", "ALAKAMISY", "SABOTSY", "ALAHADY"]
 
 ## World zone id -> its scene, the spots (Marker2Ds under
 ## VillagerRoads/Spots), the roads along its dirt paths (one Line2D each; a
@@ -47,6 +54,7 @@ const ZONES := {
 			"Hotely": Vector2(775, 1300),
 			"Epicerie": Vector2(1150, 1035),
 			"Vers_farm": Vector2(15, 505),
+			"Vers_bourg": Vector2(1585, 1620),
 		},
 		"roads": {
 			"Route_Ouest": [Vector2(274, 1108), Vector2(450, 1100), Vector2(480, 900), Vector2(480, 620), Vector2(560, 560)],
@@ -58,6 +66,7 @@ const ZONES := {
 			"Route_Hotely": [Vector2(450, 1100), Vector2(560, 1250), Vector2(775, 1300)],
 			"Route_Epicerie": [Vector2(1290, 850), Vector2(1180, 1035)],
 			"Route_Ferme": [Vector2(560, 560), Vector2(300, 515), Vector2(15, 505)],
+			"Route_Bourg": [Vector2(1370, 1440), Vector2(1500, 1520), Vector2(1585, 1620)],
 		},
 		"paddies": [],
 		"remove_trees": [],
@@ -80,6 +89,39 @@ const ZONES := {
 			"Route_Maison": [Vector2(1022, 540), Vector2(1022, 500)],
 			"Route_Linge": [Vector2(1265, 565), Vector2(1290, 690)],
 			"Route_Verger": [Vector2(470, 560), Vector2(460, 1100), Vector2(360, 1360)],
+		},
+		"paddies": [],
+		"remove_trees": [],
+	},
+	"bourg": {
+		"scene": "res://world/areas/exterior/bourg.tscn",
+		"spots": {
+			"Vers_village": Vector2(1056, 20),
+			"Pont": Vector2(1056, 500),
+			"Lavoir": Vector2(700, 505),
+			"Tsena": Vector2(1056, 950),
+			# Behind the stalls (tools/build_bourg.gd).
+			"Tsena_Mpanangona": Vector2(1290, 760),
+			"Tsena_Legioma_1": Vector2(620, 760),
+			"Tsena_Lamba_1": Vector2(830, 760),
+			"Tsena_Legioma_3": Vector2(1500, 760),
+			"Taxi": Vector2(1150, 1480),
+			"Trano_Rabe": Vector2(1957, 883),
+			"Trano_Lalao": Vector2(278, 1350),
+			# The zebu market, north of the river (tools/place_zebu_herds.gd).
+			"Tsena_Omby": Vector2(255, 285),
+			"Trano_Ratsimba": Vector2(1876, 1362),
+		},
+		"roads": {
+			"Route_Nord": [Vector2(1056, 20), Vector2(1056, 260), Vector2(1056, 500), Vector2(1056, 700),
+				Vector2(1056, 950), Vector2(1056, 1380), Vector2(1056, 1480), Vector2(1150, 1480)],
+			"Route_Omby": [Vector2(1056, 260), Vector2(640, 285), Vector2(255, 285)],
+			"Route_Ratsimba": [Vector2(1056, 1380), Vector2(1600, 1390), Vector2(1876, 1362)],
+			"Route_Lavoir": [Vector2(1056, 500), Vector2(900, 500), Vector2(700, 505)],
+			"Route_Tsena_Andrefana": [Vector2(1056, 700), Vector2(830, 760), Vector2(620, 760)],
+			"Route_Tsena_Atsinanana": [Vector2(1056, 700), Vector2(1290, 760), Vector2(1500, 760)],
+			"Route_Rabe": [Vector2(1056, 950), Vector2(1600, 960), Vector2(1957, 883)],
+			"Route_Lalao": [Vector2(1056, 950), Vector2(480, 960), Vector2(278, 1350)],
 		},
 		"paddies": [],
 		"remove_trees": [],
@@ -134,12 +176,15 @@ const VILLAGERS := {
 		"name": "Ravao", "role": "Marchande, elle tient l'étal du marché", "home": "Maison_Est", "size": 1.0, "skin": Color(0.55, 0.36, 0.24),
 		"layers": [["skirt", Color(0.75, 0.3, 0.25)], ["shirt", Color(0.95, 0.85, 0.55)], ["hair_bun", Color(0.12, 0.09, 0.07)]],
 		"routine": [
-			[7, 0, "", "Marche", "STAND", true],
-			[12, 0, "", "Banc_Est", "STAND", false],
-			[13, 30, "", "Marche", "STAND", true],
+			[6, 30, "bourg", "Tsena_Lamba_1", "STAND", true, MARKET],
+			[7, 0, "", "Marche", "STAND", true, NOT_MARKET],
+			[12, 0, "", "Banc_Est", "STAND", false, NOT_MARKET],
+			[13, 30, "", "Marche", "STAND", true, NOT_MARKET],
+			[15, 30, "", "Banc_Est", "STAND", false, MARKET],
 			[17, 30, "", "Maison_Est", "INSIDE", true],
 		],
-		"greetings": ["Des légumes frais au marché !", "Bonjour ! Tu passes au marché ?"],
+		"greetings": ["Des légumes frais au marché !", "Bonjour ! Tu passes au marché ?",
+			"Le zoma, je vends mes lambas au tsena du bourg."],
 		"orders": [
 			["cassava", 4, 6, 1500, 10, "Mes clients réclament du manioc. Il m'en faudrait %d racines.", "Merci ! Mes clients vont être contents."],
 			["corn", 5, 8, 1700, 7, "Le maïs grillé se vend bien en ce moment. Tu m'apportes %d épis ?", "Ils sont beaux ! Merci."],
@@ -179,7 +224,8 @@ const VILLAGERS := {
 		"name": "Koto", "role": "Un enfant du village, toujours à jouer", "home": "Maison_Sud", "size": 0.8, "skin": Color(0.5, 0.33, 0.22),
 		"layers": [["shorts", Color(0.25, 0.35, 0.6)], ["shirt", Color(0.85, 0.3, 0.25)], ["hair", Color(0.12, 0.09, 0.07)]],
 		"routine": [
-			[7, 30, "", "Sekoly", "STAND", true],
+			[7, 30, "", "Sekoly", "STAND", true, SCHOOL_DAYS],
+			[8, 30, "", "Kianja", "WANDER", false, WEEKEND],
 			[12, 0, "", "Maison_Sud", "INSIDE", true],
 			[14, 0, "", "Marche", "WANDER", false],
 			[16, 30, "", "Kianja", "WANDER", false],
@@ -264,7 +310,8 @@ const VILLAGERS := {
 		"size": 0.75, "skin": Color(0.5, 0.33, 0.22),
 		"layers": [["skirt", Color(0.85, 0.4, 0.55)], ["shirt", Color(0.98, 0.95, 0.9)], ["hair", Color(0.12, 0.09, 0.07)]],
 		"routine": [
-			[7, 15, "village", "Sekoly", "STAND", true],
+			[7, 15, "village", "Sekoly", "STAND", true, SCHOOL_DAYS],
+			[9, 0, "", "Poulailler", "WANDER", false, WEEKEND],
 			[12, 15, "", "Poulailler", "WANDER", false],
 			[14, 30, "", "Trano", "INSIDE", true],
 			[16, 0, "village", "Kianja", "WANDER", false],
@@ -275,6 +322,80 @@ const VILLAGERS := {
 			"Koto est trop fort au foot !",
 			"Les poules m'ont suivie jusqu'au poulailler !",
 			"Maman dit que tu travailles bien.",
+		],
+	},
+	# The bourg's merchants.
+	"rabe": {
+		"name": "Rabe", "role": "Collecteur, il achète vanille et girofle au tsena du bourg",
+		"home": "Trano_Rabe", "home_zone": "bourg", "size": 1.05, "skin": Color(0.48, 0.31, 0.2),
+		"layers": [["trousers", Color(0.25, 0.25, 0.3)], ["shirt", Color(0.92, 0.92, 0.95)], ["hair", Color(0.1, 0.08, 0.06)], ["hat", Color(0.35, 0.3, 0.25)]],
+		"routine": [
+			[6, 0, "", "Tsena_Mpanangona", "STAND", true, MARKET],
+			[8, 30, "", "Taxi", "STAND", false, NOT_MARKET],
+			[12, 0, "", "Trano_Rabe", "INSIDE", true, NOT_MARKET],
+			[14, 0, "", "Tsena", "WANDER", false, NOT_MARKET],
+			[17, 0, "", "Tsena", "WANDER", false, MARKET],
+			[18, 0, "", "Trano_Rabe", "INSIDE", true],
+		],
+		"greetings": [
+			"Vanille, girofle, café, litchis : le zoma, je t'achète tout !",
+			"Le tsena n'ouvre que le zoma. Reviens avec ta récolte !",
+			"La vanille met longtemps à pousser, mais rien ne paie mieux.",
+			"Le taxi-brousse emporte nos sacs jusqu'à la ville.",
+		],
+		"orders": [
+			["coffee", 3, 5, 16000, 12, "Un client de la ville veut du café. Il m'en faudrait %d.", "Beau café ! Le client sera content."],
+			["clove", 2, 4, 20000, 14, "Je monte un sac de girofle : tu m'en apportes %d ?", "Ça sent bon le girofle ! Merci."],
+			["litchi", 4, 6, 26000, 14, "Les litchis partent par camion pour les fêtes. %d, tu les as ?", "Parfait, ils sont bien rouges !"],
+			["vanilla", 1, 2, 40000, 20, "Il me manque %d gousses de vanille pour un lot. Tu en as ?", "De la belle vanille ! Tu as la main verte."],
+		],
+		"gifts": [
+			[2, "coffee_seed", 2, "Des graines de café. Plante-les, je te rachèterai la récolte."],
+			[4, "vanilla_seed", 2, "De la vanille. Elle demande de la patience, mais c'est de l'or vert."],
+		],
+	},
+	"lalao": {
+		"name": "Lalao", "role": "Marchande de légumes au tsena du bourg",
+		"home": "Trano_Lalao", "home_zone": "bourg", "size": 0.95, "skin": Color(0.52, 0.34, 0.22),
+		"layers": [["skirt", Color(0.55, 0.3, 0.55)], ["shirt", Color(0.95, 0.9, 0.75)], ["hair_bun", Color(0.12, 0.09, 0.07)]],
+		"routine": [
+			[6, 0, "", "Tsena_Legioma_1", "STAND", true, MARKET],
+			[7, 30, "", "Lavoir", "STAND", false, NOT_MARKET],
+			[11, 0, "", "Trano_Lalao", "INSIDE", true, NOT_MARKET],
+			[15, 0, "", "Pont", "STAND", false, NOT_MARKET],
+			[17, 0, "", "Trano_Lalao", "INSIDE", true],
+		],
+		"greetings": [
+			"Tomates, haricots, brèdes ! Viens voir mon étal le zoma.",
+			"Le zoma, tout le monde descend au bourg.",
+			"Je lave le linge à la rivière quand il n'y a pas marché.",
+		],
+		"orders": [
+			["tomato", 4, 6, 6500, 9, "Il me faut %d tomates pour l'étal du zoma.", "Merci ! Elles partiront vite."],
+			["bean", 4, 6, 3500, 9, "Tu m'apportes %d haricots pour le zoma ?", "Merci beaucoup !"],
+			["groundnut", 3, 5, 4000, 10, "Les arachides se vendent bien au bourg : %d, ça te va ?", "Merci, à zoma !"],
+		],
+		"gifts": [
+			[2, "bean_seed", 6, "Des haricots de ma récolte, pour ta ferme."],
+			[4, "clove_seed", 2, "Mon frère cultive le girofle sur la côte. Tiens, quelques graines."],
+		],
+	},
+	"ratsimba": {
+		"name": "Ratsimba", "role": "Marchand de zébus, au tsena omby du bourg",
+		"home": "Trano_Ratsimba", "home_zone": "bourg", "size": 1.1, "skin": Color(0.42, 0.27, 0.17),
+		"layers": [["trousers", Color(0.4, 0.33, 0.22)], ["shirt", Color(0.7, 0.25, 0.2)], ["hair", Color(0.1, 0.08, 0.06)], ["hat", Color(0.84, 0.72, 0.45)]],
+		"routine": [
+			[6, 0, "", "Tsena_Omby", "STAND", true, MARKET],
+			[9, 0, "", "Taxi", "STAND", false, NOT_MARKET],
+			[13, 0, "", "Trano_Ratsimba", "INSIDE", true, NOT_MARKET],
+			[15, 30, "", "Tsena", "WANDER", false, NOT_MARKET],
+			[17, 0, "", "Trano_Ratsimba", "INSIDE", true],
+		],
+		"greetings": [
+			"Un zébu, c'est une banque qui broute !",
+			"Le zoma, je vends mes zébus au parc, au nord de la rivière.",
+			"Un zébu bien abreuvé prend du poids chaque jour.",
+			"Achète-le jeune, revends-le adulte : il aura doublé de prix.",
 		],
 	},
 }
@@ -303,6 +424,9 @@ func _initialize() -> void:
 				changed = true
 			if data.friendship_rewards.is_empty() and not VILLAGERS[id].get("gifts", []).is_empty():
 				data.friendship_rewards = _make_gifts(VILLAGERS[id])
+				changed = true
+			if "--routines" in OS.get_cmdline_user_args():
+				data.routine = _make_routine(VILLAGERS[id])
 				changed = true
 			if changed:
 				ResourceSaver.save(data, path)
@@ -374,6 +498,24 @@ func _build_villager_scene() -> void:
 	_save(villager, VILLAGER_SCENE)
 	villager.free()
 
+func _make_routine(spec: Dictionary) -> Array[VillagerStop]:
+	var routine: Array[VillagerStop] = []
+	for entry: Array in spec["routine"]:
+		var stop := VillagerStop.new()
+		stop.hour = entry[0]
+		stop.minute = entry[1]
+		stop.zone = entry[2]
+		stop.spot = entry[3]
+		stop.activity = VillagerStop.Activity[entry[4]]
+		stop.rain_proof = entry[5]
+		if entry.size() > 6:
+			var weekdays: Array = []
+			for day_name: String in entry[6]:
+				weekdays.append(GameClock.Weekday[day_name])
+			stop.days = VillagerStop.days_mask(weekdays)
+		routine.append(stop)
+	return routine
+
 func _make_data(spec: Dictionary) -> VillagerData:
 	var look := VillagerLook.new()
 	look.skin_color = spec["skin"]
@@ -392,17 +534,7 @@ func _make_data(spec: Dictionary) -> VillagerData:
 	data.home = spec["home"]
 	data.size = spec["size"]
 	data.look = look
-	var routine: Array[VillagerStop] = []
-	for entry: Array in spec["routine"]:
-		var stop := VillagerStop.new()
-		stop.hour = entry[0]
-		stop.minute = entry[1]
-		stop.zone = entry[2]
-		stop.spot = entry[3]
-		stop.activity = VillagerStop.Activity[entry[4]]
-		stop.rain_proof = entry[5]
-		routine.append(stop)
-	data.routine = routine
+	data.routine = _make_routine(spec)
 	data.greetings = PackedStringArray(spec["greetings"])
 	data.orders = _make_orders(spec)
 	data.friendship_rewards = _make_gifts(spec)

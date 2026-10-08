@@ -120,6 +120,10 @@ func change_zone(zone_id: String, spawn_name: String = "SpawnDefault") -> void:
 
 	if current_zone != null:
 		zone_unloading.emit(current_zone)
+		# Out of the tree now, not at the end of the frame: until then its
+		# walls would still be in the physics space, and the player, set
+		# down at the new spawn, could be pushed out of them - into an exit.
+		zone_container.remove_child(current_zone)
 		current_zone.queue_free()
 
 	var zone: ZoneRoot = zone_data.scene.instantiate()

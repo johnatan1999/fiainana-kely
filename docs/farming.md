@@ -9,6 +9,21 @@
   pluvial).
 - **Cultures vivantes** : elles ondulent au vent selon leur hauteur et s'écartent quand le
   joueur les frôle.
+- **Labour aux zébus** : avec la **charrue à zébus** (angadin'omby, 15 000 Ar à l'épicerie du
+  village) en main, l'action « Labourer (zébus) » laboure d'un coup **jusqu'à 4 parcelles en
+  ligne** devant le joueur.
+  - Un attelage de deux zébus apparaît et tire la charrue le long du sillon ; chaque parcelle
+    se retourne quand le soc y passe. Le joueur marche derrière, sans pouvoir rien faire
+    d'autre ; l'attelage disparaît ensuite.
+  - Le sillon s'arrête au bord du champ, à une parcelle déjà labourée ou plantée.
+  - Il faut **deux zébus d'au moins 15 jours de croissance** (voir `zebus.md`). Sinon, ou si
+    l'attelage a déjà labouré **24 parcelles** aujourd'hui, un message explique pourquoi.
+  - Ça marche aussi dans les rizières : labourer la rizière aux zébus est la tradition.
+- **Fumure** : le **fumier de zébu** (ramassé au parc, voir `zebus.md`) se tient en main comme
+  les graines. L'action « Fumer » l'épand sur une parcelle **labourée ou plantée** : des mottes
+  sombres apparaissent sur la terre, et la **prochaine récolte** de la parcelle est **plus
+  grosse de moitié** (arrondie au-dessus). Une seule fois par récolte : la récolte consomme le
+  fumier.
 - **Réactions aux actions** :
   - labourer : nuage de terre ;
   - planter : nuage de terre, puis la graine apparaît avec un « pop » ;
@@ -81,6 +96,31 @@
 - Uniforme global **`player_position`** (`[shader_globals]` dans `project.godot`), mis à jour
   par `PlayerController` à chaque image physique.
 
+**Labour aux zébus**
+- `FarmAction.Type.PLOUGH` (5), outil `data/items/tool_plough.tres` (écrit par
+  `tools/build_zebu_market.gd`, vendu à l'épicerie du village).
+- Règles (`FarmSimulation`) : `ZEBU_TEAM_SIZE` (2), `ZEBU_WORK_MIN_DAYS` (15), `PLOUGH_REACH`
+  (4), `PLOUGH_CELLS_PER_DAY` (24) ; `check_plough()` → `PloughCheck` (`OK`, `NO_TEAM`,
+  `TIRED`), `is_ploughable(plot)` (pas de culture, pas encore labourée),
+  `can_plough(plot)`, `plough(plot)` (laboure une parcelle et compte dans le quota),
+  `get_plough_cells_left()`. `FarmState.plough_cells_today` est sauvegardé et remis à zéro
+  chaque matin.
+- `FarmingController` : `get_furrow(plot, step)` (le sillon), `_plough_furrow()` qui
+  bloque le joueur (`input_enabled`), crée un `PloughTeam` dans la zone, l'avance parcelle
+  par parcelle (`walk_to` / `arrived`) et appelle `plough()` à chaque arrivée.
+- **`PloughTeam`** (`entities/zebu/plough_team.gd`, construit en code) : la charrue (planche
+  `zebu_market.png`, case 3) et deux zébus de la planche des zébus, aux robes des zébus du
+  joueur. Son origine est le soc. S'il est libéré en route (changement de zone), il émet
+  quand même `arrived` pour ne pas bloquer le contrôleur.
+
+**Fumure**
+- `FarmAction.Type.FERTILIZE` (6), objet `manure`. `PlotState.fertilized` (sauvegardé, clé
+  optionnelle `"fertilized"`) ; `FarmSimulation.harvest()` multiplie la quantité par
+  `MANURE_YIELD_MULTIPLIER` (après les malus d'arrosage et de saison) et remet le drapeau à
+  `false`.
+- `PlotView` montre les mottes (planche `manure.png`, case 3, à l'échelle d'une case,
+  `z_index` -1 : sous la culture et les personnages). `is_manure_shown()`.
+
 **Réactions**
 - `PlotView.react(action)` : nuages (`CPUParticles2D`), écrasement, cueillette (`_pluck_out`).
 - `FarmView.react_to_action(plot_id, action)` relaie, et `FarmingController` appelle après une
@@ -107,5 +147,11 @@ voisin » doivent rester vides (voir `CLAUDE.md`).
   Rien à régler : sa grille est la sienne.
 - Pour qu'une culture bloque le joueur à partir d'un stade, ajouter un `StaticBody2D` sous ce
   stade dans sa scène visuelle (voir `corn_visual.tscn`).
+- Le gain du fumier n'apparaît pas dans le message de récolte (« +3 Maïs ») : il faudrait
+  ajouter l'information au signal `crop_harvested`.
+- La planche des zébus n'a qu'une vue de profil : en labourant vers le haut ou le bas,
+  l'attelage reste de profil.
+- Les zébus de l'attelage sont « virtuels » : ceux du parc continuent de paître pendant le
+  labour.
 - `rice.png` est un dessin provisoire généré. Pour le remplacer, garder la disposition : 4 cases
   de 96×128, plant posé sur le bord bas.

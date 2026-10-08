@@ -1,0 +1,35 @@
+[gd_scene load_steps=7 format=3 uid="uid://cm0mxhdtcnj8g"]
+
+[ext_resource type="Script" path="res://entities/zebu/zebu_market.gd" id="1_0h7wt"]
+[ext_resource type="Resource" uid="uid://6wgo11i2b581" path="res://data/shops/zebu_market.tres" id="2_tysts"]
+[ext_resource type="Texture2D" uid="uid://d2onmml8svabu" path="res://assets/sprites/props/zebu_market.png" id="3_ior2b"]
+[ext_resource type="PackedScene" uid="uid://bub176arlv6dd" path="res://entities/props/signboard.tscn" id="4_a8ft4"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="5_2u23r"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6x5r7"]
+size = Vector2(24, 12)
+
+[node name="ZebuMarket" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_0h7wt")
+profile = ExtResource("2_tysts")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 4
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_ior2b")
+offset = Vector2(0, -96)
+region_enabled = true
+region_rect = Rect2(384, 0, 192, 192)
+
+[node name="Base" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Base"]
+position = Vector2(0, -6)
+shape = SubResource("RectangleShape2D_6x5r7")
+
+[node name="Panneau" parent="." instance=ExtResource("4_a8ft4")]
+position = Vector2(50, 6)
+text = "OMBY"
+
+[node name="InteractableComponent" parent="." instance=ExtResource("5_2u23r")]

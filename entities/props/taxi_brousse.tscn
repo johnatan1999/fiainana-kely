@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3 uid="uid://djcjbm28cxx4w"]
+
+[ext_resource type="Script" path="res://entities/props/prop.gd" id="1_ygm8m"]
+[ext_resource type="Texture2D" uid="uid://bp0ns8b6ua0xx" path="res://assets/sprites/props/bourg.png" id="2_8qeq7"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_35ns4"]
+size = Vector2(176, 24)
+
+[node name="TaxiBrousse" type="Node2D"]
+script = ExtResource("1_ygm8m")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 4
+texture = ExtResource("2_8qeq7")
+region_enabled = true
+region_rect = Rect2(0, 192, 192, 192)
+
+[node name="Base" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Base"]
+position = Vector2(0, -12)
+shape = SubResource("RectangleShape2D_35ns4")

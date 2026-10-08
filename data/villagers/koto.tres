@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="VillagerData" load_steps=24 format=3 uid="uid://bvfoa1n3x2ndx"]
+[gd_resource type="Resource" script_class="VillagerData" load_steps=25 format=3 uid="uid://bvfoa1n3x2ndx"]
 
 [ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_nm3cx"]
 [ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_47o20"]
@@ -71,60 +71,76 @@ days = 3
 request_line = "Maman veut %d œufs. Tu en as ?"
 thanks_line = "Merci ! Maman va être contente."
 
-[sub_resource type="Resource" id="Resource_ep18v"]
+[sub_resource type="Resource" id="Resource_4ucgt"]
 script = ExtResource("8_5fibi")
 hour = 7
 minute = 30
 zone = ""
 spot = "Sekoly"
 activity = 0
+days = 31
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_b78cp"]
+[sub_resource type="Resource" id="Resource_dsioa"]
+script = ExtResource("8_5fibi")
+hour = 8
+minute = 30
+zone = ""
+spot = "Kianja"
+activity = 1
+days = 96
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_f3kh7"]
 script = ExtResource("8_5fibi")
 hour = 12
 minute = 0
 zone = ""
 spot = "Maison_Sud"
 activity = 2
+days = 0
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_174xn"]
+[sub_resource type="Resource" id="Resource_0yi51"]
 script = ExtResource("8_5fibi")
 hour = 14
 minute = 0
 zone = ""
 spot = "Marche"
 activity = 1
+days = 0
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_hforf"]
+[sub_resource type="Resource" id="Resource_85e70"]
 script = ExtResource("8_5fibi")
 hour = 16
 minute = 30
 zone = ""
 spot = "Kianja"
 activity = 1
+days = 0
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_7sag8"]
+[sub_resource type="Resource" id="Resource_xeivk"]
 script = ExtResource("8_5fibi")
 hour = 18
 minute = 30
 zone = ""
 spot = "Maison_Sud"
 activity = 2
+days = 0
 rain_proof = true
 
 [resource]
 script = ExtResource("9_75lmc")
 display_name = "Koto"
 role = "Un enfant du village, toujours à jouer"
+family = false
 look = SubResource("Resource_dr5yn")
 size = 0.8
 home_zone = "village"
 home = "Maison_Sud"
-routine = Array[ExtResource("8_5fibi")]([SubResource("Resource_ep18v"), SubResource("Resource_b78cp"), SubResource("Resource_174xn"), SubResource("Resource_hforf"), SubResource("Resource_7sag8")])
+routine = Array[ExtResource("8_5fibi")]([SubResource("Resource_4ucgt"), SubResource("Resource_dsioa"), SubResource("Resource_f3kh7"), SubResource("Resource_0yi51"), SubResource("Resource_85e70"), SubResource("Resource_xeivk")])
 greetings = PackedStringArray("Salut ! On joue ?", "J\'ai vu un caméléon près du manguier !")
 orders = Array[ExtResource("7_jq7go")]([SubResource("Resource_uxto7"), SubResource("Resource_cepyk"), SubResource("Resource_ra2hx")])
 friendship_rewards = Array[ExtResource("1_nm3cx")]([SubResource("Resource_to52i"), SubResource("Resource_c32fm")])

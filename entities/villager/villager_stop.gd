@@ -24,9 +24,23 @@ enum Activity {
 @export var zone := ""
 @export var spot := ""
 @export var activity := Activity.STAND
+## The weekdays this step happens on (GameClock.Weekday bits); none ticked
+## = every day. On the other days the step is skipped - the previous one
+## goes on (school on weekdays only, the zoma market on Fridays).
+@export_flags("Alatsinainy", "Talata", "Alarobia", "Alakamisy", "Zoma", "Sabotsy", "Alahady") var days := 0
 ## Still done in the rain (a covered stall, work in the rice fields);
 ## otherwise the villager stays home while it rains.
 @export var rain_proof := false
 
 func get_minute_of_day() -> int:
 	return hour * 60 + minute
+
+func happens_on(weekday: int) -> bool:
+	return days == 0 or days & (1 << weekday) != 0
+
+## The `days` bits for a list of GameClock.Weekday values.
+static func days_mask(weekdays: Array) -> int:
+	var mask := 0
+	for weekday: int in weekdays:
+		mask |= 1 << weekday
+	return mask

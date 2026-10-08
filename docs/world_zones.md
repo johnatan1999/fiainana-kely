@@ -8,6 +8,8 @@ partie :
 - le poulailler et ses poules en liberté ;
 - les quatre terrains de culture, clôturés, avec leurs panneaux d'achat ;
 - le verger de manguiers ;
+- à l'ouest des champs, le **parc à zébus** du joueur, son abreuvoir et son pâturage (voir
+  `zebus.md`) ;
 - au nord, la colline ; à l'est, une haie d'eucalyptus avec la trouée du chemin vers le
   village.
 
@@ -36,6 +38,25 @@ verre à la gargote (voir `villagers.md`).
   qui sèche, corde à linge avec lambas, charrette à zébus (sarety), bancs, paniers, foin,
   grenier, remise en brique.
 
+**Bourg (`bourg`)**, au bout du chemin sud du village : le gros bourg de la commune, où l'on
+descend le **zoma** (vendredi), jour de marché.
+- Au nord, l'arrivée depuis le village, entre des eucalyptus.
+- Une **rivière** traverse la carte d'ouest en est, avec des roseaux sur les berges. On ne peut
+  pas la passer à gué : un **pont en bois** la franchit.
+- En aval du pont, sur la berge sud, un **lavoir** en pierres plates et une corde à linge.
+- La **place du marché (tsena)**, en terre rouge, avec un panneau « TSENA » : des étals de
+  légumes sous des auvents en lamba, des étals de lambas et de paniers, des poules en cage
+  (sobika), des sacs de riz, et **l'étal du collecteur** (Rabe), qui est la boutique du marché du
+  zoma (voir `shops.md`). La route nord-sud reste libre au milieu.
+- Quatre **maisons** autour de la place (portes fermées), des manguiers pour l'ombre.
+- Au nord de la rivière, à gauche de la route, le **marché aux zébus** (tsena omby) : un
+  enclos, et le poteau du marchand Ratsimba (voir `zebus.md`).
+- Au sud, l'**arrêt du taxi-brousse** : un minibus chargé de bagages, un panneau « TAXI » et des
+  sacs de riz. La route continue vers le sud mais s'arrête au bord de la carte.
+- Le zoma, les marchands sont à leurs étals et Ravao descend du village. Les autres jours, la
+  place est calme : Lalao lave le linge à la rivière, Rabe attend le taxi-brousse (voir
+  `villagers.md`).
+
 **Rizières (`rice_fields`)**, au bout du sentier nord du village :
 - Un ruisseau en haut, un canal d'irrigation à l'ouest.
 - **Rizières en terrasses** : la rizière haute est sur un gradin, accessible par l'est ; la
@@ -50,6 +71,11 @@ verre à la gargote (voir `villagers.md`).
 **Zones**
 - Chaque zone est déclarée par un `ZoneData` dans `data/world_zones/`, découvert
   automatiquement par `WorldManager`.
+- `WorldManager.change_zone()` **retire l'ancienne zone de l'arbre** avant de la libérer : sans
+  ça, ses murs restaient dans l'espace physique jusqu'à la fin de l'image, et le joueur, posé
+  au point d'arrivée, pouvait en être éjecté (la colline du village chevauche l'arrivée du
+  bourg, ce qui le renvoyait au village). Conséquence : un nœud de zone branché sur la
+  simulation doit se débrancher en sortant de l'arbre (`FarmView._exit_tree`).
 - `ZoneRoot` (`world/zone_root.gd`) : la taille de la zone vient du `GroundLayer` peint.
   Exports : `bgm`, `camera_zoom` (0.9 par défaut en extérieur, soit environ 27 × 15 cases visibles ;
   1.4 dans les intérieurs), `indoor`.
@@ -58,7 +84,24 @@ verre à la gargote (voir `villagers.md`).
   - village ↔ rizières : `ToRiceFields` en haut du sentier nord du village (vers
     `SpawnFrom_VILLAGE`), `ToVillage` en bas des rizières (vers `SpawnFrom_RICE_FIELDS`) ;
   - village ↔ ferme : `ToFarm` sur le bord ouest du village (vers `SpawnFrom_VILLAGE` de la
-    ferme), `ToVillage` sur le bord est de la ferme (vers `SpawnFrom_FARM` du village).
+    ferme), `ToVillage` sur le bord est de la ferme (vers `SpawnFrom_FARM` du village) ;
+  - village ↔ bourg : `ToBourg` au bout du chemin sud du village (cases 31 à 34 de la
+    dernière rangée, vers `SpawnFrom_VILLAGE` du bourg), `ToVillage` en haut de la route nord
+    du bourg (vers `SpawnFrom_BOURG` du village).
+- **Bourg** : construit par `tools/build_bourg.gd` (avec `--editor`) depuis ses tables.
+  - Carte de 44 × 34 cases (2 112 × 1 632 px), grille à l'origine `(0, 0)`. Rivière sur les
+    rangées 7 et 8 (`StreamLayer`, tuile ruisseau avec collision), sauf sous le pont (colonnes
+    20 à 23) ; terre nue (`DIRT`) pour la route, la place et le chemin du lavoir, herbe
+    (terrain « Grass ») partout ailleurs ; herbe haute sur les berges et dans les coins.
+  - Le pont (`entities/props/bridge.tscn`) est un `Prop` à `z_index` -7 : il se dessine sur
+    l'eau, sous les personnages, et ne bloque rien (ce sont les berges qui bloquent).
+  - Décors de la planche `assets/sprites/props/bourg.png` (`gen_bourg.gd`) : `bridge`,
+    `market_stall_produce`, `market_stall_lamba`, `taxi_brousse`, `rice_sacks`, `reeds`,
+    `hen_cages`. L'étal du collecteur est `structures/shop/market_stall_shop.tscn`.
+  - La scène n'est construite qu'une fois : l'outil refuse de l'écraser ensuite, sauf avec
+    `-- --force` (qui perd les retouches faites dans l'éditeur). Il réécrit en revanche à
+    chaque fois les décors, les profils de boutique, le `ZoneData`, et ajoute la sortie sud du
+    village si elle manque.
 - **Centre du village** : `tools/place_village_center.gd` reconstruit le nœud `CentreVillage`
   depuis sa table.
   - L'école et la gargote sont des modèles de maison existants (`trano_kely_02`,
@@ -83,7 +126,7 @@ verre à la gargote (voir `villagers.md`).
 |---|---|---|
 | `GroundLayer` | -10 | Terre rouge, `GroundLayer` script (taille de zone) |
 | `GrassLayer` | -9 | Terrain « Grass » de `farm_tileset.tres` (herbe sèche, bords fondus) |
-| `StreamLayer` | -8 | Eau du ruisseau (rizières) |
+| `StreamLayer` | -8 | Eau du ruisseau (rizières) et de la rivière (bourg) |
 | `ClifLayer` | -8 | Terrain « Clif » de `assets/tileset/cliff_tileset.tres` : plateau, tuiles du bord sud en 1×3 avec paroi et collision |
 | `FarmView` / champs | -1 | Sol des champs (voir `farming.md`) |
 | `TallGrassLayer` | 0, y-sort | Herbe haute, grille 16 px |
@@ -91,7 +134,7 @@ verre à la gargote (voir `villagers.md`).
 | `DecorLayer` | 0, y-sort | Tileset `decor_tileset.tres`, encore vide (buissons à venir) |
 
 - Grille du sol : cases de 48 px, avec une origine à `(1, -1)` dans le village et `(0, 0)`
-  dans les rizières.
+  dans les rizières et le bourg.
 - **Colline du village** : plateau sur les 3 rangées du haut, trouée sur les colonnes 30 à 32.
   `HillWalls` (StaticBody2D) empêche de monter sur le plateau par les côtés de la trouée.
 - **Herbe haute** : `environment/grass/tall_grass_layer.gd` (`TallGrassLayer`) et
@@ -115,7 +158,10 @@ verre à la gargote (voir `villagers.md`).
   été généré une seule fois. **Les scènes sont maintenant la référence** et s'éditent à la
   main dans l'éditeur, sur les couches et nœuds décrits plus haut. Les planches provisoires,
   elles, se régénèrent avec `tools/placeholder_art/`.
-- Les sorties est et sud du village sont dessinées mais ne mènent nulle part (bord de carte).
+- La sortie est du village est dessinée mais ne mène nulle part (bord de carte). La sortie sud
+  mène au bourg.
+- La route sud du bourg et son taxi-brousse sont l'amorce des **autres villages** (jusqu'à 7) :
+  le taxi-brousse pourra y emmener le joueur.
 - La paroi d'une falaise n'est visible que sur sa face sud, et les côtés du plateau ne bloquent
   pas : c'est ce qui permet d'accéder au gradin des rizières par l'est.
 - Herbe haute, clôtures, objets générés, eau et riz sont des **dessins provisoires**. Chaque

@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=4 format=3 uid="uid://ctkkmpripp5js"]
+
+[ext_resource type="Texture2D" uid="uid://d2onmml8svabu" path="res://assets/sprites/props/zebu_market.png" id="1_fntmf"]
+[ext_resource type="Script" path="res://core/data/item_data.gd" id="2_yi2i4"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7yftd"]
+atlas = ExtResource("1_fntmf")
+region = Rect2(576, 40, 192, 152)
+
+[resource]
+script = ExtResource("2_yi2i4")
+id = "tool_plough"
+display_name = "Charrue à zébus"
+malagasy_name = "Angadin'omby"
+description = "Tirée par une paire de zébus forts (15 jours de croissance), elle laboure 4 cases d'un coup. Les zébus se fatiguent après 24 cases par jour."
+category = 1
+price = 15000
+sell_price = 0
+icon = SubResource("AtlasTexture_7yftd")
+crop_id = ""
+animal_species = 0
+tool_action = 5
+sold_in_shop = true

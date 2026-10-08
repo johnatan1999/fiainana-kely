@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="VillagerData" load_steps=25 format=3 uid="uid://c3g5a1rdm37xs"]
+[gd_resource type="Resource" script_class="VillagerData" load_steps=27 format=3 uid="uid://c3g5a1rdm37xs"]
 
 [ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_7vgo8"]
 [ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="1_wi25m"]
@@ -89,51 +89,76 @@ days = 12
 request_line = "Tu pourrais me vendre %d pommes de terre ?"
 thanks_line = "Merci beaucoup !"
 
-[sub_resource type="Resource" id="Resource_stcv8"]
+[sub_resource type="Resource" id="Resource_gu64f"]
+script = ExtResource("6_7uxv6")
+hour = 6
+minute = 30
+zone = "bourg"
+spot = "Tsena_Lamba_1"
+activity = 0
+days = 16
+rain_proof = true
+
+[sub_resource type="Resource" id="Resource_m8h65"]
 script = ExtResource("6_7uxv6")
 hour = 7
 minute = 0
 zone = ""
 spot = "Marche"
 activity = 0
+days = 111
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_3wnh4"]
+[sub_resource type="Resource" id="Resource_pth4x"]
 script = ExtResource("6_7uxv6")
 hour = 12
 minute = 0
 zone = ""
 spot = "Banc_Est"
 activity = 0
+days = 111
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_vjn51"]
+[sub_resource type="Resource" id="Resource_7fn7f"]
 script = ExtResource("6_7uxv6")
 hour = 13
 minute = 30
 zone = ""
 spot = "Marche"
 activity = 0
+days = 111
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_0h3cr"]
+[sub_resource type="Resource" id="Resource_6qrvs"]
+script = ExtResource("6_7uxv6")
+hour = 15
+minute = 30
+zone = ""
+spot = "Banc_Est"
+activity = 0
+days = 16
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_2im6v"]
 script = ExtResource("6_7uxv6")
 hour = 17
 minute = 30
 zone = ""
 spot = "Maison_Est"
 activity = 2
+days = 0
 rain_proof = true
 
 [resource]
 script = ExtResource("7_5ha4h")
 display_name = "Ravao"
 role = "Marchande, elle tient l'étal du marché"
+family = false
 look = SubResource("Resource_u3177")
 size = 1.0
 home_zone = "village"
 home = "Maison_Est"
-routine = Array[ExtResource("6_7uxv6")]([SubResource("Resource_stcv8"), SubResource("Resource_3wnh4"), SubResource("Resource_vjn51"), SubResource("Resource_0h3cr")])
+routine = Array[ExtResource("6_7uxv6")]([SubResource("Resource_gu64f"), SubResource("Resource_m8h65"), SubResource("Resource_pth4x"), SubResource("Resource_7fn7f"), SubResource("Resource_6qrvs"), SubResource("Resource_2im6v")])
 greetings = PackedStringArray("Des légumes frais au marché !", "Bonjour ! Tu passes au marché ?")
 orders = Array[ExtResource("6_1cud7")]([SubResource("Resource_nsxeo"), SubResource("Resource_5rhwn"), SubResource("Resource_vqj08"), SubResource("Resource_lh3fn"), SubResource("Resource_wwumb")])
 friendship_rewards = Array[ExtResource("1_7vgo8")]([SubResource("Resource_pfako"), SubResource("Resource_3qew7")])

@@ -77,60 +77,66 @@ days = 7
 request_line = "Tu aurais %d épis de maïs pour moi ?"
 thanks_line = "Parfait, merci !"
 
-[sub_resource type="Resource" id="Resource_qvpen"]
+[sub_resource type="Resource" id="Resource_thy3n"]
 script = ExtResource("9_hrdae")
 hour = 6
 minute = 30
 zone = "rice_fields"
 spot = "Riziere_Voisins_1"
 activity = 3
+days = 0
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_ctsqq"]
+[sub_resource type="Resource" id="Resource_ighcr"]
 script = ExtResource("9_hrdae")
 hour = 12
 minute = 0
 zone = "rice_fields"
 spot = "Cabane"
 activity = 0
+days = 0
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_1ymxm"]
+[sub_resource type="Resource" id="Resource_w640s"]
 script = ExtResource("9_hrdae")
 hour = 13
 minute = 0
 zone = "rice_fields"
 spot = "Riziere_Voisins_1"
 activity = 3
+days = 0
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_76sc5"]
+[sub_resource type="Resource" id="Resource_6l5e8"]
 script = ExtResource("9_hrdae")
 hour = 16
 minute = 0
 zone = ""
 spot = "Hotely"
 activity = 0
+days = 0
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_8mu4k"]
+[sub_resource type="Resource" id="Resource_t1572"]
 script = ExtResource("9_hrdae")
 hour = 18
 minute = 0
 zone = ""
 spot = "Maison_Ouest"
 activity = 2
+days = 0
 rain_proof = true
 
 [resource]
 script = ExtResource("10_am5p6")
 display_name = "Rakoto"
 role = "Fermier, il cultive la rizière des voisins"
+family = false
 look = SubResource("Resource_vnidk")
 size = 1.0
 home_zone = "village"
 home = "Maison_Ouest"
-routine = Array[ExtResource("9_hrdae")]([SubResource("Resource_qvpen"), SubResource("Resource_ctsqq"), SubResource("Resource_1ymxm"), SubResource("Resource_76sc5"), SubResource("Resource_8mu4k")])
+routine = Array[ExtResource("9_hrdae")]([SubResource("Resource_thy3n"), SubResource("Resource_ighcr"), SubResource("Resource_w640s"), SubResource("Resource_6l5e8"), SubResource("Resource_t1572")])
 greetings = PackedStringArray("Bonjour ! Le riz pousse bien cette année.", "Les rizières ont besoin de bras, tu sais.")
 orders = Array[ExtResource("8_rqhqr")]([SubResource("Resource_trlud"), SubResource("Resource_fmxk5"), SubResource("Resource_j8686")])
 friendship_rewards = Array[ExtResource("1_imk1k")]([SubResource("Resource_15cj1"), SubResource("Resource_mv2wj")])

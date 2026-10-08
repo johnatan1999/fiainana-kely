@@ -48,6 +48,9 @@ signal order_changed(villager_id: String)
 signal order_expired(villager_id: String)
 ## Friendship with a villager grew (points); `hearts` is the new count.
 signal friendship_changed(villager_id: String, hearts: int)
+## The player's zebus changed: one bought or sold, the trough filled, a day
+## of growth.
+signal zebus_changed
 ## A new heart was reached; `reward` is the gift for it (already in the
 ## inventory), or null.
 signal friendship_level_up(villager_id: String, hearts: int, reward: FriendshipReward)
@@ -98,6 +101,38 @@ const FRIENDSHIP_TALK := 10
 const FRIENDSHIP_ORDER := 60
 const FRIENDSHIP_HARVEST_HELP := 5
 const ORDER_BONUS_PER_HEART := 0.05
+
+## The player's zebus: bought young at the zoma zebu market (in the bourg),
+## they live in the farm's pen and graze on their own. Each day the pen's
+## trough is filled (by the player, or by the rain), every zebu grows a day;
+## grown, a zebu is worth far more than its price - the Malagasy savings
+## bank on four legs. Sold back at the zebu market, at their worth.
+const ZEBU_PEN_CAPACITY := 4
+const ZEBU_PRICE := 25000
+## What a zebu is worth when bought (the dealer's margin) and full grown.
+const ZEBU_CALF_VALUE := 18000
+const ZEBU_ADULT_VALUE := 60000
+const ZEBU_GROW_DAYS := 30
+## Names by coat (GrazingZebu.COATS): brown, fawn, grey, near-black, white.
+const ZEBU_NAMES := ["Mena", "Mavo", "Lavenona", "Mainty", "Fotsy"]
+const ZEBU_COATS := 5
+## Ploughing (the plough tool, FarmAction.PLOUGH): a team of ZEBU_TEAM_SIZE
+## zebus, each with at least ZEBU_WORK_MIN_DAYS of growth, tills up to
+## PLOUGH_REACH plots in a row in one go - PLOUGH_CELLS_PER_DAY a day, then
+## the team is tired until tomorrow.
+const ZEBU_TEAM_SIZE := 2
+const ZEBU_WORK_MIN_DAYS := 15
+const PLOUGH_REACH := 4
+const PLOUGH_CELLS_PER_DAY := 24
+enum PloughCheck { OK, NO_TEAM, TIRED }
+## Manure (zezik'omby): each zebu leaves MANURE_PER_ZEBU a day on the heap by
+## the pen - only on days it was cared for (trough full) - up to
+## MANURE_PILE_MAX. Picked up as the "manure" item, spread on a plot
+## (fertilize), it multiplies that plot's next harvest.
+const MANURE_ITEM := "manure"
+const MANURE_PER_ZEBU := 1
+const MANURE_PILE_MAX := 12
+const MANURE_YIELD_MULTIPLIER := 1.5
 
 ## Why an animal can or can't be settled right now - the UI turns it into a
 ## message ("Coop full (6/6)"...).
@@ -285,6 +320,9 @@ func harvest(plot_id: int) -> bool:
 	var under_watered := plot.crop.get_watered_ratio() < crop_data.min_watered_ratio_for_quality
 	var off_season := crop_data.ideal_season != CropData.Season.TOUTE_SAISON 			and int(crop_data.ideal_season) != state.clock.get_season()
 	var quantity := _compute_harvest_quantity(crop_data, under_watered, off_season)
+	if plot.fertilized:
+		quantity = ceili(quantity * MANURE_YIELD_MULTIPLIER)
+		plot.fertilized = false
 	state.add_inventory(crop_id, quantity)
 	plot.crop = null
 	plot.watered = false
@@ -316,6 +354,7 @@ func advance_day() -> void:
 		plot.watered = false
 		plot_changed.emit(plot_id)
 	_advance_animals()
+	_advance_zebus()
 	_advance_trees()
 	state.clock.advance_day()
 	_minute_fraction = 0.0
@@ -764,6 +803,157 @@ static func _cell_key(cell: Vector2i) -> String:
 ## Run before the clock advances, so "in season" means the day that just
 ## ended. Fruit only grows in season, and whatever is left on the tree when
 ## the season ends rots - picking is a seasonal rush, not a stockpile.
+# --- zebus ---------------------------------------------------------------------
+
+## Zebu ids, in the order they were bought.
+func get_zebu_ids() -> Array:
+	var ids := state.zebus.keys()
+	ids.sort_custom(func(a: String, b: String) -> bool: return int(a.get_slice("_", 1)) < int(b.get_slice("_", 1)))
+	return ids
+
+func get_zebu(zebu_id: String) -> Dictionary:
+	return state.zebus.get(zebu_id, {})
+
+func can_buy_zebu() -> bool:
+	return state.zebus.size() < ZEBU_PEN_CAPACITY and state.money >= ZEBU_PRICE
+
+## A young zebu for ZEBU_PRICE, straight to the farm pen. `coat` -1 = at
+## random. Returns its id, "" if the pen is full or money short.
+func buy_zebu(coat: int = -1) -> String:
+	if not can_buy_zebu():
+		return ""
+	state.money -= ZEBU_PRICE
+	money_changed.emit(state.money)
+	if coat < 0 or coat >= ZEBU_COATS:
+		coat = randi() % ZEBU_COATS
+	var zebu_id := "zebu_%d" % state.next_zebu_index
+	state.next_zebu_index += 1
+	state.zebus[zebu_id] = {"name": _zebu_name(coat), "coat": coat, "grown_days": 0}
+	zebus_changed.emit()
+	return zebu_id
+
+## The coat's name, numbered if the herd already has one.
+func _zebu_name(coat: int) -> String:
+	var base: String = ZEBU_NAMES[coat]
+	var taken := state.zebus.values().map(func(zebu: Dictionary) -> String: return zebu["name"])
+	if not base in taken:
+		return base
+	var number := 2
+	while "%s %d" % [base, number] in taken:
+		number += 1
+	return "%s %d" % [base, number]
+
+## What the zebu market pays for it today: from ZEBU_CALF_VALUE to
+## ZEBU_ADULT_VALUE over ZEBU_GROW_DAYS days of care, by 500 Ar.
+func get_zebu_value(zebu_id: String) -> int:
+	var zebu := get_zebu(zebu_id)
+	if zebu.is_empty():
+		return 0
+	var t := clampf(float(zebu["grown_days"]) / ZEBU_GROW_DAYS, 0.0, 1.0)
+	return roundi(lerpf(ZEBU_CALF_VALUE, ZEBU_ADULT_VALUE, t) / 500.0) * 500
+
+func is_zebu_grown(zebu_id: String) -> bool:
+	return int(get_zebu(zebu_id).get("grown_days", 0)) >= ZEBU_GROW_DAYS
+
+## Sells it at its worth. Returns what it paid, 0 for an unknown id.
+func sell_zebu(zebu_id: String) -> int:
+	var value := get_zebu_value(zebu_id)
+	if value <= 0:
+		return 0
+	state.zebus.erase(zebu_id)
+	state.money += value
+	money_changed.emit(state.money)
+	zebus_changed.emit()
+	return value
+
+## Water and hay for today. False if there's no zebu or it's already full.
+func fill_zebu_trough() -> bool:
+	if state.zebus.is_empty() or is_zebu_trough_full():
+		return false
+	state.zebu_trough_full = true
+	zebus_changed.emit()
+	return true
+
+## Full today - filled by the player, or by the rain.
+func is_zebu_trough_full() -> bool:
+	return state.zebu_trough_full or is_raining()
+
+## Zebus strong enough to pull the plough.
+func get_work_zebu_count() -> int:
+	return state.zebus.values().filter(func(zebu: Dictionary) -> bool:
+		return int(zebu["grown_days"]) >= ZEBU_WORK_MIN_DAYS).size()
+
+func check_plough() -> PloughCheck:
+	if get_work_zebu_count() < ZEBU_TEAM_SIZE:
+		return PloughCheck.NO_TEAM
+	if state.plough_cells_today >= PLOUGH_CELLS_PER_DAY:
+		return PloughCheck.TIRED
+	return PloughCheck.OK
+
+func get_plough_cells_left() -> int:
+	return maxi(PLOUGH_CELLS_PER_DAY - state.plough_cells_today, 0)
+
+## Fallow ground the plough can turn: no crop, not tilled yet - the team
+## isn't wasted on worked soil.
+func is_ploughable(plot_id: int) -> bool:
+	return can_till(plot_id) and not get_plot(plot_id).tilled
+
+func can_plough(plot_id: int) -> bool:
+	return check_plough() == PloughCheck.OK and is_ploughable(plot_id)
+
+## Tills one plot with the team - FarmingController calls it for each plot
+## of the furrow as the team reaches it. False if it can't (anymore).
+func plough(plot_id: int) -> bool:
+	if not can_plough(plot_id):
+		return false
+	state.plough_cells_today += 1
+	return till(plot_id)
+
+# --- manure ----------------------------------------------------------------------
+
+func get_manure_pile() -> int:
+	return state.manure_pile
+
+## Takes the whole heap into the inventory. Returns how much.
+func collect_manure() -> int:
+	var amount := state.manure_pile
+	if amount <= 0:
+		return 0
+	state.manure_pile = 0
+	state.add_inventory(MANURE_ITEM, amount)
+	inventory_changed.emit(MANURE_ITEM, state.get_inventory_count(MANURE_ITEM))
+	zebus_changed.emit()
+	return amount
+
+## Worked soil or a growing crop, not fertilized yet, and manure in hand.
+func can_fertilize(plot_id: int) -> bool:
+	var plot := get_plot(plot_id)
+	return plot != null and not plot.fertilized and (plot.tilled or plot.crop != null) \
+		and state.get_inventory_count(MANURE_ITEM) > 0
+
+func fertilize(plot_id: int) -> bool:
+	if not can_fertilize(plot_id):
+		return false
+	get_plot(plot_id).fertilized = true
+	state.add_inventory(MANURE_ITEM, -1)
+	inventory_changed.emit(MANURE_ITEM, state.get_inventory_count(MANURE_ITEM))
+	plot_changed.emit(plot_id)
+	return true
+
+## The day that ends: a day of growth for each zebu if the trough was full,
+## and its manure on the heap; the team is rested.
+func _advance_zebus() -> void:
+	state.plough_cells_today = 0
+	if state.zebus.is_empty():
+		state.zebu_trough_full = false
+		return
+	if is_zebu_trough_full():
+		state.manure_pile = mini(state.manure_pile + MANURE_PER_ZEBU * state.zebus.size(), MANURE_PILE_MAX)
+		for zebu: Dictionary in state.zebus.values():
+			zebu["grown_days"] = mini(int(zebu["grown_days"]) + 1, ZEBU_GROW_DAYS)
+	state.zebu_trough_full = false
+	zebus_changed.emit()
+
 func _advance_trees() -> void:
 	var season := state.clock.get_season()
 	var next_season := state.clock.get_season_on(state.day + 1)
@@ -904,8 +1094,10 @@ func buy_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
 	inventory_changed.emit(item_id, state.get_inventory_count(item_id))
 	return true
 
-func sell(item_id: String, quantity: int = 1) -> bool:
-	if quantity <= 0:
+## `price_multiplier`: what the shop pays on top of the crop's sell_price
+## (ShopProfile.sell_multiplier - the zoma market pays more).
+func sell(item_id: String, quantity: int = 1, price_multiplier: float = 1.0) -> bool:
+	if quantity <= 0 or price_multiplier <= 0.0:
 		return false
 	var crop_data := get_crop_data(item_id)
 	if crop_data == null:
@@ -914,7 +1106,7 @@ func sell(item_id: String, quantity: int = 1) -> bool:
 		return false
 	state.add_inventory(item_id, -quantity)
 	inventory_changed.emit(item_id, state.get_inventory_count(item_id))
-	state.money += crop_data.sell_price * quantity
+	state.money += roundi(crop_data.sell_price * price_multiplier) * quantity
 	money_changed.emit(state.money)
 	return true
 
@@ -953,6 +1145,7 @@ func load_save_data(data: Dictionary) -> void:
 	state_loaded.emit()
 	hotbar_changed.emit()
 	pending_animals_changed.emit()
+	zebus_changed.emit()
 
 	var bounds := state.get_grid_bounds()
 	grid_width = bounds.size.x

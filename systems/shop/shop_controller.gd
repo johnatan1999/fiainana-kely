@@ -16,8 +16,8 @@ func buy_seed(crop_id: String, quantity: int = 1) -> bool:
 func buy_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
 	return simulation.buy_item(item_id, unit_price, quantity)
 
-func sell(item_id: String, quantity: int = 1) -> bool:
-	return simulation.sell(item_id, quantity)
+func sell(item_id: String, quantity: int = 1, price_multiplier: float = 1.0) -> bool:
+	return simulation.sell(item_id, quantity, price_multiplier)
 
 func sell_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
 	return simulation.sell_item(item_id, unit_price, quantity)

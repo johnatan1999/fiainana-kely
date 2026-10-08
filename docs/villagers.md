@@ -7,9 +7,21 @@ Cinq villageois vivent au village, chacun avec sa journée :
 |---|---|---|
 | **Rakoto**, fermier | ouest | Repique le riz dans la rizière des voisins de 6:30 à 16:00, avec une pause à la cabane à midi. Puis va à la gargote et rentre à 18:00 |
 | **Naivo**, fermier | est | Même chose de 6:15 à 15:30 (pause à 11:30), puis passe à l'épicerie et à la gargote, rentre à 18:15 |
-| **Ravao**, marchande | est | Tient son étal au marché de 7:00 à 17:30, avec une pause sur le banc près de chez elle à midi |
+| **Ravao**, marchande | est | Tient son étal au marché de 7:00 à 17:30, avec une pause sur le banc près de chez elle à midi. **Le zoma**, elle descend au bourg vendre ses lambas au tsena (6:30–15:30), puis se repose sur le banc |
 | **Neny Soa**, grand-mère | sud | Va chercher l'eau au point d'eau au lever, se promène sur la place, fait la sieste, va au banc l'après-midi |
-| **Koto**, enfant | sud | Va à l'école le matin (même sous la pluie), traîne au marché l'après-midi, joue au foot en fin de journée |
+| **Koto**, enfant | sud | **En semaine** (Alatsinainy à Zoma), va à l'école le matin (même sous la pluie) ; **le week-end**, joue au foot dès 8:30. Traîne au marché l'après-midi, joue au foot en fin de journée |
+
+- **Les marchands du bourg** (voir `world_zones.md`) :
+
+| Villageois | Sa journée |
+|---|---|
+| **Rabe**, collecteur | **Le zoma**, tient l'étal du collecteur de 6:00 à 17:00 (c'est lui qui achète vanille, girofle, café et litchis), puis flâne sur la place. Les autres jours, attend le taxi-brousse le matin, rentre à midi, flâne au marché l'après-midi |
+| **Ratsimba**, marchand de zébus | **Le zoma**, à son poteau du tsena omby de 6:00 à 17:00. Les autres jours, au taxi-brousse le matin, chez lui à midi, sur la place l'après-midi |
+| **Lalao**, marchande de légumes | **Le zoma**, à son étal de légumes de 6:00 à 17:00. Les autres jours, lave le linge au lavoir le matin, discute sur le pont l'après-midi |
+
+  Ils ont leurs commandes et leurs cadeaux d'amitié : Rabe commande des cultures d'export et
+  offre des graines de café puis de **vanille** ; Lalao commande des légumes et offre des
+  haricots puis du **girofle**. L'amitié est donc une autre porte vers les cultures chères.
 
 - **La famille du joueur**, à la ferme :
 
@@ -17,7 +29,7 @@ Cinq villageois vivent au village, chacun avec sa journée :
 |---|---|
 | **Neny**, la mère | Pile le riz au mortier devant la maison dès 6:00, va chercher l'eau au point d'eau du village vers 9:00, étend le linge, cuisine, nourrit les poules, rentre à 18:00 |
 | **Dada**, le père | Travaille au verger le matin, déjeune à la maison, coupe du bois l'après-midi, rejoint les hommes à la gargote du village à 16:00, rentre à 18:30 |
-| **Fara**, la petite sœur | Va à l'école du village le matin, joue avec les poules à midi, au foot au village l'après-midi, rentre vers 17:45 |
+| **Fara**, la petite sœur | Va à l'école du village le matin en semaine (le week-end, joue avec les poules dès 9:00), joue avec les poules à midi, au foot au village l'après-midi, rentre vers 17:45 |
 
   - Leurs répliques sont des **conseils** : arroser, acheter les graines au marché, les
     commandes, les saisons, les poules. Elles servent de tutoriel naturel.
@@ -74,10 +86,16 @@ Cinq villageois vivent au village, chacun avec sa journée :
     - `WANDER` : flâne autour ;
     - `INSIDE` : entre et disparaît (une porte) ;
     - `WORK` : penché au travail, avance d'un pas le long du rang de temps en temps ;
-  - `rain_proof` : l'étape se fait aussi sous la pluie.
-- **`get_stop(minute)`** : l'étape en cours, ou `null` (= à la maison) avant la première. La
-  journée va de 6:00 à 2:00 : après minuit, c'est toujours la dernière étape de la veille.
-  Terminer donc la journée par une étape `INSIDE` sur `home`.
+  - `rain_proof` : l'étape se fait aussi sous la pluie ;
+  - `days` : les jours de la semaine où l'étape a lieu (cases à cocher, bits de
+    `GameClock.Weekday`) ; aucune case = tous les jours. Un autre jour, l'étape est sautée et
+    la précédente continue. `happens_on(weekday)`, `days_mask([...])`.
+- **`get_stop(minute, weekday)`** : l'étape en cours ce jour-là, ou `null` (= à la maison)
+  avant la première. La journée va de 6:00 à 2:00 : après minuit, c'est toujours la dernière
+  étape de la veille. Terminer donc la journée par une étape `INSIDE` sur `home`.
+  - Pour une journée différente le zoma (ou le week-end), donner des `days` aux étapes des
+    deux variantes, triées par heure : une étape sans `days` s'applique aussi ce jour-là et
+    écraserait la variante.
 
 ### Les chemins : `VillagerRoads` (un par zone)
 - `zone_id` : l'id de la zone.
@@ -88,6 +106,10 @@ Cinq villageois vivent au village, chacun avec sa journée :
     `Epicerie` (routes `Route_Hotely`, `Route_Epicerie`). Les noms affichés dans l'inventaire
     sont dans `InventoryCatalog.SPOT_PLACES`.
   - **Rizières** : `Vers_village`, `Cabane`, `Riziere_Voisins_1`, `Riziere_Voisins_2`.
+  - **Bourg** : `Vers_village`, `Pont`, `Lavoir`, `Tsena` (la place), `Tsena_Mpanangona`,
+    `Tsena_Legioma_1`, `Tsena_Legioma_3`, `Tsena_Lamba_1` (derrière les étals), `Taxi`,
+    `Trano_Rabe`, `Trano_Lalao`, `Tsena_Omby`, `Trano_Ratsimba` (routes `Route_Omby`,
+    `Route_Ratsimba`). Le village a `Vers_bourg`, au bout de `Route_Bourg`.
   - **Ferme** : `Trano` (la porte de la maison), `Fanoto`, `Cuisine`, `Bois`, `Linge`,
     `Poulailler`, `Verger`, `Vers_village`. Le village a `Vers_farm`, au bout de `Route_Ferme`.
 - **`Vers_<zone>`** : le repère où le chemin quitte la carte vers cette zone. `exit_to(zone)`
@@ -107,7 +129,8 @@ Cinq villageois vivent au village, chacun avec sa journée :
   après `ARRIVAL_DELAY` (12 s, le temps du trajet), puis marche jusqu'à son repère.
 - **Couche physique « Animals »** (4) : le joueur bute dessus. Il ne masque rien : il suit les
   routes et attend le joueur de lui-même (`BLOCK_DISTANCE`).
-- Suit l'**horloge** (`CLOCK_GROUP`) et la **météo** (`WEATHER_GROUP`).
+- Suit l'**horloge** (`CLOCK_GROUP`), le **jour de la semaine** (`CALENDAR_GROUP`) et la
+  **météo** (`WEATHER_GROUP`).
 - Au premier top d'horloge après le chargement d'une zone, il se place directement à son
   étape.
 - Chaque villageois a **sa place autour d'un repère partagé**, toujours la même, tirée de son
@@ -195,7 +218,10 @@ Les deux se lancent avec `--editor`.
 - **`tools/place_villagers.gd`** :
   - construit `villager.tscn` ;
   - écrit les `.tres` manquants (supprimer un fichier pour qu'il soit réécrit depuis la
-    table) ;
+    table) ; avec `-- --routines`, réécrit les journées de tous depuis la table, sans toucher
+    au reste ;
+  - dans la table, une étape peut avoir un 7e élément : ses jours (`SCHOOL_DAYS`, `WEEKEND`,
+    `MARKET`, `NOT_MARKET`) ;
   - pour chaque zone de sa table `ZONES` : reconstruit `VillagerRoads`, les rizières des
     voisins (`RizieresVoisins`) et `Villagers` (un nœud par villageois dont la journée passe
     par la zone) ;
@@ -209,7 +235,7 @@ Les deux se lancent avec `--editor`.
 
 ### Tests
 - `run_tests.gd` :
-  - les étapes de la journée ;
+  - les étapes de la journée, et les étapes réservées à certains jours de la semaine ;
   - le calendrier du riz des voisins et l'avancement de la moisson ;
   - l'aide du joueur : seulement pendant la moisson, sur une touffe debout, une seule fois ;
   - la sauvegarde des touffes coupées, et la remise à zéro à la saison suivante.
@@ -220,7 +246,10 @@ Les deux se lancent avec `--editor`.
   - la moisson : à moitié coupée le 27e jour, gerbes, action proposée, touffe coupée par le
     joueur contre une graine de riz, appel des fermiers, tout coupé le 29e jour ;
   - départ vers le village à 16:00, arrivée au village par le chemin du nord après le
-    trajet.
+    trajet ;
+  - pas d'école le dimanche (Koto au foot), école un jour de semaine ;
+  - au bourg : marchands au lavoir et au taxi en semaine, à leurs étals le zoma, Ravao
+    descendue du village.
 
 ## À savoir
 **Ajouter un villageois**

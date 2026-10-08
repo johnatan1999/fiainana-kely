@@ -1,0 +1,161 @@
+[gd_resource type="Resource" script_class="VillagerData" load_steps=28 format=3 uid="uid://dv10l1ly4yv6s"]
+
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_tswvq"]
+[ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_3oco8"]
+[ext_resource type="Texture2D" uid="uid://dbudckdywttlh" path="res://assets/sprites/characters/villager/example_trousers.png" id="3_l3lmx"]
+[ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="4_wie88"]
+[ext_resource type="Texture2D" uid="uid://c8fse4uenivl2" path="res://assets/sprites/characters/villager/example_hair.png" id="5_q6cfu"]
+[ext_resource type="Texture2D" uid="uid://dlywe88eiapxn" path="res://assets/sprites/characters/villager/example_hat.png" id="6_uyx5v"]
+[ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="7_f50mk"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="8_hv21r"]
+[ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="9_8a5j7"]
+[ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="10_dqhvg"]
+
+[sub_resource type="Resource" id="Resource_ua8cm"]
+script = ExtResource("1_tswvq")
+hearts = 2
+item_id = "coffee_seed"
+quantity = 2
+line = "Des graines de café. Plante-les, je te rachèterai la récolte."
+
+[sub_resource type="Resource" id="Resource_i6yab"]
+script = ExtResource("1_tswvq")
+hearts = 4
+item_id = "vanilla_seed"
+quantity = 2
+line = "De la vanille. Elle demande de la patience, mais c'est de l'or vert."
+
+[sub_resource type="Resource" id="Resource_bj74y"]
+script = ExtResource("2_3oco8")
+texture = ExtResource("3_l3lmx")
+color = Color(0.25, 0.25, 0.3, 1)
+
+[sub_resource type="Resource" id="Resource_34bwi"]
+script = ExtResource("2_3oco8")
+texture = ExtResource("4_wie88")
+color = Color(0.92, 0.92, 0.95, 1)
+
+[sub_resource type="Resource" id="Resource_i1n6w"]
+script = ExtResource("2_3oco8")
+texture = ExtResource("5_q6cfu")
+color = Color(0.1, 0.08, 0.06, 1)
+
+[sub_resource type="Resource" id="Resource_5bf62"]
+script = ExtResource("2_3oco8")
+texture = ExtResource("6_uyx5v")
+color = Color(0.35, 0.3, 0.25, 1)
+
+[sub_resource type="Resource" id="Resource_msrkq"]
+script = ExtResource("7_f50mk")
+skin_color = Color(0.48, 0.31, 0.2, 1)
+layers = Array[ExtResource("2_3oco8")]([SubResource("Resource_bj74y"), SubResource("Resource_34bwi"), SubResource("Resource_i1n6w"), SubResource("Resource_5bf62")])
+
+[sub_resource type="Resource" id="Resource_iud3y"]
+script = ExtResource("8_hv21r")
+item_id = "coffee"
+quantity = Vector2i(3, 5)
+unit_reward = 16000
+days = 12
+request_line = "Un client de la ville veut du café. Il m'en faudrait %d."
+thanks_line = "Beau café ! Le client sera content."
+
+[sub_resource type="Resource" id="Resource_h3oed"]
+script = ExtResource("8_hv21r")
+item_id = "clove"
+quantity = Vector2i(2, 4)
+unit_reward = 20000
+days = 14
+request_line = "Je monte un sac de girofle : tu m'en apportes %d ?"
+thanks_line = "Ça sent bon le girofle ! Merci."
+
+[sub_resource type="Resource" id="Resource_em0ib"]
+script = ExtResource("8_hv21r")
+item_id = "litchi"
+quantity = Vector2i(4, 6)
+unit_reward = 26000
+days = 14
+request_line = "Les litchis partent par camion pour les fêtes. %d, tu les as ?"
+thanks_line = "Parfait, ils sont bien rouges !"
+
+[sub_resource type="Resource" id="Resource_l6h1c"]
+script = ExtResource("8_hv21r")
+item_id = "vanilla"
+quantity = Vector2i(1, 2)
+unit_reward = 40000
+days = 20
+request_line = "Il me manque %d gousses de vanille pour un lot. Tu en as ?"
+thanks_line = "De la belle vanille ! Tu as la main verte."
+
+[sub_resource type="Resource" id="Resource_y5gpd"]
+script = ExtResource("9_8a5j7")
+hour = 6
+minute = 0
+zone = ""
+spot = "Tsena_Mpanangona"
+activity = 0
+days = 16
+rain_proof = true
+
+[sub_resource type="Resource" id="Resource_xgrx7"]
+script = ExtResource("9_8a5j7")
+hour = 8
+minute = 30
+zone = ""
+spot = "Taxi"
+activity = 0
+days = 111
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_2corj"]
+script = ExtResource("9_8a5j7")
+hour = 12
+minute = 0
+zone = ""
+spot = "Trano_Rabe"
+activity = 2
+days = 111
+rain_proof = true
+
+[sub_resource type="Resource" id="Resource_p6vv2"]
+script = ExtResource("9_8a5j7")
+hour = 14
+minute = 0
+zone = ""
+spot = "Tsena"
+activity = 1
+days = 111
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_m1vil"]
+script = ExtResource("9_8a5j7")
+hour = 17
+minute = 0
+zone = ""
+spot = "Tsena"
+activity = 1
+days = 16
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_tbdjw"]
+script = ExtResource("9_8a5j7")
+hour = 18
+minute = 0
+zone = ""
+spot = "Trano_Rabe"
+activity = 2
+days = 0
+rain_proof = true
+
+[resource]
+script = ExtResource("10_dqhvg")
+display_name = "Rabe"
+role = "Collecteur, il achète vanille et girofle au tsena du bourg"
+family = false
+look = SubResource("Resource_msrkq")
+size = 1.05
+home_zone = "bourg"
+home = "Trano_Rabe"
+routine = Array[ExtResource("9_8a5j7")]([SubResource("Resource_y5gpd"), SubResource("Resource_xgrx7"), SubResource("Resource_2corj"), SubResource("Resource_p6vv2"), SubResource("Resource_m1vil"), SubResource("Resource_tbdjw")])
+greetings = PackedStringArray("Vanille, girofle, café, litchis : le zoma, je t\'achète tout !", "Le tsena n\'ouvre que le zoma. Reviens avec ta récolte !", "La vanille met longtemps à pousser, mais rien ne paie mieux.", "Le taxi-brousse emporte nos sacs jusqu\'à la ville.")
+orders = Array[ExtResource("8_hv21r")]([SubResource("Resource_iud3y"), SubResource("Resource_h3oed"), SubResource("Resource_em0ib"), SubResource("Resource_l6h1c")])
+friendship_rewards = Array[ExtResource("1_tswvq")]([SubResource("Resource_ua8cm"), SubResource("Resource_i6yab")])

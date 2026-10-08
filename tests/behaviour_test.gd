@@ -47,6 +47,10 @@ func _ready() -> void:
 	await _test_tilling_repaints_one_field()
 	await _test_farm_and_village_paths()
 	await _test_family()
+	await _test_bourg()
+	await _test_zebu_market()
+	await _test_zebu_plough()
+	await _test_zebu_manure()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -75,6 +79,15 @@ func _wait_for(condition: Callable, seconds: float) -> bool:
 func _set_time(minute_of_day: int) -> void:
 	_sim.state.clock.minute_of_day = minute_of_day
 	_sim.time_changed.emit(minute_of_day)
+
+## Moves the clock to `weekday` within the current week (the zone loads
+## and the CALENDAR_GROUP pick it up). Returns the day it was, to restore.
+func _set_weekday(weekday: GameClock.Weekday) -> int:
+	var clock := _sim.state.clock
+	var day := clock.current_day
+	clock.current_day = day - clock.get_weekday() + weekday + (7 if day - clock.get_weekday() + weekday < 1 else 0)
+	get_tree().call_group(DayNightController.CALENDAR_GROUP, "set_weekday", clock.get_weekday())
+	return day
 
 func _go_to_zone(zone_id: String) -> void:
 	if _wm.current_zone_id != zone_id:
@@ -393,13 +406,21 @@ func _test_villagers() -> void:
 	_player.global_position = Vector2(300, 300)
 	# Rain: home, unless the step is rain-proof.
 	_set_time(9 * 60)
+	var today := _set_weekday(GameClock.Weekday.ALAHADY)
+	await _go_to_zone("rice_fields")
+	await _go_to_zone("village")
+	await _frames(3)
+	_check(_villager("Koto").get_spot_name() == "Kianja",
+		"villagers: no school on Alahady - the child plays football")
+	_set_weekday(GameClock.Weekday.TALATA)
 	await _go_to_zone("rice_fields")
 	await _go_to_zone("village")
 	await _frames(3)
 	var koto := _villager("Koto")
 	var grandmother := _villager("NenySoa")
 	_check(koto.get_spot_name() == "Sekoly" and not grandmother.is_inside(),
-		"villagers: in the morning the child is at school, the grandmother strolls on the square")
+		"villagers: on a school day morning the child is at school, the grandmother strolls on the square")
+	_sim.state.clock.current_day = today
 	_sim.set_weather(FarmState.Weather.RAIN)
 	var sheltered := func() -> bool: return grandmother.is_inside()
 	_check(await _wait_for(sheltered, 60.0) and not _villager("Ravao").is_inside() and not koto.is_inside(),
@@ -566,9 +587,9 @@ func _test_inventory_villagers() -> void:
 	await _frames(2)
 	var card: ItemInfoCard = inventory.info_card
 	var texts := card.find_children("*", "Label", true, false).map(func(label): return label.text)
-	_check(inventory._order.size() == 8 and inventory._entries["villager:ravao"].info.icon != null
+	_check(inventory._order.size() == VillagerData.load_all().size() and inventory._entries["villager:ravao"].info.icon != null
 			and texts.has("Ravao") and texts.has("2/5 cœurs") and texts.has("35 %"),
-		"inventory: the Villageois tab lists the 8 villagers (family included) with their portrait; Ravao's card shows 2/5 hearts, 35 %")
+		"inventory: the Villageois tab lists every villager (family and bourg included) with their portrait; Ravao's card shows 2/5 hearts, 35 %")
 	inventory.close()
 	await _frames(15)
 
@@ -622,6 +643,7 @@ func _test_farm_and_village_paths() -> void:
 func _test_family() -> void:
 	_sim.set_weather(FarmState.Weather.CLEAR)
 	_set_time(8 * 60)
+	var today := _set_weekday(GameClock.Weekday.ALAROBIA)
 	await _go_to_zone("village")
 	await _go_to_zone("farm")
 	await _frames(3)
@@ -645,7 +667,264 @@ func _test_family() -> void:
 	var at_school: Villager = _zone().get_node("Villagers/Fara")
 	_check(not at_school.is_inside() and at_school.get_spot_name() == "Sekoly",
 		"family: in the village at 9:00, the sister is at school")
+	_sim.state.clock.current_day = today
 	_set_time(10 * 60)
+
+# --- bourg and zoma market ---------------------------------------------------------
+
+func _test_bourg() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_set_time(10 * 60)
+	var today := _set_weekday(GameClock.Weekday.TALATA)
+	await _go_to_zone("village")
+	_player.global_position = Vector2(1585, 1480)
+	_player.auto_walk_to(Vector2(1585, 1720), 6.0)
+	var in_bourg := func() -> bool: return _wm.current_zone_id == "bourg"
+	var bourg_loaded := func() -> bool: return _wm.current_zone_id == "bourg" and _zone().name == "Bourg"
+	_check(await _wait_for(in_bourg, 7.0) and await _wait_for(bourg_loaded, 5.0),
+		"bourg: the village's south road leads to the bourg")
+	# Let the walk that brought the player here run out.
+	var walk_done := func() -> bool: return not _player.is_auto_walking()
+	await _wait_for(walk_done, 8.0)
+	await _frames(5)
+	# The river stops the player; the bridge crosses it.
+	_player.global_position = Vector2(600, 250)
+	_player.auto_walk_to(Vector2(600, 560), 2.0)
+	await _frames(130)
+	var stopped_y := _player.global_position.y
+	_player.global_position = Vector2(1056, 250)
+	_player.auto_walk_to(Vector2(1056, 600), 3.0)
+	await _frames(190)
+	_check(stopped_y < 340.0 and _player.global_position.y > 560.0,
+		"bourg: the river can't be waded across, the bridge crosses it")
+	_player.global_position = Vector2(300, 1500)
+	# Not market day: the collector's stall is shut, the merchants about.
+	var stall: Shop = _zone().get_node("Props/Tsena_Mpanangona")
+	var shop_ui: ShopUI = _world.get_node("UI/ShopUI")
+	stall.get_node("InteractableComponent").interacted.emit()
+	await _frames(3)
+	_check(not stall.is_open() and not shop_ui.visible and _villager("Rabe").get_spot_name() == "Taxi"
+			and _villager("Lalao").get_spot_name() == "Lavoir" and _villager("Ravao").is_inside(),
+		"bourg: on Talata the zoma market is shut, Rabe waits at the taxi, Lalao washes at the river, Ravao is in the village")
+	# Market day.
+	_set_weekday(GameClock.Weekday.ZOMA)
+	await _go_to_zone("village")
+	await _go_to_zone("bourg")
+	await _frames(3)
+	_check(_villager("Rabe").get_spot_name() == "Tsena_Mpanangona" and _villager("Lalao").get_spot_name() == "Tsena_Legioma_1"
+			and not _villager("Ravao").is_inside() and _villager("Ravao").get_spot_name() == "Tsena_Lamba_1",
+		"bourg: on the zoma, the merchants are at their stalls - Ravao came down from the village")
+	stall = _zone().get_node("Props/Tsena_Mpanangona")
+	stall.get_node("InteractableComponent").interacted.emit()
+	await _frames(3)
+	var seeds: Array = shop_ui._catalog[ItemData.Category.SEEDS]
+	var tools_button: CategoryButton = shop_ui.category_row.get_child(1)
+	_check(shop_ui.visible and shop_ui.get_profile().sell_multiplier > 1.0
+			and seeds.any(func(item: ItemData) -> bool: return item.crop_id == "vanilla")
+			and not tools_button.visible,
+		"zoma market: it opens on the zoma, with the export crops' seeds and no tools")
+	_sim.state.add_inventory("corn", 2)
+	var money := _sim.state.money
+	var corn_seed: ItemData = seeds.filter(func(item: ItemData) -> bool: return item.crop_id == "corn")[0]
+	shop_ui._on_sell_requested(corn_seed, 2)
+	_check(_sim.state.money - money == 2 * roundi(_sim.get_crop_data("corn").sell_price * 1.25),
+		"zoma market: harvests sell for 25 % more")
+	shop_ui.close()
+	await _frames(20)
+	# The village grocery doesn't take export crops.
+	shop_ui.open(Shop.DEFAULT_PROFILE)
+	await _frames(3)
+	var village_seeds: Array = shop_ui._catalog[ItemData.Category.SEEDS]
+	_check(not village_seeds.any(func(item: ItemData) -> bool: return item.crop_id == "vanilla")
+			and village_seeds.any(func(item: ItemData) -> bool: return item.crop_id == "rice"),
+		"village shop: everyday seeds only - vanilla and cloves are bought and sold at the zoma market")
+	shop_ui.close()
+	await _frames(20)
+	_sim.state.clock.current_day = today
+	await _go_to_zone("village")
+
+# --- zebu market and the player's zebus ------------------------------------------
+
+func _test_zebu_market() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_set_time(10 * 60)
+	var today := _set_weekday(GameClock.Weekday.ALAROBIA)
+	await _go_to_zone("village")
+	await _go_to_zone("bourg")
+	await _frames(5)
+	# The village's hill walls overlap the bourg's spawn: they must be gone
+	# from the physics space the moment the bourg is set up.
+	_check(_wm.current_zone_id == "bourg"
+			and _player.global_position.distance_to(_zone().get_node("Spawns/SpawnDefault").global_position) < 2.0,
+		"zones: arriving in a zone, the player isn't pushed out by the walls of the zone left behind")
+	var herd: MarketDayOnly = _zone().get_node("ZebuHerd")
+	var stand: ZebuMarket = _zone().get_node("TsenaOmby")
+	var panel: ZebuMarketPanel = _world.get_node("UI/ZebuMarketPanel")
+	stand.get_node("InteractableComponent").interacted.emit()
+	await _frames(3)
+	_check(herd.get_child_count() == 0 and not herd.is_market_on() and not stand.is_open() and not panel.visible,
+		"zebu market: on Alarobia the corral is empty and the dealer's stand shut")
+	_set_weekday(GameClock.Weekday.ZOMA)
+	await _go_to_zone("village")
+	await _go_to_zone("bourg")
+	await _frames(5)
+	herd = _zone().get_node("ZebuHerd")
+	stand = _zone().get_node("TsenaOmby")
+	_check(herd.get_child_count() == 3 and _villager("Ratsimba").get_spot_name() == "Tsena_Omby",
+		"zebu market: on the zoma, zebus for sale in the corral, Ratsimba at his stand")
+	_sim.state.money = 100000
+	stand.get_node("InteractableComponent").interacted.emit()
+	await _frames(3)
+	var opened := panel.visible
+	panel.buy_requested.emit()
+	await _frames(3)
+	var ids := _sim.get_zebu_ids()
+	_check(opened and ids.size() == 1 and _sim.state.money == 100000 - FarmSimulation.ZEBU_PRICE,
+		"zebu market: the stand opens the market, and a young zebu is bought")
+	panel.close()
+	await _frames(3)
+	# On the farm: in the pen's pasture, the trough to fill, penned at night.
+	await _go_to_zone("farm")
+	await _frames(5)
+	var zebus: Node2D = _zone().get_node("PlayerZebus")
+	var trough: ZebuTrough = _zone().get_node("ZebuTrough")
+	var mine: GrazingZebu = zebus.get_child(0) if zebus.get_child_count() > 0 else null
+	_check(zebus.get_child_count() == 1 and mine.coat == _sim.get_zebu(ids[0])["coat"]
+			and not trough.is_full() and trough.get_node("InteractableComponent").is_interactable,
+		"farm: the bought zebu grazes on the farm, its trough waiting to be filled")
+	trough.interacted.emit()
+	await _frames(3)
+	_check(_sim.is_zebu_trough_full() and trough.is_full()
+			and not trough.get_node("InteractableComponent").is_interactable,
+		"farm: filling the trough shows it full, once for the day")
+	_set_time(20 * 60)
+	await _go_to_zone("village")
+	await _go_to_zone("farm")
+	await _frames(5)
+	mine = _zone().get_node("PlayerZebus").get_child(0)
+	_check(mine.has_pen() and mine.is_penned(), "farm: at night the player's zebu sleeps in the farm pen")
+	# Sold back at the zoma.
+	_set_time(10 * 60)
+	await _go_to_zone("bourg")
+	await _frames(3)
+	var money := _sim.state.money
+	var value := _sim.get_zebu_value(ids[0])
+	panel.sell_requested.emit(ids[0])
+	await _frames(3)
+	_check(_sim.get_zebu_ids().is_empty() and _sim.state.money == money + value,
+		"zebu market: a zebu sells back at its worth")
+	if panel.visible:
+		panel.close()
+	_sim.state.clock.current_day = today
+	await _go_to_zone("village")
+
+func _test_zebu_plough() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_set_time(9 * 60)
+	await _go_to_zone("farm")
+	await _frames(3)
+	var controller: FarmingController = _world.get_node("Gameplay/FarmingController")
+	var hotbar: Hotbar = _world.get_node("Gameplay/Hotbar")
+	_sim.state.add_inventory("tool_plough", 1)
+	hotbar.assign("tool_plough", 7)
+	hotbar.select(7)
+	# Four fallow plots in a row, west to east.
+	var first := -1
+	for plot_id: int in _sim.get_all_plot_ids():
+		if _sim.get_plot_zone(plot_id) != "farm":
+			continue
+		var cell := _sim.get_plot_position(plot_id)
+		var row_ok := true
+		for dx in 4:
+			var other := _sim.get_plot_id_at(cell.x + dx, cell.y, "farm")
+			row_ok = row_ok and other != -1 and _sim.is_ploughable(other)
+		if row_ok:
+			first = plot_id
+			break
+	var view := controller.farm_view
+	var rect := view.get_plot_global_rect(first)
+	_player.global_position = Vector2(rect.position.x - 20, rect.get_center().y + 10)
+	_player.last_facing_direction = Vector2.RIGHT
+	await _frames(2)
+	# Without a team: refused.
+	controller._on_use_item_requested()
+	await _frames(3)
+	_check(first != -1 and not controller.is_ploughing() and not _sim.get_plot(first).tilled,
+		"plough: refused without a pair of strong zebus")
+	_sim.state.money = 100000
+	for coat in [0, 3]:
+		var zebu_id := _sim.buy_zebu(coat)
+		_sim.state.zebus[zebu_id]["grown_days"] = FarmSimulation.ZEBU_WORK_MIN_DAYS
+	_player.global_position = Vector2(rect.position.x - 20, rect.get_center().y + 10)
+	_player.last_facing_direction = Vector2.RIGHT
+	await _frames(2)
+	controller._on_use_item_requested()
+	await _frames(10)
+	var team := _zone().get_node_or_null("PloughTeam")
+	var started := controller.is_ploughing() and team != null
+	var done := func() -> bool: return not controller.is_ploughing()
+	await _wait_for(done, 15.0)
+	var cell := _sim.get_plot_position(first)
+	var tilled := 0
+	for dx in 4:
+		if _sim.get_plot(_sim.get_plot_id_at(cell.x + dx, cell.y, "farm")).tilled:
+			tilled += 1
+	await _frames(40)
+	_check(started and tilled == 4 and _sim.state.plough_cells_today == 4
+			and _zone().get_node_or_null("PloughTeam") == null and _player.input_enabled,
+		"plough: the zebu team tills four plots in a row, the player following, then leaves")
+	for zebu_id: String in _sim.get_zebu_ids():
+		_sim.sell_zebu(zebu_id)
+	hotbar.select(0)
+
+func _test_zebu_manure() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_set_time(9 * 60)
+	await _go_to_zone("farm")
+	await _frames(3)
+	var heap: ManureHeap = _zone().get_node("ManureHeap")
+	var empty_at_first: bool = heap.get_amount() == 0 and not heap.get_node("Sprite2D").visible
+	_sim.state.money = 100000
+	_sim.buy_zebu(0)
+	_sim.buy_zebu(4)
+	_sim.fill_zebu_trough()
+	_sim.advance_day()
+	_set_time(9 * 60)
+	await _frames(3)
+	_check(empty_at_first and heap.get_amount() == 2 and heap.get_node("Sprite2D").visible
+			and heap.get_node("InteractableComponent").is_interactable,
+		"manure: the cared-for zebus leave a heap by the pen overnight")
+	var before := _sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM)
+	heap.interacted.emit()
+	await _frames(3)
+	_check(_sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM) == before + 2 and heap.get_amount() == 0
+			and not heap.get_node("Sprite2D").visible,
+		"manure: picking up the heap takes it all")
+	# Spread on a tilled plot, from the hotbar.
+	var controller: FarmingController = _world.get_node("Gameplay/FarmingController")
+	var hotbar: Hotbar = _world.get_node("Gameplay/Hotbar")
+	hotbar.assign(FarmSimulation.MANURE_ITEM, 6)
+	hotbar.select(6)
+	var target := -1
+	for plot_id: int in _sim.get_all_plot_ids():
+		var plot := _sim.get_plot(plot_id)
+		if _sim.get_plot_zone(plot_id) == "farm" and plot.tilled and plot.crop == null and not plot.fertilized:
+			target = plot_id
+			break
+	var view := controller.farm_view
+	var rect := view.get_plot_global_rect(target)
+	_player.global_position = Vector2(rect.position.x - 20, rect.get_center().y + 10)
+	_player.last_facing_direction = Vector2.RIGHT
+	await _frames(2)
+	controller._on_use_item_requested()
+	await _frames(20)
+	var plot_view: PlotView = view._plot_views[target]
+	_check(_sim.get_plot(target).fertilized and plot_view.is_manure_shown()
+			and _sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM) == before + 1,
+		"manure: spread on a tilled plot, it shows on the soil")
+	for zebu_id: String in _sim.get_zebu_ids():
+		_sim.sell_zebu(zebu_id)
+	hotbar.select(0)
 
 # --- tall grass ----------------------------------------------------------------
 

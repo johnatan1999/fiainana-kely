@@ -1,4 +1,4 @@
-[gd_scene load_steps=60 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=61 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -86,6 +86,9 @@ point_count = 9
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_mef77"]
 size = Vector2(24, 130)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bofs1"]
+size = Vector2(192, 24)
+
 [node name="PlayerVillage" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_o0l50")
@@ -101,6 +104,9 @@ position = Vector2(1505, 110)
 
 [node name="SpawnFrom_FARM" type="Marker2D" parent="Spawns"]
 position = Vector2(70, 505)
+
+[node name="SpawnFrom_BOURG" type="Marker2D" parent="Spawns"]
+position = Vector2(1585, 1560)
 
 [node name="GroundLayer" type="TileMapLayer" parent="."]
 z_index = -10
@@ -640,24 +646,6 @@ curve = SubResource("Curve2D_cart_east")
 
 [node name="ZebuCart" parent="CartRoute_Est" instance=ExtResource("63_zebucart")]
 
-[node name="ZebuPen" parent="." instance=ExtResource("45_kbl0q")]
-position = Vector2(2065, 575)
-
-[node name="ZebuHerd" type="Node2D" parent="."]
-y_sort_enabled = true
-
-[node name="Zebu1" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1880, 560)
-
-[node name="Zebu2" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1990, 625)
-
-[node name="Zebu3" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1960, 705)
-
-[node name="Zebu4" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1860, 745)
-
 [node name="ToFarm" type="Area2D" parent="."]
 script = ExtResource("27_transition")
 target_zone = "farm"
@@ -717,6 +705,15 @@ position = Vector2(1150, 985)
 position = Vector2(1040, 1010)
 text = "ÉPICERIE"
 
+[node name="ToBourg" type="Area2D" parent="."]
+script = ExtResource("27_transition")
+target_zone = "bourg"
+target_spawn = "SpawnFrom_VILLAGE"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ToBourg"]
+position = Vector2(1585, 1620)
+shape = SubResource("RectangleShape2D_bofs1")
+
 [node name="VillagerRoads" type="Node2D" parent="."]
 script = ExtResource("47_euky7")
 zone_id = "village"
@@ -763,6 +760,11 @@ default_color = Color(1, 0.85, 0.3, 0.6)
 
 [node name="Route_Ferme" type="Line2D" parent="VillagerRoads"]
 points = PackedVector2Array(560, 560, 300, 515, 15, 505)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Route_Bourg" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(1370, 1440, 1500, 1520, 1585, 1620)
 width = 6.0
 default_color = Color(1, 0.85, 0.3, 0.6)
 
@@ -820,6 +822,10 @@ gizmo_extents = 16.0
 position = Vector2(15, 505)
 gizmo_extents = 16.0
 
+[node name="Vers_bourg" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1585, 1620)
+gizmo_extents = 16.0
+
 [node name="Villagers" type="Node2D" parent="."]
 y_sort_enabled = true
 
@@ -854,3 +860,21 @@ data = ExtResource("51_m2nm3")
 [node name="Fara" parent="Villagers" instance=ExtResource("48_mi770")]
 position = Vector2(274, 1108)
 data = ExtResource("52_s2hsk")
+
+[node name="ZebuPen" parent="." instance=ExtResource("45_kbl0q")]
+position = Vector2(2065, 575)
+
+[node name="ZebuHerd" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Zebu1" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(1880, 560)
+
+[node name="Zebu2" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(1990, 625)
+
+[node name="Zebu3" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(1960, 705)
+
+[node name="Zebu4" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(1860, 745)

@@ -36,49 +36,54 @@ script = ExtResource("7_uowk7")
 skin_color = Color(0.45, 0.29, 0.19, 1)
 layers = Array[ExtResource("2_hva55")]([SubResource("Resource_bpvb5"), SubResource("Resource_kpad0"), SubResource("Resource_w24jl"), SubResource("Resource_1c2ht")])
 
-[sub_resource type="Resource" id="Resource_ghyve"]
+[sub_resource type="Resource" id="Resource_3tgho"]
 script = ExtResource("9_fyn6f")
 hour = 6
 minute = 30
 zone = ""
 spot = "Verger"
 activity = 3
+days = 0
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_jat82"]
+[sub_resource type="Resource" id="Resource_u2yvt"]
 script = ExtResource("9_fyn6f")
 hour = 11
 minute = 30
 zone = ""
 spot = "Trano"
 activity = 2
+days = 0
 rain_proof = true
 
-[sub_resource type="Resource" id="Resource_2jo5v"]
+[sub_resource type="Resource" id="Resource_452me"]
 script = ExtResource("9_fyn6f")
 hour = 13
 minute = 30
 zone = ""
 spot = "Bois"
 activity = 3
+days = 0
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_scmmv"]
+[sub_resource type="Resource" id="Resource_ktkwo"]
 script = ExtResource("9_fyn6f")
 hour = 16
 minute = 0
 zone = "village"
 spot = "Hotely"
 activity = 0
+days = 0
 rain_proof = false
 
-[sub_resource type="Resource" id="Resource_3m0k2"]
+[sub_resource type="Resource" id="Resource_hioeb"]
 script = ExtResource("9_fyn6f")
 hour = 18
 minute = 30
 zone = ""
 spot = "Trano"
 activity = 2
+days = 0
 rain_proof = true
 
 [resource]
@@ -90,7 +95,7 @@ look = SubResource("Resource_f6o2q")
 size = 1.05
 home_zone = "farm"
 home = "Trano"
-routine = Array[ExtResource("9_fyn6f")]([SubResource("Resource_ghyve"), SubResource("Resource_jat82"), SubResource("Resource_2jo5v"), SubResource("Resource_scmmv"), SubResource("Resource_3m0k2")])
+routine = Array[ExtResource("9_fyn6f")]([SubResource("Resource_3tgho"), SubResource("Resource_u2yvt"), SubResource("Resource_452me"), SubResource("Resource_ktkwo"), SubResource("Resource_hioeb")])
 greetings = PackedStringArray("Le manioc pousse en toute saison : c\'est une valeur sûre.", "En Asara, plante du riz et du maïs ; en Asotry, des patates douces et des arachides.", "Garde un peu d\'argent pour agrandir nos terres.", "Aide les voisins à la moisson, ils te le rendront.")
 orders = Array[ExtResource("8_sdi2s")]([])
 friendship_rewards = Array[ExtResource("1_tagj8")]([])

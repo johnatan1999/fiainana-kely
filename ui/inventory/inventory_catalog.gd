@@ -39,11 +39,23 @@ const SPOT_PLACES := {
 	"Poulailler": "au poulailler",
 	"Verger": "au verger",
 	"Bois": "au tas de bois",
+	"Pont": "sur le pont du bourg",
+	"Lavoir": "au lavoir du bourg",
+	"Tsena": "sur la place du marché, au bourg",
+	"Tsena_Mpanangona": "à son étal du tsena, au bourg",
+	"Tsena_Legioma_1": "à son étal du tsena, au bourg",
+	"Tsena_Legioma_3": "à son étal du tsena, au bourg",
+	"Tsena_Lamba_1": "à son étal du tsena, au bourg",
+	"Taxi": "à l'arrêt du taxi-brousse",
+	"Tsena_Omby": "au tsena omby du bourg, avec ses zébus",
 }
 const HOME_PLACES := {
 	"Maison_Ouest": "la maison de l'ouest",
 	"Maison_Est": "la maison de l'est",
 	"Maison_Sud": "la maison du sud",
+	"Trano_Rabe": "une maison du bourg, à l'est du marché",
+	"Trano_Lalao": "une maison du bourg, à l'ouest du marché",
+	"Trano_Ratsimba": "une maison du bourg, au sud-est du marché",
 }
 const PLACEHOLDER_VILLAGER := Color(0.62, 0.45, 0.32)
 
@@ -161,6 +173,32 @@ static func describe_animal(db: ItemDatabase, animal: AnimalState) -> Dictionary
 	entry["sort_group"] = 1
 	return entry
 
+## One of the player's zebus (FarmSimulation's zebu API): its growth, its
+## worth at the zebu market, today's trough.
+static func describe_zebu(simulation: FarmSimulation, zebu_id: String) -> Dictionary:
+	var zebu := simulation.get_zebu(zebu_id)
+	var grown := simulation.is_zebu_grown(zebu_id)
+	var details: Array = [
+		[_t("Croissance"), _t("Adulte") if grown
+			else "%d / %d" % [zebu["grown_days"], FarmSimulation.ZEBU_GROW_DAYS]],
+		[_t("Valeur au marché"), Currency.format(simulation.get_zebu_value(zebu_id))],
+		[_t("Abreuvoir"), _t("Plein aujourd'hui") if simulation.is_zebu_trough_full() else _t("À remplir")],
+	]
+	var description := _t("Un zébu adulte, à vendre au tsena omby du bourg le zoma.") if grown \
+		else _t("Il grandit d'un jour chaque jour où l'abreuvoir du parc est rempli (ou qu'il pleut).")
+	var entry := _make("zebu:" + zebu_id, zebu["name"], zebu_icon(), Category.ANIMALS,
+		ItemData.Category.ANIMALS, description, details)
+	entry["meta"] = _t("Au parc de la ferme")
+	entry["sort_group"] = 1
+	return entry
+
+## A zebu standing (frame 0 of the zebu sheet), for icons.
+static func zebu_icon() -> Texture2D:
+	var icon := AtlasTexture.new()
+	icon.atlas = load("res://assets/sprites/animals/zebu.png")
+	icon.region = Rect2(0, 0, 128, 96)
+	return icon
+
 ## French: singular for 0 and 1 ("0 jour", "1 jour", "2 jours").
 ## A villager, for the Villageois tab: their portrait, who they are, and
 ## the player's friendship, next gift, order and where to find them now.
@@ -227,7 +265,8 @@ static func _describe_family(villager_id: String, data: VillagerData, simulation
 ## Where they are now, by their routine (and the weather) - the same rule
 ## as Villager, without needing their zone to be loaded.
 static func _place_text(simulation: FarmSimulation, data: VillagerData) -> String:
-	var stop := data.get_stop(simulation.state.clock.minute_of_day)
+	var clock := simulation.state.clock
+	var stop := data.get_stop(clock.minute_of_day, clock.get_weekday())
 	if stop != null and simulation.is_raining() and not stop.rain_proof:
 		stop = null
 	if stop == null or stop.spot == data.home:

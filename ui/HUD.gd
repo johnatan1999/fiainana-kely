@@ -2,7 +2,7 @@ class_name HUD
 extends Control
 
 ## Top-left panel: the date as players plan around it (season, day of the
-## season, year, and how far into the season we are), the time of day, and
+## week, year, and how far into the season we are), the time of day, and
 ## the money. What
 ## the player holds is shown by the HotbarUI.
 ##
@@ -74,7 +74,9 @@ func _refresh_date() -> void:
 	var clock := _simulation.state.clock
 	var season := clock.get_season()
 	season_glyph.kind = SEASON_GLYPHS[season]
-	date_label.text = tr("%s · Jour %d") % [tr(SEASON_NAMES[season]), clock.get_day_of_season()]
+	# The day of the season is on the bar below (DaysLabel): the date line
+	# names the weekday instead - what villagers and the zoma market keep to.
+	date_label.text = tr("%s · %s") % [tr(SEASON_NAMES[season]), GameClock.get_weekday_name(clock.get_weekday())]
 	year_label.text = tr("An %d") % clock.get_year()
 	season_bar.value = clock.get_day_of_season()
 	(season_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = SEASON_COLORS[season]

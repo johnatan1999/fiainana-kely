@@ -152,6 +152,15 @@ func _run_all() -> void:
 	test_weather_save_load_roundtrip()
 	test_rain_is_much_more_likely_in_asara()
 	test_villager_routine_steps()
+	test_villager_weekday_steps()
+	test_weekday_calendar()
+	test_zebus_bought_grow_and_sell()
+	test_zebu_pen_capacity_and_money()
+	test_zebus_save_load()
+	test_ploughing_needs_a_strong_team()
+	test_ploughing_tires_the_team()
+	test_zebus_make_manure()
+	test_manure_grows_a_bigger_harvest()
 	test_neighbour_harvest_follows_the_calendar()
 	test_helping_the_neighbours_harvest()
 	test_neighbour_harvest_save_load_and_new_season()
@@ -1123,11 +1132,188 @@ func test_villager_routine_steps() -> void:
 		routine.append(stop)
 	data.routine = routine
 	var at := func(minute: int) -> String:
-		var stop := data.get_stop(minute)
+		var stop := data.get_stop(minute, GameClock.Weekday.TALATA)
 		return stop.spot if stop != null else "home"
 	_check(at.call(6 * 60 + 30) == "home" and at.call(7 * 60) == "Marche" and at.call(12 * 60 + 29) == "Marche"
 			and at.call(15 * 60) == "Banc" and at.call(23 * 60) == "Maison" and at.call(60) == "Maison",
 		"a villager's routine: home before the first step, each step until the next, the evening's last one past midnight")
+
+func test_villager_weekday_steps() -> void:
+	var data := VillagerData.new()
+	var routine: Array[VillagerStop] = []
+	for entry in [[7, 0, "Place", []], [8, 0, "Sekoly", [GameClock.Weekday.ALATSINAINY, GameClock.Weekday.ZOMA]]]:
+		var stop := VillagerStop.new()
+		stop.hour = entry[0]
+		stop.spot = entry[2]
+		stop.days = VillagerStop.days_mask(entry[3])
+		routine.append(stop)
+	data.routine = routine
+	_check(data.get_stop(9 * 60, GameClock.Weekday.ZOMA).spot == "Sekoly"
+			and data.get_stop(9 * 60, GameClock.Weekday.ALAHADY).spot == "Place",
+		"a step with weekdays only happens on them; on other days the previous step goes on")
+
+func test_zebus_bought_grow_and_sell() -> void:
+	var sim := _make_sim()
+	sim.state.money = 100000
+	var zebu_id := sim.buy_zebu(0)
+	_check(zebu_id != "" and sim.state.money == 100000 - FarmSimulation.ZEBU_PRICE
+			and sim.get_zebu(zebu_id)["name"] == "Mena"
+			and sim.get_zebu_value(zebu_id) == FarmSimulation.ZEBU_CALF_VALUE,
+		"a young zebu costs ZEBU_PRICE, is named after its coat, and is worth less than its price at first")
+	sim.advance_day() # trough empty: no growth
+	_check(sim.get_zebu(zebu_id)["grown_days"] == 0, "a zebu doesn't grow on a day its trough stayed empty")
+	_check(sim.fill_zebu_trough() and not sim.fill_zebu_trough(), "the trough is filled once a day")
+	sim.advance_day()
+	_check(sim.get_zebu(zebu_id)["grown_days"] == 1 and not sim.is_zebu_trough_full(),
+		"a full trough: a day of growth, and it's empty again the next morning")
+	sim.set_weather(FarmState.Weather.RAIN)
+	_check(sim.is_zebu_trough_full(), "the rain fills the trough")
+	for i in FarmSimulation.ZEBU_GROW_DAYS + 5:
+		sim.fill_zebu_trough()
+		sim.advance_day()
+	_check(sim.is_zebu_grown(zebu_id) and sim.get_zebu_value(zebu_id) == FarmSimulation.ZEBU_ADULT_VALUE,
+		"after ZEBU_GROW_DAYS days of care, a grown zebu is worth ZEBU_ADULT_VALUE")
+	var money := sim.state.money
+	_check(sim.sell_zebu(zebu_id) == FarmSimulation.ZEBU_ADULT_VALUE
+			and sim.state.money == money + FarmSimulation.ZEBU_ADULT_VALUE and sim.get_zebu_ids().is_empty(),
+		"selling a zebu pays its worth and takes it out of the herd")
+
+func test_zebu_pen_capacity_and_money() -> void:
+	var sim := _make_sim()
+	sim.state.money = FarmSimulation.ZEBU_PRICE - 1
+	_check(sim.buy_zebu() == "", "no zebu without the money")
+	sim.state.money = 1000000
+	for i in FarmSimulation.ZEBU_PEN_CAPACITY:
+		sim.buy_zebu(0)
+	var names := sim.get_zebu_ids().map(func(zebu_id: String) -> String: return sim.get_zebu(zebu_id)["name"])
+	_check(sim.buy_zebu() == "" and sim.get_zebu_ids().size() == FarmSimulation.ZEBU_PEN_CAPACITY
+			and names == ["Mena", "Mena 2", "Mena 3", "Mena 4"],
+		"the pen holds ZEBU_PEN_CAPACITY zebus; same coats get numbered names")
+	_check(not _make_sim().fill_zebu_trough(), "no trough to fill without zebus")
+
+func test_zebus_save_load() -> void:
+	var sim := _make_sim()
+	sim.state.money = 100000
+	var zebu_id := sim.buy_zebu(3)
+	sim.fill_zebu_trough()
+	sim.advance_day()
+	sim.fill_zebu_trough()
+	var data: Dictionary = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var other := _make_sim()
+	other.load_save_data(data)
+	_check(other.get_zebu(zebu_id) == {"name": "Mainty", "coat": 3, "grown_days": 1}
+			and other.is_zebu_trough_full() and other.buy_zebu(3) == "zebu_1",
+		"zebus, their growth and today's trough survive a save/load")
+
+func test_ploughing_needs_a_strong_team() -> void:
+	var sim := _make_sim()
+	sim.state.money = 1000000
+	var plot_id: int = sim.get_all_plot_ids()[0]
+	sim.buy_zebu(0)
+	_check(sim.check_plough() == FarmSimulation.PloughCheck.NO_TEAM and not sim.plough(plot_id),
+		"no ploughing with a single zebu")
+	sim.buy_zebu(1)
+	_check(sim.check_plough() == FarmSimulation.PloughCheck.NO_TEAM,
+		"no ploughing with two calves: they must be strong enough")
+	for zebu_id: String in sim.get_zebu_ids():
+		sim.state.zebus[zebu_id]["grown_days"] = FarmSimulation.ZEBU_WORK_MIN_DAYS
+	_check(sim.check_plough() == FarmSimulation.PloughCheck.OK and sim.plough(plot_id)
+			and sim.get_plot(plot_id).tilled and sim.state.plough_cells_today == 1,
+		"two zebus of ZEBU_WORK_MIN_DAYS plough a plot")
+	_check(not sim.plough(plot_id), "an already tilled plot isn't ploughed again")
+
+func test_ploughing_tires_the_team() -> void:
+	var sim := _make_sim()
+	sim.state.money = 1000000
+	for coat in 2:
+		var zebu_id := sim.buy_zebu(coat)
+		sim.state.zebus[zebu_id]["grown_days"] = FarmSimulation.ZEBU_GROW_DAYS
+	sim.state.plough_cells_today = FarmSimulation.PLOUGH_CELLS_PER_DAY
+	var plot_id: int = sim.get_all_plot_ids()[0]
+	_check(sim.check_plough() == FarmSimulation.PloughCheck.TIRED and not sim.plough(plot_id)
+			and sim.get_plough_cells_left() == 0,
+		"after PLOUGH_CELLS_PER_DAY plots the team is tired")
+	var data: Dictionary = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var other := _make_sim()
+	other.load_save_data(data)
+	_check(other.state.plough_cells_today == FarmSimulation.PLOUGH_CELLS_PER_DAY,
+		"the team's tiredness survives a save/load")
+	sim.advance_day()
+	_check(sim.check_plough() == FarmSimulation.PloughCheck.OK and sim.plough(plot_id),
+		"rested the next morning")
+
+func test_zebus_make_manure() -> void:
+	var sim := _make_sim()
+	sim.state.money = 1000000
+	sim.buy_zebu(0)
+	sim.buy_zebu(1)
+	sim.advance_day() # trough empty
+	_check(sim.get_manure_pile() == 0, "no manure from zebus left without water and hay")
+	sim.fill_zebu_trough()
+	sim.advance_day()
+	_check(sim.get_manure_pile() == 2 * FarmSimulation.MANURE_PER_ZEBU,
+		"each zebu cared for leaves its manure on the heap")
+	for i in 20:
+		sim.fill_zebu_trough()
+		sim.advance_day()
+	_check(sim.get_manure_pile() == FarmSimulation.MANURE_PILE_MAX, "the heap stops growing at MANURE_PILE_MAX")
+	var data: Dictionary = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var other := _make_sim()
+	other.load_save_data(data)
+	_check(other.get_manure_pile() == FarmSimulation.MANURE_PILE_MAX, "the heap survives a save/load")
+	_check(sim.collect_manure() == FarmSimulation.MANURE_PILE_MAX and sim.get_manure_pile() == 0
+			and sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM) == FarmSimulation.MANURE_PILE_MAX,
+		"picking up the heap puts it all in the inventory")
+
+func test_manure_grows_a_bigger_harvest() -> void:
+	var sim := _make_sim()
+	var corn: CropData = sim.get_crop_data("corn")
+	var plain: int = sim.get_all_plot_ids()[0]
+	var manured: int = sim.get_all_plot_ids()[1]
+	_check(not sim.can_fertilize(manured), "no fertilizing without manure")
+	sim.state.add_inventory(FarmSimulation.MANURE_ITEM, 2)
+	_check(not sim.fertilize(manured), "fallow ground isn't fertilized: till it first")
+	sim.till(plain)
+	sim.till(manured)
+	_check(sim.fertilize(manured) and not sim.fertilize(manured)
+			and sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM) == 1,
+		"a tilled plot takes manure once")
+	for plot_id in [plain, manured]:
+		sim.state.add_inventory("corn_seed", 1)
+		sim.plant(plot_id, "corn")
+	for i in corn.growth_days:
+		sim.water(plain)
+		sim.water(manured)
+		sim.advance_day()
+	seed(7)
+	sim.harvest(plain)
+	var plain_yield := sim.state.get_inventory_count("corn")
+	seed(7)
+	sim.harvest(manured)
+	var manured_yield := sim.state.get_inventory_count("corn") - plain_yield
+	var data: Dictionary = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	_check(manured_yield == ceili(plain_yield * FarmSimulation.MANURE_YIELD_MULTIPLIER)
+			and not sim.get_plot(manured).fertilized,
+		"a fertilized plot's harvest is MANURE_YIELD_MULTIPLIER bigger, and uses the manure up")
+	sim.fertilize(plain)
+	data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var other := _make_sim()
+	other.load_save_data(data)
+	_check(other.get_plot(plain).fertilized, "a plot's manure survives a save/load")
+
+func test_weekday_calendar() -> void:
+	var clock := GameClock.new()
+	_check(clock.get_weekday() == GameClock.Weekday.ALATSINAINY and clock.days_to_market() == 4,
+		"day 1 is an Alatsinainy, four days before the zoma")
+	for i in 4:
+		clock.advance_day()
+	_check(clock.is_market_day() and clock.days_to_market() == 0
+			and GameClock.get_weekday_name(clock.get_weekday()) == "Zoma",
+		"day 5 is the zoma, market day")
+	for i in 3:
+		clock.advance_day()
+	_check(clock.get_weekday() == GameClock.Weekday.ALATSINAINY and clock.days_to_market() == 4,
+		"the week starts again on day 8")
 
 func _make_sim_with_neighbour_paddy() -> FarmSimulation:
 	var sim := _make_sim()

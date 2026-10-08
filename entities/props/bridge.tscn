@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://ds7yl5bn6x0qb"]
+
+[ext_resource type="Script" path="res://entities/props/prop.gd" id="1_hi51o"]
+[ext_resource type="Texture2D" uid="uid://bp0ns8b6ua0xx" path="res://assets/sprites/props/bourg.png" id="2_yhnup"]
+
+[node name="Bridge" type="Node2D"]
+z_index = -7
+script = ExtResource("1_hi51o")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 4
+texture = ExtResource("2_yhnup")
+region_enabled = true
+region_rect = Rect2(0, 0, 192, 192)

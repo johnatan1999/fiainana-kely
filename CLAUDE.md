@@ -7,9 +7,13 @@ Scène principale : `res://world/world.tscn`.
 - Godot : `E:/DEV/Game/Godot_v4.3-stable_win64.exe~1/Godot_v4.3-stable_win64_console.exe`
 - Tests unitaires (simulation pure) : `<godot> --headless --path . --script res://tests/run_tests.gd`
 - Tests d'intégration, dans l'environnement complet du jeu (autoloads chargés) :
-  `<godot> --headless --path . res://tests/runner.tscn -- <test>`, avec `<test>` parmi
+  `<godot> --headless --fixed-fps 60 --path . res://tests/runner.tscn -- <test>`, avec `<test>` parmi
   `smoke_test_world`, `zone_wiring_test`, `integration_test_farm`, `behaviour_test`.
-  Code de sortie 1 si un test échoue.
+  Code de sortie 1 si un test échoue, 2 si le script de test ne compile pas, 3 s'il ne se
+  termine pas en 10 minutes (bloqué).
+  - `--fixed-fps 60` : chaque image avance le jeu de 1/60 s sans attendre l'horloge réelle.
+    Même déroulé, bien plus rapide (`behaviour_test` : ~13 s au lieu de ~3 min 30). Ne pas
+    l'oublier.
   - `behaviour_test` : comportements du monde (poules, oiseaux, clôtures, falaises, lanternes,
     herbe haute, zébus, villageois, commandes, amitié). À compléter quand un comportement visible est ajouté ou modifié.
 - Le mode `--script` ne charge pas les autoloads : n'y lancer que `run_tests.gd`. Tout ce qui

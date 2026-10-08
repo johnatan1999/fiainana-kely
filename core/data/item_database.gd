@@ -22,18 +22,19 @@ enum Kind { SEED, CROP, AUTHORED, UNKNOWN }
 ## compile time could run while item_data.gd itself was still compiling
 ## (load cycle through the scripts that reference ItemDatabase), leaving the
 ## entries as bare Resources with no ItemData script.
-## animal_zebu.tres is deliberately left out: FarmSimulation already supports
-## buying any species, but there's no Zebu scene in AnimalManager and no
-## structure to place one in - add it back here once both exist.
+## animal_zebu.tres is deliberately left out: zebus aren't items - they're
+## bought one by one at the zoma zebu market (FarmSimulation's zebu API).
 const ITEM_PATHS := [
 	"res://data/items/tool_hoe.tres",
 	"res://data/items/tool_watering_can.tres",
 	"res://data/items/tool_angady.tres",
 	"res://data/items/tool_watering_can_tin.tres",
+	"res://data/items/tool_plough.tres",
 	"res://data/items/food_vary_sy_laoka.tres",
 	"res://data/items/food_vary_amin_anana.tres",
 	"res://data/items/animal_chicken.tres",
 	"res://data/items/egg.tres",
+	"res://data/items/manure.tres",
 	"res://data/items/mango.tres",
 ]
 

@@ -1,7 +1,8 @@
 # Interface en jeu : `HUD`, `HotbarUI`, retours visuels
 
 ## Ce que voit le joueur
-- **En haut à gauche (`HUD`)** : saison, jour, année, **heure** (par pas de 10 minutes),
+- **En haut à gauche (`HUD`)** : saison et **jour de la semaine** (« Asara · Zoma »), année,
+  **heure** (par pas de 10 minutes),
   **icône de pluie** les jours de pluie, progression de la saison et argent. Les gains et
   dépenses d'argent s'animent (+/−).
 - **En bas au centre (`HotbarUI`)** : la barre d'outils et de graines (8 cases). Les récoltes
@@ -19,6 +20,8 @@
 
 ## Détails techniques
 - **`HUD.gd`** : `TimeLabel` est mis à jour par `time_changed` (voir `day_night.md`).
+  `DateLabel` montre la saison et le jour de la semaine ; le jour de la saison est sur la
+  barre (`DaysLabel`, « 5/30 »).
 - **`Toast`** (`ui/notifications/toast.gd`) : alimenté par `UIEvents.notify()`. Un nouveau
   message remplace celui affiché.
 - **Onglet Villageois de l'inventaire** :

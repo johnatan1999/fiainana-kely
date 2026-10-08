@@ -71,6 +71,18 @@ var friendship: Dictionary = {} # villager_id -> points
 ## The last day the player talked to each villager (talking counts once a
 ## day).
 var friendship_talk_day: Dictionary = {} # villager_id -> day
+
+## The player's zebus (FarmSimulation's zebu API), bought at the zoma zebu
+## market: zebu_id -> {"name": String, "coat": int (GrazingZebu.COATS),
+## "grown_days": int (days of care so far)}.
+var zebus: Dictionary = {}
+var next_zebu_index: int = 0
+## Today's water and hay in the farm pen's trough - for the whole herd.
+var zebu_trough_full: bool = false
+## Plots the zebu team has ploughed today (FarmSimulation.plough).
+var plough_cells_today: int = 0
+## Manure heaped by the farm pen, waiting to be picked up.
+var manure_pile: int = 0
 const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
@@ -186,6 +198,7 @@ func to_dict() -> Dictionary:
 			"tilled": plot.tilled,
 			"watered": plot.watered,
 			"flooded": plot.flooded,
+			"fertilized": plot.fertilized,
 			"crop": crop_data,
 		}
 
@@ -235,6 +248,11 @@ func to_dict() -> Dictionary:
 		"order_roll_day": order_roll_day,
 		"friendship": friendship.duplicate(),
 		"friendship_talk_day": friendship_talk_day.duplicate(),
+		"zebus": zebus.duplicate(true),
+		"next_zebu_index": next_zebu_index,
+		"zebu_trough_full": zebu_trough_full,
+		"plough_cells_today": plough_cells_today,
+		"manure_pile": manure_pile,
 	}
 
 ## JSON object keys are strings: species saved as "0", "4"...
@@ -277,6 +295,8 @@ func load_dict(data: Dictionary) -> void:
 		plot.tilled = plot_data.get("tilled", false)
 		plot.watered = plot_data.get("watered", false)
 		plot.flooded = plot_data.get("flooded", false)
+		# Optional key (older saves have none): not fertilized.
+		plot.fertilized = plot_data.get("fertilized", false)
 		var crop_data = plot_data.get("crop")
 		if crop_data != null:
 			var crop := CropState.new(str(crop_data["crop_id"]), int(crop_data["growth_days"]))
@@ -350,6 +370,21 @@ func load_dict(data: Dictionary) -> void:
 	if talk_data is Dictionary:
 		for villager_id in talk_data:
 			friendship_talk_day[str(villager_id)] = int(talk_data[villager_id])
+	# Optional keys (older saves have none): no zebus yet.
+	zebus.clear()
+	var zebus_data = data.get("zebus", {})
+	if zebus_data is Dictionary:
+		for zebu_id in zebus_data:
+			var zebu: Dictionary = zebus_data[zebu_id]
+			zebus[str(zebu_id)] = {
+				"name": str(zebu.get("name", "")),
+				"coat": int(zebu.get("coat", 0)),
+				"grown_days": int(zebu.get("grown_days", 0)),
+			}
+	next_zebu_index = int(data.get("next_zebu_index", zebus.size()))
+	zebu_trough_full = bool(data.get("zebu_trough_full", false))
+	plough_cells_today = int(data.get("plough_cells_today", 0))
+	manure_pile = int(data.get("manure_pile", 0))
 
 	# Optional key (older saves have none): no tufts cut yet.
 	neighbour_harvest.clear()
