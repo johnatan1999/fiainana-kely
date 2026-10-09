@@ -17,7 +17,7 @@ extends Node2D
 
 const GROUP := "villager_roads"
 const MERGE_DISTANCE := 12.0
-const EXIT_PREFIX := "Vers_"
+const EXIT_PREFIX := "To_"
 
 ## The world zone these roads are in (a WorldManager zone id).
 @export var zone_id := ""

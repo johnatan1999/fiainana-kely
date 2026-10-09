@@ -11,17 +11,17 @@ extends Control
 ## or a purchase is felt, not just silently rewritten.
 
 const SEASON_NAMES := {
-	GameClock.Season.ASARA: "Asara",
-	GameClock.Season.ASOTRY: "Asotry",
+	GameClock.Season.RAINY: "Asara",
+	GameClock.Season.DRY: "Asotry",
 }
 const SEASON_GLYPHS := {
-	GameClock.Season.ASARA: "sun",
-	GameClock.Season.ASOTRY: "dry_leaf",
+	GameClock.Season.RAINY: "sun",
+	GameClock.Season.DRY: "dry_leaf",
 }
 ## Season bar fill: lush green for the rainy season, dry tan for the cool one.
 const SEASON_COLORS := {
-	GameClock.Season.ASARA: Color(0.42, 0.66, 0.26),
-	GameClock.Season.ASOTRY: Color(0.8, 0.56, 0.26),
+	GameClock.Season.RAINY: Color(0.42, 0.66, 0.26),
+	GameClock.Season.DRY: Color(0.8, 0.56, 0.26),
 }
 const GAIN_COLOR := Color(0.2, 0.55, 0.15)
 const LOSS_COLOR := Color(0.75, 0.2, 0.12)
@@ -75,7 +75,7 @@ func _refresh_date() -> void:
 	var season := clock.get_season()
 	season_glyph.kind = SEASON_GLYPHS[season]
 	# The day of the season is on the bar below (DaysLabel): the date line
-	# names the weekday instead - what villagers and the zoma market keep to.
+	# names the weekday instead - what villagers and the weekly market keep to.
 	date_label.text = tr("%s · %s") % [tr(SEASON_NAMES[season]), GameClock.get_weekday_name(clock.get_weekday())]
 	year_label.text = tr("An %d") % clock.get_year()
 	season_bar.value = clock.get_day_of_season()

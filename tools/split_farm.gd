@@ -29,23 +29,23 @@ const FARM_WIDTH := 30 # cells: 1440 px
 ## a name prefix.
 const FARM_NODES := [
 	"FarmView", "HouseGroup/House", "ChickenCoopBuilding", "AnimalContainer",
-	"Hen", "NiggaHen", "Rooster",
+	"Hen", "BlackHen", "Rooster",
 	"ModularFarmZoneSign", "FarmZoneSign_zone_east", "FarmZoneSign_zone_south",
 	"Props/GrandeMaison_*", "Props/Poulailler_*",
-	"NightLights/Lanterne_GrandeMaison", "NightLights/Lanterne_Poulailler",
+	"NightLights/Lantern_BigHouse", "NightLights/Lantern_Coop",
 	"Trees/Verger_Manguier_*",
 	"Spawns/SpawnFrom_CHICKEN_COOP",
 ]
 ## Nodes that stay in the village (removed from the farm) - besides anything
 ## east of the farm's edge.
 const VILLAGE_NODES := [
-	"HouseGroup/TranoKely01", "HouseGroup/TranoGasy01", "HouseGroup/TranoKely02",
-	"Shop", "ToRiceFields", "HillWalls/East", "CartRoute_Est", "ZebuPen", "ZebuHerd",
+	"HouseGroup/HouseSmall01", "HouseGroup/HouseTraditional01", "HouseGroup/HouseSmall02",
+	"Shop", "ToRiceFields", "HillWalls/East", "CartRoute_East", "ZebuPen", "ZebuHerd",
 	"VillagerRoads", "Villagers",
-	"Props/Grenier", "Props/MaisonOuest_*", "Props/MaisonEst_*", "Props/MaisonSud_*", "Props/Marche_*",
-	"NightLights/Lanterne_MaisonEst", "NightLights/Lanterne_MaisonOuest",
-	"NightLights/Lanterne_MaisonSud", "NightLights/Lanterne_Marche",
-	"Trees/Manguier_MaisonOuest",
+	"Props/Granary", "Props/MaisonOuest_*", "Props/MaisonEst_*", "Props/MaisonSud_*", "Props/Marche_*",
+	"NightLights/Lantern_HouseEast", "NightLights/Lantern_HouseWest",
+	"NightLights/Lantern_HouseSouth", "NightLights/Lantern_Market",
+	"Trees/MangoTree_HouseWest",
 	"Spawns/SpawnFrom_RICE_FIELDS",
 ]
 ## The farm's new east edge: a hedge, with a gap for the way to the village.

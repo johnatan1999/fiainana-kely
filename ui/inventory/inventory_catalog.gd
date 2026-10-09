@@ -22,47 +22,47 @@ const CATEGORY_NAMES := {
 ## markers) - "En ce moment : au marché". A spot missing here reads as
 ## "quelque part au village".
 const SPOT_PLACES := {
-	"Marche": "au marché",
-	"Place": "sur la place",
-	"Banc_Est": "sur le banc, près de la maison de l'est",
-	"Cabane": "à la cabane des rizières",
-	"Riziere_Voisins_1": "dans la rizière des voisins",
-	"Riziere_Voisins_2": "dans la rizière des voisins",
-	"Sekoly": "à l'école",
-	"Kianja": "sur le terrain de foot",
-	"Fantsakana": "au point d'eau",
-	"Hotely": "à la gargote",
-	"Epicerie": "à l'épicerie",
-	"Fanoto": "au mortier, devant la maison",
-	"Linge": "à la corde à linge",
-	"Cuisine": "à la cuisine",
-	"Poulailler": "au poulailler",
-	"Verger": "au verger",
-	"Bois": "au tas de bois",
-	"Pont": "sur le pont du bourg",
-	"Lavoir": "au lavoir du bourg",
-	"Tsena": "sur la place du marché, au bourg",
-	"Tsena_Mpanangona": "à son étal du tsena, au bourg",
-	"Tsena_Legioma_1": "à son étal du tsena, au bourg",
-	"Tsena_Legioma_3": "à son étal du tsena, au bourg",
-	"Tsena_Lamba_1": "à son étal du tsena, au bourg",
+	"Market": "au marché",
+	"Square": "sur la place",
+	"Bench_East": "sur le banc, près de la maison de l'est",
+	"Hut": "à la cabane des rizières",
+	"NeighbourPaddy_1": "dans la rizière des voisins",
+	"NeighbourPaddy_2": "dans la rizière des voisins",
+	"School": "à l'école",
+	"Pitch": "sur le terrain de foot",
+	"WaterPoint": "au point d'eau",
+	"Eatery": "à la gargote",
+	"Grocery": "à l'épicerie",
+	"Mortar": "au mortier, devant la maison",
+	"Laundry": "à la corde à linge",
+	"Kitchen": "à la cuisine",
+	"Coop": "au poulailler",
+	"Orchard": "au verger",
+	"Woodpile": "au tas de bois",
+	"Bridge": "sur le pont du bourg",
+	"WashingStones": "au lavoir du bourg",
+	"MarketSquare": "sur la place du marché, au bourg",
+	"Market_Collector": "à son étal du tsena, au bourg",
+	"Market_Vegetables_1": "à son étal du tsena, au bourg",
+	"Market_Vegetables_3": "à son étal du tsena, au bourg",
+	"Market_Cloth_1": "à son étal du tsena, au bourg",
 	"Taxi": "à l'arrêt du taxi-brousse",
-	"Tsena_Omby": "au tsena omby du bourg, avec ses zébus",
+	"ZebuMarket": "au tsena omby du bourg, avec ses zébus",
 }
 const HOME_PLACES := {
-	"Maison_Ouest": "la maison de l'ouest",
-	"Maison_Est": "la maison de l'est",
-	"Maison_Sud": "la maison du sud",
-	"Trano_Rabe": "une maison du bourg, à l'est du marché",
-	"Trano_Lalao": "une maison du bourg, à l'ouest du marché",
-	"Trano_Ratsimba": "une maison du bourg, au sud-est du marché",
+	"House_West": "la maison de l'ouest",
+	"House_East": "la maison de l'est",
+	"House_South": "la maison du sud",
+	"House_Rabe": "une maison du bourg, à l'est du marché",
+	"House_Lalao": "une maison du bourg, à l'ouest du marché",
+	"House_Ratsimba": "une maison du bourg, au sud-est du marché",
 }
 const PLACEHOLDER_VILLAGER := Color(0.62, 0.45, 0.32)
 
 const SEASON_NAMES := {
-	CropData.Season.ASARA: "Asara",
-	CropData.Season.ASOTRY: "Asotry",
-	CropData.Season.TOUTE_SAISON: "Toute saison",
+	CropData.Season.RAINY: "Asara",
+	CropData.Season.DRY: "Asotry",
+	CropData.Season.ALL_YEAR: "Toute saison",
 }
 
 const WATER_NEED_NAMES := {
@@ -72,8 +72,8 @@ const WATER_NEED_NAMES := {
 }
 
 const CROP_TYPE_NAMES := {
-	CropData.Category.VIVRIER: "Culture vivrière",
-	CropData.Category.RENTE: "Culture de rente",
+	CropData.Category.FOOD: "Culture vivrière",
+	CropData.Category.CASH: "Culture de rente",
 	CropData.Category.EXPORT: "Culture d'export",
 }
 

@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3 uid="uid://4vlln23qe0gd"]
 
 [ext_resource type="Script" path="res://structures/shop/shop.gd" id="1_aov4v"]
-[ext_resource type="Resource" uid="uid://dxsvcvo8o7adm" path="res://data/shops/zoma_market.tres" id="2_a3y8x"]
-[ext_resource type="Texture2D" uid="uid://bp0ns8b6ua0xx" path="res://assets/sprites/props/bourg.png" id="3_dunj4"]
+[ext_resource type="Resource" uid="uid://dxsvcvo8o7adm" path="res://data/shops/weekly_market.tres" id="2_a3y8x"]
+[ext_resource type="Texture2D" uid="uid://bp0ns8b6ua0xx" path="res://assets/sprites/props/market_town.png" id="3_dunj4"]
 [ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="4_4xkyg"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_pf0j4"]

@@ -24,11 +24,11 @@ const DATA_DIR := "res://data/villagers/"
 const LAYERS := "res://assets/sprites/characters/villager/example_%s.png"
 const TILE := 48
 ## Weekdays for the routine entries' optional 7th element (none = every day).
-const SCHOOL_DAYS := ["ALATSINAINY", "TALATA", "ALAROBIA", "ALAKAMISY", "ZOMA"]
-const WEEKEND := ["SABOTSY", "ALAHADY"]
-## The zoma market in the bourg (GameClock.MARKET_DAY), and the other days.
-const MARKET := ["ZOMA"]
-const NOT_MARKET := ["ALATSINAINY", "TALATA", "ALAROBIA", "ALAKAMISY", "SABOTSY", "ALAHADY"]
+const SCHOOL_DAYS := ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
+const WEEKEND := ["SATURDAY", "SUNDAY"]
+## The weekly market in the market town (GameClock.MARKET_DAY), and the other days.
+const MARKET := ["FRIDAY"]
+const NOT_MARKET := ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "SATURDAY", "SUNDAY"]
 
 ## World zone id -> its scene, the spots (Marker2Ds under
 ## VillagerRoads/Spots), the roads along its dirt paths (one Line2D each; a
@@ -40,33 +40,33 @@ const ZONES := {
 	"village": {
 		"scene": "res://world/areas/exterior/player_village.tscn",
 		"spots": {
-			"Maison_Ouest": Vector2(274, 1108),
-			"Maison_Est": Vector2(1986, 1025),
-			"Maison_Sud": Vector2(1584, 1440),
-			"Marche": Vector2(1290, 850),
-			"Place": Vector2(950, 600),
-			"Banc_Est": Vector2(1850, 1040),
-			"Vers_rice_fields": Vector2(1505, 30),
+			"House_West": Vector2(274, 1108),
+			"House_East": Vector2(1986, 1025),
+			"House_South": Vector2(1584, 1440),
+			"Market": Vector2(1290, 850),
+			"Square": Vector2(950, 600),
+			"Bench_East": Vector2(1850, 1040),
+			"To_rice_fields": Vector2(1505, 30),
 			# The village centre (tools/place_village_center.gd).
-			"Sekoly": Vector2(936, 535),
-			"Kianja": Vector2(875, 760),
-			"Fantsakana": Vector2(575, 905),
-			"Hotely": Vector2(775, 1300),
-			"Epicerie": Vector2(1150, 1035),
-			"Vers_farm": Vector2(15, 505),
-			"Vers_bourg": Vector2(1585, 1620),
+			"School": Vector2(936, 535),
+			"Pitch": Vector2(875, 760),
+			"WaterPoint": Vector2(575, 905),
+			"Eatery": Vector2(775, 1300),
+			"Grocery": Vector2(1150, 1035),
+			"To_farm": Vector2(15, 505),
+			"To_market_town": Vector2(1585, 1620),
 		},
 		"roads": {
-			"Route_Ouest": [Vector2(274, 1108), Vector2(450, 1100), Vector2(480, 900), Vector2(480, 620), Vector2(560, 560)],
-			"Route_Place": [Vector2(560, 560), Vector2(950, 575), Vector2(1150, 555), Vector2(1300, 575), Vector2(1460, 640), Vector2(1520, 720)],
-			"Route_Nord": [Vector2(1520, 720), Vector2(1530, 450), Vector2(1510, 200), Vector2(1505, 30)],
-			"Route_Marche": [Vector2(1460, 640), Vector2(1430, 780), Vector2(1290, 850)],
-			"Route_Est": [Vector2(1520, 720), Vector2(1650, 880), Vector2(1760, 1030), Vector2(1850, 1030), Vector2(1986, 1025)],
-			"Route_Sud": [Vector2(1430, 780), Vector2(1450, 960), Vector2(1370, 1150), Vector2(1370, 1440), Vector2(1584, 1440)],
-			"Route_Hotely": [Vector2(450, 1100), Vector2(560, 1250), Vector2(775, 1300)],
-			"Route_Epicerie": [Vector2(1290, 850), Vector2(1180, 1035)],
-			"Route_Ferme": [Vector2(560, 560), Vector2(300, 515), Vector2(15, 505)],
-			"Route_Bourg": [Vector2(1370, 1440), Vector2(1500, 1520), Vector2(1585, 1620)],
+			"Road_West": [Vector2(274, 1108), Vector2(450, 1100), Vector2(480, 900), Vector2(480, 620), Vector2(560, 560)],
+			"Road_Square": [Vector2(560, 560), Vector2(950, 575), Vector2(1150, 555), Vector2(1300, 575), Vector2(1460, 640), Vector2(1520, 720)],
+			"Road_North": [Vector2(1520, 720), Vector2(1530, 450), Vector2(1510, 200), Vector2(1505, 30)],
+			"Road_Market": [Vector2(1460, 640), Vector2(1430, 780), Vector2(1290, 850)],
+			"Road_East": [Vector2(1520, 720), Vector2(1650, 880), Vector2(1760, 1030), Vector2(1850, 1030), Vector2(1986, 1025)],
+			"Road_South": [Vector2(1430, 780), Vector2(1450, 960), Vector2(1370, 1150), Vector2(1370, 1440), Vector2(1584, 1440)],
+			"Road_Eatery": [Vector2(450, 1100), Vector2(560, 1250), Vector2(775, 1300)],
+			"Road_Grocery": [Vector2(1290, 850), Vector2(1180, 1035)],
+			"Road_Farm": [Vector2(560, 560), Vector2(300, 515), Vector2(15, 505)],
+			"Road_MarketTown": [Vector2(1370, 1440), Vector2(1500, 1520), Vector2(1585, 1620)],
 		},
 		"paddies": [],
 		"remove_trees": [],
@@ -74,54 +74,54 @@ const ZONES := {
 	"farm": {
 		"scene": "res://world/areas/exterior/player_farm.tscn",
 		"spots": {
-			"Trano": Vector2(1022, 500),
-			"Vers_village": Vector2(1430, 560),
-			"Fanoto": Vector2(875, 560),
-			"Cuisine": Vector2(1190, 560),
-			"Bois": Vector2(1265, 565),
-			"Linge": Vector2(1290, 690),
-			"Poulailler": Vector2(420, 650),
-			"Verger": Vector2(360, 1360),
+			"House": Vector2(1022, 500),
+			"To_village": Vector2(1430, 560),
+			"Mortar": Vector2(875, 560),
+			"Kitchen": Vector2(1190, 560),
+			"Woodpile": Vector2(1265, 565),
+			"Laundry": Vector2(1290, 690),
+			"Coop": Vector2(420, 650),
+			"Orchard": Vector2(360, 1360),
 		},
 		"roads": {
-			"Route_Cour": [Vector2(1430, 560), Vector2(1265, 565), Vector2(1190, 560), Vector2(1022, 540),
+			"Road_Yard": [Vector2(1430, 560), Vector2(1265, 565), Vector2(1190, 560), Vector2(1022, 540),
 				Vector2(875, 560), Vector2(560, 555), Vector2(470, 560), Vector2(420, 650)],
-			"Route_Maison": [Vector2(1022, 540), Vector2(1022, 500)],
-			"Route_Linge": [Vector2(1265, 565), Vector2(1290, 690)],
-			"Route_Verger": [Vector2(470, 560), Vector2(460, 1100), Vector2(360, 1360)],
+			"Road_House": [Vector2(1022, 540), Vector2(1022, 500)],
+			"Road_Laundry": [Vector2(1265, 565), Vector2(1290, 690)],
+			"Road_Orchard": [Vector2(470, 560), Vector2(460, 1100), Vector2(360, 1360)],
 		},
 		"paddies": [],
 		"remove_trees": [],
 	},
-	"bourg": {
-		"scene": "res://world/areas/exterior/bourg.tscn",
+	"market_town": {
+		"scene": "res://world/areas/exterior/market_town.tscn",
 		"spots": {
-			"Vers_village": Vector2(1056, 20),
-			"Pont": Vector2(1056, 500),
-			"Lavoir": Vector2(700, 505),
-			"Tsena": Vector2(1056, 950),
-			# Behind the stalls (tools/build_bourg.gd).
-			"Tsena_Mpanangona": Vector2(1290, 760),
-			"Tsena_Legioma_1": Vector2(620, 760),
-			"Tsena_Lamba_1": Vector2(830, 760),
-			"Tsena_Legioma_3": Vector2(1500, 760),
+			"To_village": Vector2(1056, 20),
+			"Bridge": Vector2(1056, 500),
+			"WashingStones": Vector2(700, 505),
+			"MarketSquare": Vector2(1056, 950),
+			# Behind the stalls (tools/build_market_town.gd).
+			"Market_Collector": Vector2(1290, 760),
+			"Market_Vegetables_1": Vector2(620, 760),
+			"Market_Cloth_1": Vector2(830, 760),
+			"Market_Vegetables_3": Vector2(1500, 760),
 			"Taxi": Vector2(1150, 1480),
-			"Trano_Rabe": Vector2(1957, 883),
-			"Trano_Lalao": Vector2(278, 1350),
+			"House_Rabe": Vector2(1957, 883),
+			"House_Lalao": Vector2(278, 1350),
 			# The zebu market, north of the river (tools/place_zebu_herds.gd).
-			"Tsena_Omby": Vector2(255, 285),
-			"Trano_Ratsimba": Vector2(1876, 1362),
+			"ZebuMarket": Vector2(255, 285),
+			"House_Ratsimba": Vector2(1876, 1362),
 		},
 		"roads": {
-			"Route_Nord": [Vector2(1056, 20), Vector2(1056, 260), Vector2(1056, 500), Vector2(1056, 700),
+			"Road_North": [Vector2(1056, 20), Vector2(1056, 260), Vector2(1056, 500), Vector2(1056, 700),
 				Vector2(1056, 950), Vector2(1056, 1380), Vector2(1056, 1480), Vector2(1150, 1480)],
-			"Route_Omby": [Vector2(1056, 260), Vector2(640, 285), Vector2(255, 285)],
-			"Route_Ratsimba": [Vector2(1056, 1380), Vector2(1600, 1390), Vector2(1876, 1362)],
-			"Route_Lavoir": [Vector2(1056, 500), Vector2(900, 500), Vector2(700, 505)],
-			"Route_Tsena_Andrefana": [Vector2(1056, 700), Vector2(830, 760), Vector2(620, 760)],
-			"Route_Tsena_Atsinanana": [Vector2(1056, 700), Vector2(1290, 760), Vector2(1500, 760)],
-			"Route_Rabe": [Vector2(1056, 950), Vector2(1600, 960), Vector2(1957, 883)],
-			"Route_Lalao": [Vector2(1056, 950), Vector2(480, 960), Vector2(278, 1350)],
+			"Road_Zebu": [Vector2(1056, 260), Vector2(640, 285), Vector2(255, 285)],
+			"Road_Ratsimba": [Vector2(1056, 1380), Vector2(1600, 1390), Vector2(1876, 1362)],
+			"Road_WashingStones": [Vector2(1056, 500), Vector2(900, 500), Vector2(700, 505)],
+			"Road_Market_West": [Vector2(1056, 700), Vector2(830, 760), Vector2(620, 760)],
+			"Road_Market_East": [Vector2(1056, 700), Vector2(1290, 760), Vector2(1500, 760)],
+			"Road_Rabe": [Vector2(1056, 950), Vector2(1600, 960), Vector2(1957, 883)],
+			"Road_Lalao": [Vector2(1056, 950), Vector2(480, 960), Vector2(278, 1350)],
 		},
 		"paddies": [],
 		"remove_trees": [],
@@ -129,18 +129,18 @@ const ZONES := {
 	"rice_fields": {
 		"scene": "res://world/areas/exterior/rice_fields.tscn",
 		"spots": {
-			"Vers_village": Vector2(960, 1320),
-			"Cabane": Vector2(1135, 1125),
-			"Riziere_Voisins_1": Vector2(1310, 1115),
-			"Riziere_Voisins_2": Vector2(1420, 1205),
+			"To_village": Vector2(960, 1320),
+			"Hut": Vector2(1135, 1125),
+			"NeighbourPaddy_1": Vector2(1310, 1115),
+			"NeighbourPaddy_2": Vector2(1420, 1205),
 		},
 		"roads": {
-			"Route_Village": [Vector2(960, 1320), Vector2(960, 1180), Vector2(1135, 1150), Vector2(1235, 1150)],
+			"Road_Village": [Vector2(960, 1320), Vector2(960, 1180), Vector2(1135, 1150), Vector2(1235, 1150)],
 		},
 		# Right of the hut, seen from the road. The south hedge's west trees
 		# would hide it under their foliage.
 		"paddies": [[Vector2i(26, 22), Vector2i(5, 4)]],
-		"remove_trees": ["Haie_Sud_3_01", "Haie_Sud_3_02", "Haie_Sud_3_03"],
+		"remove_trees": ["Hedge_South_3_01", "Hedge_South_3_02", "Hedge_South_3_03"],
 	},
 }
 
@@ -152,14 +152,14 @@ const ZONES := {
 ## [hearts, item, quantity, line] - see FriendshipReward.
 const VILLAGERS := {
 	"rakoto": {
-		"name": "Rakoto", "role": "Fermier, il cultive la rizière des voisins", "home": "Maison_Ouest", "size": 1.0, "skin": Color(0.45, 0.29, 0.19),
+		"name": "Rakoto", "role": "Fermier, il cultive la rizière des voisins", "home": "House_West", "size": 1.0, "skin": Color(0.45, 0.29, 0.19),
 		"layers": [["trousers", Color(0.45, 0.35, 0.25)], ["shirt", Color(0.92, 0.9, 0.82)], ["hair", Color(0.1, 0.08, 0.06)], ["hat", Color(0.86, 0.74, 0.46)]],
 		"routine": [
-			[6, 30, "rice_fields", "Riziere_Voisins_1", "WORK", true],
-			[12, 0, "rice_fields", "Cabane", "STAND", true],
-			[13, 0, "rice_fields", "Riziere_Voisins_1", "WORK", true],
-			[16, 0, "", "Hotely", "STAND", false],
-			[18, 0, "", "Maison_Ouest", "INSIDE", true],
+			[6, 30, "rice_fields", "NeighbourPaddy_1", "WORK", true],
+			[12, 0, "rice_fields", "Hut", "STAND", true],
+			[13, 0, "rice_fields", "NeighbourPaddy_1", "WORK", true],
+			[16, 0, "", "Eatery", "STAND", false],
+			[18, 0, "", "House_West", "INSIDE", true],
 		],
 		"greetings": ["Bonjour ! Le riz pousse bien cette année.", "Les rizières ont besoin de bras, tu sais."],
 		"orders": [
@@ -173,15 +173,15 @@ const VILLAGERS := {
 		],
 	},
 	"ravao": {
-		"name": "Ravao", "role": "Marchande, elle tient l'étal du marché", "home": "Maison_Est", "size": 1.0, "skin": Color(0.55, 0.36, 0.24),
+		"name": "Ravao", "role": "Marchande, elle tient l'étal du marché", "home": "House_East", "size": 1.0, "skin": Color(0.55, 0.36, 0.24),
 		"layers": [["skirt", Color(0.75, 0.3, 0.25)], ["shirt", Color(0.95, 0.85, 0.55)], ["hair_bun", Color(0.12, 0.09, 0.07)]],
 		"routine": [
-			[6, 30, "bourg", "Tsena_Lamba_1", "STAND", true, MARKET],
-			[7, 0, "", "Marche", "STAND", true, NOT_MARKET],
-			[12, 0, "", "Banc_Est", "STAND", false, NOT_MARKET],
-			[13, 30, "", "Marche", "STAND", true, NOT_MARKET],
-			[15, 30, "", "Banc_Est", "STAND", false, MARKET],
-			[17, 30, "", "Maison_Est", "INSIDE", true],
+			[6, 30, "market_town", "Market_Cloth_1", "STAND", true, MARKET],
+			[7, 0, "", "Market", "STAND", true, NOT_MARKET],
+			[12, 0, "", "Bench_East", "STAND", false, NOT_MARKET],
+			[13, 30, "", "Market", "STAND", true, NOT_MARKET],
+			[15, 30, "", "Bench_East", "STAND", false, MARKET],
+			[17, 30, "", "House_East", "INSIDE", true],
 		],
 		"greetings": ["Des légumes frais au marché !", "Bonjour ! Tu passes au marché ?",
 			"Le zoma, je vends mes lambas au tsena du bourg."],
@@ -198,14 +198,14 @@ const VILLAGERS := {
 		],
 	},
 	"neny_soa": {
-		"name": "Neny Soa", "role": "La grand-mère du village", "home": "Maison_Sud", "size": 0.95, "skin": Color(0.5, 0.33, 0.22),
+		"name": "Neny Soa", "role": "La grand-mère du village", "home": "House_South", "size": 0.95, "skin": Color(0.5, 0.33, 0.22),
 		"layers": [["skirt", Color(0.3, 0.35, 0.55)], ["shirt", Color(0.85, 0.85, 0.85)], ["hair_bun", Color(0.75, 0.75, 0.75)]],
 		"routine": [
-			[7, 0, "", "Fantsakana", "STAND", false],
-			[8, 30, "", "Place", "WANDER", false],
-			[11, 0, "", "Maison_Sud", "INSIDE", true],
-			[15, 0, "", "Banc_Est", "STAND", false],
-			[17, 30, "", "Maison_Sud", "INSIDE", true],
+			[7, 0, "", "WaterPoint", "STAND", false],
+			[8, 30, "", "Square", "WANDER", false],
+			[11, 0, "", "House_South", "INSIDE", true],
+			[15, 0, "", "Bench_East", "STAND", false],
+			[17, 30, "", "House_South", "INSIDE", true],
 		],
 		"greetings": ["Ah, mon enfant ! Tu travailles bien.", "Quand j'étais jeune, tout ce champ était à mon père."],
 		"orders": [
@@ -221,15 +221,15 @@ const VILLAGERS := {
 		],
 	},
 	"koto": {
-		"name": "Koto", "role": "Un enfant du village, toujours à jouer", "home": "Maison_Sud", "size": 0.8, "skin": Color(0.5, 0.33, 0.22),
+		"name": "Koto", "role": "Un enfant du village, toujours à jouer", "home": "House_South", "size": 0.8, "skin": Color(0.5, 0.33, 0.22),
 		"layers": [["shorts", Color(0.25, 0.35, 0.6)], ["shirt", Color(0.85, 0.3, 0.25)], ["hair", Color(0.12, 0.09, 0.07)]],
 		"routine": [
-			[7, 30, "", "Sekoly", "STAND", true, SCHOOL_DAYS],
-			[8, 30, "", "Kianja", "WANDER", false, WEEKEND],
-			[12, 0, "", "Maison_Sud", "INSIDE", true],
-			[14, 0, "", "Marche", "WANDER", false],
-			[16, 30, "", "Kianja", "WANDER", false],
-			[18, 30, "", "Maison_Sud", "INSIDE", true],
+			[7, 30, "", "School", "STAND", true, SCHOOL_DAYS],
+			[8, 30, "", "Pitch", "WANDER", false, WEEKEND],
+			[12, 0, "", "House_South", "INSIDE", true],
+			[14, 0, "", "Market", "WANDER", false],
+			[16, 30, "", "Pitch", "WANDER", false],
+			[18, 30, "", "House_South", "INSIDE", true],
 		],
 		"greetings": ["Salut ! On joue ?", "J'ai vu un caméléon près du manguier !"],
 		"orders": [
@@ -243,15 +243,15 @@ const VILLAGERS := {
 		],
 	},
 	"naivo": {
-		"name": "Naivo", "role": "Fermier, il cultive la rizière des voisins", "home": "Maison_Est", "size": 1.05, "skin": Color(0.62, 0.42, 0.28),
+		"name": "Naivo", "role": "Fermier, il cultive la rizière des voisins", "home": "House_East", "size": 1.05, "skin": Color(0.62, 0.42, 0.28),
 		"layers": [["shorts", Color(0.3, 0.4, 0.3)], ["shirt", Color(0.6, 0.45, 0.3)], ["hair", Color(0.1, 0.08, 0.06)], ["hat", Color(0.8, 0.68, 0.42)]],
 		"routine": [
-			[6, 15, "rice_fields", "Riziere_Voisins_2", "WORK", true],
-			[11, 30, "rice_fields", "Cabane", "STAND", true],
-			[12, 30, "rice_fields", "Riziere_Voisins_2", "WORK", true],
-			[15, 30, "", "Epicerie", "STAND", false],
-			[17, 0, "", "Hotely", "STAND", false],
-			[18, 15, "", "Maison_Est", "INSIDE", true],
+			[6, 15, "rice_fields", "NeighbourPaddy_2", "WORK", true],
+			[11, 30, "rice_fields", "Hut", "STAND", true],
+			[12, 30, "rice_fields", "NeighbourPaddy_2", "WORK", true],
+			[15, 30, "", "Grocery", "STAND", false],
+			[17, 0, "", "Eatery", "STAND", false],
+			[18, 15, "", "House_East", "INSIDE", true],
 		],
 		"greetings": ["Belle journée pour travailler la terre.", "Bonjour, voisin !", "Le repiquage, ça casse le dos !"],
 		"orders": [
@@ -267,17 +267,17 @@ const VILLAGERS := {
 	},
 	# The player's family, on the farm.
 	"mother": {
-		"name": "Neny", "role": "Ta mère", "home": "Trano", "home_zone": "farm", "family": true,
+		"name": "Neny", "role": "Ta mère", "home": "House", "home_zone": "farm", "family": true,
 		"size": 1.0, "skin": Color(0.5, 0.33, 0.22),
 		"layers": [["skirt", Color(0.25, 0.45, 0.35)], ["shirt", Color(0.95, 0.92, 0.8)], ["hair_bun", Color(0.12, 0.09, 0.07)]],
 		"routine": [
-			[6, 0, "", "Fanoto", "STAND", true],
-			[9, 0, "village", "Fantsakana", "STAND", false],
-			[10, 30, "", "Linge", "STAND", false],
-			[12, 0, "", "Cuisine", "STAND", true],
-			[14, 0, "", "Poulailler", "WANDER", false],
-			[16, 0, "", "Fanoto", "STAND", true],
-			[18, 0, "", "Trano", "INSIDE", true],
+			[6, 0, "", "Mortar", "STAND", true],
+			[9, 0, "village", "WaterPoint", "STAND", false],
+			[10, 30, "", "Laundry", "STAND", false],
+			[12, 0, "", "Kitchen", "STAND", true],
+			[14, 0, "", "Coop", "WANDER", false],
+			[16, 0, "", "Mortar", "STAND", true],
+			[18, 0, "", "House", "INSIDE", true],
 		],
 		"greetings": [
 			"Arrose tes cultures chaque jour, sauf quand il pleut.",
@@ -288,15 +288,15 @@ const VILLAGERS := {
 		],
 	},
 	"father": {
-		"name": "Dada", "role": "Ton père", "home": "Trano", "home_zone": "farm", "family": true,
+		"name": "Dada", "role": "Ton père", "home": "House", "home_zone": "farm", "family": true,
 		"size": 1.05, "skin": Color(0.45, 0.29, 0.19),
 		"layers": [["trousers", Color(0.35, 0.32, 0.28)], ["shirt", Color(0.75, 0.6, 0.4)], ["hair", Color(0.1, 0.08, 0.06)], ["hat", Color(0.84, 0.72, 0.45)]],
 		"routine": [
-			[6, 30, "", "Verger", "WORK", true],
-			[11, 30, "", "Trano", "INSIDE", true],
-			[13, 30, "", "Bois", "WORK", false],
-			[16, 0, "village", "Hotely", "STAND", false],
-			[18, 30, "", "Trano", "INSIDE", true],
+			[6, 30, "", "Orchard", "WORK", true],
+			[11, 30, "", "House", "INSIDE", true],
+			[13, 30, "", "Woodpile", "WORK", false],
+			[16, 0, "village", "Eatery", "STAND", false],
+			[18, 30, "", "House", "INSIDE", true],
 		],
 		"greetings": [
 			"Le manioc pousse en toute saison : c'est une valeur sûre.",
@@ -306,16 +306,16 @@ const VILLAGERS := {
 		],
 	},
 	"fara": {
-		"name": "Fara", "role": "Ta petite sœur", "home": "Trano", "home_zone": "farm", "family": true,
+		"name": "Fara", "role": "Ta petite sœur", "home": "House", "home_zone": "farm", "family": true,
 		"size": 0.75, "skin": Color(0.5, 0.33, 0.22),
 		"layers": [["skirt", Color(0.85, 0.4, 0.55)], ["shirt", Color(0.98, 0.95, 0.9)], ["hair", Color(0.12, 0.09, 0.07)]],
 		"routine": [
-			[7, 15, "village", "Sekoly", "STAND", true, SCHOOL_DAYS],
-			[9, 0, "", "Poulailler", "WANDER", false, WEEKEND],
-			[12, 15, "", "Poulailler", "WANDER", false],
-			[14, 30, "", "Trano", "INSIDE", true],
-			[16, 0, "village", "Kianja", "WANDER", false],
-			[17, 45, "", "Trano", "INSIDE", true],
+			[7, 15, "village", "School", "STAND", true, SCHOOL_DAYS],
+			[9, 0, "", "Coop", "WANDER", false, WEEKEND],
+			[12, 15, "", "Coop", "WANDER", false],
+			[14, 30, "", "House", "INSIDE", true],
+			[16, 0, "village", "Pitch", "WANDER", false],
+			[17, 45, "", "House", "INSIDE", true],
 		],
 		"greetings": [
 			"Tu joues avec moi ?",
@@ -324,18 +324,18 @@ const VILLAGERS := {
 			"Maman dit que tu travailles bien.",
 		],
 	},
-	# The bourg's merchants.
+	# The market town's merchants.
 	"rabe": {
 		"name": "Rabe", "role": "Collecteur, il achète vanille et girofle au tsena du bourg",
-		"home": "Trano_Rabe", "home_zone": "bourg", "size": 1.05, "skin": Color(0.48, 0.31, 0.2),
+		"home": "House_Rabe", "home_zone": "market_town", "size": 1.05, "skin": Color(0.48, 0.31, 0.2),
 		"layers": [["trousers", Color(0.25, 0.25, 0.3)], ["shirt", Color(0.92, 0.92, 0.95)], ["hair", Color(0.1, 0.08, 0.06)], ["hat", Color(0.35, 0.3, 0.25)]],
 		"routine": [
-			[6, 0, "", "Tsena_Mpanangona", "STAND", true, MARKET],
+			[6, 0, "", "Market_Collector", "STAND", true, MARKET],
 			[8, 30, "", "Taxi", "STAND", false, NOT_MARKET],
-			[12, 0, "", "Trano_Rabe", "INSIDE", true, NOT_MARKET],
-			[14, 0, "", "Tsena", "WANDER", false, NOT_MARKET],
-			[17, 0, "", "Tsena", "WANDER", false, MARKET],
-			[18, 0, "", "Trano_Rabe", "INSIDE", true],
+			[12, 0, "", "House_Rabe", "INSIDE", true, NOT_MARKET],
+			[14, 0, "", "MarketSquare", "WANDER", false, NOT_MARKET],
+			[17, 0, "", "MarketSquare", "WANDER", false, MARKET],
+			[18, 0, "", "House_Rabe", "INSIDE", true],
 		],
 		"greetings": [
 			"Vanille, girofle, café, litchis : le zoma, je t'achète tout !",
@@ -356,14 +356,14 @@ const VILLAGERS := {
 	},
 	"lalao": {
 		"name": "Lalao", "role": "Marchande de légumes au tsena du bourg",
-		"home": "Trano_Lalao", "home_zone": "bourg", "size": 0.95, "skin": Color(0.52, 0.34, 0.22),
+		"home": "House_Lalao", "home_zone": "market_town", "size": 0.95, "skin": Color(0.52, 0.34, 0.22),
 		"layers": [["skirt", Color(0.55, 0.3, 0.55)], ["shirt", Color(0.95, 0.9, 0.75)], ["hair_bun", Color(0.12, 0.09, 0.07)]],
 		"routine": [
-			[6, 0, "", "Tsena_Legioma_1", "STAND", true, MARKET],
-			[7, 30, "", "Lavoir", "STAND", false, NOT_MARKET],
-			[11, 0, "", "Trano_Lalao", "INSIDE", true, NOT_MARKET],
-			[15, 0, "", "Pont", "STAND", false, NOT_MARKET],
-			[17, 0, "", "Trano_Lalao", "INSIDE", true],
+			[6, 0, "", "Market_Vegetables_1", "STAND", true, MARKET],
+			[7, 30, "", "WashingStones", "STAND", false, NOT_MARKET],
+			[11, 0, "", "House_Lalao", "INSIDE", true, NOT_MARKET],
+			[15, 0, "", "Bridge", "STAND", false, NOT_MARKET],
+			[17, 0, "", "House_Lalao", "INSIDE", true],
 		],
 		"greetings": [
 			"Tomates, haricots, brèdes ! Viens voir mon étal le zoma.",
@@ -382,14 +382,14 @@ const VILLAGERS := {
 	},
 	"ratsimba": {
 		"name": "Ratsimba", "role": "Marchand de zébus, au tsena omby du bourg",
-		"home": "Trano_Ratsimba", "home_zone": "bourg", "size": 1.1, "skin": Color(0.42, 0.27, 0.17),
+		"home": "House_Ratsimba", "home_zone": "market_town", "size": 1.1, "skin": Color(0.42, 0.27, 0.17),
 		"layers": [["trousers", Color(0.4, 0.33, 0.22)], ["shirt", Color(0.7, 0.25, 0.2)], ["hair", Color(0.1, 0.08, 0.06)], ["hat", Color(0.84, 0.72, 0.45)]],
 		"routine": [
-			[6, 0, "", "Tsena_Omby", "STAND", true, MARKET],
+			[6, 0, "", "ZebuMarket", "STAND", true, MARKET],
 			[9, 0, "", "Taxi", "STAND", false, NOT_MARKET],
-			[13, 0, "", "Trano_Ratsimba", "INSIDE", true, NOT_MARKET],
-			[15, 30, "", "Tsena", "WANDER", false, NOT_MARKET],
-			[17, 0, "", "Trano_Ratsimba", "INSIDE", true],
+			[13, 0, "", "House_Ratsimba", "INSIDE", true, NOT_MARKET],
+			[15, 30, "", "MarketSquare", "WANDER", false, NOT_MARKET],
+			[17, 0, "", "House_Ratsimba", "INSIDE", true],
 		],
 		"greetings": [
 			"Un zébu, c'est une banque qui broute !",
@@ -568,7 +568,7 @@ func _place_in_zone(zone_id: String) -> void:
 	var table: Dictionary = ZONES[zone_id]
 	var path: String = table["scene"]
 	var zone: Node = (load(path) as PackedScene).instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
-	for old in ["VillagerRoads", "Villagers", "RizieresVoisins"]:
+	for old in ["VillagerRoads", "Villagers", "NeighbourPaddies"]:
 		if zone.has_node(old):
 			var node := zone.get_node(old)
 			zone.remove_child(node)
@@ -605,14 +605,14 @@ func _place_in_zone(zone_id: String) -> void:
 
 	if not table["paddies"].is_empty():
 		var paddies := Node2D.new()
-		paddies.name = "RizieresVoisins"
+		paddies.name = "NeighbourPaddies"
 		paddies.y_sort_enabled = true
 		_add(zone, zone, paddies)
 		var ground: Node2D = zone.get_node("GroundLayer")
 		for i in table["paddies"].size():
 			var entry: Array = table["paddies"][i]
 			var paddy := Node2D.new()
-			paddy.name = "Riziere%d" % (i + 1)
+			paddy.name = "Paddy%d" % (i + 1)
 			paddy.set_script(load("res://structures/farm/village_paddy/village_paddy.gd"))
 			paddy.y_sort_enabled = true
 			# On the ground grid, like everything else on the map.
@@ -637,7 +637,8 @@ func _place_in_zone(zone_id: String) -> void:
 		if not _passes_through(spec, zone_id):
 			continue
 		var villager: Node2D = scene.instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
-		villager.name = spec["name"].replace(" ", "")
+		# By id, not display name: "mother" -> Mother, "neny_soa" -> NenySoa.
+		villager.name = id.to_pascal_case()
 		villager.set("data", load(DATA_DIR + id + ".tres"))
 		# Placed by the clock in game; here, somewhere sensible to find it.
 		villager.position = table["spots"].get(spec["home"], table["spots"].values()[0])

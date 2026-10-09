@@ -38,7 +38,7 @@ verre à la gargote (voir `villagers.md`).
   qui sèche, corde à linge avec lambas, charrette à zébus (sarety), bancs, paniers, foin,
   grenier, remise en brique.
 
-**Bourg (`bourg`)**, au bout du chemin sud du village : le gros bourg de la commune, où l'on
+**Bourg (`market_town`)**, au bout du chemin sud du village : le gros bourg de la commune, où l'on
 descend le **zoma** (vendredi), jour de marché.
 - Au nord, l'arrivée depuis le village, entre des eucalyptus.
 - Une **rivière** traverse la carte d'ouest en est, avec des roseaux sur les berges. On ne peut
@@ -65,7 +65,7 @@ descend le **zoma** (vendredi), jour de marché.
   charrette.
 - La **rizière des voisins**, à droite de la cabane, où Rakoto et Naivo repiquent puis
   moissonnent le riz, et où le joueur peut les aider (voir `villagers.md`). Décor seulement, non achetable. Les trois eucalyptus ouest de la haie sud
-  (`Haie_Sud_3_*`) ont été retirés pour qu'on la voie depuis le chemin.
+  (`Hedge_South_3_*`) ont été retirés pour qu'on la voie depuis le chemin.
 
 ## Détails techniques
 **Zones**
@@ -85,27 +85,27 @@ descend le **zoma** (vendredi), jour de marché.
     `SpawnFrom_VILLAGE`), `ToVillage` en bas des rizières (vers `SpawnFrom_RICE_FIELDS`) ;
   - village ↔ ferme : `ToFarm` sur le bord ouest du village (vers `SpawnFrom_VILLAGE` de la
     ferme), `ToVillage` sur le bord est de la ferme (vers `SpawnFrom_FARM` du village) ;
-  - village ↔ bourg : `ToBourg` au bout du chemin sud du village (cases 31 à 34 de la
+  - village ↔ bourg : `ToMarketTown` au bout du chemin sud du village (cases 31 à 34 de la
     dernière rangée, vers `SpawnFrom_VILLAGE` du bourg), `ToVillage` en haut de la route nord
-    du bourg (vers `SpawnFrom_BOURG` du village).
-- **Bourg** : construit par `tools/build_bourg.gd` (avec `--editor`) depuis ses tables.
+    du bourg (vers `SpawnFrom_MARKET_TOWN` du village).
+- **Bourg** : construit par `tools/build_market_town.gd` (avec `--editor`) depuis ses tables.
   - Carte de 44 × 34 cases (2 112 × 1 632 px), grille à l'origine `(0, 0)`. Rivière sur les
     rangées 7 et 8 (`StreamLayer`, tuile ruisseau avec collision), sauf sous le pont (colonnes
     20 à 23) ; terre nue (`DIRT`) pour la route, la place et le chemin du lavoir, herbe
     (terrain « Grass ») partout ailleurs ; herbe haute sur les berges et dans les coins.
   - Le pont (`entities/props/bridge.tscn`) est un `Prop` à `z_index` -7 : il se dessine sur
     l'eau, sous les personnages, et ne bloque rien (ce sont les berges qui bloquent).
-  - Décors de la planche `assets/sprites/props/bourg.png` (`gen_bourg.gd`) : `bridge`,
-    `market_stall_produce`, `market_stall_lamba`, `taxi_brousse`, `rice_sacks`, `reeds`,
+  - Décors de la planche `assets/sprites/props/market_town.png` (`gen_market_town.gd`) : `bridge`,
+    `market_stall_produce`, `market_stall_cloth`, `bush_taxi`, `rice_sacks`, `reeds`,
     `hen_cages`. L'étal du collecteur est `structures/shop/market_stall_shop.tscn`.
   - La scène n'est construite qu'une fois : l'outil refuse de l'écraser ensuite, sauf avec
     `-- --force` (qui perd les retouches faites dans l'éditeur). Il réécrit en revanche à
     chaque fois les décors, les profils de boutique, le `ZoneData`, et ajoute la sortie sud du
     village si elle manque.
-- **Centre du village** : `tools/place_village_center.gd` reconstruit le nœud `CentreVillage`
+- **Centre du village** : `tools/place_village_center.gd` reconstruit le nœud `VillageCenter`
   depuis sa table.
-  - L'école et la gargote sont des modèles de maison existants (`trano_kely_02`,
-    `trano_kely_01`), porte fermée (`locked`), en attendant de vrais bâtiments.
+  - L'école et la gargote sont des modèles de maison existants (`house_small_02`,
+    `house_small_01`), porte fermée (`locked`), en attendant de vrais bâtiments.
   - Les décors viennent de la planche `assets/sprites/props/village_center.png`
     (`gen_village_center.gd`) : `water_point`, `washing_stones`, `grocery_kiosk`,
     `eatery_table`, `flagpole`, `football_goal`, `hearth`.
@@ -117,6 +117,11 @@ descend le **zoma** (vendredi), jour de marché.
   - Le village garde tout le reste. Les clôtures des champs y sont retirées.
   - Les sorties de la maison et du poulailler mènent à la ferme, et une nouvelle partie démarre
     à la ferme (`World`).
+  - **Sauvegardes v8** (`SaveController._migrate_to_v8`) : les ids, fichiers et nœuds sont
+    passés en anglais (`tools/rename_to_english.gd`, fait une fois, avec les tables de la
+    migration : `v8_english_name`). La migration convertit la zone `bourg` en
+    `market_town`, les ids d'objets et de terrains, les ids des arbres et des rizières des
+    voisins et le chemin du point de retour.
   - **Sauvegardes v7** (`SaveController._migrate_to_v7`) : les parcelles du village, les
     manguiers du verger, un retour vers la maison ou le poulailler, et un joueur sauvegardé dans
     l'ouest du village passent à la ferme.
@@ -146,7 +151,7 @@ descend le **zoma** (vendredi), jour de marché.
   collision limitée à la base). Dessins dans `assets/sprites/props/village_props.png`
   (générés, échelle 0,7 à 0,9) et `assets/tileset/exterior.png`. Rangés sous un nœud `Props`
   y-sorté dans chaque zone.
-- **Routes des charrettes** : `Path2D` y-sortés (`CartRoute_Est`) avec un `ZebuCart` (voir
+- **Routes des charrettes** : `Path2D` y-sortés (`CartRoute_East`) avec un `ZebuCart` (voir
   `zebu_cart.md`). La charrette garée de la maison de l'est a été retirée, et ses paniers
   déplacés hors de la route.
 - **Arbres** : sous un nœud `Trees` y-sorté (voir `trees.md`). **Lanternes** : sous un nœud

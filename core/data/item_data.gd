@@ -68,9 +68,9 @@ func get_description() -> String:
 
 static func _season_key(season: CropData.Season) -> String:
 	match season:
-		CropData.Season.ASARA:
+		CropData.Season.RAINY:
 			return "Asara"
-		CropData.Season.ASOTRY:
+		CropData.Season.DRY:
 			return "Asotry"
 	return "toute saison"
 

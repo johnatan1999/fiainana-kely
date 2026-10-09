@@ -26,8 +26,8 @@ enum Activity {
 @export var activity := Activity.STAND
 ## The weekdays this step happens on (GameClock.Weekday bits); none ticked
 ## = every day. On the other days the step is skipped - the previous one
-## goes on (school on weekdays only, the zoma market on Fridays).
-@export_flags("Alatsinainy", "Talata", "Alarobia", "Alakamisy", "Zoma", "Sabotsy", "Alahady") var days := 0
+## goes on (school on weekdays only, the weekly market on Fridays).
+@export_flags("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday") var days := 0
 ## Still done in the rain (a covered stall, work in the rice fields);
 ## otherwise the villager stays home while it rains.
 @export var rain_proof := false

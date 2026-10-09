@@ -49,7 +49,7 @@
 - **`firefly.gd`** : lueur pulsée en *unshaded*, visible seulement la nuit.
 - **Placement** :
   - village : un `AmbientLife` (10 papillons, 8 oiseaux) ;
-  - rizières : un `AmbientLife` général, plus `Aigrettes` (5 aigrettes limitées aux bassins,
+  - rizières : un `AmbientLife` général, plus `Egrets` (5 aigrettes limitées aux bassins,
     sans vols).
 - **Son d'envol** : `AudioManager.play_bird_flight_sfx()`, avec le slot `sfx_bird_flight` →
   `assets/audio/SFX/Audio_SFX_Flying_Bird.wav`.

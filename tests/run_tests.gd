@@ -46,7 +46,7 @@ func _make_farm_land_manager(simulation: FarmSimulation) -> FarmLandManager:
 
 ## Listed column by column, so row-by-row ordering has to come from
 ## FarmLandManager, not from the input order.
-const MANGO_TREE_ID := "village:TreeGroup/Manguier"
+const MANGO_TREE_ID := "village:TreeGroup/MangoTree"
 
 ## Mango tree: fruits in Asara (days 1-30), every 4 days, 2 to 4 at a time.
 func _make_sim_with_mango() -> FarmSimulation:
@@ -146,11 +146,12 @@ func _run_all() -> void:
 	test_zone_plots_save_load_roundtrip()
 	test_v5_save_migrates_plots_to_their_zone()
 	test_v6_save_moves_the_farm_out_of_the_village()
+	test_v7_save_moves_ids_to_english()
 	test_harvest_reports_quantity_and_penalties()
 	test_rain_waters_tilled_plots_only()
 	test_crops_grow_on_a_rainy_day_without_watering()
 	test_weather_save_load_roundtrip()
-	test_rain_is_much_more_likely_in_asara()
+	test_rain_is_much_more_likely_in_the_rainy_season()
 	test_villager_routine_steps()
 	test_villager_weekday_steps()
 	test_weekday_calendar()
@@ -341,15 +342,15 @@ func test_save_load_roundtrip() -> void:
 func test_season_boundaries() -> void:
 	var clock := GameClock.new()
 	clock.current_day = 1
-	_check(clock.get_season() == GameClock.Season.ASARA, "day 1 is Asara")
+	_check(clock.get_season() == GameClock.Season.RAINY, "day 1 is Asara")
 	clock.current_day = 30
-	_check(clock.get_season() == GameClock.Season.ASARA, "day 30 is still Asara")
+	_check(clock.get_season() == GameClock.Season.RAINY, "day 30 is still Asara")
 	clock.current_day = 31
-	_check(clock.get_season() == GameClock.Season.ASOTRY, "day 31 switches to Asotry")
+	_check(clock.get_season() == GameClock.Season.DRY, "day 31 switches to Asotry")
 	clock.current_day = 60
-	_check(clock.get_season() == GameClock.Season.ASOTRY, "day 60 is still Asotry")
+	_check(clock.get_season() == GameClock.Season.DRY, "day 60 is still Asotry")
 	clock.current_day = 61
-	_check(clock.get_season() == GameClock.Season.ASARA, "day 61 returns to Asara")
+	_check(clock.get_season() == GameClock.Season.RAINY, "day 61 returns to Asara")
 
 func test_build_coop_deducts_money() -> void:
 	var sim := _make_sim_with_chicken()
@@ -932,9 +933,9 @@ func test_paddy_flag_set_on_purchase_and_saved() -> void:
 	var farm_land_manager := FarmLandManager.new()
 	farm_land_manager.setup(sim)
 	var cells := _rect_cells(Vector2i(100, 5), Vector2i(2, 2))
-	farm_land_manager.register_field(FarmField.Kind.ZONE, cells, load("res://data/zones/riziere_haute.tres"), true)
+	farm_land_manager.register_field(FarmField.Kind.ZONE, cells, load("res://data/zones/upper_paddy.tres"), true)
 	sim.state.money = 1000000
-	farm_land_manager.buy_zone("riziere_haute")
+	farm_land_manager.buy_zone("upper_paddy")
 	var plot_id := sim.get_plot_id_at(100, 5)
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var fresh_sim := _make_sim()
@@ -1052,10 +1053,39 @@ func test_v6_save_moves_the_farm_out_of_the_village() -> void:
 	save_controller.free()
 	var trees: Dictionary = data["trees"]
 	_check(data["plots"]["0"]["zone"] == "farm" and data["plots"]["1"]["zone"] == "rice_fields"
-			and trees.has("farm:Trees/Verger_Manguier_02") and trees.has("village:Trees/MangoTree")
+			and trees.has("farm:Trees/Orchard_MangoTree_02") and trees.has("village:Trees/MangoTree")
 			and not trees.has("village:Trees/Verger_Manguier_02")
 			and data["return_point"]["zone"] == "farm" and data["zone_id"] == "farm",
 		"migrating a v6 save moves the farm's plots, orchard, house exit and the player in it to the farm zone")
+
+func test_v7_save_moves_ids_to_english() -> void:
+	var data := {
+		"plots": {"0": {"x": 3, "y": 4, "zone": "bourg"}},
+		"trees": {
+			"village:Trees/Haie_Sud_1_01": {"type": "eucalyptus"},
+			"bourg:Trees/Manga_Tsena_01": {"type": "mango_tree"},
+		},
+		"neighbour_harvest": {"rice_fields:Riziere1": {"season": 1, "cut": []}},
+		"inventory": {"tool_angady": 1, "food_vary_sy_laoka": 2, "corn": 3},
+		"hotbar": ["tool_hoe", "tool_angady", ""],
+		"orders": {"neny_soa": {"item": "food_vary_amin_anana", "quantity": 1}},
+		"unlocked_zone_ids": ["riziere_haute", "tany_lonaka_sud"],
+		"return_point": {"zone": "village", "spawn": "HouseGroup/TranoKely01/ExitSpawn"},
+		"zone_id": "bourg",
+	}
+	var save_controller := SaveController.new()
+	data = save_controller._migrate(data, 7)
+	save_controller.free()
+	_check(data["zone_id"] == "market_town" and data["plots"]["0"]["zone"] == "market_town"
+			and data["trees"].has("village:Trees/Hedge_South_1_01")
+			and data["trees"].has("market_town:Trees/Mango_Market_01")
+			and data["neighbour_harvest"].has("rice_fields:Paddy1")
+			and data["inventory"] == {"tool_spade": 1, "food_rice_and_side_dish": 2, "corn": 3}
+			and data["hotbar"] == ["tool_hoe", "tool_spade", ""]
+			and data["orders"]["neny_soa"]["item"] == "food_rice_with_greens"
+			and data["unlocked_zone_ids"] == ["upper_paddy", "fertile_land_south"]
+			and data["return_point"]["spawn"] == "HouseGroup/HouseSmall01/ExitSpawn",
+		"migrating a v7 save moves zone, tree, paddy, item and farm zone ids and node paths to English")
 
 func test_harvest_reports_quantity_and_penalties() -> void:
 	var sim := _make_sim()
@@ -1106,25 +1136,25 @@ func test_weather_save_load_roundtrip() -> void:
 	_check(fresh_sim.is_raining() and not old_save_sim.is_raining(),
 		"today's weather survives a save/load; a save from before it has a clear day")
 
-func test_rain_is_much_more_likely_in_asara() -> void:
+func test_rain_is_much_more_likely_in_the_rainy_season() -> void:
 	seed(1234)
 	var sim := _make_sim()
 	sim.rain_chance = FarmSimulation.RAIN_CHANCE.duplicate()
-	var rainy := {GameClock.Season.ASARA: 0, GameClock.Season.ASOTRY: 0}
+	var rainy := {GameClock.Season.RAINY: 0, GameClock.Season.DRY: 0}
 	for season_start in [1, 31]: # first day of Asara, of Asotry
 		for i in 2000:
 			sim.state.clock.current_day = season_start
 			if sim._roll_weather() == FarmState.Weather.RAIN:
 				rainy[sim.state.clock.get_season()] += 1
-	var asara: float = rainy[GameClock.Season.ASARA] / 2000.0
-	var asotry: float = rainy[GameClock.Season.ASOTRY] / 2000.0
-	_check(absf(asara - 0.45) < 0.04 and absf(asotry - 0.08) < 0.03,
-		"it rains on ~45%% of Asara days and ~8%% of Asotry days (%.2f / %.2f)" % [asara, asotry])
+	var rainy_rate: float = rainy[GameClock.Season.RAINY] / 2000.0
+	var dry_rate: float = rainy[GameClock.Season.DRY] / 2000.0
+	_check(absf(rainy_rate - 0.45) < 0.04 and absf(dry_rate - 0.08) < 0.03,
+		"it rains on ~45%% of Asara days and ~8%% of Asotry days (%.2f / %.2f)" % [rainy_rate, dry_rate])
 
 func test_villager_routine_steps() -> void:
 	var data := VillagerData.new()
 	var routine: Array[VillagerStop] = []
-	for entry in [[7, 0, "Marche"], [12, 30, "Banc"], [22, 0, "Maison"]]:
+	for entry in [[7, 0, "Market"], [12, 30, "Bench"], [22, 0, "House"]]:
 		var stop := VillagerStop.new()
 		stop.hour = entry[0]
 		stop.minute = entry[1]
@@ -1132,24 +1162,24 @@ func test_villager_routine_steps() -> void:
 		routine.append(stop)
 	data.routine = routine
 	var at := func(minute: int) -> String:
-		var stop := data.get_stop(minute, GameClock.Weekday.TALATA)
+		var stop := data.get_stop(minute, GameClock.Weekday.TUESDAY)
 		return stop.spot if stop != null else "home"
-	_check(at.call(6 * 60 + 30) == "home" and at.call(7 * 60) == "Marche" and at.call(12 * 60 + 29) == "Marche"
-			and at.call(15 * 60) == "Banc" and at.call(23 * 60) == "Maison" and at.call(60) == "Maison",
+	_check(at.call(6 * 60 + 30) == "home" and at.call(7 * 60) == "Market" and at.call(12 * 60 + 29) == "Market"
+			and at.call(15 * 60) == "Bench" and at.call(23 * 60) == "House" and at.call(60) == "House",
 		"a villager's routine: home before the first step, each step until the next, the evening's last one past midnight")
 
 func test_villager_weekday_steps() -> void:
 	var data := VillagerData.new()
 	var routine: Array[VillagerStop] = []
-	for entry in [[7, 0, "Place", []], [8, 0, "Sekoly", [GameClock.Weekday.ALATSINAINY, GameClock.Weekday.ZOMA]]]:
+	for entry in [[7, 0, "Square", []], [8, 0, "School", [GameClock.Weekday.MONDAY, GameClock.Weekday.FRIDAY]]]:
 		var stop := VillagerStop.new()
 		stop.hour = entry[0]
 		stop.spot = entry[2]
 		stop.days = VillagerStop.days_mask(entry[3])
 		routine.append(stop)
 	data.routine = routine
-	_check(data.get_stop(9 * 60, GameClock.Weekday.ZOMA).spot == "Sekoly"
-			and data.get_stop(9 * 60, GameClock.Weekday.ALAHADY).spot == "Place",
+	_check(data.get_stop(9 * 60, GameClock.Weekday.FRIDAY).spot == "School"
+			and data.get_stop(9 * 60, GameClock.Weekday.SUNDAY).spot == "Square",
 		"a step with weekdays only happens on them; on other days the previous step goes on")
 
 func test_zebus_bought_grow_and_sell() -> void:
@@ -1303,7 +1333,7 @@ func test_manure_grows_a_bigger_harvest() -> void:
 
 func test_weekday_calendar() -> void:
 	var clock := GameClock.new()
-	_check(clock.get_weekday() == GameClock.Weekday.ALATSINAINY and clock.days_to_market() == 4,
+	_check(clock.get_weekday() == GameClock.Weekday.MONDAY and clock.days_to_market() == 4,
 		"day 1 is an Alatsinainy, four days before the zoma")
 	for i in 4:
 		clock.advance_day()
@@ -1312,12 +1342,12 @@ func test_weekday_calendar() -> void:
 		"day 5 is the zoma, market day")
 	for i in 3:
 		clock.advance_day()
-	_check(clock.get_weekday() == GameClock.Weekday.ALATSINAINY and clock.days_to_market() == 4,
+	_check(clock.get_weekday() == GameClock.Weekday.MONDAY and clock.days_to_market() == 4,
 		"the week starts again on day 8")
 
 func _make_sim_with_neighbour_paddy() -> FarmSimulation:
 	var sim := _make_sim()
-	sim.register_neighbour_paddy("rice_fields:Riziere1", Vector2i(5, 4))
+	sim.register_neighbour_paddy("rice_fields:Paddy1", Vector2i(5, 4))
 	return sim
 
 func test_neighbour_harvest_follows_the_calendar() -> void:
@@ -1339,7 +1369,7 @@ func test_neighbour_harvest_follows_the_calendar() -> void:
 
 func test_helping_the_neighbours_harvest() -> void:
 	var sim := _make_sim_with_neighbour_paddy()
-	var paddy := "rice_fields:Riziere1"
+	var paddy := "rice_fields:Paddy1"
 	var clock := sim.state.clock
 	clock.current_day = 20
 	var too_early := sim.help_neighbour_harvest(paddy, Vector2i(4, 3))
@@ -1357,7 +1387,7 @@ func test_helping_the_neighbours_harvest() -> void:
 
 func test_neighbour_harvest_save_load_and_new_season() -> void:
 	var sim := _make_sim_with_neighbour_paddy()
-	var paddy := "rice_fields:Riziere1"
+	var paddy := "rice_fields:Paddy1"
 	sim.state.clock.current_day = 26
 	sim.help_neighbour_harvest(paddy, Vector2i(4, 3))
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
@@ -1389,12 +1419,12 @@ func _order(item_id: String, quantity: int, unit_reward: int, days: int) -> Orde
 
 func test_orders_only_what_the_player_can_get() -> void:
 	var sim := _make_sim_for_orders() # day 1: Asara, no paddy, no hens
-	var asotry_crop: Array[OrderTemplate] = [_order("sweet_potato", 3, 2000, 8)]
+	var dry_season_crop: Array[OrderTemplate] = [_order("sweet_potato", 3, 2000, 8)]
 	var needs_paddy: Array[OrderTemplate] = [_order("rice", 5, 5500, 14)]
 	var no_hens: Array[OrderTemplate] = [_order("egg", 2, 1000, 4)]
 	var too_slow: Array[OrderTemplate] = [_order("cassava", 4, 1500, 5)] # grows in 8 days
 	var fine: Array[OrderTemplate] = [_order("corn", 4, 1700, 7)]
-	sim.register_order_giver("a", asotry_crop)
+	sim.register_order_giver("a", dry_season_crop)
 	sim.register_order_giver("b", needs_paddy)
 	sim.register_order_giver("c", no_hens)
 	sim.register_order_giver("d", too_slow)
@@ -1424,7 +1454,7 @@ func test_orders_run_out_without_penalty() -> void:
 	var sim := _make_sim_for_orders()
 	var templates: Array[OrderTemplate] = [_order("corn", 4, 1700, 5)]
 	sim.register_order_giver("koto", templates)
-	sim.register_order_giver("neny", templates.duplicate())
+	sim.register_order_giver("mother", templates.duplicate())
 	sim.refresh_order_offers()
 	sim.accept_order("koto") # deadline: day 5
 	var expired := []
@@ -1432,7 +1462,7 @@ func test_orders_run_out_without_penalty() -> void:
 	var money := sim.state.money
 	sim.advance_day()
 	sim.advance_day() # day 3
-	var offer_gone := not sim.is_order_offered("neny") # offered day 1, not taken in 2 days
+	var offer_gone := not sim.is_order_offered("mother") # offered day 1, not taken in 2 days
 	sim.advance_day()
 	sim.advance_day() # day 5: the last day
 	var still_on := sim.is_order_active("koto")

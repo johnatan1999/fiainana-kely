@@ -1,0 +1,83 @@
+[gd_scene load_steps=12 format=3 uid="uid://g1qr3qbmi5k1"]
+
+[ext_resource type="Script" path="res://structures/houses/house.gd" id="1_ce65y"]
+[ext_resource type="Texture2D" uid="uid://cswykv32hayj" path="res://assets/sprites/houses/house_tall_01/body.png" id="2_evn47"]
+[ext_resource type="Texture2D" uid="uid://qs3tpg6apgiw" path="res://assets/sprites/houses/house_traditional_01/door_open.png" id="3_blbg5"]
+[ext_resource type="Script" path="res://components/zone_transition.gd" id="4_b15m5"]
+[ext_resource type="AudioStream" uid="uid://v644po0aqtbb" path="res://assets/audio/SFX/Audio_SFX_Door_Cracking.wav" id="5_f1ffo"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_left"]
+size = Vector2(140, 116)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_right"]
+size = Vector2(33, 114)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_porch"]
+size = Vector2(116, 81)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_takmo"]
+size = Vector2(48, 29)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_threshold"]
+size = Vector2(39, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door_reach"]
+size = Vector2(128, 88)
+
+[node name="HouseTraditional01" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_ce65y")
+
+[node name="Visual" type="Node2D" parent="."]
+texture_filter = 4
+position = Vector2(0, -56)
+
+[node name="Body" type="Sprite2D" parent="Visual"]
+position = Vector2(0, -292)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_evn47")
+centered = false
+
+[node name="DoorOpen" type="Sprite2D" parent="Visual"]
+modulate = Color(1, 1, 1, 0)
+position = Vector2(246, -74)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_blbg5")
+centered = false
+
+[node name="Walls" type="StaticBody2D" parent="."]
+
+[node name="WallLeft" type="CollisionShape2D" parent="Walls"]
+position = Vector2(87, -63)
+shape = SubResource("RectangleShape2D_wall_left")
+
+[node name="WallRight" type="CollisionShape2D" parent="Walls"]
+position = Vector2(289.5, -63)
+shape = SubResource("RectangleShape2D_wall_right")
+
+[node name="WallBehindPorch" type="CollisionShape2D" parent="Walls"]
+position = Vector2(215, -80.5)
+shape = SubResource("RectangleShape2D_wall_porch")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Walls"]
+position = Vector2(330, -20.5)
+shape = SubResource("RectangleShape2D_takmo")
+
+[node name="EnterHouse" type="Area2D" parent="."]
+script = ExtResource("4_b15m5")
+transition_sound = ExtResource("5_f1ffo")
+transition_volume_db = -8.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EnterHouse"]
+position = Vector2(215, -45)
+shape = SubResource("RectangleShape2D_threshold")
+
+[node name="DoorReach" type="Area2D" parent="."]
+monitorable = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorReach"]
+position = Vector2(213, -12)
+shape = SubResource("RectangleShape2D_door_reach")
+
+[node name="ExitSpawn" type="Marker2D" parent="."]
+position = Vector2(218.5, 20)

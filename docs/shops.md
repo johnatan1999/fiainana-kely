@@ -33,8 +33,8 @@ tous les jours.
   - `closed_message` : affiché (toast) si le joueur vient quand c'est fermé ;
   - `is_open(weekday, minute)`, `sells(item, item_db)`, `filter_catalog(catalog, item_db)`,
     `sell_price(base_price)`.
-- **Profils** (`data/shops/`, écrits par `tools/build_bourg.gd` depuis sa table `SHOPS`) :
-  `village_shop.tres` (`LOCAL`, tout le reste, toujours ouvert), `zoma_market.tres`.
+- **Profils** (`data/shops/`, écrits par `tools/build_market_town.gd` depuis sa table `SHOPS`) :
+  `village_shop.tres` (`LOCAL`, tout le reste, toujours ouvert), `weekly_market.tres`.
 - **`Shop`** (`structures/shop/shop.gd`, `StaticBody2D` + `InteractableComponent`) :
   - export `profile` (vide = `village_shop.tres`) et `reach` (taille de la zone d'interaction,
     posée en code ; zéro = celle de la scène) ;
@@ -42,7 +42,7 @@ tous les jours.
     ouverture ; ouvert, il émet `UIEvents.shop_requested(self)`.
   - Scènes : `structures/shop/shop.tscn` (le marché du village) et
     `structures/shop/market_stall_shop.tscn` (l'étal du collecteur, profil du zoma, construit
-    par `build_bourg.gd`).
+    par `build_market_town.gd`).
 - **`ShopUI`** (`ui/shop_ui.gd`, une seule fenêtre pour toutes les boutiques) :
   - `open(profile)` : filtre le catalogue (`ItemDatabase.get_shop_catalog()`) par le profil,
     met le titre, cache les onglets vides et vide le panier quand on change de boutique ;

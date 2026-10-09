@@ -47,14 +47,14 @@ const ZONES := {
 		"manure": Vector2(185, 955),
 	},
 	# The zebu market, north of the river: zebus for sale in the corral on
-	# the zoma, and the dealer's stand.
-	"res://world/areas/exterior/bourg.tscn": {
+	# market day, and the dealer's stand.
+	"res://world/areas/exterior/market_town.tscn": {
 		"homes": [Vector2(380, 150), Vector2(470, 130), Vector2(440, 190)],
 		"pen_cell": Vector2i(6, 1),
 		"wander_radius": 30.0,
 		"market_only": true,
 		"market": Vector2(200, 310),
-		"remove_trees": ["Ala_Avaratra_02", "Ala_Avaratra_03"],
+		"remove_trees": ["Forest_North_02", "Forest_North_03"],
 	},
 }
 
@@ -70,7 +70,7 @@ func _place(path: String, herd: Dictionary) -> void:
 			var tree := zone.get_node("Trees/" + tree_name)
 			tree.get_parent().remove_child(tree)
 			tree.free()
-	for old in ["ZebuPen", "ZebuHerd", "ZebuPasture", "ZebuTrough", "ManureHeap", "TsenaOmby"]:
+	for old in ["ZebuPen", "ZebuHerd", "ZebuPasture", "ZebuTrough", "ManureHeap", "ZebuMarket"]:
 		if zone.has_node(old):
 			var node := zone.get_node(old)
 			zone.remove_child(node)
@@ -110,7 +110,7 @@ func _place(path: String, herd: Dictionary) -> void:
 		zone.add_child(pasture)
 		pasture.owner = zone
 	for entry in [["trough", TROUGH, "ZebuTrough"], ["manure", MANURE_HEAP, "ManureHeap"],
-			["market", MARKET, "TsenaOmby"]]:
+			["market", MARKET, "ZebuMarket"]]:
 		if herd.has(entry[0]):
 			var node: Node2D = (load(entry[1]) as PackedScene).instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
 			node.name = entry[2]

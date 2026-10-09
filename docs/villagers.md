@@ -101,18 +101,18 @@ Cinq villageois vivent au village, chacun avec sa journée :
 - `zone_id` : l'id de la zone.
 - Les **routes** sont ses enfants `Line2D`, visibles dans l'éditeur et cachés en jeu.
 - Les **repères** sont des `Marker2D` sous `Spots`.
-  - **Village** : `Maison_Ouest`, `Maison_Est`, `Maison_Sud`, `Marche`, `Place`, `Banc_Est`,
-    `Vers_rice_fields`, et au centre du village `Sekoly`, `Kianja`, `Fantsakana`, `Hotely`,
-    `Epicerie` (routes `Route_Hotely`, `Route_Epicerie`). Les noms affichés dans l'inventaire
+  - **Village** : `House_West`, `House_East`, `House_South`, `Market`, `Square`, `Bench_East`,
+    `To_rice_fields`, et au centre du village `School`, `Pitch`, `WaterPoint`, `Eatery`,
+    `Grocery` (routes `Road_Eatery`, `Road_Grocery`). Les noms affichés dans l'inventaire
     sont dans `InventoryCatalog.SPOT_PLACES`.
-  - **Rizières** : `Vers_village`, `Cabane`, `Riziere_Voisins_1`, `Riziere_Voisins_2`.
-  - **Bourg** : `Vers_village`, `Pont`, `Lavoir`, `Tsena` (la place), `Tsena_Mpanangona`,
-    `Tsena_Legioma_1`, `Tsena_Legioma_3`, `Tsena_Lamba_1` (derrière les étals), `Taxi`,
-    `Trano_Rabe`, `Trano_Lalao`, `Tsena_Omby`, `Trano_Ratsimba` (routes `Route_Omby`,
-    `Route_Ratsimba`). Le village a `Vers_bourg`, au bout de `Route_Bourg`.
-  - **Ferme** : `Trano` (la porte de la maison), `Fanoto`, `Cuisine`, `Bois`, `Linge`,
-    `Poulailler`, `Verger`, `Vers_village`. Le village a `Vers_farm`, au bout de `Route_Ferme`.
-- **`Vers_<zone>`** : le repère où le chemin quitte la carte vers cette zone. `exit_to(zone)`
+  - **Rizières** : `To_village`, `Hut`, `NeighbourPaddy_1`, `NeighbourPaddy_2`.
+  - **Bourg** : `To_village`, `Bridge`, `WashingStones`, `MarketSquare` (la place), `Market_Collector`,
+    `Market_Vegetables_1`, `Market_Vegetables_3`, `Market_Cloth_1` (derrière les étals), `Taxi`,
+    `House_Rabe`, `House_Lalao`, `ZebuMarket`, `House_Ratsimba` (routes `Road_Zebu`,
+    `Road_Ratsimba`). Le village a `To_market_town`, au bout de `Road_MarketTown`.
+  - **Ferme** : `House` (la porte de la maison), `Mortar`, `Kitchen`, `Woodpile`, `Laundry`,
+    `Coop`, `Orchard`, `To_village`. Le village a `To_farm`, au bout de `Road_Farm`.
+- **`To_<zone>`** : le repère où le chemin quitte la carte vers cette zone. `exit_to(zone)`
   le renvoie.
 - Deux points de route à moins de 12 px forment un carrefour. Un repère s'accroche au point de
   route le plus proche.
@@ -123,9 +123,9 @@ Cinq villageois vivent au village, chacun avec sa journée :
 - **Un nœud par zone traversée**, avec le même `VillagerData`. Les fermiers ont donc un
   `Villager` au village et un aux rizières.
 - **Dans une zone, une étape ailleurs** (`zone` différente de celle des routes) devient « aller
-  à `Vers_<zone>` et disparaître ». Sans chemin vers cette zone, il passe par le chemin vers
+  à `To_<zone>` et disparaître ». Sans chemin vers cette zone, il passe par le chemin vers
   `home_zone`.
-- **Une étape ici après une étape ailleurs** : il réapparaît à `Vers_<zone d'où il vient>`
+- **Une étape ici après une étape ailleurs** : il réapparaît à `To_<zone d'où il vient>`
   après `ARRIVAL_DELAY` (12 s, le temps du trajet), puis marche jusqu'à son repère.
 - **Couche physique « Animals »** (4) : le joueur bute dessus. Il ne masque rien : il suit les
   routes et attend le joueur de lui-même (`BLOCK_DISTANCE`).
@@ -223,7 +223,7 @@ Les deux se lancent avec `--editor`.
   - dans la table, une étape peut avoir un 7e élément : ses jours (`SCHOOL_DAYS`, `WEEKEND`,
     `MARKET`, `NOT_MARKET`) ;
   - pour chaque zone de sa table `ZONES` : reconstruit `VillagerRoads`, les rizières des
-    voisins (`RizieresVoisins`) et `Villagers` (un nœud par villageois dont la journée passe
+    voisins (`NeighbourPaddies`) et `Villagers` (un nœud par villageois dont la journée passe
     par la zone) ;
   - retire les arbres listés dans `remove_trees` et l'herbe haute sous les rizières.
 - **`tools/placeholder_art/gen_villager_from_player.gd`** : écrit les planches actuelles
@@ -266,7 +266,7 @@ Pour que `place_villagers.gd` le garde, l'ajouter aussi à sa table `VILLAGERS`.
 Les routes doivent rester **sur les chemins** : les villageois traversent tout le reste.
 
 **Relier une nouvelle zone**
-Ajouter, dans les deux zones, un repère `Vers_<autre zone>` là où le chemin quitte la carte,
+Ajouter, dans les deux zones, un repère `To_<autre zone>` là où le chemin quitte la carte,
 relié aux routes.
 
 **Points d'attention**

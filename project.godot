@@ -95,15 +95,15 @@ locale/fallback="fr"
 2d_physics/layer_3="Interactables"
 2d_physics/layer_4="Animals"
 
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)
+
 [shader_globals]
 
 player_position={
 "type": "vec2",
 "value": Vector2(-100000, -100000)
 }
-
-[rendering]
-
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
-environment/defaults/default_clear_color=Color(0, 0, 0, 1)

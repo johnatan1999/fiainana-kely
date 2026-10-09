@@ -3,7 +3,7 @@ extends SceneTree
 ## The village centre, on the ground the farm left free (tools/split_farm.gd):
 ## 1. builds the prop scenes of assets/sprites/props/village_center.png
 ##    (tools/placeholder_art/gen_village_center.gd) in entities/props/;
-## 2. rebuilds the village's "CentreVillage" node from the table below - the
+## 2. rebuilds the village's "VillageCenter" node from the table below - the
 ##    school (a house model, door shut, with its flag and its football
 ##    pitch), the water point and its washing stones, the eatery (hotely),
 ##    the grocery kiosk - leaving the rest of the scene alone.
@@ -36,24 +36,24 @@ const PROPS := {
 ## What goes where: [name, scene, position, extra properties].
 const CENTRE := [
 	# The school (sekoly) where the player's house stood, its flag and sign.
-	["Sekoly", "res://structures/houses/models/trano_kely_02.tscn", Vector2(760, 470), {"locked": true}],
-	["Sekoly_Drapeau", "flagpole", Vector2(1195, 470), {}],
-	["Sekoly_Panneau", "signboard", Vector2(700, 520), {"text": "SEKOLY"}],
+	["School", "res://structures/houses/models/house_small_02.tscn", Vector2(760, 470), {"locked": true}],
+	["School_Flag", "flagpole", Vector2(1195, 470), {}],
+	["School_Sign", "signboard", Vector2(700, 520), {"text": "SEKOLY"}],
 	# The football pitch (kianja) in front of it.
-	["Kianja_But_Ouest", "football_goal", Vector2(640, 790), {}],
-	["Kianja_But_Est", "football_goal", Vector2(1110, 790), {}],
+	["Pitch_Goal_West", "football_goal", Vector2(640, 790), {}],
+	["Pitch_Goal_East", "football_goal", Vector2(1110, 790), {}],
 	# The water point (fantsakana) and the washing stones, by the west path.
-	["Fantsakana", "water_point", Vector2(575, 870), {}],
-	["Fantsakana_Lavoir", "washing_stones", Vector2(720, 875), {}],
+	["WaterPoint", "water_point", Vector2(575, 870), {}],
+	["WaterPoint_WashingStones", "washing_stones", Vector2(720, 875), {}],
 	# The eatery (hotely): a house, its tables and its hearth.
-	["Hotely", "res://structures/houses/models/trano_kely_01.tscn", Vector2(620, 1170), {"locked": true}],
-	["Hotely_Panneau", "signboard", Vector2(575, 1215), {"text": "HOTELY"}],
-	["Hotely_Table_1", "eatery_table", Vector2(690, 1265), {}],
-	["Hotely_Table_2", "eatery_table", Vector2(860, 1270), {}],
-	["Hotely_Foyer", "hearth", Vector2(985, 1210), {}],
+	["Eatery", "res://structures/houses/models/house_small_01.tscn", Vector2(620, 1170), {"locked": true}],
+	["Eatery_Sign", "signboard", Vector2(575, 1215), {"text": "HOTELY"}],
+	["Eatery_Table_1", "eatery_table", Vector2(690, 1265), {}],
+	["Eatery_Table_2", "eatery_table", Vector2(860, 1270), {}],
+	["Eatery_Hearth", "hearth", Vector2(985, 1210), {}],
 	# The grocery kiosk (épicerie), near the market.
-	["Epicerie", "grocery_kiosk", Vector2(1150, 985), {}],
-	["Epicerie_Panneau", "signboard", Vector2(1040, 1010), {"text": "ÉPICERIE"}],
+	["Grocery", "grocery_kiosk", Vector2(1150, 985), {}],
+	["Grocery_Sign", "signboard", Vector2(1040, 1010), {"text": "ÉPICERIE"}],
 ]
 
 func _initialize() -> void:
@@ -91,12 +91,12 @@ func _build_prop(prop_name: String, spec: Array) -> void:
 
 func _place() -> void:
 	var village: Node = (load(VILLAGE) as PackedScene).instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
-	if village.has_node("CentreVillage"):
-		var old := village.get_node("CentreVillage")
+	if village.has_node("VillageCenter"):
+		var old := village.get_node("VillageCenter")
 		village.remove_child(old)
 		old.free()
 	var centre := Node2D.new()
-	centre.name = "CentreVillage"
+	centre.name = "VillageCenter"
 	centre.y_sort_enabled = true
 	_add(village, village, centre)
 	for entry: Array in CENTRE:

@@ -140,7 +140,7 @@ semaine, ce qui oblige à prévoir.
 - `tools/place_zebu_herds.gd` : table zone → positions des zébus et case du parc, et en option
   `wander_radius`, `market_only` (troupeau `MarketDayOnly`), `market` (le poteau),
   `pasture` et `trough` (zébus du joueur), `remove_trees`. Reconstruit `ZebuHerd`, `ZebuPen`,
-  `ZebuPasture`, `ZebuTrough` et `TsenaOmby` dans chaque scène de zone.
+  `ZebuPasture`, `ZebuTrough` et `ZebuMarket` dans chaque scène de zone.
   - Ferme : parc à la case (3, 15), pâturage (320, 1030), abreuvoir (290, 960), tas de
     fumier (185, 955).
   - Bourg : parc à la case (6, 1), poteau (200, 310), deux eucalyptus retirés.

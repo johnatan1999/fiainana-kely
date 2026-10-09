@@ -72,7 +72,7 @@ var friendship: Dictionary = {} # villager_id -> points
 ## day).
 var friendship_talk_day: Dictionary = {} # villager_id -> day
 
-## The player's zebus (FarmSimulation's zebu API), bought at the zoma zebu
+## The player's zebus (FarmSimulation's zebu API), bought at the market-day zebu
 ## market: zebu_id -> {"name": String, "coat": int (GrazingZebu.COATS),
 ## "grown_days": int (days of care so far)}.
 var zebus: Dictionary = {}

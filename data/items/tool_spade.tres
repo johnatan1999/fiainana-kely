@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3 uid="uid://defoeu0mix5ey"]
+
+[ext_resource type="Script" path="res://core/data/item_data.gd" id="1_angady"]
+
+[resource]
+script = ExtResource("1_angady")
+id = "tool_spade"
+display_name = "Angady"
+malagasy_name = "Angady"
+description = "La bêche traditionnelle malgache. Creuse plus profond qu'une simple houe."
+category = 1
+price = 2500
+sell_price = 0
+crop_id = ""
+animal_species = 0
+tool_action = 1
+sold_in_shop = true

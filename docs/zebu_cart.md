@@ -14,7 +14,7 @@
 ## Détails techniques
 - **`entities/zebu_cart/zebu_cart.tscn`** (`ZebuCart`, un `PathFollow2D`) : à placer comme
   enfant d'un `Path2D` tracé sur un chemin. Le `Path2D` doit être y-sorté.
-  - Dans le village : `CartRoute_Est`, de la sortie est (hors écran) au marché.
+  - Dans le village : `CartRoute_East`, de la sortie est (hors écran) au marché.
   - Trajet : `OUT` (début → fin), `STOPPED` (pause à la fin), `BACK` (retour), `AWAY` (caché
     hors écran, puis nouveau départ).
   - **Approche hors champ** : au démarrage, la charrette ajoute au début de sa route un point

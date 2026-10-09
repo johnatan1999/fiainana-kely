@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://ctf2qmsiccl70"]
 
 [ext_resource type="Script" path="res://entities/props/prop.gd" id="1_ne7nx"]
-[ext_resource type="Texture2D" uid="uid://bp0ns8b6ua0xx" path="res://assets/sprites/props/bourg.png" id="2_erfm1"]
+[ext_resource type="Texture2D" uid="uid://bp0ns8b6ua0xx" path="res://assets/sprites/props/market_town.png" id="2_erfm1"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tch5i"]
 size = Vector2(82.5, 9.9)

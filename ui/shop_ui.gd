@@ -6,7 +6,7 @@ extends Control
 ## (seeds synthesized from the real CropData registry, the rest hand-authored
 ## ItemData resources) - see ItemDatabase.ITEM_PATHS for the catalog - down
 ## to what the opened shop sells (its ShopProfile: the village grocery, the
-## zoma market...), at its prices. Categories it has nothing in are hidden.
+## weekly market...), at its prices. Categories it has nothing in are hidden.
 
 const ItemCardScene := preload("res://ui/shop/item_card.tscn")
 ## For a shop with no profile.

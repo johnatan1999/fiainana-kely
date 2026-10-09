@@ -28,9 +28,9 @@
 - `GameClock.minute_of_day` : minutes depuis minuit (au-delà de 1440 = après minuit, toujours
   le même jour). `DAY_START_MINUTE = 360`, `LATEST_MINUTE = 1560` (2:00).
   `advance_minutes()`, `get_hour()`, `get_minute()`. `advance_day()` remet 6:00.
-- **Semaine** : `GameClock.Weekday` (`ALATSINAINY` … `ALAHADY`), `WEEKDAY_NAMES`,
+- **Semaine** : `GameClock.Weekday` (`MONDAY` … `SUNDAY`), `WEEKDAY_NAMES`,
   `get_weekday()` (tiré de `current_day`, rien de plus n'est sauvegardé),
-  `get_weekday_on(day)`, `get_weekday_name(weekday)`, `MARKET_DAY` (`ZOMA`),
+  `get_weekday_on(day)`, `get_weekday_name(weekday)`, `MARKET_DAY` (`FRIDAY`),
   `is_market_day()`, `days_to_market()`.
 - `FarmSimulation.advance_time(minutes: float)` : cumule les fractions et émet
   `time_changed(minute_of_day)` à chaque minute entière.

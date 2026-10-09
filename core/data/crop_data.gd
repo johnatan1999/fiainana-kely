@@ -4,8 +4,8 @@ extends Resource
 ## Static definition of one crop. Runtime state (age, watering history) lives
 ## in CropState - this Resource never changes once loaded.
 
-enum Category { VIVRIER, RENTE, EXPORT }
-enum Season { ASARA, ASOTRY, TOUTE_SAISON }
+enum Category { FOOD, CASH, EXPORT }
+enum Season { RAINY, DRY, ALL_YEAR }
 enum WaterNeed { LOW, MEDIUM, HIGH }
 
 @export var id: String
@@ -17,7 +17,7 @@ enum WaterNeed { LOW, MEDIUM, HIGH }
 ## ("Graine d'arachide", "Voam-bary", "Rice seed"). Empty = the generic
 ## "Graine de %s" template.
 @export var seed_display_name: String = ""
-@export var category: Category = Category.VIVRIER
+@export var category: Category = Category.FOOD
 @export var tier: int = 1
 
 @export var seed_price: int = 0
@@ -27,7 +27,7 @@ enum WaterNeed { LOW, MEDIUM, HIGH }
 @export var yield_min: int = 1
 @export var yield_max: int = 1
 
-@export var ideal_season: Season = Season.TOUTE_SAISON
+@export var ideal_season: Season = Season.ALL_YEAR
 ## Multiplier applied to the harvested quantity when harvested outside ideal_season.
 @export var off_season_yield_multiplier: float = 0.6
 

@@ -22,6 +22,11 @@ Scène principale : `res://world/world.tscn`.
 
 ## Conventions
 - Textes affichés au joueur : en français. Code et commentaires : en anglais.
+- Tous les identifiants sont en anglais, même pour les notions malgaches : variables, enums,
+  fichiers, scènes, nœuds, ids de données (zones, objets, repères). Exemples :
+  `Weekday.FRIDAY`, `market_town`, `Hedge_South_1_01`, `tool_spade`. Le français et le
+  malgache ne vont que dans les textes affichés (« Zoma », « Angady », « Bourg »). Les noms
+  propres des personnages (`rakoto`, `NenySoa`) restent tels quels.
 - Contenu data-driven (villages, zones, maisons) : un village aujourd'hui, jusqu'à 7 plus tard.
   La ferme du joueur est une zone à part (`farm`), reliée au village : les villages n'ont pas
   de champs du joueur.
@@ -45,6 +50,11 @@ Scène principale : `res://world/world.tscn`.
 - Performance : ne pas reconstruire une interface fermée sur chaque signal (l'inventaire
   change souvent), et ne pas relancer `set_cells_terrain_connect` sur de grandes zones à
   chaque action (lent). Mesurer d'abord (temps par image) avant d'optimiser.
+- Fichiers renommés ou déplacés hors de l'éditeur (`git mv`) : mettre à jour leurs chemins
+  `res://` partout (y compris `source_file` des `.import`, pour garder les uid), puis supprimer
+  `.godot/uid_cache.bin` et `.godot/editor/filesystem_cache*` et relancer
+  `<godot> --headless --editor --path . --quit`. Sinon le cache garde les anciens chemins
+  (ressources introuvables, plantages intermittents à la fermeture).
 - Un outil qui réenregistre une scène se lance avec `--editor`
   (`<godot> --headless --editor --path . --script res://tools/<outil>.gd`). Sans ce mode,
   Godot ne connaît pas les valeurs par défaut des scripts et écrit toutes les propriétés

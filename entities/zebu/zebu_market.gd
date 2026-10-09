@@ -1,7 +1,7 @@
 class_name ZebuMarket
 extends Node2D
 
-## The zebu dealer's stand, by the corral of the bourg: open on market days
+## The zebu dealer's stand, by the corral of the market town: open on market days
 ## (its ShopProfile's days and hours), it asks for the zebu market window
 ## (ZebuManager opens ZebuMarketPanel); closed, it says when to come back.
 ## Group "zebu_markets": ZebuManager finds it when the zone loads.
@@ -15,7 +15,7 @@ const GROUP := "zebu_markets"
 
 @onready var _interactable: InteractableComponent = $InteractableComponent
 
-var _weekday := GameClock.Weekday.ALATSINAINY
+var _weekday := GameClock.Weekday.MONDAY
 var _minute := GameClock.DAY_START_MINUTE
 
 func _ready() -> void:

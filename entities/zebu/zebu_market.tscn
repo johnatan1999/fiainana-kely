@@ -28,7 +28,7 @@ region_rect = Rect2(384, 0, 192, 192)
 position = Vector2(0, -6)
 shape = SubResource("RectangleShape2D_6x5r7")
 
-[node name="Panneau" parent="." instance=ExtResource("4_a8ft4")]
+[node name="Sign" parent="." instance=ExtResource("4_a8ft4")]
 position = Vector2(50, 6)
 text = "OMBY"
 

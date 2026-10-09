@@ -3,14 +3,14 @@ extends Resource
 
 ## What a shop (structures/shop) sells, what it pays and when it's open. The
 ## one ShopUI shows whichever shop the player opened through it: the village
-## grocery has the everyday seeds and goods every day; the bourg's zoma
+## grocery has the everyday seeds and goods every day; the market town's weekly
 ## market has the export crops' seeds, pays more for harvests, and only
 ## opens on market day.
 
 ## Which seeds (by CropData.Category) are on the shelf - each seed's card is
 ## also where its harvest is sold.
 enum SeedRange {
-	## Food and cash crops (VIVRIER, RENTE): what the village grows.
+	## Food and cash crops (FOOD, CASH): what the village grows.
 	LOCAL,
 	## Export crops only (vanilla, clove...): what the collectors buy.
 	EXPORT,
@@ -27,7 +27,7 @@ enum SeedRange {
 ## (1.25 = +25 %).
 @export_range(0.5, 2.0, 0.05) var sell_multiplier := 1.0
 ## The weekdays it opens (GameClock.Weekday bits); none ticked = every day.
-@export_flags("Alatsinainy", "Talata", "Alarobia", "Alakamisy", "Zoma", "Sabotsy", "Alahady") var open_days := 0
+@export_flags("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday") var open_days := 0
 ## Opening hours, in minutes of the day (past 1440 = after midnight).
 @export_range(0, 1560, 30) var opens_at := 0
 @export_range(0, 1560, 30) var closes_at := 1560

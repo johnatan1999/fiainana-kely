@@ -17,7 +17,7 @@ extends Node
 ##   listens to this one, so retuning the sky never moves gameplay.
 ## - CALENDAR_GROUP: set_weekday(weekday) (GameClock.Weekday) on each new
 ##   day - before that day's first set_time_of_day. Villagers keep a weekly
-##   routine (school on weekdays, the zoma market).
+##   routine (school on weekdays, the weekly market).
 ## All are also sent when a zone loads, so its nodes start in the right state.
 
 const LIGHT_GROUP := "light_listeners"

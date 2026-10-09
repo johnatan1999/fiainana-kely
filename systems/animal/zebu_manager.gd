@@ -10,7 +10,7 @@ extends Node
 ##   player asks;
 ## - the zone's "ManureHeap": shows the manure waiting by the pen, and picks
 ##   it up when the player asks;
-## - the zone's ZebuMarket stands (the bourg): open the ZebuMarketPanel, and
+## - the zone's ZebuMarket stands (the market town): open the ZebuMarketPanel, and
 ##   buy or sell through it.
 
 const ZEBU_SCENE := preload("res://entities/zebu/grazing_zebu.tscn")

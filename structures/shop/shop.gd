@@ -17,7 +17,7 @@ const DEFAULT_PROFILE := preload("res://data/shops/village_shop.tres")
 
 @onready var interactable_component: InteractableComponent = $InteractableComponent
 
-var _weekday := GameClock.Weekday.ALATSINAINY
+var _weekday := GameClock.Weekday.MONDAY
 var _minute := GameClock.DAY_START_MINUTE
 
 func _ready() -> void:

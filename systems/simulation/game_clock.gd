@@ -3,15 +3,15 @@ extends RefCounted
 
 ## Two-season Malagasy agricultural calendar: Asara (hot/rainy) and Asotry
 ## (cool/dry), alternating every DAYS_PER_SEASON days.
-enum Season { ASARA, ASOTRY }
+enum Season { RAINY, DRY }
 const DAYS_PER_SEASON := 30
 ## The Malagasy week; day 1 of the game is an Alatsinainy (Monday).
-enum Weekday { ALATSINAINY, TALATA, ALAROBIA, ALAKAMISY, ZOMA, SABOTSY, ALAHADY }
+enum Weekday { MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY }
 const WEEKDAY_NAMES: Array[String] = [
 	"Alatsinainy", "Talata", "Alarobia", "Alakamisy", "Zoma", "Sabotsy", "Alahady",
 ]
-## Market day in the bourg - the zoma (Friday) market.
-const MARKET_DAY := Weekday.ZOMA
+## Market day: the weekly market in the market town is on Fridays.
+const MARKET_DAY := Weekday.FRIDAY
 ## Every day starts at 6:00 - waking up.
 const DAY_START_MINUTE := 6 * 60
 ## Time stops at 2:00 (the night after): the night goes on until the player
@@ -44,7 +44,7 @@ func get_season() -> Season:
 	return get_season_on(current_day)
 
 func get_season_on(day: int) -> Season:
-	return Season.ASOTRY if ((day - 1) / DAYS_PER_SEASON) % 2 == 1 else Season.ASARA
+	return Season.DRY if ((day - 1) / DAYS_PER_SEASON) % 2 == 1 else Season.RAINY
 
 ## 1..DAYS_PER_SEASON - the date players plan around ("Asara, day 9").
 func get_day_of_season() -> int:

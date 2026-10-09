@@ -47,7 +47,7 @@ func _ready() -> void:
 	await _test_tilling_repaints_one_field()
 	await _test_farm_and_village_paths()
 	await _test_family()
-	await _test_bourg()
+	await _test_market_town()
 	await _test_zebu_market()
 	await _test_zebu_plough()
 	await _test_zebu_manure()
@@ -253,7 +253,7 @@ func _test_rain() -> void:
 func _test_zebu_cart() -> void:
 	await _go_to_zone("village")
 	_sim.set_weather(FarmState.Weather.CLEAR)
-	var cart: ZebuCart = _zone().get_node("CartRoute_Est/ZebuCart")
+	var cart: ZebuCart = _zone().get_node("CartRoute_East/ZebuCart")
 	_player.global_position = Vector2(300, 300) # well out of the way
 	_set_time(22 * 60)
 	cart._go_away()
@@ -384,7 +384,7 @@ func _test_villagers() -> void:
 	var roads := VillagerRoads.of_zone(_zone())
 	var ravao := _villager("Ravao")
 	var rakoto := _villager("Rakoto")
-	_check(not ravao.is_inside() and ravao.global_position.distance_to(roads.get_spot("Marche")) < 60.0
+	_check(not ravao.is_inside() and ravao.global_position.distance_to(roads.get_spot("Market")) < 60.0
 			and rakoto.is_inside(),
 		"villagers: arriving at 10:00, the merchant is at her stall and the farmer is away in the rice fields")
 	# Off home at the end of the day, along the roads.
@@ -406,19 +406,19 @@ func _test_villagers() -> void:
 	_player.global_position = Vector2(300, 300)
 	# Rain: home, unless the step is rain-proof.
 	_set_time(9 * 60)
-	var today := _set_weekday(GameClock.Weekday.ALAHADY)
+	var today := _set_weekday(GameClock.Weekday.SUNDAY)
 	await _go_to_zone("rice_fields")
 	await _go_to_zone("village")
 	await _frames(3)
-	_check(_villager("Koto").get_spot_name() == "Kianja",
-		"villagers: no school on Alahady - the child plays football")
-	_set_weekday(GameClock.Weekday.TALATA)
+	_check(_villager("Koto").get_spot_name() == "Pitch",
+		"villagers: no school on Sunday - the child plays football")
+	_set_weekday(GameClock.Weekday.TUESDAY)
 	await _go_to_zone("rice_fields")
 	await _go_to_zone("village")
 	await _frames(3)
 	var koto := _villager("Koto")
 	var grandmother := _villager("NenySoa")
-	_check(koto.get_spot_name() == "Sekoly" and not grandmother.is_inside(),
+	_check(koto.get_spot_name() == "School" and not grandmother.is_inside(),
 		"villagers: on a school day morning the child is at school, the grandmother strolls on the square")
 	_sim.state.clock.current_day = today
 	_sim.set_weather(FarmState.Weather.RAIN)
@@ -447,7 +447,7 @@ func _test_neighbours_harvest() -> void:
 	await _go_to_zone("village")
 	await _go_to_zone("rice_fields")
 	await _frames(3)
-	var paddy: VillagePaddy = _zone().get_node("RizieresVoisins/Riziere1")
+	var paddy: VillagePaddy = _zone().get_node("NeighbourPaddies/Paddy1")
 	var interactable: InteractableComponent = paddy._interactable
 	_check(not interactable.get_prompt().is_empty() and paddy.get_sheaf_count() > 0,
 		"neighbours' harvest: half cut on day 27, sheaves drying, and the player is offered to help")
@@ -477,7 +477,7 @@ func _test_farmers_in_the_rice_fields() -> void:
 	await _go_to_zone("rice_fields")
 	await _frames(3)
 	_player.global_position = Vector2(300, 300) # off their road (the spawn is on it)
-	var paddy: VillagePaddy = _zone().get_node("RizieresVoisins/Riziere1")
+	var paddy: VillagePaddy = _zone().get_node("NeighbourPaddies/Paddy1")
 	var area := paddy.get_rect().grow(4.0)
 	var farmers: Array = _zone().get_node("Villagers").get_children()
 	var at_work := func() -> bool:
@@ -505,7 +505,7 @@ func _test_farmers_in_the_rice_fields() -> void:
 	_check(rakoto.is_inside(), "farmers: ...and not back yet right at 16:00 (the trip takes a while)")
 	var back := func() -> bool: return not rakoto.is_inside()
 	_check(await _wait_for(back, Villager.ARRIVAL_DELAY + 2.0)
-			and rakoto.global_position.distance_to(VillagerRoads.of_zone(_zone()).get_spot("Vers_rice_fields")) < 80.0,
+			and rakoto.global_position.distance_to(VillagerRoads.of_zone(_zone()).get_spot("To_rice_fields")) < 80.0,
 		"farmers: he comes in by the road from the rice fields")
 	_set_time(10 * 60)
 
@@ -589,7 +589,7 @@ func _test_inventory_villagers() -> void:
 	var texts := card.find_children("*", "Label", true, false).map(func(label): return label.text)
 	_check(inventory._order.size() == VillagerData.load_all().size() and inventory._entries["villager:ravao"].info.icon != null
 			and texts.has("Ravao") and texts.has("2/5 cœurs") and texts.has("35 %"),
-		"inventory: the Villageois tab lists every villager (family and bourg included) with their portrait; Ravao's card shows 2/5 hearts, 35 %")
+		"inventory: the Villageois tab lists every villager (family and market town included) with their portrait; Ravao's card shows 2/5 hearts, 35 %")
 	inventory.close()
 	await _frames(15)
 
@@ -643,15 +643,15 @@ func _test_farm_and_village_paths() -> void:
 func _test_family() -> void:
 	_sim.set_weather(FarmState.Weather.CLEAR)
 	_set_time(8 * 60)
-	var today := _set_weekday(GameClock.Weekday.ALAROBIA)
+	var today := _set_weekday(GameClock.Weekday.WEDNESDAY)
 	await _go_to_zone("village")
 	await _go_to_zone("farm")
 	await _frames(3)
 	_player.global_position = Vector2(700, 1500)
-	var mother: Villager = _zone().get_node("Villagers/Neny")
-	var father: Villager = _zone().get_node("Villagers/Dada")
+	var mother: Villager = _zone().get_node("Villagers/Mother")
+	var father: Villager = _zone().get_node("Villagers/Father")
 	var sister: Villager = _zone().get_node("Villagers/Fara")
-	_check(not mother.is_inside() and mother.get_spot_name() == "Fanoto" and father.get_spot_name() == "Verger"
+	_check(not mother.is_inside() and mother.get_spot_name() == "Mortar" and father.get_spot_name() == "Orchard"
 			and sister.is_inside(),
 		"family: at 8:00 the mother pounds rice, the father works the orchard, the sister is off to school")
 	var points := _sim.get_friendship("mother")
@@ -665,24 +665,24 @@ func _test_family() -> void:
 	await _go_to_zone("village")
 	await _frames(3)
 	var at_school: Villager = _zone().get_node("Villagers/Fara")
-	_check(not at_school.is_inside() and at_school.get_spot_name() == "Sekoly",
+	_check(not at_school.is_inside() and at_school.get_spot_name() == "School",
 		"family: in the village at 9:00, the sister is at school")
 	_sim.state.clock.current_day = today
 	_set_time(10 * 60)
 
-# --- bourg and zoma market ---------------------------------------------------------
+# --- market town and weekly market ---------------------------------------------------------
 
-func _test_bourg() -> void:
+func _test_market_town() -> void:
 	_sim.set_weather(FarmState.Weather.CLEAR)
 	_set_time(10 * 60)
-	var today := _set_weekday(GameClock.Weekday.TALATA)
+	var today := _set_weekday(GameClock.Weekday.TUESDAY)
 	await _go_to_zone("village")
 	_player.global_position = Vector2(1585, 1480)
 	_player.auto_walk_to(Vector2(1585, 1720), 6.0)
-	var in_bourg := func() -> bool: return _wm.current_zone_id == "bourg"
-	var bourg_loaded := func() -> bool: return _wm.current_zone_id == "bourg" and _zone().name == "Bourg"
-	_check(await _wait_for(in_bourg, 7.0) and await _wait_for(bourg_loaded, 5.0),
-		"bourg: the village's south road leads to the bourg")
+	var in_market_town := func() -> bool: return _wm.current_zone_id == "market_town"
+	var market_town_loaded := func() -> bool: return _wm.current_zone_id == "market_town" and _zone().name == "MarketTown"
+	_check(await _wait_for(in_market_town, 7.0) and await _wait_for(market_town_loaded, 5.0),
+		"market town: the village's south road leads to the market town")
 	# Let the walk that brought the player here run out.
 	var walk_done := func() -> bool: return not _player.is_auto_walking()
 	await _wait_for(walk_done, 8.0)
@@ -696,25 +696,25 @@ func _test_bourg() -> void:
 	_player.auto_walk_to(Vector2(1056, 600), 3.0)
 	await _frames(190)
 	_check(stopped_y < 340.0 and _player.global_position.y > 560.0,
-		"bourg: the river can't be waded across, the bridge crosses it")
+		"market town: the river can't be waded across, the bridge crosses it")
 	_player.global_position = Vector2(300, 1500)
 	# Not market day: the collector's stall is shut, the merchants about.
-	var stall: Shop = _zone().get_node("Props/Tsena_Mpanangona")
+	var stall: Shop = _zone().get_node("Props/Market_Collector")
 	var shop_ui: ShopUI = _world.get_node("UI/ShopUI")
 	stall.get_node("InteractableComponent").interacted.emit()
 	await _frames(3)
 	_check(not stall.is_open() and not shop_ui.visible and _villager("Rabe").get_spot_name() == "Taxi"
-			and _villager("Lalao").get_spot_name() == "Lavoir" and _villager("Ravao").is_inside(),
-		"bourg: on Talata the zoma market is shut, Rabe waits at the taxi, Lalao washes at the river, Ravao is in the village")
+			and _villager("Lalao").get_spot_name() == "WashingStones" and _villager("Ravao").is_inside(),
+		"market town: on Tuesday the weekly market is shut, Rabe waits at the taxi, Lalao washes at the river, Ravao is in the village")
 	# Market day.
-	_set_weekday(GameClock.Weekday.ZOMA)
+	_set_weekday(GameClock.Weekday.FRIDAY)
 	await _go_to_zone("village")
-	await _go_to_zone("bourg")
+	await _go_to_zone("market_town")
 	await _frames(3)
-	_check(_villager("Rabe").get_spot_name() == "Tsena_Mpanangona" and _villager("Lalao").get_spot_name() == "Tsena_Legioma_1"
-			and not _villager("Ravao").is_inside() and _villager("Ravao").get_spot_name() == "Tsena_Lamba_1",
-		"bourg: on the zoma, the merchants are at their stalls - Ravao came down from the village")
-	stall = _zone().get_node("Props/Tsena_Mpanangona")
+	_check(_villager("Rabe").get_spot_name() == "Market_Collector" and _villager("Lalao").get_spot_name() == "Market_Vegetables_1"
+			and not _villager("Ravao").is_inside() and _villager("Ravao").get_spot_name() == "Market_Cloth_1",
+		"market town: on market day, the merchants are at their stalls - Ravao came down from the village")
+	stall = _zone().get_node("Props/Market_Collector")
 	stall.get_node("InteractableComponent").interacted.emit()
 	await _frames(3)
 	var seeds: Array = shop_ui._catalog[ItemData.Category.SEEDS]
@@ -722,13 +722,13 @@ func _test_bourg() -> void:
 	_check(shop_ui.visible and shop_ui.get_profile().sell_multiplier > 1.0
 			and seeds.any(func(item: ItemData) -> bool: return item.crop_id == "vanilla")
 			and not tools_button.visible,
-		"zoma market: it opens on the zoma, with the export crops' seeds and no tools")
+		"weekly market: it opens on market day, with the export crops' seeds and no tools")
 	_sim.state.add_inventory("corn", 2)
 	var money := _sim.state.money
 	var corn_seed: ItemData = seeds.filter(func(item: ItemData) -> bool: return item.crop_id == "corn")[0]
 	shop_ui._on_sell_requested(corn_seed, 2)
 	_check(_sim.state.money - money == 2 * roundi(_sim.get_crop_data("corn").sell_price * 1.25),
-		"zoma market: harvests sell for 25 % more")
+		"weekly market: harvests sell for 25 % more")
 	shop_ui.close()
 	await _frames(20)
 	# The village grocery doesn't take export crops.
@@ -737,7 +737,7 @@ func _test_bourg() -> void:
 	var village_seeds: Array = shop_ui._catalog[ItemData.Category.SEEDS]
 	_check(not village_seeds.any(func(item: ItemData) -> bool: return item.crop_id == "vanilla")
 			and village_seeds.any(func(item: ItemData) -> bool: return item.crop_id == "rice"),
-		"village shop: everyday seeds only - vanilla and cloves are bought and sold at the zoma market")
+		"village shop: everyday seeds only - vanilla and cloves are bought and sold at the weekly market")
 	shop_ui.close()
 	await _frames(20)
 	_sim.state.clock.current_day = today
@@ -748,30 +748,30 @@ func _test_bourg() -> void:
 func _test_zebu_market() -> void:
 	_sim.set_weather(FarmState.Weather.CLEAR)
 	_set_time(10 * 60)
-	var today := _set_weekday(GameClock.Weekday.ALAROBIA)
+	var today := _set_weekday(GameClock.Weekday.WEDNESDAY)
 	await _go_to_zone("village")
-	await _go_to_zone("bourg")
+	await _go_to_zone("market_town")
 	await _frames(5)
-	# The village's hill walls overlap the bourg's spawn: they must be gone
-	# from the physics space the moment the bourg is set up.
-	_check(_wm.current_zone_id == "bourg"
+	# The village's hill walls overlap the market town's spawn: they must be gone
+	# from the physics space the moment the market town is set up.
+	_check(_wm.current_zone_id == "market_town"
 			and _player.global_position.distance_to(_zone().get_node("Spawns/SpawnDefault").global_position) < 2.0,
 		"zones: arriving in a zone, the player isn't pushed out by the walls of the zone left behind")
 	var herd: MarketDayOnly = _zone().get_node("ZebuHerd")
-	var stand: ZebuMarket = _zone().get_node("TsenaOmby")
+	var stand: ZebuMarket = _zone().get_node("ZebuMarket")
 	var panel: ZebuMarketPanel = _world.get_node("UI/ZebuMarketPanel")
 	stand.get_node("InteractableComponent").interacted.emit()
 	await _frames(3)
 	_check(herd.get_child_count() == 0 and not herd.is_market_on() and not stand.is_open() and not panel.visible,
-		"zebu market: on Alarobia the corral is empty and the dealer's stand shut")
-	_set_weekday(GameClock.Weekday.ZOMA)
+		"zebu market: on Wednesday the corral is empty and the dealer's stand shut")
+	_set_weekday(GameClock.Weekday.FRIDAY)
 	await _go_to_zone("village")
-	await _go_to_zone("bourg")
+	await _go_to_zone("market_town")
 	await _frames(5)
 	herd = _zone().get_node("ZebuHerd")
-	stand = _zone().get_node("TsenaOmby")
-	_check(herd.get_child_count() == 3 and _villager("Ratsimba").get_spot_name() == "Tsena_Omby",
-		"zebu market: on the zoma, zebus for sale in the corral, Ratsimba at his stand")
+	stand = _zone().get_node("ZebuMarket")
+	_check(herd.get_child_count() == 3 and _villager("Ratsimba").get_spot_name() == "ZebuMarket",
+		"zebu market: on market day, zebus for sale in the corral, Ratsimba at his stand")
 	_sim.state.money = 100000
 	stand.get_node("InteractableComponent").interacted.emit()
 	await _frames(3)
@@ -803,9 +803,9 @@ func _test_zebu_market() -> void:
 	await _frames(5)
 	mine = _zone().get_node("PlayerZebus").get_child(0)
 	_check(mine.has_pen() and mine.is_penned(), "farm: at night the player's zebu sleeps in the farm pen")
-	# Sold back at the zoma.
+	# Sold back at market day.
 	_set_time(10 * 60)
-	await _go_to_zone("bourg")
+	await _go_to_zone("market_town")
 	await _frames(3)
 	var money := _sim.state.money
 	var value := _sim.get_zebu_value(ids[0])

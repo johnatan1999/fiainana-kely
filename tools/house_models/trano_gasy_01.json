@@ -1,9 +1,0 @@
-{
-	"master": "res://art_src/houses/house-1.png",
-	"out_dir": "res://assets/sprites/houses/trano_gasy_01",
-	"crop": [40, 216, 1200, 804],
-	"width_tiles": 13,
-	"bake_scale": 2,
-	"door": [515, 770, 88, 142],
-	"door_leaf": [520, 777, 78, 131]
-}

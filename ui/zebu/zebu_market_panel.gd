@@ -1,7 +1,7 @@
 class_name ZebuMarketPanel
 extends Control
 
-## The zebu market (tsena omby) of the bourg: buy a young zebu, sell the
+## The zebu market of the market town: buy a young zebu, sell the
 ## player's own at their worth. Only shows what ZebuManager hands it and
 ## says what the player asked for (signals) - the rules are FarmSimulation's.
 ## Pauses the game while open, like the shop. Built in code.

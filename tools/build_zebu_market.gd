@@ -29,7 +29,7 @@ const SCALE := 0.5
 func _initialize() -> void:
 	var profile: ShopProfile = load(PROFILE) if ResourceLoader.exists(PROFILE) else ShopProfile.new()
 	profile.title = "Tsena omby"
-	profile.open_days = 1 << GameClock.Weekday.ZOMA
+	profile.open_days = 1 << GameClock.Weekday.FRIDAY
 	profile.opens_at = 6 * 60
 	profile.closes_at = 17 * 60
 	profile.closed_message = "Le tsena omby n'ouvre que le zoma, de 6:00 à 17:00."
@@ -54,7 +54,7 @@ func _initialize() -> void:
 	_add(market, market, post)
 	_add_base(market, Vector2(24, 12))
 	var sign_node: Node2D = (load(SIGNBOARD) as PackedScene).instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
-	sign_node.name = "Panneau"
+	sign_node.name = "Sign"
 	sign_node.position = Vector2(50, 6)
 	sign_node.set("text", "OMBY")
 	_add(market, market, sign_node)

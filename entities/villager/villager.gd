@@ -63,7 +63,7 @@ const HEARTS_Y := -104.0
 
 var _roads: VillagerRoads
 var _minute := 12 * 60
-var _weekday := GameClock.Weekday.ALATSINAINY
+var _weekday := GameClock.Weekday.MONDAY
 var _raining := false
 var _clock_known := false
 ## Where the villager is (or is going): the world zone, the spot there, what

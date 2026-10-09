@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="FarmZoneData" load_steps=2 format=3 uid="uid://remtw1n514i"]
+
+[ext_resource type="Script" path="res://core/data/farm_zone_data.gd" id="1_zone"]
+
+[resource]
+script = ExtResource("1_zone")
+id = "fertile_land_north"
+display_name = "Terres fertiles du nord"
+malagasy_name = "Tany lonaka avaratra"
+description = "Une terre grasse et sombre au bord du ruisseau, prête à cultiver."
+price = 50000

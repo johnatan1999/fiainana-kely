@@ -23,15 +23,15 @@ enum Kind { SEED, CROP, AUTHORED, UNKNOWN }
 ## (load cycle through the scripts that reference ItemDatabase), leaving the
 ## entries as bare Resources with no ItemData script.
 ## animal_zebu.tres is deliberately left out: zebus aren't items - they're
-## bought one by one at the zoma zebu market (FarmSimulation's zebu API).
+## bought one by one at the market-day zebu market (FarmSimulation's zebu API).
 const ITEM_PATHS := [
 	"res://data/items/tool_hoe.tres",
 	"res://data/items/tool_watering_can.tres",
-	"res://data/items/tool_angady.tres",
+	"res://data/items/tool_spade.tres",
 	"res://data/items/tool_watering_can_tin.tres",
 	"res://data/items/tool_plough.tres",
-	"res://data/items/food_vary_sy_laoka.tres",
-	"res://data/items/food_vary_amin_anana.tres",
+	"res://data/items/food_rice_and_side_dish.tres",
+	"res://data/items/food_rice_with_greens.tres",
 	"res://data/items/animal_chicken.tres",
 	"res://data/items/egg.tres",
 	"res://data/items/manure.tres",

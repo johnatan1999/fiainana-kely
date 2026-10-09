@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://ds7yl5bn6x0qb"]
 
 [ext_resource type="Script" path="res://entities/props/prop.gd" id="1_hi51o"]
-[ext_resource type="Texture2D" uid="uid://bp0ns8b6ua0xx" path="res://assets/sprites/props/bourg.png" id="2_yhnup"]
+[ext_resource type="Texture2D" uid="uid://bp0ns8b6ua0xx" path="res://assets/sprites/props/market_town.png" id="2_yhnup"]
 
 [node name="Bridge" type="Node2D"]
 z_index = -7

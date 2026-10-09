@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3 uid="uid://c1e70dw0ujlh"]
+
+[ext_resource type="Script" path="res://core/data/item_data.gd" id="1_food2"]
+
+[resource]
+script = ExtResource("1_food2")
+id = "food_rice_with_greens"
+display_name = "Riz aux brèdes"
+malagasy_name = "Vary amin'anana"
+description = "Un plat mijoté de riz et de brèdes, réconfortant après une longue journée aux champs."
+category = 2
+price = 1200
+sell_price = 0
+crop_id = ""
+animal_species = 0
+tool_action = 0
+sold_in_shop = true

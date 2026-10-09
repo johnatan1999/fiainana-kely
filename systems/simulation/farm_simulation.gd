@@ -58,7 +58,7 @@ signal friendship_level_up(villager_id: String, hearts: int, reward: FriendshipR
 const COOP_COST := 6000
 ## Chance of a rainy day, per season: Asara is the rainy season. A rainy day
 ## waters every tilled plot from the morning - see set_weather().
-const RAIN_CHANCE := {GameClock.Season.ASARA: 0.45, GameClock.Season.ASOTRY: 0.08}
+const RAIN_CHANCE := {GameClock.Season.RAINY: 0.45, GameClock.Season.DRY: 0.08}
 
 ## The neighbours' paddies (VillagePaddy - decor, not the player's): their
 ## rice follows the calendar, two crops a year. Planted out at the start of
@@ -102,7 +102,7 @@ const FRIENDSHIP_ORDER := 60
 const FRIENDSHIP_HARVEST_HELP := 5
 const ORDER_BONUS_PER_HEART := 0.05
 
-## The player's zebus: bought young at the zoma zebu market (in the bourg),
+## The player's zebus: bought young at the market-day zebu market (in the market town),
 ## they live in the farm's pen and graze on their own. Each day the pen's
 ## trough is filled (by the player, or by the rain), every zebu grows a day;
 ## grown, a zebu is worth far more than its price - the Malagasy savings
@@ -318,7 +318,7 @@ func harvest(plot_id: int) -> bool:
 	var crop_id := plot.crop.crop_id
 	var crop_data := get_crop_data(crop_id)
 	var under_watered := plot.crop.get_watered_ratio() < crop_data.min_watered_ratio_for_quality
-	var off_season := crop_data.ideal_season != CropData.Season.TOUTE_SAISON 			and int(crop_data.ideal_season) != state.clock.get_season()
+	var off_season := crop_data.ideal_season != CropData.Season.ALL_YEAR 			and int(crop_data.ideal_season) != state.clock.get_season()
 	var quantity := _compute_harvest_quantity(crop_data, under_watered, off_season)
 	if plot.fertilized:
 		quantity = ceili(quantity * MANURE_YIELD_MULTIPLIER)
@@ -649,7 +649,7 @@ func can_fulfil(item_id: String, quantity: int, days: int) -> bool:
 	var season := state.clock.get_season()
 	var crop_data := get_crop_data(item_id)
 	if crop_data != null:
-		if crop_data.ideal_season != CropData.Season.TOUTE_SAISON and int(crop_data.ideal_season) != season:
+		if crop_data.ideal_season != CropData.Season.ALL_YEAR and int(crop_data.ideal_season) != season:
 			return false
 		if crop_data.growth_days + 1 > days:
 			return false
@@ -1095,7 +1095,7 @@ func buy_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
 	return true
 
 ## `price_multiplier`: what the shop pays on top of the crop's sell_price
-## (ShopProfile.sell_multiplier - the zoma market pays more).
+## (ShopProfile.sell_multiplier - the weekly market pays more).
 func sell(item_id: String, quantity: int = 1, price_multiplier: float = 1.0) -> bool:
 	if quantity <= 0 or price_multiplier <= 0.0:
 		return false
