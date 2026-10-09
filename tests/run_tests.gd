@@ -188,6 +188,10 @@ func _run_all() -> void:
 	test_cockfight_villagers_fight_their_bouts()
 	test_cockfight_season_champion()
 	test_rooster_and_cockfight_save_load()
+	test_save_slots_write_and_read()
+	test_save_slots_keep_the_night_before()
+	test_save_slots_delete()
+	test_save_slots_migrate_the_old_save()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -1817,3 +1821,76 @@ func test_rooster_and_cockfight_save_load() -> void:
 			and loaded.check_cockfight() == FarmSimulation.CockfightCheck.ALREADY_ENTERED
 			and loaded.get_cockfight_champion() == "mahery",
 		"rooster: the rooster, the points and today's entry survive a save/load")
+
+# --- Save slots ---------------------------------------------------------------------------
+
+const TEST_SAVES := "user://test_saves/"
+
+## Points SaveSlots at an empty test folder (never the player's saves).
+func _use_test_saves() -> void:
+	SaveSlots.dir = TEST_SAVES
+	_clear_test_saves()
+
+func _clear_test_saves() -> void:
+	if DirAccess.dir_exists_absolute(TEST_SAVES):
+		for file in DirAccess.get_files_at(TEST_SAVES):
+			DirAccess.remove_absolute(TEST_SAVES + file)
+
+func _done_with_test_saves() -> void:
+	_clear_test_saves()
+	DirAccess.remove_absolute(TEST_SAVES)
+	SaveSlots.dir = "user://saves/"
+	SaveSlots.legacy_path = "user://savegame.json"
+
+func test_save_slots_write_and_read() -> void:
+	_use_test_saves()
+	var empty := not SaveSlots.exists(1) and SaveSlots.read(1).is_empty() and SaveSlots.read_summary(1).is_empty()
+	var written := SaveSlots.write(1, {"day": 12, "money": 500,
+		"summary": {"day": 12, "money": 500, "play_seconds": 4000, "saved_at": 1700000000}})
+	var summary := SaveSlots.read_summary(1)
+	# A save from before summaries: what's in it.
+	SaveSlots.write(2, {"day": 40, "money": 9000})
+	var old := SaveSlots.read_summary(2)
+	_check(empty and written and SaveSlots.exists(1) and not SaveSlots.exists(0) and SaveSlots.read(1)["day"] == 12
+			and summary == {"day": 12, "money": 500, "play_seconds": 4000, "saved_at": 1700000000}
+			and old["day"] == 40 and old["money"] == 9000 and old["saved_at"] == 0,
+		"save slots: a save per slot, and its summary for the title screen")
+	_done_with_test_saves()
+
+func test_save_slots_keep_the_night_before() -> void:
+	_use_test_saves()
+	SaveSlots.write(0, {"day": 3})
+	SaveSlots.write(0, {"day": 4})
+	var backup = JSON.parse_string(FileAccess.get_file_as_string(SaveSlots.path(0) + SaveSlots.BACKUP))
+	# The save gets corrupted (a crash while writing it...): the night before.
+	var file := FileAccess.open(SaveSlots.path(0), FileAccess.WRITE)
+	file.store_string("{\"day\": 5, broken")
+	file.close()
+	_check(backup["day"] == 3 and SaveSlots.read(0)["day"] == 3
+			and not FileAccess.file_exists(SaveSlots.path(0) + SaveSlots.TEMP),
+		"save slots: the previous save is kept, and read when the save is unreadable")
+	_done_with_test_saves()
+
+func test_save_slots_delete() -> void:
+	_use_test_saves()
+	SaveSlots.write(2, {"day": 3})
+	SaveSlots.write(2, {"day": 4})
+	SaveSlots.delete(2)
+	_check(not SaveSlots.exists(2) and SaveSlots.read(2).is_empty(),
+		"save slots: deleting a slot removes the save and the one before it")
+	_done_with_test_saves()
+
+func test_save_slots_migrate_the_old_save() -> void:
+	_use_test_saves()
+	DirAccess.make_dir_recursive_absolute(TEST_SAVES)
+	var legacy := TEST_SAVES + "savegame.json"
+	var file := FileAccess.open(legacy, FileAccess.WRITE)
+	file.store_string(JSON.stringify({"day": 20, "money": 1234}))
+	file.close()
+	SaveSlots.legacy_path = legacy
+	var migrated := SaveSlots.migrate_legacy()
+	var again := SaveSlots.migrate_legacy()
+	_check(migrated and not again and SaveSlots.read(0)["day"] == 20
+			and not FileAccess.file_exists(legacy) and FileAccess.file_exists(legacy + ".migrated"),
+		"save slots: the single save of earlier versions becomes the first slot, once")
+	_done_with_test_saves()

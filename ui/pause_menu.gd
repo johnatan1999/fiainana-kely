@@ -1,11 +1,16 @@
 class_name PauseMenu
 extends Control
 
-signal save_requested
+## No "save" here: the game saves when the player goes to bed (see
+## SaveController). Leaving during the day goes back to that morning - the
+## menu asks for a second press to be sure.
+signal title_requested
 signal quit_requested
 
+const LEAVE_WARNING := "Sans sauvegarder ? Confirmer"
+
 @onready var continue_button: Button = $Panel/VBoxContainer/ContinueButton
-@onready var save_button: Button = $Panel/VBoxContainer/SaveButton
+@onready var title_button: Button = $Panel/VBoxContainer/TitleButton
 @onready var language_button: Button = $Panel/VBoxContainer/LanguageButton
 @onready var quit_button: Button = $Panel/VBoxContainer/QuitButton
 
@@ -19,10 +24,11 @@ func _ready() -> void:
 		_close()
 	)
 
-	save_button.pressed.connect(func():
+	title_button.pressed.connect(func():
 		AudioManager.play_click_menu_sfx()
-		save_requested.emit()
-		_close()
+		if _confirm(title_button, "Menu principal"):
+			_close()
+			title_requested.emit()
 	)
 
 	# Cycles Français -> Malagasy -> English; saved right away by GameSettings.
@@ -34,7 +40,8 @@ func _ready() -> void:
 
 	quit_button.pressed.connect(func():
 		AudioManager.play_click_menu_sfx()
-		quit_requested.emit()
+		if _confirm(quit_button, "Quitter"):
+			quit_requested.emit()
 	)
 	visible = false
 
@@ -71,3 +78,21 @@ func _open() -> void:
 func _close() -> void:
 	visible = false
 	get_tree().paused = false
+	_reset_confirmations()
+
+## Leaving loses the day: the first press asks (the button says so), the
+## second does it. Returns whether it's confirmed.
+func _confirm(button: Button, label: String) -> bool:
+	if button.has_meta("armed"):
+		_reset_confirmations()
+		return true
+	_reset_confirmations()
+	button.set_meta("armed", label)
+	button.text = tr(LEAVE_WARNING)
+	return false
+
+func _reset_confirmations() -> void:
+	for button in [title_button, quit_button]:
+		if button.has_meta("armed"):
+			button.text = tr(button.get_meta("armed"))
+			button.remove_meta("armed")

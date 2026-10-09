@@ -15,6 +15,9 @@ extends Node
 
 signal zone_loaded(zone: ZoneRoot)
 signal zone_unloading(zone: ZoneRoot)
+## The player slept: the new day has begun, they're up at the WakeSpot
+## (SaveController saves the game then).
+signal slept
 
 const ZONES_DIR := "res://data/world_zones/"
 
@@ -254,3 +257,4 @@ func _on_sleep_requested() -> void:
 	var wake_spot := current_zone.get_node_or_null("WakeSpot")
 	if wake_spot:
 		player.global_position = wake_spot.global_position
+	slept.emit()

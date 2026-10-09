@@ -2,9 +2,19 @@ class_name SaveController
 extends Node
 
 ## Persists/restores the simulation's state, plus the player's zone and
-## position, to a single JSON save file.
+## position, in the save slot being played (SaveSlots).
+##
+## The game saves itself when the player goes to bed (WorldManager.slept),
+## and only then: quitting during the day goes back to that morning. A
+## tournament or a harvest can't be replayed by reloading - their outcome
+## stands. Also saved once at the start of a new game, so its slot shows.
+## Development builds keep the save_game / load_game keys (F5 / F9).
 
-const SAVE_PATH := "user://savegame.json"
+## After a night's sleep: whether the new morning was saved (false: no
+## slot, or writing failed). No UI here - the migrations are unit-tested
+## without the autoloads.
+signal night_saved(saved: bool)
+
 const DEFAULT_ZONE_ID := "village"
 
 ## Bump this whenever the save format changes, and add a matching
@@ -17,33 +27,55 @@ const SAVE_VERSION := 8
 var simulation: FarmSimulation
 var world_manager: WorldManager
 var player: PlayerController
+## The slot this game is saved in (SaveSlots), -1 = never saved.
+var slot := -1
+## Time actually played in this game (the tree not paused), in seconds.
+var _play_seconds := 0.0
 
-func setup(p_simulation: FarmSimulation, p_world_manager: WorldManager, p_player: PlayerController) -> void:
+func setup(p_simulation: FarmSimulation, p_world_manager: WorldManager, p_player: PlayerController,
+		p_slot: int = -1) -> void:
 	simulation = p_simulation
 	world_manager = p_world_manager
 	player = p_player
+	slot = p_slot
+	world_manager.slept.connect(_on_slept)
+
+func _process(delta: float) -> void:
+	_play_seconds += delta
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return slot >= 0 and SaveSlots.exists(slot)
 
-func save_game() -> void:
+## Returns whether it was saved (not without a slot, or if writing failed).
+func save_game() -> bool:
+	if slot < 0:
+		return false
 	var data := simulation.to_save_data()
 	data["save_version"] = SAVE_VERSION
 	data["zone_id"] = world_manager.current_zone_id
 	data["return_point"] = world_manager.get_return_point()
 	data["player_position"] = {"x": player.global_position.x, "y": player.global_position.y}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	file.store_string(JSON.stringify(data))
+	data["summary"] = {
+		"day": simulation.state.day,
+		"money": simulation.state.money,
+		"play_seconds": int(_play_seconds),
+		"saved_at": int(Time.get_unix_time_from_system()),
+	}
+	return SaveSlots.write(slot, data)
+
+## A night's sleep: the new morning is saved.
+func _on_slept() -> void:
+	night_saved.emit(save_game())
 
 ## Restores simulation state, then re-enters the saved zone at the saved
 ## position instead of the zone's default spawn marker.
 func load_game() -> bool:
 	if not has_save():
 		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	var data = JSON.parse_string(file.get_as_text())
-	if typeof(data) != TYPE_DICTIONARY:
+	var data := SaveSlots.read(slot)
+	if data.is_empty():
 		return false
+	_play_seconds = float(data.get("summary", {}).get("play_seconds", 0)) if data.get("summary") is Dictionary else 0.0
 
 	var save_version := int(data.get("save_version", 0))
 	if save_version > SAVE_VERSION:
@@ -385,8 +417,12 @@ func _migrate_to_v8(data: Dictionary) -> Dictionary:
 		data["unlocked_zone_ids"] = unlocked.map(func(id) -> String: return _V8_FARM_ZONE_IDS.get(str(id), str(id)))
 	return data
 
+## Development only: save or reload at any time.
 func _unhandled_input(event: InputEvent) -> void:
+	if not OS.is_debug_build():
+		return
 	if event.is_action_pressed("save_game"):
-		save_game()
+		if save_game():
+			print("[dev] saved in slot %d" % (slot + 1))
 	elif event.is_action_pressed("load_game"):
 		load_game()

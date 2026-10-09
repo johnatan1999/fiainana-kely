@@ -49,10 +49,13 @@ func _ready() -> void:
 	await _test_family()
 	await _test_school_fees()
 	await _test_cockfight()
+	await _test_save_at_bedtime()
 	await _test_market_town()
 	await _test_zebu_market()
 	await _test_zebu_plough()
 	await _test_zebu_manure()
+	# Last: it takes over the camera.
+	await _test_home_screen()
 
 	print("\n%d passed, %d failed" % [_pass_count, _fail_count])
 	get_tree().quit(1 if _fail_count > 0 else 0)
@@ -727,10 +730,10 @@ func _test_cockfight() -> void:
 	_sim.set_weather(FarmState.Weather.CLEAR)
 	var state := _sim.state
 	var money := state.money
-	var today := _set_weekday(GameClock.Weekday.TUESDAY)
-	state.clock.current_day = maxi(state.clock.current_day, CockfightManager.GIFT_FROM_DAY + 1)
-	today = maxi(today, state.clock.current_day)
-	_set_weekday(GameClock.Weekday.TUESDAY)
+	var today := state.clock.current_day
+	# A Tuesday past Rakoto's first days (day 1 is a Monday): day 9.
+	state.clock.current_day = 9
+	get_tree().call_group(DayNightController.CALENDAR_GROUP, "set_weekday", state.clock.get_weekday())
 	state.orders.erase("rakoto")
 	_sim.order_changed.emit("rakoto")
 	_set_time(16 * 60 + 30)
@@ -803,6 +806,119 @@ func _test_cockfight() -> void:
 	state.money = money
 	state.clock.current_day = today
 	_set_time(10 * 60)
+
+# --- saving at bedtime, save slots, title screen -------------------------------------------
+
+const TEST_SAVES := "user://test_saves_behaviour/"
+
+func _test_save_at_bedtime() -> void:
+	# Never the player's saves: a test folder, slot 1.
+	SaveSlots.dir = TEST_SAVES
+	SaveSlots.legacy_path = TEST_SAVES + "savegame.json"
+	var save: SaveController = _world.get_node("Gameplay/SaveController")
+	save.slot = 0
+	SaveSlots.delete(0)
+	SaveSlots.delete(1)
+	var state := _sim.state
+	var day := state.day
+	await _go_to_zone("player_house")
+	await _frames(3)
+	var notified := [""]
+	var watch := func(text: String): notified[0] = text
+	UIEvents.notification_requested.connect(watch)
+	_zone().get_node("SleepSpot").sleep_requested.emit()
+	await _frames(3)
+	UIEvents.notification_requested.disconnect(watch)
+	var saved := SaveSlots.read(0)
+	_check(state.day == day + 1 and saved.get("day", 0) == day + 1 and saved.get("zone_id", "") == "player_house"
+			and notified[0] == tr("Bonne nuit ! La partie est sauvegardée."),
+		"save: going to bed saves the new morning in the slot - and says so")
+	var money := state.money
+	state.money += 777
+	save.load_game()
+	await _frames(3)
+	_check(state.money == money and state.day == day + 1,
+		"save: leaving during the day goes back to that morning")
+
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var list := SaveSlotsPanel.new()
+	layer.add_child(list)
+	list.open()
+	await _frames(2)
+	var cards := list._slots.get_children()
+	var first_text := (cards[0].find_children("*", "Label", true, false) as Array).map(func(l): return l.text)
+	var shows: bool = cards.size() == SaveSlots.SLOT_COUNT \
+		and cards[0].find_child("Play", true, false).text == tr("Continuer") \
+		and cards[1].find_child("Play", true, false).text == tr("Nouvelle partie") \
+		and first_text.any(func(text: String): return text.contains("jour %d" % state.clock.get_day_of_season()))
+	var delete: Button = cards[0].find_child("Delete", true, false)
+	delete.pressed.emit()
+	var asked := SaveSlots.exists(0)
+	delete.pressed.emit()
+	await _frames(2)
+	_check(shows and asked and not SaveSlots.exists(0)
+			and list._slots.get_child(0).find_child("Play", true, false).text == tr("Nouvelle partie"),
+		"saves list: a card per slot - the date reached, continue or new game; deleting asks first")
+	layer.queue_free()
+
+	var pause: PauseMenu = _world.get_node("UI/PauseMenu")
+	pause._open()
+	var left := [false]
+	var on_leave := func(): left[0] = true
+	pause.title_requested.connect(on_leave)
+	pause.title_button.pressed.emit()
+	var warned := pause.title_button.text == tr(PauseMenu.LEAVE_WARNING)
+	pause._close()
+	pause.title_requested.disconnect(on_leave)
+	_check(warned and not left[0] and pause.title_button.text == tr("Menu principal")
+			and not pause.has_node("Panel/VBoxContainer/SaveButton"),
+		"pause menu: no save button - leaving for the title screen asks first (the day isn't saved)")
+
+	save.slot = -1
+	SaveSlots.delete(0)
+	DirAccess.remove_absolute(TEST_SAVES)
+	SaveSlots.dir = "user://saves/"
+	SaveSlots.legacy_path = "user://savegame.json"
+	await _go_to_zone("farm")
+
+# --- home screen ----------------------------------------------------------------------------
+
+func _test_home_screen() -> void:
+	SaveSlots.dir = TEST_SAVES
+	SaveSlots.legacy_path = TEST_SAVES + "savegame.json"
+	for slot in SaveSlots.SLOT_COUNT:
+		SaveSlots.delete(slot)
+	SaveSlots.write(1, {"day": 12, "money": 100})
+	var home: HomeScreen = load("res://ui/home/home_screen.tscn").instantiate()
+	add_child(home)
+	await _frames(5)
+	var scene_ok := home.find_child("Campfire", true, false) is Campfire \
+		and home.find_child("FiresidePlayer", true, false) is FiresidePlayer \
+		and get_viewport().get_camera_2d().get_parent() == home
+	var lanterns := get_tree().get_nodes_in_group(DayNightController.LIGHT_GROUP).filter(
+		func(node): return node is NightLight and home.is_ancestor_of(node))
+	var lit := lanterns.all(func(light: NightLight): return light.visible)
+	var menu := not home._continue.disabled and home.first_free_slot() == 0
+	home._continue.pressed.emit()
+	await _frames(2)
+	var saves_open := home._saves.visible and not home._menu.visible
+	home._saves.close()
+	await _frames(2)
+	home.find_child("Settings", true, false).pressed.emit()
+	await _frames(2)
+	var settings_open := home._settings.visible and not home._menu.visible
+	home._settings.close()
+	SaveSlots.delete(1)
+	home._refresh()
+	_check(scene_ok and lit and menu and saves_open and settings_open and home._menu.visible
+			and home._continue.disabled,
+		"home screen: night in the village, the player by a campfire - Continuer (the games), Nouveau jeu, Paramètres")
+	home.queue_free()
+	DirAccess.remove_absolute(TEST_SAVES)
+	SaveSlots.dir = "user://saves/"
+	SaveSlots.legacy_path = "user://savegame.json"
+	await _frames(2)
 
 # --- market town and weekly market ---------------------------------------------------------
 

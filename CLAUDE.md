@@ -1,7 +1,8 @@
 # fiainana-kely
 
 Jeu Godot 4.3 (GDScript, renderer GL Compatibility), ferme/village malgache.
-Scène principale : `res://world/world.tscn`.
+Scène principale : `res://ui/home/home_screen.tscn` (écran d'accueil : nuit au village,
+3 parties, paramètres), qui ouvre `res://world/world.tscn`. Lancé seul (F6), le monde joue une partie neuve, jamais sauvegardée.
 
 ## Commandes
 - Godot : `E:/DEV/Game/Godot_v4.3-stable_win64.exe~1/Godot_v4.3-stable_win64_console.exe`

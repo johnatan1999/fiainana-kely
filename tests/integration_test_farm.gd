@@ -31,11 +31,10 @@ func _check(condition: bool, description: String) -> void:
 	if not condition:
 		set_meta("failed", true)
 
-## World.tscn auto-loads a real user://savegame.json if one exists on this
-## machine (it does, from interactive playtesting) - so this can't assume a
-## fresh game. Every check below is written as a delta or an explicit reset
-## instead of an absolute value, so it passes regardless of what's already
-## in that save.
+## World.tscn run on its own (no save slot picked on the title screen)
+## starts a new game and never saves. Every check below is still written as
+## a delta or an explicit reset instead of an absolute value, so it doesn't
+## depend on what a new game starts with.
 func _run_flow() -> void:
 	# The GameSettings autoload applies the player's saved language (user://
 	# settings.cfg) at startup - pin French, the source language the text

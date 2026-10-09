@@ -167,7 +167,11 @@ descend le **zoma** (vendredi), jour de marché.
 - **Voir une zone sans ouvrir l'éditeur** : `tools/zone_snapshot.gd` rend une scène de zone
   en PNG, avec une grille de coordonnées tous les 100 px. C'est pratique pour choisir où
   poser un repère ou un décor. Il se lance **sans** `--headless` (il faut un vrai rendu) :
-  `<godot> --path . --script res://tools/zone_snapshot.gd -- <res://zone.tscn> <sortie.png> [échelle]`.
+  `<godot> --path . --script res://tools/zone_snapshot.gd -- <res://zone.tscn> <sortie.png> [échelle] [x y l h]`.
+  La région `x y l h` (en px de la zone) est facultative : elle permet de regarder un coin de
+  la carte de près.
+- **L'écran d'accueil** montre le village de nuit (voir `home_screen.md`) : une retouche
+  autour de la maison du marché et de l'épicerie se voit aussi là.
 - Le tracé initial (herbe, chemins, falaises, clôtures, placements d'arbres et d'objets) a
   été généré une seule fois. **Les scènes sont maintenant la référence** et s'éditent à la
   main dans l'éditeur, sur les couches et nœuds décrits plus haut. Les planches provisoires,

@@ -15,6 +15,8 @@ const CROP_RESOURCES: Array[CropData] = [
 	preload("res://data/crops/litchi.tres"),
 ]
 
+const HOME_SCREEN := "res://ui/home/home_screen.tscn"
+
 ## What a brand-new game starts with (a loaded save replaces it entirely).
 const STARTER_INVENTORY := {
 	"tool_hoe": 1,
@@ -109,12 +111,21 @@ func _ready() -> void:
 	cockfight_manager.setup(simulation, item_db, world_manager, rooster_panel, cockfight_panel)
 	day_night.setup(simulation, world_manager)
 	weather.setup(simulation, world_manager, day_night, player)
-	save_controller.setup(simulation, world_manager, player)
+	# The slot picked on the home screen (SaveSlots.current); none when the
+	# world runs on its own (tests, F6 in the editor): a new game, never saved.
+	save_controller.setup(simulation, world_manager, player, SaveSlots.current)
 
-	pause_menu.save_requested.connect(save_controller.save_game)
+	save_controller.night_saved.connect(func(saved: bool):
+		if saved:
+			UIEvents.notify(tr("Bonne nuit ! La partie est sauvegardée."))
+		elif save_controller.slot >= 0:
+			UIEvents.notify(tr("La sauvegarde a échoué : la partie n'a pas pu être enregistrée.")))
+	pause_menu.title_requested.connect(func(): get_tree().change_scene_to_file(HOME_SCREEN))
 	pause_menu.quit_requested.connect(get_tree().quit)
 
 	if save_controller.has_save():
 		save_controller.load_game()
 	else:
 		world_manager.change_zone("farm", "SpawnDefault")
+		# A new game: its slot shows on the home screen from now on.
+		save_controller.save_game()
