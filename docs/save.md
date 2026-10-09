@@ -8,7 +8,8 @@
     de jeu et la date de la dernière sauvegarde. Boutons « Continuer » et « Supprimer ».
     Supprimer demande un second appui (« Vraiment ? »).
   - Un emplacement libre affiche « Nouvelle partie ».
-- **La partie se sauvegarde quand le joueur va se coucher**, et seulement à ce moment :
+- **La partie se sauvegarde quand le joueur va se coucher**, et seulement à ce moment
+  (après le repas du soir, sur « Dormir » - voir `evening.md`) :
   - « Bonne nuit ! La partie est sauvegardée. » au réveil ;
   - une nouvelle partie est sauvegardée dès son début, pour apparaître dans la liste.
 - **Quitter pendant la journée** (menu pause : « Menu principal » ou « Quitter ») ramène au
@@ -49,8 +50,8 @@ Côté game design :
   joueur et un `"summary"`. Il ne fait rien sans emplacement.
 - `load_game()` relit la sauvegarde, avec les migrations de format (`SAVE_VERSION`, étapes
   `_migrate_to_vN`, inchangées).
-- **Au coucher** : `WorldManager.slept` (émis après `advance_day()` et le placement au
-  `WakeSpot`) déclenche `save_game()`, puis `night_saved(saved)`. C'est `world.gd` qui
+- **Au coucher** : `WorldManager.slept` (émis par `WorldManager.sleep()`, après
+  `advance_day()` et le placement au `WakeSpot`) déclenche `save_game()`, puis `night_saved(saved)`. C'est `world.gd` qui
   affiche la notification : `SaveController` n'utilise pas d'autoload, pour que ses
   migrations restent testables en mode `--script`.
 - Le temps de jeu est compté dans `_process`, qui s'arrête quand le jeu est en pause.

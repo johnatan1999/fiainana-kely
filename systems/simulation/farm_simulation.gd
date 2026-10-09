@@ -221,6 +221,12 @@ var _fighting_roosters: Dictionary = {} # rooster_id: String -> FightingRoosterD
 ## The chance a villager offers an order on a given morning (tests set 1.0
 ## or 0.0 to make it certain).
 var order_offer_chance := ORDER_OFFER_CHANCE
+## What happened today (the evening meal tells it) - started afresh each
+## morning and on load. See DayLog.
+var day_log := DayLog.new()
+## The money as last seen by _on_money_changed(), to tell what came in or
+## went out.
+var _last_money := 0
 
 func _init(p_grid_width: int, p_grid_height: int, crop_registry: Dictionary, animal_registry: Dictionary = {}, tree_registry: Dictionary = {}) -> void:
 	grid_width = p_grid_width
@@ -234,6 +240,8 @@ func _init(p_grid_width: int, p_grid_height: int, crop_registry: Dictionary, ani
 	# so connecting it to our own signal would keep the whole simulation (and
 	# every resource it holds) alive forever - leaked at exit.
 	inventory_changed.connect(_on_inventory_changed)
+	_last_money = state.money
+	money_changed.connect(_on_money_changed)
 
 func get_plot(plot_id: int) -> PlotState:
 	return state.plots.get(plot_id)
@@ -393,6 +401,7 @@ func harvest(plot_id: int) -> bool:
 	plot.watered = false
 	inventory_changed.emit(crop_id, state.get_inventory_count(crop_id))
 	plot_changed.emit(plot_id)
+	day_log.add_harvest(crop_id, quantity)
 	crop_harvested.emit(plot_id, crop_id, quantity, under_watered, off_season)
 	return true
 
@@ -426,6 +435,7 @@ func advance_day() -> void:
 		_play_villagers_bouts()
 	var season_before := state.clock.get_season()
 	state.clock.advance_day()
+	day_log = DayLog.new()
 	if state.clock.get_season() != season_before:
 		_end_cockfight_season()
 	_minute_fraction = 0.0
@@ -568,6 +578,7 @@ func harvest_tree(tree_id: String) -> int:
 	tree.days_growing = 0
 	state.add_inventory(tree_data.fruit_item_id, quantity)
 	inventory_changed.emit(tree_data.fruit_item_id, state.get_inventory_count(tree_data.fruit_item_id))
+	day_log.add_harvest(tree_data.fruit_item_id, quantity)
 	tree_changed.emit(tree_id)
 	return quantity
 
@@ -607,8 +618,12 @@ func add_friendship(villager_id: String, points: int) -> void:
 		return
 	var before := get_hearts(villager_id)
 	var cap := FRIENDSHIP_PER_HEART * FRIENDSHIP_MAX_HEARTS
-	state.friendship[villager_id] = mini(get_friendship(villager_id) + points, cap)
+	var gained := mini(get_friendship(villager_id) + points, cap) - get_friendship(villager_id)
+	state.friendship[villager_id] = get_friendship(villager_id) + gained
+	day_log.friendship[villager_id] = int(day_log.friendship.get(villager_id, 0)) + gained
 	var after := get_hearts(villager_id)
+	if after > before:
+		day_log.new_hearts[villager_id] = after
 	friendship_changed.emit(villager_id, after)
 	for hearts in range(before + 1, after + 1):
 		var reward := _friendship_reward(villager_id, hearts)
@@ -748,6 +763,7 @@ func enter_cockfight() -> Array:
 			add_friendship(owner, FRIENDSHIP_COCKFIGHT)
 	state.money += COCKFIGHT_ENTRY_PRIZE
 	money_changed.emit(state.money)
+	day_log.cockfight = {"bouts": bouts.size(), "wins": bouts.filter(func(bout): return bout["won"]).size()}
 	cockfight_changed.emit()
 	return bouts
 
@@ -864,6 +880,7 @@ func pay_school_fees(amount: int) -> int:
 		return 0
 	state.money -= paid
 	state.school_debt -= paid
+	day_log.school_paid += paid
 	money_changed.emit(state.money)
 	school_fees_changed.emit()
 	return paid
@@ -879,6 +896,7 @@ func pay_school_fees_in_rice(count: int) -> int:
 	var value := count * price
 	state.add_inventory(SCHOOL_RICE_ITEM, -count)
 	inventory_changed.emit(SCHOOL_RICE_ITEM, state.get_inventory_count(SCHOOL_RICE_ITEM))
+	day_log.school_paid += mini(value, state.school_debt)
 	if value > state.school_debt:
 		state.money += value - state.school_debt
 		money_changed.emit(state.money)
@@ -987,6 +1005,7 @@ func deliver_order(villager_id: String) -> int:
 	inventory_changed.emit(order["item"], state.get_inventory_count(order["item"]))
 	state.money += payment
 	money_changed.emit(state.money)
+	day_log.orders_delivered.append(villager_id)
 	_close_order(villager_id)
 	add_friendship(villager_id, FRIENDSHIP_ORDER)
 	return payment
@@ -1128,6 +1147,7 @@ func help_neighbour_harvest(paddy_id: String, cell: Vector2i) -> int:
 	entry["cells"].append(_cell_key(cell))
 	state.add_inventory(NEIGHBOUR_HARVEST_REWARD, 1)
 	inventory_changed.emit(NEIGHBOUR_HARVEST_REWARD, state.get_inventory_count(NEIGHBOUR_HARVEST_REWARD))
+	day_log.neighbour_tufts += 1
 	neighbour_paddy_changed.emit(paddy_id)
 	return 1
 
@@ -1392,6 +1412,7 @@ func place_chicken() -> String:
 ## it - product_ready only announces that an egg is ready to spawn, it never
 ## touches inventory itself (FarmSimulation never touches Node2D/pickups).
 func collect_product(product_id: String, quantity: int = 1) -> void:
+	day_log.add_product(product_id, quantity)
 	state.add_inventory(product_id, quantity)
 	inventory_changed.emit(product_id, state.get_inventory_count(product_id))
 
@@ -1493,6 +1514,8 @@ func to_save_data() -> Dictionary:
 ## Restores state in-place and re-emits every signal so the presentation layer redraws itself.
 func load_save_data(data: Dictionary) -> void:
 	state.load_dict(data)
+	day_log = DayLog.new()
+	_last_money = state.money
 	_normalize_hotbar()
 	state_loaded.emit()
 	hotbar_changed.emit()
@@ -1572,6 +1595,37 @@ func remove_from_hotbar(item_id: String) -> bool:
 	state.hotbar[index] = ""
 	hotbar_changed.emit()
 	return true
+
+## Every change of money goes through money_changed: what came in or went
+## out today, whatever the cause.
+func _on_money_changed(money: int) -> void:
+	day_log.add_money(money - _last_money)
+	_last_money = money
+
+# --- Tomorrow (the evening meal's plans) --------------------------------------------------
+
+## Crops that will be ripe tomorrow morning: growing, watered today (or in a
+## paddy), one day short. crop_id -> plots.
+func get_ripening_tomorrow() -> Dictionary:
+	var ripening := {}
+	for plot: PlotState in state.plots.values():
+		var crop := plot.crop
+		if crop != null and not crop.is_mature() and (plot.watered or plot.flooded) and crop.age + 1 >= crop.growth_days:
+			ripening[crop.crop_id] = int(ripening.get(crop.crop_id, 0)) + 1
+	return ripening
+
+## Growing crops not watered today: they won't grow tonight.
+func get_unwatered_plots() -> int:
+	return state.plots.values().filter(func(plot: PlotState) -> bool:
+		return plot.crop != null and not plot.crop.is_mature() and not plot.watered and not plot.flooded).size()
+
+## Accepted orders whose last day is tomorrow.
+func get_orders_due_tomorrow() -> Array[String]:
+	var due: Array[String] = []
+	for villager_id in get_active_orders():
+		if get_order_days_left(villager_id) == 2:
+			due.append(villager_id)
+	return due
 
 func _on_inventory_changed(item_id: String, count: int) -> void:
 	if count <= 0:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3 uid="uid://fdjfwhhhgssy"]
+[gd_scene load_steps=34 format=3 uid="uid://fdjfwhhhgssy"]
 
 [ext_resource type="Script" path="res://world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://bf1stuuqjofir" path="res://entities/player/player.tscn" id="2_player"]
@@ -24,6 +24,7 @@
 [ext_resource type="Script" path="res://systems/tree/tree_manager.gd" id="17_treemanager"]
 [ext_resource type="Script" path="res://systems/cockfight/cockfight_manager.gd" id="17_wdm7e"]
 [ext_resource type="Script" path="res://systems/time/day_night_controller.gd" id="18_daynight"]
+[ext_resource type="Script" path="res://systems/family/evening_manager.gd" id="18_g25ly"]
 [ext_resource type="Script" path="res://systems/weather/weather_controller.gd" id="20_weather"]
 [ext_resource type="Script" path="res://ui/orders/orders_tracker.gd" id="21_m3xco"]
 [ext_resource type="Script" path="res://ui/orders/order_panel.gd" id="22_qlvpc"]
@@ -31,6 +32,7 @@
 [ext_resource type="Script" path="res://ui/school/school_panel.gd" id="27_2of3s"]
 [ext_resource type="Script" path="res://ui/cockfight/rooster_panel.gd" id="29_efn5j"]
 [ext_resource type="Script" path="res://ui/cockfight/cockfight_panel.gd" id="30_c0i8e"]
+[ext_resource type="Script" path="res://ui/evening/evening_panel.gd" id="32_djack"]
 
 [node name="World" type="Node2D"]
 y_sort_enabled = true
@@ -86,6 +88,9 @@ script = ExtResource("16_3js4q")
 [node name="CockfightManager" type="Node" parent="Gameplay"]
 script = ExtResource("17_wdm7e")
 
+[node name="EveningManager" type="Node" parent="Gameplay"]
+script = ExtResource("18_g25ly")
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="HUD" parent="UI" instance=ExtResource("7_hud")]
@@ -132,6 +137,11 @@ script = ExtResource("29_efn5j")
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("30_c0i8e")
+
+[node name="EveningPanel" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("32_djack")
 
 [node name="ZoneContainer" type="Node2D" parent="."]
 y_sort_enabled = true

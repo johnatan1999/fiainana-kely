@@ -192,6 +192,10 @@ func _run_all() -> void:
 	test_save_slots_keep_the_night_before()
 	test_save_slots_delete()
 	test_save_slots_migrate_the_old_save()
+	test_day_log_counts_the_day()
+	test_day_log_starts_afresh()
+	test_tomorrow_plans()
+	test_evening_plurals()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -1894,3 +1898,64 @@ func test_save_slots_migrate_the_old_save() -> void:
 			and not FileAccess.file_exists(legacy) and FileAccess.file_exists(legacy + ".migrated"),
 		"save slots: the single save of earlier versions becomes the first slot, once")
 	_done_with_test_saves()
+
+# --- The day log and tomorrow (the evening meal) -------------------------------------------
+
+func test_day_log_counts_the_day() -> void:
+	var sim := _make_sim_for_school()
+	sim.buy_seed("corn", 2) # -1 000 Ar
+	var plot := sim.get_plot(0)
+	plot.tilled = true
+	plot.crop = CropState.new("corn", 4)
+	plot.crop.age = 4
+	sim.harvest(0)
+	var harvested: int = sim.state.get_inventory_count("corn")
+	sim.sell("corn", 1) # +1 200 Ar
+	sim.collect_product("egg", 2)
+	sim.add_friendship("ravao", 120)
+	var log := sim.day_log
+	_check(log.spent == 1000 and log.earned == 1200 and log.harvested == {"corn": harvested}
+			and log.products == {"egg": 2} and log.new_hearts == {"ravao": 1} and log.friendship["ravao"] == 120
+			and log.get_main_harvest() == "corn" and not log.is_quiet(),
+		"day log: what came in and went out, harvested, picked up, the hearts won today")
+
+func test_day_log_starts_afresh() -> void:
+	var sim := _make_sim_for_school()
+	sim.buy_seed("corn", 1)
+	sim.advance_day()
+	var morning := sim.day_log.is_quiet()
+	sim.buy_seed("corn", 1)
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	sim.load_save_data(data)
+	var loaded := sim.day_log.is_quiet()
+	sim.buy_seed("corn", 1)
+	_check(morning and loaded and sim.day_log.spent == 500,
+		"day log: empty each morning and after a load (the money as loaded isn't income)")
+
+func test_tomorrow_plans() -> void:
+	var sim := _make_sim_for_school()
+	var ripe := sim.get_plot(0)
+	ripe.tilled = true
+	ripe.crop = CropState.new("corn", 4)
+	ripe.crop.age = 3
+	ripe.watered = true
+	var dry := sim.get_plot(1)
+	dry.tilled = true
+	dry.crop = CropState.new("corn", 4)
+	dry.crop.age = 3
+	sim.state.orders["koto"] = {"item": "corn", "quantity": 2, "reward": 3000, "template": -1,
+		"since": 1, "deadline": sim.state.day + 1}
+	sim.state.orders["ravao"] = {"item": "corn", "quantity": 2, "reward": 3000, "template": -1,
+		"since": 1, "deadline": sim.state.day + 5}
+	_check(sim.get_ripening_tomorrow() == {"corn": 1} and sim.get_unwatered_plots() == 1
+			and sim.get_orders_due_tomorrow() == ["koto"],
+		"tomorrow: the crops ripe in the morning, the plots left dry, the orders due")
+
+func test_evening_plurals() -> void:
+	TranslationServer.set_locale("fr")
+	_check(EveningManager.plural("haricot", 6) == "haricots" and EveningManager.plural("haricot", 1) == "haricot"
+			and EveningManager.plural("maïs", 3) == "maïs" and EveningManager.plural("riz", 5) == "riz"
+			and EveningManager.plural("patate douce", 2) == "patates douces"
+			and EveningManager.plural("pomme de terre", 4) == "pommes de terre"
+			and EveningManager.plural("graine de riz", 2) == "graines de riz",
+		"evening meal: item names in the plural, the French way")

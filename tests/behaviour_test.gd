@@ -49,6 +49,7 @@ func _ready() -> void:
 	await _test_family()
 	await _test_school_fees()
 	await _test_cockfight()
+	await _test_evening_meal()
 	await _test_save_at_bedtime()
 	await _test_market_town()
 	await _test_zebu_market()
@@ -807,6 +808,37 @@ func _test_cockfight() -> void:
 	state.clock.current_day = today
 	_set_time(10 * 60)
 
+# --- the evening meal ------------------------------------------------------------------------
+
+func _test_evening_meal() -> void:
+	var state := _sim.state
+	var day := state.day
+	await _go_to_zone("player_house")
+	await _frames(3)
+	# A day of its own (the tests before filled today's log).
+	_sim.day_log = DayLog.new()
+	_sim.day_log.add_harvest("bean", 6)
+	_sim.day_log.add_money(4500)
+	var panel: EveningPanel = _world.get_node("UI/EveningPanel")
+	var sleep_spot := _zone().get_node("SleepSpot")
+	sleep_spot.sleep_requested.emit()
+	await _frames(3)
+	var texts := panel._lines.get_children().map(func(row: Node) -> String:
+		return " ".join(row.find_children("*", "Label", true, false).map(func(l: Label): return l.text)))
+	var told := texts.any(func(text: String): return text.contains("Dada") and text.contains("6 haricots"))
+	var at_dinner := panel.visible and get_tree().paused and state.day == day and panel._dish.text.contains("tsaramaso") \
+		and told and panel._money.text.contains("4")
+	panel._not_yet.pressed.emit()
+	await _frames(3)
+	var not_yet := not panel.visible and not get_tree().paused and state.day == day
+	sleep_spot.sleep_requested.emit()
+	await _frames(3)
+	panel._sleep.pressed.emit()
+	await _frames(3)
+	_check(at_dinner and not_yet and not panel.visible and state.day == day + 1 and _sim.day_log.is_quiet(),
+		"evening meal: going to bed, the family talks about the day over its dish - 'Pas encore' goes back, 'Dormir' sleeps")
+	await _go_to_zone("farm")
+
 # --- saving at bedtime, save slots, title screen -------------------------------------------
 
 const TEST_SAVES := "user://test_saves_behaviour/"
@@ -827,6 +859,9 @@ func _test_save_at_bedtime() -> void:
 	var watch := func(text: String): notified[0] = text
 	UIEvents.notification_requested.connect(watch)
 	_zone().get_node("SleepSpot").sleep_requested.emit()
+	await _frames(3)
+	# The evening meal first: "Dormir".
+	(_world.get_node("UI/EveningPanel") as EveningPanel).sleep_confirmed.emit()
 	await _frames(3)
 	UIEvents.notification_requested.disconnect(watch)
 	var saved := SaveSlots.read(0)

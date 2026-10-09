@@ -15,6 +15,10 @@ extends Node
 
 signal zone_loaded(zone: ZoneRoot)
 signal zone_unloading(zone: ZoneRoot)
+## The player lay down on the bed: the evening meal comes first
+## (EveningManager), which calls sleep() if they go to sleep. With no one
+## listening, sleep() right away.
+signal bedtime_requested
 ## The player slept: the new day has begun, they're up at the WakeSpot
 ## (SaveController saves the game then).
 signal slept
@@ -253,6 +257,13 @@ func _find_transitions(node: Node) -> Array:
 	return result
 
 func _on_sleep_requested() -> void:
+	if bedtime_requested.get_connections().is_empty():
+		sleep()
+	else:
+		bedtime_requested.emit()
+
+## The night: the next day starts, the player is up at the WakeSpot.
+func sleep() -> void:
 	simulation.advance_day()
 	var wake_spot := current_zone.get_node_or_null("WakeSpot")
 	if wake_spot:

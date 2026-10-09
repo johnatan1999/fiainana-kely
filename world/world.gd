@@ -64,6 +64,8 @@ const TREE_RESOURCES: Array[TreeData] = [
 @onready var cockfight_manager: CockfightManager = $Gameplay/CockfightManager
 @onready var rooster_panel: RoosterPanel = $UI/RoosterPanel
 @onready var cockfight_panel: CockfightPanel = $UI/CockfightPanel
+@onready var evening_manager: EveningManager = $Gameplay/EveningManager
+@onready var evening_panel: EveningPanel = $UI/EveningPanel
 
 var simulation: FarmSimulation
 var item_db: ItemDatabase
@@ -109,6 +111,7 @@ func _ready() -> void:
 	school_manager.setup(simulation, item_db, world_manager, school_panel, orders_tracker)
 	# After OrderManager too: Rakoto greets, then hands over his rooster.
 	cockfight_manager.setup(simulation, item_db, world_manager, rooster_panel, cockfight_panel)
+	evening_manager.setup(simulation, item_db, world_manager, evening_panel)
 	day_night.setup(simulation, world_manager)
 	weather.setup(simulation, world_manager, day_night, player)
 	# The slot picked on the home screen (SaveSlots.current); none when the
