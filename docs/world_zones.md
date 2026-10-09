@@ -164,6 +164,9 @@ descend le **zoma** (vendredi), jour de marché.
   `ambient_life.md`).
 
 ## À savoir
+- **Intérieurs** (maison, poulailler) : la zone est triée en y (`y_sort_enabled`) et l'image
+  de la pièce est un `Sprite2D` en `z_index = -1`, comme un sol. Sinon, toute la pièce est
+  classée à y = 0 et le joueur passe sous l'image dès qu'il est dans la moitié haute.
 - **Voir une zone sans ouvrir l'éditeur** : `tools/zone_snapshot.gd` rend une scène de zone
   en PNG, avec une grille de coordonnées tous les 100 px. C'est pratique pour choisir où
   poser un repère ou un décor. Il se lance **sans** `--headless` (il faut un vrai rendu) :

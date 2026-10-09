@@ -28,6 +28,7 @@ size = Vector2(455, 95)
 size = Vector2(82, 106)
 
 [node name="InteriorHouse" type="Node2D"]
+y_sort_enabled = true
 script = ExtResource("1_r400i")
 indoor = true
 camera_limit_left = -256
@@ -38,6 +39,7 @@ camera_zoom = 1.4
 bgm = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+z_index = -1
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("2_6wlfw")
 

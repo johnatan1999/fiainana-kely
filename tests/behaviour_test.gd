@@ -815,6 +815,13 @@ func _test_evening_meal() -> void:
 	var day := state.day
 	await _go_to_zone("player_house")
 	await _frames(3)
+	# The room's picture is the floor: the player is drawn over it wherever
+	# they stand - even in the top half of the room, above its origin.
+	var room: Sprite2D = _zone().get_node("Sprite2D")
+	_player.global_position = Vector2(60, -110)
+	await _frames(2)
+	_check(room.z_index < _player.z_index and _zone().y_sort_enabled,
+		"house: the player stays in sight at the top of the room (the room's picture is under them)")
 	# A day of its own (the tests before filled today's log).
 	_sim.day_log = DayLog.new()
 	_sim.day_log.add_harvest("bean", 6)
