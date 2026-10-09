@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://fdjfwhhhgssy"]
+[gd_scene load_steps=32 format=3 uid="uid://fdjfwhhhgssy"]
 
 [ext_resource type="Script" path="res://world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://bf1stuuqjofir" path="res://entities/player/player.tscn" id="2_player"]
@@ -19,13 +19,18 @@
 [ext_resource type="PackedScene" path="res://ui/hotbar/hotbar_ui.tscn" id="14_hotbarui"]
 [ext_resource type="Script" path="res://systems/animal/zebu_manager.gd" id="15_kllkn"]
 [ext_resource type="PackedScene" path="res://ui/prompts/action_prompt.tscn" id="15_prompt"]
+[ext_resource type="Script" path="res://systems/family/school_manager.gd" id="16_3js4q"]
 [ext_resource type="PackedScene" path="res://ui/notifications/toast.tscn" id="16_toast"]
 [ext_resource type="Script" path="res://systems/tree/tree_manager.gd" id="17_treemanager"]
+[ext_resource type="Script" path="res://systems/cockfight/cockfight_manager.gd" id="17_wdm7e"]
 [ext_resource type="Script" path="res://systems/time/day_night_controller.gd" id="18_daynight"]
 [ext_resource type="Script" path="res://systems/weather/weather_controller.gd" id="20_weather"]
 [ext_resource type="Script" path="res://ui/orders/orders_tracker.gd" id="21_m3xco"]
 [ext_resource type="Script" path="res://ui/orders/order_panel.gd" id="22_qlvpc"]
 [ext_resource type="Script" path="res://ui/zebu/zebu_market_panel.gd" id="25_btqak"]
+[ext_resource type="Script" path="res://ui/school/school_panel.gd" id="27_2of3s"]
+[ext_resource type="Script" path="res://ui/cockfight/rooster_panel.gd" id="29_efn5j"]
+[ext_resource type="Script" path="res://ui/cockfight/cockfight_panel.gd" id="30_c0i8e"]
 
 [node name="World" type="Node2D"]
 y_sort_enabled = true
@@ -75,6 +80,12 @@ script = ExtResource("14_eka1b")
 [node name="ZebuManager" type="Node" parent="Gameplay"]
 script = ExtResource("15_kllkn")
 
+[node name="SchoolManager" type="Node" parent="Gameplay"]
+script = ExtResource("16_3js4q")
+
+[node name="CockfightManager" type="Node" parent="Gameplay"]
+script = ExtResource("17_wdm7e")
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="HUD" parent="UI" instance=ExtResource("7_hud")]
@@ -106,6 +117,21 @@ script = ExtResource("22_qlvpc")
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("25_btqak")
+
+[node name="SchoolPanel" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("27_2of3s")
+
+[node name="RoosterPanel" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("29_efn5j")
+
+[node name="CockfightPanel" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("30_c0i8e")
 
 [node name="ZoneContainer" type="Node2D" parent="."]
 y_sort_enabled = true

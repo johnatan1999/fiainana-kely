@@ -57,6 +57,11 @@ const TREE_RESOURCES: Array[TreeData] = [
 @onready var order_panel: OrderPanel = $UI/OrderPanel
 @onready var zebu_manager: ZebuManager = $Gameplay/ZebuManager
 @onready var zebu_market_panel: ZebuMarketPanel = $UI/ZebuMarketPanel
+@onready var school_manager: SchoolManager = $Gameplay/SchoolManager
+@onready var school_panel: SchoolPanel = $UI/SchoolPanel
+@onready var cockfight_manager: CockfightManager = $Gameplay/CockfightManager
+@onready var rooster_panel: RoosterPanel = $UI/RoosterPanel
+@onready var cockfight_panel: CockfightPanel = $UI/CockfightPanel
 
 var simulation: FarmSimulation
 var item_db: ItemDatabase
@@ -98,6 +103,10 @@ func _ready() -> void:
 	friendship_manager.setup(simulation, item_db, world_manager)
 	order_manager.setup(simulation, item_db, world_manager, player, order_panel, orders_tracker)
 	zebu_manager.setup(simulation, world_manager, zebu_market_panel)
+	# After OrderManager: the head teacher greets (OrderManager), then the panel opens.
+	school_manager.setup(simulation, item_db, world_manager, school_panel, orders_tracker)
+	# After OrderManager too: Rakoto greets, then hands over his rooster.
+	cockfight_manager.setup(simulation, item_db, world_manager, rooster_panel, cockfight_panel)
 	day_night.setup(simulation, world_manager)
 	weather.setup(simulation, world_manager, day_night, player)
 	save_controller.setup(simulation, world_manager, player)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=61 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=62 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -46,6 +46,7 @@
 [ext_resource type="PackedScene" path="res://entities/props/woodpile.tscn" id="51_prop_woodpile"]
 [ext_resource type="Resource" uid="uid://bvfoa1n3x2ndx" path="res://data/villagers/koto.tres" id="52_hjw3q"]
 [ext_resource type="Resource" uid="uid://bogw8wg2husan" path="res://data/villagers/fara.tres" id="52_s2hsk"]
+[ext_resource type="Resource" uid="uid://dldtvbutk6hqd" path="res://data/villagers/hanta.tres" id="53_klm3y"]
 [ext_resource type="Resource" uid="uid://b8ua56irvcthp" path="res://data/villagers/naivo.tres" id="53_pd4mh"]
 [ext_resource type="PackedScene" path="res://entities/props/brick_shed.tscn" id="60_prop_brick_shed"]
 [ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
@@ -714,6 +715,24 @@ target_spawn = "SpawnFrom_VILLAGE"
 position = Vector2(1585, 1620)
 shape = SubResource("RectangleShape2D_bofs1")
 
+[node name="ZebuPen" parent="." instance=ExtResource("45_kbl0q")]
+position = Vector2(2065, 575)
+
+[node name="ZebuHerd" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Zebu1" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(1880, 560)
+
+[node name="Zebu2" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(1990, 625)
+
+[node name="Zebu3" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(1960, 705)
+
+[node name="Zebu4" parent="ZebuHerd" instance=ExtResource("64_zebu")]
+position = Vector2(1860, 745)
+
 [node name="VillagerRoads" type="Node2D" parent="."]
 script = ExtResource("47_euky7")
 zone_id = "village"
@@ -861,20 +880,6 @@ data = ExtResource("51_m2nm3")
 position = Vector2(274, 1108)
 data = ExtResource("52_s2hsk")
 
-[node name="ZebuPen" parent="." instance=ExtResource("45_kbl0q")]
-position = Vector2(2065, 575)
-
-[node name="ZebuHerd" type="Node2D" parent="."]
-y_sort_enabled = true
-
-[node name="Zebu1" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1880, 560)
-
-[node name="Zebu2" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1990, 625)
-
-[node name="Zebu3" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1960, 705)
-
-[node name="Zebu4" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1860, 745)
+[node name="Hanta" parent="Villagers" instance=ExtResource("48_mi770")]
+position = Vector2(936, 535)
+data = ExtResource("53_klm3y")

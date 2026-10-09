@@ -42,15 +42,15 @@ static func load_all() -> Dictionary:
 			all[file.get_basename()] = data
 	return all
 
-## The step for `minute_of_day`, or null = at home. The day runs from 6:00
-## to 2:00: the small hours belong to the evening before.
 ## The step under way at `minute_of_day` on `weekday` (GameClock.Weekday),
-## or null before the day's first one (at home).
-func get_stop(minute_of_day: int, weekday: int) -> VillagerStop:
+## with today's story `conditions` (FarmSimulation.get_conditions()), or
+## null before the day's first one (at home). The day runs from 6:00 to
+## 2:00: the small hours belong to the evening before.
+func get_stop(minute_of_day: int, weekday: int, conditions := {}) -> VillagerStop:
 	var now := _day_minute(minute_of_day)
 	var current: VillagerStop = null
 	for stop in routine:
-		if stop != null and stop.happens_on(weekday) and _day_minute(stop.get_minute_of_day()) <= now:
+		if stop != null and stop.happens(weekday, conditions) and _day_minute(stop.get_minute_of_day()) <= now:
 			current = stop
 	return current
 

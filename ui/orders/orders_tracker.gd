@@ -3,8 +3,10 @@ extends Control
 
 ## The accepted orders, top right: for each, who, the item, how many the
 ## player already has out of how many, and the days left - in green once
-## it can be delivered, in red on its last day. Hidden with no order.
-## Built in code; OrderManager fills it (show_orders()).
+## it can be delivered, in red on its last day. Below, other things to
+## pay or do by a date (show_reminders(): Fara's school fees). Hidden when
+## there's nothing. Built in code; OrderManager fills the orders,
+## SchoolManager the reminders.
 
 const PANEL_COLOR := Color(0.96, 0.9, 0.76, 0.92)
 const BORDER_COLOR := Color(0.45, 0.28, 0.15)
@@ -15,7 +17,9 @@ const ICON_SIZE := 22.0
 const MARGIN := 16.0
 
 var _panel: PanelContainer
+var _title: Label
 var _rows: VBoxContainer
+var _reminders: VBoxContainer
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -33,21 +37,22 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 4)
 	_panel.add_child(box)
-	var title := Label.new()
-	title.text = tr("Commandes")
-	title.add_theme_font_size_override("font_size", 16)
-	title.add_theme_color_override("font_color", TEXT_COLOR)
-	box.add_child(title)
+	_title = Label.new()
+	_title.text = tr("Commandes")
+	_title.add_theme_font_size_override("font_size", 16)
+	_title.add_theme_color_override("font_color", TEXT_COLOR)
+	box.add_child(_title)
 	_rows = VBoxContainer.new()
 	_rows.add_theme_constant_override("separation", 3)
 	box.add_child(_rows)
+	_reminders = VBoxContainer.new()
+	_reminders.add_theme_constant_override("separation", 3)
+	box.add_child(_reminders)
 	visible = false
 
 ## `orders`: [{"villager", "icon", "item", "have", "need", "days_left"}].
 func show_orders(orders: Array) -> void:
-	for row in _rows.get_children():
-		_rows.remove_child(row)
-		row.queue_free()
+	_clear(_rows)
 	for order: Dictionary in orders:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 6)
@@ -70,7 +75,27 @@ func show_orders(orders: Array) -> void:
 		label.add_theme_color_override("font_color", color)
 		row.add_child(label)
 		_rows.add_child(row)
-	visible = not orders.is_empty()
+	_title.visible = not orders.is_empty()
+	_fit()
+
+## `reminders`: [{"text", "urgent" (red)}].
+func show_reminders(reminders: Array) -> void:
+	_clear(_reminders)
+	for reminder: Dictionary in reminders:
+		var label := Label.new()
+		label.text = reminder["text"]
+		label.add_theme_font_size_override("font_size", 14)
+		label.add_theme_color_override("font_color", URGENT_COLOR if reminder.get("urgent", false) else TEXT_COLOR)
+		_reminders.add_child(label)
+	_fit()
+
+func _clear(container: Node) -> void:
+	for child in container.get_children():
+		container.remove_child(child)
+		child.queue_free()
+
+func _fit() -> void:
+	visible = _rows.get_child_count() > 0 or _reminders.get_child_count() > 0
 	# Hug the top-right corner, whatever the width.
 	await get_tree().process_frame
 	_panel.reset_size()

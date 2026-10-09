@@ -174,6 +174,20 @@ func _run_all() -> void:
 	test_friendship_hearts_and_gifts()
 	test_friendship_better_order_price()
 	test_friendship_save_load()
+	test_school_fees_billed_a_week_before_the_season()
+	test_school_fees_overdue_sends_fara_home()
+	test_school_fees_paid_in_part()
+	test_school_fees_paid_in_rice()
+	test_school_debt_adds_up_and_keeps_its_due_day()
+	test_school_fees_save_load()
+	test_villager_steps_on_conditions()
+	test_rooster_given_once()
+	test_rooster_grows_with_care()
+	test_cockfight_on_sunday_afternoon_only()
+	test_cockfight_bouts_follow_the_powers()
+	test_cockfight_villagers_fight_their_bouts()
+	test_cockfight_season_champion()
+	test_rooster_and_cockfight_save_load()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -1555,3 +1569,251 @@ func test_friendship_save_load() -> void:
 	loaded.load_save_data(data)
 	_check(loaded.get_friendship("koto") == 130 and loaded.get_hearts("koto") == 1 and not loaded.talk_to("neny_soa"),
 		"friendship: points and today's talk survive a save/load")
+
+# --- Fara's school fees -------------------------------------------------------------
+
+func _make_sim_for_school() -> FarmSimulation:
+	var corn: CropData = load("res://data/crops/corn.tres")
+	var rice: CropData = load("res://data/crops/rice.tres")
+	var sim: FarmSimulation = FarmSimulation.new(4, 4, {"corn": corn, "rice": rice})
+	sim.rain_chance = {}
+	sim.order_offer_chance = 0.0
+	return sim
+
+func _advance_to_day(sim: FarmSimulation, day: int) -> void:
+	while sim.state.day < day:
+		sim.advance_day()
+
+func test_school_fees_billed_a_week_before_the_season() -> void:
+	var sim := _make_sim_for_school()
+	var billed := [0]
+	sim.school_fees_changed.connect(func(): billed[0] += 1)
+	_advance_to_day(sim, 23)
+	var before := sim.get_school_debt()
+	_advance_to_day(sim, 24)
+	_check(before == 0 and sim.get_school_debt() == FarmSimulation.SCHOOL_FEE and billed[0] == 1
+			and sim.get_school_days_left() == 14 and not sim.is_school_fees_overdue(),
+		"school: the first season is paid; the next one's fees come a week before it starts, due a week into it")
+
+func test_school_fees_overdue_sends_fara_home() -> void:
+	var sim := _make_sim_for_school()
+	_advance_to_day(sim, 37)
+	var last_day := sim.get_school_days_left() == 1 and sim.get_conditions().is_empty()
+	_advance_to_day(sim, 38)
+	var overdue := sim.is_school_fees_overdue() 		and sim.get_conditions().has(FarmSimulation.CONDITION_SCHOOL_FEES_OVERDUE)
+	sim.state.money = FarmSimulation.SCHOOL_FEE
+	sim.pay_school_fees(FarmSimulation.SCHOOL_FEE)
+	_check(last_day and overdue and not sim.is_school_fees_overdue() and sim.get_conditions().is_empty(),
+		"school: unpaid past the due day, Fara stays home - paying sends her back")
+
+func test_school_fees_paid_in_part() -> void:
+	var sim := _make_sim_for_school()
+	_advance_to_day(sim, 24)
+	sim.state.money = 3000
+	var paid := sim.pay_school_fees(FarmSimulation.SCHOOL_FEE)
+	var nothing_left := sim.pay_school_fees(FarmSimulation.SCHOOL_FEE)
+	sim.state.money = 50000
+	var rest := sim.pay_school_fees(50000)
+	_check(paid == 3000 and nothing_left == 0 and rest == FarmSimulation.SCHOOL_FEE - 3000
+			and sim.state.money == 50000 - rest and not sim.is_school_fee_due(),
+		"school: fees can be paid in part, never more than owned or owed")
+
+func test_school_fees_paid_in_rice() -> void:
+	var sim := _make_sim_for_school()
+	_advance_to_day(sim, 24)
+	var price := sim.get_school_rice_price()
+	sim.state.add_inventory("rice", 5)
+	var given := sim.pay_school_fees_in_rice(10)
+	var full := given == 2 and sim.state.get_inventory_count("rice") == 3 and not sim.is_school_fee_due()
+	# Owing 7 000 Ar: two rice (10 000 Ar), 3 000 Ar back.
+	var other := _make_sim_for_school()
+	_advance_to_day(other, 24)
+	other.state.money = 3000
+	other.pay_school_fees(3000)
+	other.state.add_inventory("rice", 2)
+	var money_before := other.state.money
+	var given_other := other.pay_school_fees_in_rice(2)
+	_check(price == 5000 and full and given_other == 2 and not other.is_school_fee_due()
+			and other.state.money == money_before + 2 * price - (FarmSimulation.SCHOOL_FEE - 3000),
+		"school: rice is taken at the weekly market's price, only what's needed, the change given back")
+
+func test_school_debt_adds_up_and_keeps_its_due_day() -> void:
+	var sim := _make_sim_for_school()
+	_advance_to_day(sim, 54)
+	_check(sim.get_school_debt() == 2 * FarmSimulation.SCHOOL_FEE and sim.state.school_due_day == 37
+			and sim.is_school_fees_overdue(),
+		"school: an unpaid bill adds up with the next one, and keeps its due day")
+
+func test_school_fees_save_load() -> void:
+	var sim := _make_sim_for_school()
+	_advance_to_day(sim, 24)
+	sim.state.money = 4000
+	sim.pay_school_fees(4000)
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var loaded := _make_sim_for_school()
+	loaded.load_save_data(data)
+	var same := loaded.get_school_debt() == FarmSimulation.SCHOOL_FEE - 4000 and loaded.state.school_due_day == 37 		and loaded.state.school_billed_season == 1
+	# A save from before school fees, in the middle of the second season:
+	# that season counts as paid, the next bill comes as usual.
+	var old: Dictionary = data.duplicate(true)
+	for key in ["school_debt", "school_due_day", "school_billed_season"]:
+		old.erase(key)
+	old["day"] = 45
+	var from_old := _make_sim_for_school()
+	from_old.load_save_data(old)
+	from_old.advance_day()
+	var quiet := not from_old.is_school_fee_due()
+	_advance_to_day(from_old, 54)
+	_check(same and quiet and from_old.get_school_debt() == FarmSimulation.SCHOOL_FEE and not from_old.is_school_fees_overdue(),
+		"school: the fees survive a save/load; an older save starts with this season paid")
+
+func test_villager_steps_on_conditions() -> void:
+	var data := VillagerData.new()
+	var routine: Array[VillagerStop] = []
+	for entry in [["School", "", "late"], ["Mortar", "late", ""]]:
+		var stop := VillagerStop.new()
+		stop.hour = 7
+		stop.spot = entry[0]
+		stop.only_if = entry[1]
+		stop.unless = entry[2]
+		routine.append(stop)
+	data.routine = routine
+	_check(data.get_stop(9 * 60, GameClock.Weekday.MONDAY).spot == "School"
+			and data.get_stop(9 * 60, GameClock.Weekday.MONDAY, {"late": true}).spot == "Mortar",
+		"a step can need a story condition (only_if) or be cancelled by one (unless)")
+
+# --- The fighting rooster and the Sunday tournament ------------------------------------
+
+func _make_sim_for_cockfight() -> FarmSimulation:
+	var sim := _make_sim_for_school()
+	var roosters := FightingRoosterData.load_all()
+	for rooster_id: String in roosters:
+		sim.register_fighting_rooster(rooster_id, roosters[rooster_id])
+	return sim
+
+## Moves to the next Sunday (from a weekday), at `minute`.
+func _to_sunday(sim: FarmSimulation, minute: int) -> void:
+	while sim.state.clock.get_weekday() != GameClock.Weekday.SUNDAY:
+		sim.advance_day()
+	sim.state.clock.minute_of_day = minute
+
+func test_rooster_given_once() -> void:
+	var sim := _make_sim_for_cockfight()
+	var first := sim.adopt_rooster()
+	var second := sim.adopt_rooster("Autre")
+	_check(first and not second and sim.get_rooster()["name"] == FarmSimulation.ROOSTER_NAME
+			and sim.get_rooster_power() == 2 * FarmSimulation.ROOSTER_START_STAT,
+		"rooster: Rakoto's gift, one rooster at a time")
+
+func test_rooster_grows_with_care() -> void:
+	var sim := _make_sim_for_cockfight()
+	sim.adopt_rooster()
+	sim.state.add_inventory("corn", 5)
+	sim.state.add_inventory("tomato", 5)
+	var refused := not sim.feed_rooster("tomato") and not sim.can_feed_rooster("rice")
+	sim.feed_rooster("corn")
+	sim.train_rooster()
+	var once := not sim.feed_rooster("corn") and not sim.train_rooster()
+	sim.advance_day() # fed and trained: force +2, endurance +2
+	var day1 := [sim.get_rooster()["force"], sim.get_rooster()["endurance"]]
+	sim.feed_rooster("corn")
+	sim.advance_day() # fed only: endurance +1
+	sim.train_rooster()
+	sim.advance_day() # trained but hungry: nothing
+	sim.advance_day() # forgotten: nothing lost
+	sim.state.rooster["force"] = FarmSimulation.ROOSTER_MAX_STAT - 1
+	sim.feed_rooster("corn")
+	sim.train_rooster()
+	sim.advance_day()
+	_check(refused and once and day1 == [22, 22] and sim.get_rooster()["endurance"] == 25
+			and sim.get_rooster()["force"] == FarmSimulation.ROOSTER_MAX_STAT
+			and sim.state.get_inventory_count("corn") == 2,
+		"rooster: a grain a day grows its endurance, training too its force - never lost, capped")
+
+func test_cockfight_on_sunday_afternoon_only() -> void:
+	var sim := _make_sim_for_cockfight()
+	var no_rooster := sim.check_cockfight() == FarmSimulation.CockfightCheck.NO_ROOSTER
+	sim.adopt_rooster()
+	_to_sunday(sim, FarmSimulation.COCKFIGHT_HOURS.x - 1)
+	var closed := sim.check_cockfight() == FarmSimulation.CockfightCheck.CLOSED
+	sim.state.clock.minute_of_day = FarmSimulation.COCKFIGHT_HOURS.x
+	var money := sim.state.money
+	var bouts := sim.enter_cockfight()
+	var powers := bouts.map(func(bout): return sim.get_cockfight_power(bout["opponent"]))
+	var sorted_powers := powers.duplicate()
+	sorted_powers.sort()
+	var owners_closer := bouts.all(func(bout): return sim.get_friendship(
+		sim.get_fighting_rooster(bout["opponent"]).owner_id) == FarmSimulation.FRIENDSHIP_COCKFIGHT)
+	var wins := bouts.filter(func(bout): return bout["won"]).size()
+	_check(no_rooster and closed and bouts.size() == FarmSimulation.COCKFIGHT_BOUTS and powers == sorted_powers
+			and sim.state.money == money + FarmSimulation.COCKFIGHT_ENTRY_PRIZE and owners_closer
+			and sim.get_cockfight_points("player") == wins * 3 + (3 - wins) * 1
+			and sim.check_cockfight() == FarmSimulation.CockfightCheck.ALREADY_ENTERED,
+		"cockfight: Sunday afternoons, once - 3 bouts weakest first, a prize, the owners closer, points")
+
+func test_cockfight_bouts_follow_the_powers() -> void:
+	var sim := _make_sim_for_cockfight()
+	sim.adopt_rooster()
+	seed(7)
+	var strong_wins := 0
+	var shapes_ok := true
+	for i in 200:
+		sim.state.rooster["force"] = 100
+		sim.state.rooster["endurance"] = 100
+		var bout := sim._bout("player", "kely")
+		if bout["won"]:
+			strong_wins += 1
+		var hits: Array = bout["hits"]
+		var winner_hits := hits.filter(func(hit): return hit == bout["won"]).size()
+		shapes_ok = shapes_ok and hits.back() == bout["won"] and winner_hits == FarmSimulation.COCKFIGHT_HITS_TO_WIN \
+			and hits.size() - winner_hits < FarmSimulation.COCKFIGHT_HITS_TO_WIN
+	var even_wins := 0
+	for i in 400:
+		sim.state.rooster["force"] = 30
+		sim.state.rooster["endurance"] = 15 # 45, Kely's power in week 1
+		if sim._bout("player", "kely")["won"]:
+			even_wins += 1
+	_check(strong_wins >= 195 and even_wins > 160 and even_wins < 240 and shapes_ok,
+		"cockfight: a much stronger rooster almost always wins, an even bout is a coin toss (%d/200, %d/400)" % [strong_wins, even_wins])
+
+func test_cockfight_villagers_fight_their_bouts() -> void:
+	var sim := _make_sim_for_cockfight()
+	sim.adopt_rooster()
+	_to_sunday(sim, FarmSimulation.COCKFIGHT_HOURS.x)
+	sim.enter_cockfight()
+	sim.advance_day()
+	var roosters := FightingRoosterData.load_all().keys()
+	var all_fought := roosters.all(func(id): return sim.get_cockfight_points(id) >= 3 and sim.get_cockfight_points(id) <= 9)
+	var ranking := sim.get_cockfight_ranking()
+	_check(all_fought and sim.state.cockfight_week_bouts.is_empty() and ranking.size() == roosters.size() + 1
+			and ranking[0]["points"] >= ranking[-1]["points"],
+		"cockfight: on Sunday, every villager's rooster fights 3 bouts too - the ranking follows the points")
+
+func test_cockfight_season_champion() -> void:
+	var sim := _make_sim_for_cockfight()
+	sim.adopt_rooster()
+	var champions := []
+	sim.cockfight_season_ended.connect(func(id): champions.append(id))
+	_advance_to_day(sim, 29)
+	sim.state.cockfight_points["player"] = 100
+	_advance_to_day(sim, 31)
+	_check(champions == ["player"] and sim.get_cockfight_champion() == "player"
+			and sim.state.cockfight_points.is_empty() and sim.get_friendship("rakoto") == FarmSimulation.FRIENDSHIP_CHAMPION,
+		"cockfight: the season's top rooster is the village's best - its owner befriends the amateurs, points start again")
+
+func test_rooster_and_cockfight_save_load() -> void:
+	var sim := _make_sim_for_cockfight()
+	sim.adopt_rooster()
+	sim.state.add_inventory("corn", 1)
+	sim.feed_rooster("corn")
+	_to_sunday(sim, FarmSimulation.COCKFIGHT_HOURS.x)
+	sim.enter_cockfight()
+	sim.state.cockfight_champion = "mahery"
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var loaded := _make_sim_for_cockfight()
+	loaded.load_save_data(data)
+	_check(loaded.get_rooster() == sim.get_rooster() and loaded.state.cockfight_points == sim.state.cockfight_points
+			and loaded.state.cockfight_week_bouts == sim.state.cockfight_week_bouts
+			and loaded.check_cockfight() == FarmSimulation.CockfightCheck.ALREADY_ENTERED
+			and loaded.get_cockfight_champion() == "mahery",
+		"rooster: the rooster, the points and today's entry survive a save/load")

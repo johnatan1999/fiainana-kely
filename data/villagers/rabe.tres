@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="VillagerData" load_steps=28 format=3 uid="uid://dv10l1ly4yv6s"]
+[gd_resource type="Resource" script_class="VillagerData" load_steps=29 format=3 uid="uid://dv10l1ly4yv6s"]
 
 [ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_tswvq"]
 [ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_3oco8"]
@@ -86,7 +86,7 @@ days = 20
 request_line = "Il me manque %d gousses de vanille pour un lot. Tu en as ?"
 thanks_line = "De la belle vanille ! Tu as la main verte."
 
-[sub_resource type="Resource" id="Resource_y5gpd"]
+[sub_resource type="Resource" id="Resource_id51q"]
 script = ExtResource("9_8a5j7")
 hour = 6
 minute = 0
@@ -95,8 +95,10 @@ spot = "Market_Collector"
 activity = 0
 days = 16
 rain_proof = true
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_xgrx7"]
+[sub_resource type="Resource" id="Resource_rukdf"]
 script = ExtResource("9_8a5j7")
 hour = 8
 minute = 30
@@ -105,8 +107,10 @@ spot = "Taxi"
 activity = 0
 days = 111
 rain_proof = false
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_2corj"]
+[sub_resource type="Resource" id="Resource_n34g3"]
 script = ExtResource("9_8a5j7")
 hour = 12
 minute = 0
@@ -115,8 +119,10 @@ spot = "House_Rabe"
 activity = 2
 days = 111
 rain_proof = true
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_p6vv2"]
+[sub_resource type="Resource" id="Resource_8bgkk"]
 script = ExtResource("9_8a5j7")
 hour = 14
 minute = 0
@@ -125,8 +131,22 @@ spot = "MarketSquare"
 activity = 1
 days = 111
 rain_proof = false
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_m1vil"]
+[sub_resource type="Resource" id="Resource_s2cvr"]
+script = ExtResource("9_8a5j7")
+hour = 14
+minute = 0
+zone = ""
+spot = "Cockfight_East"
+activity = 0
+days = 64
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_ch517"]
 script = ExtResource("9_8a5j7")
 hour = 17
 minute = 0
@@ -135,8 +155,10 @@ spot = "MarketSquare"
 activity = 1
 days = 16
 rain_proof = false
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_tbdjw"]
+[sub_resource type="Resource" id="Resource_sw246"]
 script = ExtResource("9_8a5j7")
 hour = 18
 minute = 0
@@ -145,6 +167,8 @@ spot = "House_Rabe"
 activity = 2
 days = 0
 rain_proof = true
+only_if = ""
+unless = ""
 
 [resource]
 script = ExtResource("10_dqhvg")
@@ -155,7 +179,7 @@ look = SubResource("Resource_msrkq")
 size = 1.05
 home_zone = "market_town"
 home = "House_Rabe"
-routine = Array[ExtResource("9_8a5j7")]([SubResource("Resource_y5gpd"), SubResource("Resource_xgrx7"), SubResource("Resource_2corj"), SubResource("Resource_p6vv2"), SubResource("Resource_m1vil"), SubResource("Resource_tbdjw")])
+routine = Array[ExtResource("9_8a5j7")]([SubResource("Resource_id51q"), SubResource("Resource_rukdf"), SubResource("Resource_n34g3"), SubResource("Resource_8bgkk"), SubResource("Resource_s2cvr"), SubResource("Resource_ch517"), SubResource("Resource_sw246")])
 greetings = PackedStringArray("Vanille, girofle, café, litchis : le zoma, je t\'achète tout !", "Le tsena n\'ouvre que le zoma. Reviens avec ta récolte !", "La vanille met longtemps à pousser, mais rien ne paie mieux.", "Le taxi-brousse emporte nos sacs jusqu\'à la ville.")
 orders = Array[ExtResource("8_hv21r")]([SubResource("Resource_iud3y"), SubResource("Resource_h3oed"), SubResource("Resource_em0ib"), SubResource("Resource_l6h1c")])
 friendship_rewards = Array[ExtResource("1_tswvq")]([SubResource("Resource_ua8cm"), SubResource("Resource_i6yab")])

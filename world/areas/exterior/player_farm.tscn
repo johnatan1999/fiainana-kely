@@ -595,3 +595,7 @@ position = Vector2(290, 960)
 
 [node name="ManureHeap" parent="." instance=ExtResource("42_1ltp7")]
 position = Vector2(185, 955)
+
+[node name="RoosterStake" type="Marker2D" parent="."]
+position = Vector2(960, 650)
+gizmo_extents = 16.0

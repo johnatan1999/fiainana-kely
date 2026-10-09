@@ -47,6 +47,8 @@ func _ready() -> void:
 	await _test_tilling_repaints_one_field()
 	await _test_farm_and_village_paths()
 	await _test_family()
+	await _test_school_fees()
+	await _test_cockfight()
 	await _test_market_town()
 	await _test_zebu_market()
 	await _test_zebu_plough()
@@ -668,6 +670,138 @@ func _test_family() -> void:
 	_check(not at_school.is_inside() and at_school.get_spot_name() == "School",
 		"family: in the village at 9:00, the sister is at school")
 	_sim.state.clock.current_day = today
+	_set_time(10 * 60)
+
+# --- Fara's school fees ----------------------------------------------------------------------
+
+func _test_school_fees() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_set_time(8 * 60)
+	var today := _set_weekday(GameClock.Weekday.WEDNESDAY)
+	var state := _sim.state
+	var money := state.money
+	state.school_debt = FarmSimulation.SCHOOL_FEE
+	state.school_due_day = state.day - 1
+	_sim.school_fees_changed.emit()
+	await _go_to_zone("village")
+	await _go_to_zone("farm")
+	await _frames(3)
+	_player.global_position = Vector2(700, 1500)
+	var sister: Villager = _zone().get_node("Villagers/Fara")
+	var tracker: OrdersTracker = _world.get_node("UI/OrdersTracker")
+	_check(not sister.is_inside() and sister.get_spot_name() == "Mortar" and not sister.call_out.is_empty()
+			and not _zone().get_node("Villagers/Mother").call_out.is_empty()
+			and tracker.visible and tracker._reminders.get_child_count() == 1,
+		"school: fees overdue, Fara stays home at the mortar on a school day - the family speaks of it, the tracker reminds")
+	_set_time(9 * 60)
+	await _go_to_zone("village")
+	await _frames(3)
+	_player.global_position = Vector2(950, 700)
+	var teacher := _villager("Hanta")
+	var panel: SchoolPanel = _world.get_node("UI/SchoolPanel")
+	state.money = FarmSimulation.SCHOOL_FEE + 500
+	teacher.interacted.emit()
+	await _frames(3)
+	var opened := panel.visible and not teacher.is_inside() and teacher.get_spot_name() == "School" 		and teacher.talk_prompt == tr("Payer l'écolage de Fara")
+	panel.pay_money_requested.emit()
+	await _frames(3)
+	var paid := not _sim.is_school_fee_due() and state.money == 500 and panel.visible
+	panel.close()
+	await _frames(3)
+	teacher.interacted.emit()
+	await _frames(3)
+	_check(opened and paid and not panel.visible and teacher.talk_prompt.is_empty()
+			and tracker._reminders.get_child_count() == 0,
+		"school: Ramatoa Hanta, at the school, takes the fees - once paid, talking to her is just a chat")
+	await _go_to_zone("farm")
+	await _frames(3)
+	_check(_zone().get_node("Villagers/Fara").get_spot_name() != "Mortar",
+		"school: the fees paid, Fara goes back to school")
+	state.money = money
+	state.clock.current_day = today
+	_set_time(10 * 60)
+
+# --- fighting rooster and Sunday tournament ---------------------------------------------
+
+func _test_cockfight() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	var state := _sim.state
+	var money := state.money
+	var today := _set_weekday(GameClock.Weekday.TUESDAY)
+	state.clock.current_day = maxi(state.clock.current_day, CockfightManager.GIFT_FROM_DAY + 1)
+	today = maxi(today, state.clock.current_day)
+	_set_weekday(GameClock.Weekday.TUESDAY)
+	state.orders.erase("rakoto")
+	_sim.order_changed.emit("rakoto")
+	_set_time(16 * 60 + 30)
+	await _go_to_zone("farm")
+	await _go_to_zone("village")
+	await _frames(3)
+	_player.global_position = Vector2(300, 300)
+	var rakoto := _villager("Rakoto")
+	var offered := rakoto.talk_prompt == tr("Écouter Rakoto") and rakoto.call_out == tr(CockfightManager.GIFT_CALL)
+	rakoto.interacted.emit()
+	await _frames(3)
+	_check(offered and _sim.has_rooster() and rakoto.call_out.is_empty() and rakoto.get_node("Bubble").visible,
+		"cockfight: Rakoto calls out to the player, and gives them a young fighting rooster")
+
+	await _go_to_zone("farm")
+	await _frames(3)
+	var rooster := _zone().get_node_or_null("PlayerRooster") as TetheredRooster
+	var stake: Marker2D = _zone().get_node("RoosterStake")
+	await _frames(120)
+	var tethered := rooster != null and rooster.get_rooster_position().distance_to(stake.global_position) <= TetheredRooster.TETHER + 2.0
+	var panel: RoosterPanel = _world.get_node("UI/RoosterPanel")
+	state.add_inventory("corn", 2)
+	_sim.inventory_changed.emit("corn", state.get_inventory_count("corn"))
+	rooster.interacted.emit()
+	await _frames(3)
+	var opened := panel.visible
+	panel.feed_requested.emit("corn")
+	panel.train_requested.emit()
+	await _frames(3)
+	var cared := _sim.is_rooster_fed_today() and _sim.is_rooster_trained_today() and panel.visible \
+		and not rooster._bubble.visible
+	panel.close()
+	_check(tethered and opened and cared,
+		"cockfight: the rooster is tied at its stake on the farm - fed and trained from its panel")
+
+	_set_weekday(GameClock.Weekday.SUNDAY)
+	_set_time(14 * 60 + 30)
+	await _go_to_zone("village")
+	await _go_to_zone("market_town")
+	await _frames(3)
+	_player.global_position = Vector2(1056, 900)
+	var ring: CockfightRing = _zone().get_node("CockfightRing")
+	var crowd := _villager("Rabe").get_spot_name() == "Cockfight_East" and _villager("Ratsimba").get_spot_name() == "Cockfight_West"
+	var show_on: bool = ring._show[0].visible and ring._interactable.prompt_message == tr("Inscrire ton coq au tournoi")
+	var fight: CockfightPanel = _world.get_node("UI/CockfightPanel")
+	money = state.money
+	ring.interacted.emit()
+	await _frames(3)
+	var playing := fight.visible and fight.is_playing()
+	await _frames(90) # a blow or two, for real
+	fight.skip()
+	var done := func() -> bool: return not fight.is_playing()
+	var finished := await _wait_for(done, 10.0)
+	_check(crowd and show_on and playing and finished and fight._summary.visible
+			and _sim.get_cockfight_points("player") >= FarmSimulation.COCKFIGHT_BOUTS
+			and state.money == money + FarmSimulation.COCKFIGHT_ENTRY_PRIZE,
+		"cockfight: on Sunday afternoon the amateurs gather at the ring - the player's rooster fights 3 bouts, played out")
+	fight.close()
+	await _frames(3)
+	ring.interacted.emit()
+	await _frames(3)
+	_check(not fight.is_playing() and fight.visible and not fight._fight_box.visible
+			and ring._interactable.prompt_message == tr("Voir le classement des coqs"),
+		"cockfight: once a Sunday - afterwards, the ring shows the ranking")
+	fight.close()
+
+	state.rooster = {}
+	state.cockfight_points.clear()
+	state.cockfight_entered_day = 0
+	state.money = money
+	state.clock.current_day = today
 	_set_time(10 * 60)
 
 # --- market town and weekly market ---------------------------------------------------------

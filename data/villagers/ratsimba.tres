@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="VillagerData" load_steps=21 format=3 uid="uid://bhopv7yxv4x8r"]
+[gd_resource type="Resource" script_class="VillagerData" load_steps=22 format=3 uid="uid://bhopv7yxv4x8r"]
 
 [ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_s3217"]
 [ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_cjmx6"]
@@ -36,7 +36,7 @@ script = ExtResource("7_iicdj")
 skin_color = Color(0.42, 0.27, 0.17, 1)
 layers = Array[ExtResource("2_cjmx6")]([SubResource("Resource_pc2hp"), SubResource("Resource_shbb6"), SubResource("Resource_qg7y1"), SubResource("Resource_k2m5c")])
 
-[sub_resource type="Resource" id="Resource_nreqh"]
+[sub_resource type="Resource" id="Resource_cghcc"]
 script = ExtResource("9_d0sjg")
 hour = 6
 minute = 0
@@ -45,8 +45,10 @@ spot = "ZebuMarket"
 activity = 0
 days = 16
 rain_proof = true
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_b4rl0"]
+[sub_resource type="Resource" id="Resource_nvcse"]
 script = ExtResource("9_d0sjg")
 hour = 9
 minute = 0
@@ -55,8 +57,10 @@ spot = "Taxi"
 activity = 0
 days = 111
 rain_proof = false
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_bo8wp"]
+[sub_resource type="Resource" id="Resource_pv5fe"]
 script = ExtResource("9_d0sjg")
 hour = 13
 minute = 0
@@ -65,18 +69,34 @@ spot = "House_Ratsimba"
 activity = 2
 days = 111
 rain_proof = true
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_bnj8c"]
+[sub_resource type="Resource" id="Resource_l5mxv"]
+script = ExtResource("9_d0sjg")
+hour = 14
+minute = 0
+zone = ""
+spot = "Cockfight_West"
+activity = 0
+days = 64
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_wsmfr"]
 script = ExtResource("9_d0sjg")
 hour = 15
 minute = 30
 zone = ""
 spot = "MarketSquare"
 activity = 1
-days = 111
+days = 47
 rain_proof = false
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_dcwpm"]
+[sub_resource type="Resource" id="Resource_jtl15"]
 script = ExtResource("9_d0sjg")
 hour = 17
 minute = 0
@@ -85,6 +105,8 @@ spot = "House_Ratsimba"
 activity = 2
 days = 0
 rain_proof = true
+only_if = ""
+unless = ""
 
 [resource]
 script = ExtResource("10_hjlk1")
@@ -95,7 +117,7 @@ look = SubResource("Resource_55c4x")
 size = 1.1
 home_zone = "market_town"
 home = "House_Ratsimba"
-routine = Array[ExtResource("9_d0sjg")]([SubResource("Resource_nreqh"), SubResource("Resource_b4rl0"), SubResource("Resource_bo8wp"), SubResource("Resource_bnj8c"), SubResource("Resource_dcwpm")])
+routine = Array[ExtResource("9_d0sjg")]([SubResource("Resource_cghcc"), SubResource("Resource_nvcse"), SubResource("Resource_pv5fe"), SubResource("Resource_l5mxv"), SubResource("Resource_wsmfr"), SubResource("Resource_jtl15")])
 greetings = PackedStringArray("Un zébu, c\'est une banque qui broute !", "Le zoma, je vends mes zébus au parc, au nord de la rivière.", "Un zébu bien abreuvé prend du poids chaque jour.", "Achète-le jeune, revends-le adulte : il aura doublé de prix.")
 orders = Array[ExtResource("8_yeeqj")]([])
 friendship_rewards = Array[ExtResource("1_s3217")]([])

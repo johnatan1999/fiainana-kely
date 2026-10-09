@@ -31,12 +31,22 @@ enum Activity {
 ## Still done in the rain (a covered stall, work in the rice fields);
 ## otherwise the villager stays home while it rains.
 @export var rain_proof := false
+## A story condition (FarmSimulation.get_conditions()) this step needs, or
+## that cancels it - skipped like on another weekday. Fara goes to school
+## `unless` "school_fees_overdue", and helps at home `only_if` it is.
+@export var only_if := ""
+@export var unless := ""
 
 func get_minute_of_day() -> int:
 	return hour * 60 + minute
 
 func happens_on(weekday: int) -> bool:
 	return days == 0 or days & (1 << weekday) != 0
+
+## On `weekday` (GameClock.Weekday), with `conditions` (name -> true).
+func happens(weekday: int, conditions: Dictionary) -> bool:
+	return happens_on(weekday) and (only_if.is_empty() or conditions.has(only_if)) \
+		and (unless.is_empty() or not conditions.has(unless))
 
 ## The `days` bits for a list of GameClock.Weekday values.
 static func days_mask(weekdays: Array) -> int:

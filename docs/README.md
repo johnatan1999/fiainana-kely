@@ -22,6 +22,8 @@ la fiche concernée, ou en crée une nouvelle ajoutée à cet index.
 | [zebus.md](zebus.md) | `GrazingZebu`, `ZebuPen`, `ZebuManager`, `ZebuMarketPanel` : zébus en liberté, parcs, zébus du joueur, marché aux zébus |
 | [villagers.md](villagers.md) | `Villager`, `VillagerRoads`, `VillagerVisual`, `VillagePaddy`, `NeighbourPaddyManager` : villageois, journées, fermiers et moisson chez les voisins, apparence par calques |
 | [orders.md](orders.md) | `OrderManager`, `OrderTemplate` : commandes des villageois, panneau, suivi |
+| [cockfight.md](cockfight.md) | `CockfightManager`, `TetheredRooster`, `CockfightRing` : coq de combat du joueur, tournoi de l'Alahady au bourg, classement |
+| [school.md](school.md) | `SchoolManager`, `SchoolPanel` : écolage de Fara, directrice de l'école, Fara renvoyée à la maison |
 | [friendship.md](friendship.md) | `FriendshipManager`, `FriendshipReward` : amitié avec les villageois, cœurs, cadeaux, prix d'ami |
 | [shops.md](shops.md) | `Shop`, `ShopProfile`, `ShopUI` : épicerie du village, marché du zoma au bourg |
 | [weather.md](weather.md) | `WeatherController` : pluie, ciel couvert, arrosage par la pluie |

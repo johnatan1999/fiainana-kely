@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="VillagerData" load_steps=28 format=3 uid="uid://b8ua56irvcthp"]
+[gd_resource type="Resource" script_class="VillagerData" load_steps=29 format=3 uid="uid://b8ua56irvcthp"]
 
 [ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_4rslo"]
 [ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_21a7j"]
@@ -86,7 +86,7 @@ days = 7
 request_line = "%d épis de maïs, tu peux m'en trouver ?"
 thanks_line = "Merci beaucoup !"
 
-[sub_resource type="Resource" id="Resource_6kqho"]
+[sub_resource type="Resource" id="Resource_4lnt8"]
 script = ExtResource("9_pet6q")
 hour = 6
 minute = 15
@@ -95,8 +95,10 @@ spot = "NeighbourPaddy_2"
 activity = 3
 days = 0
 rain_proof = true
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_0c6c8"]
+[sub_resource type="Resource" id="Resource_smrv4"]
 script = ExtResource("9_pet6q")
 hour = 11
 minute = 30
@@ -105,28 +107,46 @@ spot = "Hut"
 activity = 0
 days = 0
 rain_proof = true
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_ohahq"]
+[sub_resource type="Resource" id="Resource_4s3ro"]
 script = ExtResource("9_pet6q")
 hour = 12
 minute = 30
 zone = "rice_fields"
 spot = "NeighbourPaddy_2"
 activity = 3
-days = 0
+days = 63
 rain_proof = true
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_i2p3e"]
+[sub_resource type="Resource" id="Resource_fnfr7"]
+script = ExtResource("9_pet6q")
+hour = 13
+minute = 30
+zone = "market_town"
+spot = "Cockfight_West"
+activity = 0
+days = 64
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_35ta1"]
 script = ExtResource("9_pet6q")
 hour = 15
 minute = 30
 zone = ""
 spot = "Grocery"
 activity = 0
-days = 0
+days = 63
 rain_proof = false
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_k8vcv"]
+[sub_resource type="Resource" id="Resource_y1iwt"]
 script = ExtResource("9_pet6q")
 hour = 17
 minute = 0
@@ -135,8 +155,10 @@ spot = "Eatery"
 activity = 0
 days = 0
 rain_proof = false
+only_if = ""
+unless = ""
 
-[sub_resource type="Resource" id="Resource_0pit0"]
+[sub_resource type="Resource" id="Resource_jqmb6"]
 script = ExtResource("9_pet6q")
 hour = 18
 minute = 15
@@ -145,6 +167,8 @@ spot = "House_East"
 activity = 2
 days = 0
 rain_proof = true
+only_if = ""
+unless = ""
 
 [resource]
 script = ExtResource("10_u3ha4")
@@ -155,7 +179,7 @@ look = SubResource("Resource_msaf2")
 size = 1.05
 home_zone = "village"
 home = "House_East"
-routine = Array[ExtResource("9_pet6q")]([SubResource("Resource_6kqho"), SubResource("Resource_0c6c8"), SubResource("Resource_ohahq"), SubResource("Resource_i2p3e"), SubResource("Resource_k8vcv"), SubResource("Resource_0pit0")])
+routine = Array[ExtResource("9_pet6q")]([SubResource("Resource_4lnt8"), SubResource("Resource_smrv4"), SubResource("Resource_4s3ro"), SubResource("Resource_fnfr7"), SubResource("Resource_35ta1"), SubResource("Resource_y1iwt"), SubResource("Resource_jqmb6")])
 greetings = PackedStringArray("Belle journée pour travailler la terre.", "Bonjour, voisin !", "Le repiquage, ça casse le dos !")
 orders = Array[ExtResource("8_8q1yg")]([SubResource("Resource_prq8r"), SubResource("Resource_82pav"), SubResource("Resource_si3f5"), SubResource("Resource_i4f87")])
 friendship_rewards = Array[ExtResource("1_4rslo")]([SubResource("Resource_7luax"), SubResource("Resource_q530i")])

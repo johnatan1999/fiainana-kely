@@ -83,6 +83,26 @@ var zebu_trough_full: bool = false
 var plough_cells_today: int = 0
 ## Manure heaped by the farm pen, waiting to be picked up.
 var manure_pile: int = 0
+
+## Fara's school fees (FarmSimulation's school API): what's still owed, the
+## last day to pay it, and the last season billed (0, 1, 2... - the first
+## one is paid by the parents).
+var school_debt: int = 0
+var school_due_day: int = 0
+var school_billed_season: int = 0
+
+## The player's fighting rooster (FarmSimulation's rooster API), {} until
+## Rakoto gives one: {"name", "force", "endurance", "fed_day",
+## "trained_day"}.
+var rooster: Dictionary = {}
+## The cockfight season: points by rooster id ("player" or a
+## FightingRoosterData id), the villagers' roosters' bouts already fought
+## this week (against the player's), the day the player last entered, and
+## the village's best rooster (last season's top - "" before the first).
+var cockfight_points: Dictionary = {}
+var cockfight_week_bouts: Dictionary = {}
+var cockfight_entered_day: int = 0
+var cockfight_champion: String = ""
 const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
@@ -253,6 +273,14 @@ func to_dict() -> Dictionary:
 		"zebu_trough_full": zebu_trough_full,
 		"plough_cells_today": plough_cells_today,
 		"manure_pile": manure_pile,
+		"school_debt": school_debt,
+		"school_due_day": school_due_day,
+		"school_billed_season": school_billed_season,
+		"rooster": rooster.duplicate(),
+		"cockfight_points": cockfight_points.duplicate(),
+		"cockfight_week_bouts": cockfight_week_bouts.duplicate(),
+		"cockfight_entered_day": cockfight_entered_day,
+		"cockfight_champion": cockfight_champion,
 	}
 
 ## JSON object keys are strings: species saved as "0", "4"...
@@ -385,6 +413,30 @@ func load_dict(data: Dictionary) -> void:
 	zebu_trough_full = bool(data.get("zebu_trough_full", false))
 	plough_cells_today = int(data.get("plough_cells_today", 0))
 	manure_pile = int(data.get("manure_pile", 0))
+	# Optional keys (older saves have none): this season counts as paid.
+	school_debt = int(data.get("school_debt", 0))
+	school_due_day = int(data.get("school_due_day", 0))
+	school_billed_season = int(data.get("school_billed_season", (day - 1) / GameClock.DAYS_PER_SEASON))
+	# Optional keys (older saves have none): no rooster, no tournament yet.
+	rooster.clear()
+	var rooster_data = data.get("rooster", {})
+	if rooster_data is Dictionary and not rooster_data.is_empty():
+		rooster = {
+			"name": str(rooster_data.get("name", "")),
+			"force": int(rooster_data.get("force", 0)),
+			"endurance": int(rooster_data.get("endurance", 0)),
+			"fed_day": int(rooster_data.get("fed_day", 0)),
+			"trained_day": int(rooster_data.get("trained_day", 0)),
+		}
+	for key in ["cockfight_points", "cockfight_week_bouts"]:
+		var target: Dictionary = get(key)
+		target.clear()
+		var saved = data.get(key, {})
+		if saved is Dictionary:
+			for rooster_id in saved:
+				target[str(rooster_id)] = int(saved[rooster_id])
+	cockfight_entered_day = int(data.get("cockfight_entered_day", 0))
+	cockfight_champion = str(data.get("cockfight_champion", ""))
 
 	# Optional key (older saves have none): no tufts cut yet.
 	neighbour_harvest.clear()

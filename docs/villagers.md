@@ -1,22 +1,23 @@
 # Villageois : `Villager`, `VillagerRoads`, `VillagerVisual`, `VillagePaddy`, `NeighbourPaddyManager`
 
 ## Ce que voit le joueur
-Cinq villageois vivent au village, chacun avec sa journée :
+Six villageois vivent au village, chacun avec sa journée :
 
 | Villageois | Maison | Sa journée |
 |---|---|---|
-| **Rakoto**, fermier | ouest | Repique le riz dans la rizière des voisins de 6:30 à 16:00, avec une pause à la cabane à midi. Puis va à la gargote et rentre à 18:00 |
-| **Naivo**, fermier | est | Même chose de 6:15 à 15:30 (pause à 11:30), puis passe à l'épicerie et à la gargote, rentre à 18:15 |
+| **Rakoto**, fermier | ouest | Repique le riz dans la rizière des voisins de 6:30 à 16:00, avec une pause à la cabane à midi. Puis va à la gargote et rentre à 18:00. **L'Alahady**, descend au bourg dès 13:30 pour le tournoi de coqs (son coq, Mahery, est le plus fort) ; c'est lui qui offre au joueur son coq de combat (voir `cockfight.md`) |
+| **Naivo**, fermier | est | Même chose de 6:15 à 15:30 (pause à 11:30), puis passe à l'épicerie et à la gargote, rentre à 18:15. **L'Alahady**, au tournoi de coqs du bourg dès 13:30 |
 | **Ravao**, marchande | est | Tient son étal au marché de 7:00 à 17:30, avec une pause sur le banc près de chez elle à midi. **Le zoma**, elle descend au bourg vendre ses lambas au tsena (6:30–15:30), puis se repose sur le banc |
 | **Neny Soa**, grand-mère | sud | Va chercher l'eau au point d'eau au lever, se promène sur la place, fait la sieste, va au banc l'après-midi |
-| **Koto**, enfant | sud | **En semaine** (Alatsinainy à Zoma), va à l'école le matin (même sous la pluie) ; **le week-end**, joue au foot dès 8:30. Traîne au marché l'après-midi, joue au foot en fin de journée |
+| **Koto**, enfant | sud | **En semaine** (Alatsinainy à Zoma), va à l'école le matin (même sous la pluie) ; **le week-end**, joue au foot dès 8:30. Traîne au marché l'après-midi, joue au foot en fin de journée. **L'Alahady à 14:00**, va voir combattre son petit coq, Kely, au bourg |
+| **Ramatoa Hanta**, directrice de l'école | logement de l'école | **En semaine**, devant l'école dès 7:00 ; **le week-end**, se promène sur la place le matin. Déjeune à la gargote à midi, est de nouveau à l'école de 13:30 à 17:30 (tous les jours), puis rentre. C'est à elle qu'on paie l'écolage de Fara (voir `school.md`) |
 
 - **Les marchands du bourg** (voir `world_zones.md`) :
 
 | Villageois | Sa journée |
 |---|---|
-| **Rabe**, collecteur | **Le zoma**, tient l'étal du collecteur de 6:00 à 17:00 (c'est lui qui achète vanille, girofle, café et litchis), puis flâne sur la place. Les autres jours, attend le taxi-brousse le matin, rentre à midi, flâne au marché l'après-midi |
-| **Ratsimba**, marchand de zébus | **Le zoma**, à son poteau du tsena omby de 6:00 à 17:00. Les autres jours, au taxi-brousse le matin, chez lui à midi, sur la place l'après-midi |
+| **Rabe**, collecteur | **Le zoma**, tient l'étal du collecteur de 6:00 à 17:00 (c'est lui qui achète vanille, girofle, café et litchis), puis flâne sur la place. Les autres jours, attend le taxi-brousse le matin, rentre à midi, flâne au marché l'après-midi (**l'Alahady**, au tournoi de coqs dès 14:00) |
+| **Ratsimba**, marchand de zébus | **Le zoma**, à son poteau du tsena omby de 6:00 à 17:00. Les autres jours, au taxi-brousse le matin, chez lui à midi, sur la place l'après-midi (**l'Alahady**, au tournoi de coqs dès 14:00) |
 | **Lalao**, marchande de légumes | **Le zoma**, à son étal de légumes de 6:00 à 17:00. Les autres jours, lave le linge au lavoir le matin, discute sur le pont l'après-midi |
 
   Ils ont leurs commandes et leurs cadeaux d'amitié : Rabe commande des cultures d'export et
@@ -29,7 +30,7 @@ Cinq villageois vivent au village, chacun avec sa journée :
 |---|---|
 | **Neny**, la mère | Pile le riz au mortier devant la maison dès 6:00, va chercher l'eau au point d'eau du village vers 9:00, étend le linge, cuisine, nourrit les poules, rentre à 18:00 |
 | **Dada**, le père | Travaille au verger le matin, déjeune à la maison, coupe du bois l'après-midi, rejoint les hommes à la gargote du village à 16:00, rentre à 18:30 |
-| **Fara**, la petite sœur | Va à l'école du village le matin en semaine (le week-end, joue avec les poules dès 9:00), joue avec les poules à midi, au foot au village l'après-midi, rentre vers 17:45 |
+| **Fara**, la petite sœur | Va à l'école du village le matin en semaine (le week-end, joue avec les poules dès 9:00), joue avec les poules à midi, au foot au village l'après-midi, rentre vers 17:45. **Écolage en retard** : renvoyée de l'école, elle aide Neny au mortier les matins de semaine (voir `school.md`) |
 
   - Leurs répliques sont des **conseils** : arroser, acheter les graines au marché, les
     commandes, les saisons, les poules. Elles servent de tutoriel naturel.
@@ -90,7 +91,11 @@ Cinq villageois vivent au village, chacun avec sa journée :
   - `days` : les jours de la semaine où l'étape a lieu (cases à cocher, bits de
     `GameClock.Weekday`) ; aucune case = tous les jours. Un autre jour, l'étape est sautée et
     la précédente continue. `happens_on(weekday)`, `days_mask([...])`.
-- **`get_stop(minute, weekday)`** : l'étape en cours ce jour-là, ou `null` (= à la maison)
+  - `only_if` / `unless` : une **condition d'histoire** (`FarmSimulation.get_conditions()`)
+    dont l'étape a besoin, ou qui l'annule. L'étape est alors sautée, comme un autre jour.
+    Seule condition aujourd'hui : `school_fees_overdue` (Fara va à l'école `unless`, aide au
+    mortier `only_if`). `happens(weekday, conditions)`.
+- **`get_stop(minute, weekday, conditions)`** : l'étape en cours ce jour-là, ou `null` (= à la maison)
   avant la première. La journée va de 6:00 à 2:00 : après minuit, c'est toujours la dernière
   étape de la veille. Terminer donc la journée par une étape `INSIDE` sur `home`.
   - Pour une journée différente le zoma (ou le week-end), donner des `days` aux étapes des
@@ -221,7 +226,11 @@ Les deux se lancent avec `--editor`.
     table) ; avec `-- --routines`, réécrit les journées de tous depuis la table, sans toucher
     au reste ;
   - dans la table, une étape peut avoir un 7e élément : ses jours (`SCHOOL_DAYS`, `WEEKEND`,
-    `MARKET`, `NOT_MARKET`) ;
+    `MARKET`, `NOT_MARKET`), et un 8e : sa condition (`{"only_if": ...}` ou
+    `{"unless": ...}`) ;
+  - `-- --routines` réenregistre **tous** les `.tres` (nouveaux ids de sous-ressources) et
+    chaque zone remet `VillagerRoads` et `Villagers` en fin de scène. Pour ne changer qu'un
+    villageois, annuler ensuite (`git checkout`) les fichiers qui ne le concernent pas ;
   - pour chaque zone de sa table `ZONES` : reconstruit `VillagerRoads`, les rizières des
     voisins (`NeighbourPaddies`) et `Villagers` (un nœud par villageois dont la journée passe
     par la zone) ;

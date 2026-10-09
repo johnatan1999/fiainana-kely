@@ -24,11 +24,17 @@ const DATA_DIR := "res://data/villagers/"
 const LAYERS := "res://assets/sprites/characters/villager/example_%s.png"
 const TILE := 48
 ## Weekdays for the routine entries' optional 7th element (none = every day).
+## An optional 8th element sets the step's story condition: {"only_if": name}
+## or {"unless": name} (VillagerStop).
 const SCHOOL_DAYS := ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]
 const WEEKEND := ["SATURDAY", "SUNDAY"]
 ## The weekly market in the market town (GameClock.MARKET_DAY), and the other days.
 const MARKET := ["FRIDAY"]
 const NOT_MARKET := ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "SATURDAY", "SUNDAY"]
+## The Sunday cockfight tournament in the market town
+## (FarmSimulation.COCKFIGHT_DAY), and the other days.
+const SUNDAY := ["SUNDAY"]
+const NOT_SUNDAY := ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]
 
 ## World zone id -> its scene, the spots (Marker2Ds under
 ## VillagerRoads/Spots), the roads along its dirt paths (one Line2D each; a
@@ -111,6 +117,10 @@ const ZONES := {
 			# The zebu market, north of the river (tools/place_zebu_herds.gd).
 			"ZebuMarket": Vector2(255, 285),
 			"House_Ratsimba": Vector2(1876, 1362),
+			# Around the cockfight ring (tools/place_cockfight.gd).
+			"Cockfight_South": Vector2(1380, 578),
+			"Cockfight_West": Vector2(1255, 508),
+			"Cockfight_East": Vector2(1505, 508),
 		},
 		"roads": {
 			"Road_North": [Vector2(1056, 20), Vector2(1056, 260), Vector2(1056, 500), Vector2(1056, 700),
@@ -118,6 +128,7 @@ const ZONES := {
 			"Road_Zebu": [Vector2(1056, 260), Vector2(640, 285), Vector2(255, 285)],
 			"Road_Ratsimba": [Vector2(1056, 1380), Vector2(1600, 1390), Vector2(1876, 1362)],
 			"Road_WashingStones": [Vector2(1056, 500), Vector2(900, 500), Vector2(700, 505)],
+			"Road_Cockfight": [Vector2(1056, 500), Vector2(1255, 508), Vector2(1380, 578), Vector2(1505, 508)],
 			"Road_Market_West": [Vector2(1056, 700), Vector2(830, 760), Vector2(620, 760)],
 			"Road_Market_East": [Vector2(1056, 700), Vector2(1290, 760), Vector2(1500, 760)],
 			"Road_Rabe": [Vector2(1056, 950), Vector2(1600, 960), Vector2(1957, 883)],
@@ -157,8 +168,9 @@ const VILLAGERS := {
 		"routine": [
 			[6, 30, "rice_fields", "NeighbourPaddy_1", "WORK", true],
 			[12, 0, "rice_fields", "Hut", "STAND", true],
-			[13, 0, "rice_fields", "NeighbourPaddy_1", "WORK", true],
-			[16, 0, "", "Eatery", "STAND", false],
+			[13, 0, "rice_fields", "NeighbourPaddy_1", "WORK", true, NOT_SUNDAY],
+			[13, 30, "market_town", "Cockfight_South", "STAND", true, SUNDAY],
+			[16, 0, "", "Eatery", "STAND", false, NOT_SUNDAY],
 			[18, 0, "", "House_West", "INSIDE", true],
 		],
 		"greetings": ["Bonjour ! Le riz pousse bien cette année.", "Les rizières ont besoin de bras, tu sais."],
@@ -228,6 +240,7 @@ const VILLAGERS := {
 			[8, 30, "", "Pitch", "WANDER", false, WEEKEND],
 			[12, 0, "", "House_South", "INSIDE", true],
 			[14, 0, "", "Market", "WANDER", false],
+			[14, 0, "market_town", "Cockfight_South", "STAND", true, SUNDAY],
 			[16, 30, "", "Pitch", "WANDER", false],
 			[18, 30, "", "House_South", "INSIDE", true],
 		],
@@ -248,8 +261,9 @@ const VILLAGERS := {
 		"routine": [
 			[6, 15, "rice_fields", "NeighbourPaddy_2", "WORK", true],
 			[11, 30, "rice_fields", "Hut", "STAND", true],
-			[12, 30, "rice_fields", "NeighbourPaddy_2", "WORK", true],
-			[15, 30, "", "Grocery", "STAND", false],
+			[12, 30, "rice_fields", "NeighbourPaddy_2", "WORK", true, NOT_SUNDAY],
+			[13, 30, "market_town", "Cockfight_West", "STAND", true, SUNDAY],
+			[15, 30, "", "Grocery", "STAND", false, NOT_SUNDAY],
 			[17, 0, "", "Eatery", "STAND", false],
 			[18, 15, "", "House_East", "INSIDE", true],
 		],
@@ -310,7 +324,9 @@ const VILLAGERS := {
 		"size": 0.75, "skin": Color(0.5, 0.33, 0.22),
 		"layers": [["skirt", Color(0.85, 0.4, 0.55)], ["shirt", Color(0.98, 0.95, 0.9)], ["hair", Color(0.12, 0.09, 0.07)]],
 		"routine": [
-			[7, 15, "village", "School", "STAND", true, SCHOOL_DAYS],
+			[7, 15, "village", "School", "STAND", true, SCHOOL_DAYS, {"unless": "school_fees_overdue"}],
+			# Sent home from school (fees unpaid): helps Neny at the mortar.
+			[7, 15, "", "Mortar", "WORK", true, SCHOOL_DAYS, {"only_if": "school_fees_overdue"}],
 			[9, 0, "", "Coop", "WANDER", false, WEEKEND],
 			[12, 15, "", "Coop", "WANDER", false],
 			[14, 30, "", "House", "INSIDE", true],
@@ -334,6 +350,7 @@ const VILLAGERS := {
 			[8, 30, "", "Taxi", "STAND", false, NOT_MARKET],
 			[12, 0, "", "House_Rabe", "INSIDE", true, NOT_MARKET],
 			[14, 0, "", "MarketSquare", "WANDER", false, NOT_MARKET],
+			[14, 0, "", "Cockfight_East", "STAND", true, SUNDAY],
 			[17, 0, "", "MarketSquare", "WANDER", false, MARKET],
 			[18, 0, "", "House_Rabe", "INSIDE", true],
 		],
@@ -388,7 +405,8 @@ const VILLAGERS := {
 			[6, 0, "", "ZebuMarket", "STAND", true, MARKET],
 			[9, 0, "", "Taxi", "STAND", false, NOT_MARKET],
 			[13, 0, "", "House_Ratsimba", "INSIDE", true, NOT_MARKET],
-			[15, 30, "", "MarketSquare", "WANDER", false, NOT_MARKET],
+			[14, 0, "", "Cockfight_West", "STAND", true, SUNDAY],
+			[15, 30, "", "MarketSquare", "WANDER", false, ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "SATURDAY"]],
 			[17, 0, "", "House_Ratsimba", "INSIDE", true],
 		],
 		"greetings": [
@@ -396,6 +414,26 @@ const VILLAGERS := {
 			"Le zoma, je vends mes zébus au parc, au nord de la rivière.",
 			"Un zébu bien abreuvé prend du poids chaque jour.",
 			"Achète-le jeune, revends-le adulte : il aura doublé de prix.",
+		],
+	},
+	# The village school's head teacher: Fara's school fees are paid to her
+	# (SchoolManager). Lives in the school's lodging.
+	"hanta": {
+		"name": "Ramatoa Hanta", "role": "La directrice de l'école du village, l'institutrice de Fara",
+		"home": "School", "size": 1.0, "skin": Color(0.52, 0.34, 0.23),
+		"layers": [["skirt", Color(0.2, 0.3, 0.55)], ["shirt", Color(0.95, 0.95, 0.98)], ["hair_bun", Color(0.1, 0.08, 0.06)]],
+		"routine": [
+			[7, 0, "", "School", "STAND", true, SCHOOL_DAYS],
+			[8, 30, "", "Square", "WANDER", false, WEEKEND],
+			[12, 0, "", "Eatery", "STAND", true],
+			[13, 30, "", "School", "STAND", true],
+			[17, 30, "", "School", "INSIDE", true],
+		],
+		"greetings": [
+			"Fara est une élève appliquée, tu sais.",
+			"L'école, c'est l'avenir du village.",
+			"Cette semaine, nous apprenons les fleuves de Madagasikara.",
+			"Le lundi matin, les enfants chantent l'hymne devant le drapeau.",
 		],
 	},
 }
@@ -513,6 +551,9 @@ func _make_routine(spec: Dictionary) -> Array[VillagerStop]:
 			for day_name: String in entry[6]:
 				weekdays.append(GameClock.Weekday[day_name])
 			stop.days = VillagerStop.days_mask(weekdays)
+		if entry.size() > 7:
+			stop.only_if = entry[7].get("only_if", "")
+			stop.unless = entry[7].get("unless", "")
 		routine.append(stop)
 	return routine
 

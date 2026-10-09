@@ -56,6 +56,7 @@ const HOME_PLACES := {
 	"House_Rabe": "une maison du bourg, à l'est du marché",
 	"House_Lalao": "une maison du bourg, à l'ouest du marché",
 	"House_Ratsimba": "une maison du bourg, au sud-est du marché",
+	"School": "le logement de l'école",
 }
 const PLACEHOLDER_VILLAGER := Color(0.62, 0.45, 0.32)
 
@@ -266,10 +267,10 @@ static func _describe_family(villager_id: String, data: VillagerData, simulation
 ## as Villager, without needing their zone to be loaded.
 static func _place_text(simulation: FarmSimulation, data: VillagerData) -> String:
 	var clock := simulation.state.clock
-	var stop := data.get_stop(clock.minute_of_day, clock.get_weekday())
+	var stop := data.get_stop(clock.minute_of_day, clock.get_weekday(), simulation.get_conditions())
 	if stop != null and simulation.is_raining() and not stop.rain_proof:
 		stop = null
-	if stop == null or stop.spot == data.home:
+	if stop == null or (stop.spot == data.home and stop.activity == VillagerStop.Activity.INSIDE):
 		return _t("à la maison")
 	return _t(SPOT_PLACES.get(stop.spot, "quelque part au village"))
 

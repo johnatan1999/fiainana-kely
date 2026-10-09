@@ -7,7 +7,8 @@ extends CharacterBody2D
 ## Keeps the clock (DayNightController.CLOCK_GROUP), the day of the week
 ## (CALENDAR_GROUP: some steps only happen on some weekdays) and the weather
 ## (WeatherController.WEATHER_GROUP): in the rain, only rain_proof steps
-## happen - otherwise they stay home.
+## happen - otherwise they stay home. Story conditions (set_conditions():
+## Fara's school fees overdue) switch some steps on or off.
 ##
 ## Across zones: a villager who appears in several zones (the farmers, in
 ## the village and the rice fields) has one Villager node in each, with the
@@ -87,6 +88,12 @@ var _t := 0.0
 ## Said instead of a greeting while set (e.g. NeighbourPaddyManager: "help
 ## us with the harvest?").
 var call_out := ""
+## What talking to them does, instead of "Talk to <name>", while set
+## (already translated) - OrderManager shows it when there's no order.
+var talk_prompt := ""
+## Today's story conditions (FarmSimulation.get_conditions()): some steps
+## depend on them (VillagerStop.only_if / unless). Set by SchoolManager.
+var _conditions: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group(GROUP)
@@ -133,6 +140,13 @@ func set_raining(raining: bool) -> void:
 	if _clock_known:
 		_update_plan()
 
+func set_conditions(conditions: Dictionary) -> void:
+	if conditions == _conditions:
+		return
+	_conditions = conditions.duplicate()
+	if _clock_known:
+		_update_plan()
+
 func is_inside() -> bool:
 	return _inside
 
@@ -149,7 +163,7 @@ func get_spot_name() -> String:
 ## [zone, spot, activity] for now, the weather allowing - in this zone's
 ## terms: a step in another zone is the road there, going out.
 func _plan() -> Array:
-	var stop := data.get_stop(_minute, _weekday)
+	var stop := data.get_stop(_minute, _weekday, _conditions)
 	if stop != null and _raining and not stop.rain_proof:
 		stop = null
 	var zone := data.home_zone

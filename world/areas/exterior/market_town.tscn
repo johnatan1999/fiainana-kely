@@ -1,4 +1,4 @@
-[gd_scene load_steps=46 format=4 uid="uid://tr5aptiq624g"]
+[gd_scene load_steps=50 format=4 uid="uid://tr5aptiq624g"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_2ne5l"]
 [ext_resource type="Texture2D" uid="uid://cxd7faagbgttd" path="res://assets/tileset/farm01_48.png" id="2_mr67r"]
@@ -40,8 +40,12 @@
 [ext_resource type="PackedScene" uid="uid://cs8uqmupoimko" path="res://entities/zebu/zebu_pen.tscn" id="38_n8b1g"]
 [ext_resource type="Script" path="res://entities/zebu/market_day_only.gd" id="39_q70f5"]
 [ext_resource type="PackedScene" path="res://entities/zebu/grazing_zebu.tscn" id="40_3maaf"]
+[ext_resource type="Resource" uid="uid://wodptj1vp74l" path="res://data/villagers/rakoto.tres" id="40_3t48q"]
 [ext_resource type="PackedScene" uid="uid://cm0mxhdtcnj8g" path="res://entities/zebu/zebu_market.tscn" id="41_mwl8y"]
+[ext_resource type="Resource" uid="uid://bvfoa1n3x2ndx" path="res://data/villagers/koto.tres" id="42_08u5h"]
 [ext_resource type="Resource" uid="uid://bhopv7yxv4x8r" path="res://data/villagers/ratsimba.tres" id="42_y5ukm"]
+[ext_resource type="Resource" uid="uid://b8ua56irvcthp" path="res://data/villagers/naivo.tres" id="43_me01k"]
+[ext_resource type="Script" path="res://entities/cockfight/cockfight_ring.gd" id="43_vl08j"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_cqpok"]
 texture = ExtResource("2_mr67r")
@@ -318,6 +322,28 @@ target_spawn = "SpawnFrom_MARKET_TOWN"
 position = Vector2(1056, 12)
 shape = SubResource("RectangleShape2D_0cyjg")
 
+[node name="ZebuPen" parent="." instance=ExtResource("38_n8b1g")]
+position = Vector2(288, 48)
+
+[node name="ZebuHerd" type="Node2D" parent="."]
+y_sort_enabled = true
+script = ExtResource("39_q70f5")
+
+[node name="Zebu1" parent="ZebuHerd" instance=ExtResource("40_3maaf")]
+position = Vector2(380, 150)
+wander_radius = 30.0
+
+[node name="Zebu2" parent="ZebuHerd" instance=ExtResource("40_3maaf")]
+position = Vector2(470, 130)
+wander_radius = 30.0
+
+[node name="Zebu3" parent="ZebuHerd" instance=ExtResource("40_3maaf")]
+position = Vector2(440, 190)
+wander_radius = 30.0
+
+[node name="ZebuMarket" parent="." instance=ExtResource("41_mwl8y")]
+position = Vector2(200, 310)
+
 [node name="VillagerRoads" type="Node2D" parent="."]
 script = ExtResource("33_0i0h6")
 zone_id = "market_town"
@@ -339,6 +365,11 @@ default_color = Color(1, 0.85, 0.3, 0.6)
 
 [node name="Road_WashingStones" type="Line2D" parent="VillagerRoads"]
 points = PackedVector2Array(1056, 500, 900, 500, 700, 505)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Road_Cockfight" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(1056, 500, 1255, 508, 1380, 578, 1505, 508)
 width = 6.0
 default_color = Color(1, 0.85, 0.3, 0.6)
 
@@ -416,12 +447,36 @@ gizmo_extents = 16.0
 position = Vector2(1876, 1362)
 gizmo_extents = 16.0
 
+[node name="Cockfight_South" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1380, 578)
+gizmo_extents = 16.0
+
+[node name="Cockfight_West" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1255, 508)
+gizmo_extents = 16.0
+
+[node name="Cockfight_East" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1505, 508)
+gizmo_extents = 16.0
+
 [node name="Villagers" type="Node2D" parent="."]
 y_sort_enabled = true
+
+[node name="Rakoto" parent="Villagers" instance=ExtResource("34_kixik")]
+position = Vector2(1056, 20)
+data = ExtResource("40_3t48q")
 
 [node name="Ravao" parent="Villagers" instance=ExtResource("34_kixik")]
 position = Vector2(1056, 20)
 data = ExtResource("35_457x0")
+
+[node name="Koto" parent="Villagers" instance=ExtResource("34_kixik")]
+position = Vector2(1056, 20)
+data = ExtResource("42_08u5h")
+
+[node name="Naivo" parent="Villagers" instance=ExtResource("34_kixik")]
+position = Vector2(1056, 20)
+data = ExtResource("43_me01k")
 
 [node name="Rabe" parent="Villagers" instance=ExtResource("34_kixik")]
 position = Vector2(1957, 883)
@@ -435,24 +490,6 @@ data = ExtResource("37_ku04g")
 position = Vector2(1876, 1362)
 data = ExtResource("42_y5ukm")
 
-[node name="ZebuPen" parent="." instance=ExtResource("38_n8b1g")]
-position = Vector2(288, 48)
-
-[node name="ZebuHerd" type="Node2D" parent="."]
-y_sort_enabled = true
-script = ExtResource("39_q70f5")
-
-[node name="Zebu1" parent="ZebuHerd" instance=ExtResource("40_3maaf")]
-position = Vector2(380, 150)
-wander_radius = 30.0
-
-[node name="Zebu2" parent="ZebuHerd" instance=ExtResource("40_3maaf")]
-position = Vector2(470, 130)
-wander_radius = 30.0
-
-[node name="Zebu3" parent="ZebuHerd" instance=ExtResource("40_3maaf")]
-position = Vector2(440, 190)
-wander_radius = 30.0
-
-[node name="ZebuMarket" parent="." instance=ExtResource("41_mwl8y")]
-position = Vector2(200, 310)
+[node name="CockfightRing" type="Node2D" parent="."]
+position = Vector2(1380, 500)
+script = ExtResource("43_vl08j")

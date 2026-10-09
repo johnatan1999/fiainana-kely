@@ -143,7 +143,7 @@ func _refresh() -> void:
 			villager.set_prompt(tr("Livrer %d %s") % [order["quantity"], _item_name(order["item"]).to_lower()])
 		else:
 			villager.set_order_mark("")
-			villager.set_prompt(tr("Parler à %s") % name)
+			villager.set_prompt(villager.talk_prompt if not villager.talk_prompt.is_empty() else tr("Parler à %s") % name)
 	var rows := []
 	for villager_id in simulation.get_active_orders():
 		var order := simulation.get_order(villager_id)

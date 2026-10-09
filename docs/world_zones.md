@@ -10,6 +10,8 @@ partie :
 - le verger de manguiers ;
 - à l'ouest des champs, le **parc à zébus** du joueur, son abreuvoir et son pâturage (voir
   `zebus.md`) ;
+- dans la cour, sous la maison, le **piquet du coq de combat** du joueur, une fois que
+  Rakoto le lui a offert (repère `RoosterStake`, voir `cockfight.md`) ;
 - au nord, la colline ; à l'est, une haie d'eucalyptus avec la trouée du chemin vers le
   village.
 
@@ -51,6 +53,9 @@ descend le **zoma** (vendredi), jour de marché.
 - Quatre **maisons** autour de la place (portes fermées), des manguiers pour l'ombre.
 - Au nord de la rivière, à gauche de la route, le **marché aux zébus** (tsena omby) : un
   enclos, et le poteau du marchand Ratsimba (voir `zebus.md`).
+- Au sud de la rivière, à droite du pont, sur l'herbe, **l'arène des combats de coqs**
+  (kianja ady akoho) et son panneau « ADY AKOHO » : le tournoi de l'Alahady (voir
+  `cockfight.md`).
 - Au sud, l'**arrêt du taxi-brousse** : un minibus chargé de bagages, un panneau « TAXI » et des
   sacs de riz. La route continue vers le sud mais s'arrête au bord de la carte.
 - Le zoma, les marchands sont à leurs étals et Ravao descend du village. Les autres jours, la
@@ -159,6 +164,10 @@ descend le **zoma** (vendredi), jour de marché.
   `ambient_life.md`).
 
 ## À savoir
+- **Voir une zone sans ouvrir l'éditeur** : `tools/zone_snapshot.gd` rend une scène de zone
+  en PNG, avec une grille de coordonnées tous les 100 px. C'est pratique pour choisir où
+  poser un repère ou un décor. Il se lance **sans** `--headless` (il faut un vrai rendu) :
+  `<godot> --path . --script res://tools/zone_snapshot.gd -- <res://zone.tscn> <sortie.png> [échelle]`.
 - Le tracé initial (herbe, chemins, falaises, clôtures, placements d'arbres et d'objets) a
   été généré une seule fois. **Les scènes sont maintenant la référence** et s'éditent à la
   main dans l'éditeur, sur les couches et nœuds décrits plus haut. Les planches provisoires,
