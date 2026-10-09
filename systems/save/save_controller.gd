@@ -2,9 +2,19 @@ class_name SaveController
 extends Node
 
 ## Persists/restores the simulation's state, plus the player's zone and
-## position, to a single JSON save file.
+## position, in the save slot being played (SaveSlots).
+##
+## The game saves itself when the player goes to bed (WorldManager.slept),
+## and only then: quitting during the day goes back to that morning. A
+## tournament or a harvest can't be replayed by reloading - their outcome
+## stands. Also saved once at the start of a new game, so its slot shows.
+## Development builds keep the save_game / load_game keys (F5 / F9).
 
-const SAVE_PATH := "user://savegame.json"
+## After a night's sleep: whether the new morning was saved (false: no
+## slot, or writing failed). No UI here - the migrations are unit-tested
+## without the autoloads.
+signal night_saved(saved: bool)
+
 const DEFAULT_ZONE_ID := "village"
 
 ## Bump this whenever the save format changes, and add a matching
@@ -12,38 +22,60 @@ const DEFAULT_ZONE_ID := "village"
 ## shipped, only append new ones. This is the single place format drift gets
 ## fixed, instead of runtime code scattered across load_game() staying
 ## permanently tolerant of every historical format.
-const SAVE_VERSION := 6
+const SAVE_VERSION := 8
 
 var simulation: FarmSimulation
 var world_manager: WorldManager
 var player: PlayerController
+## The slot this game is saved in (SaveSlots), -1 = never saved.
+var slot := -1
+## Time actually played in this game (the tree not paused), in seconds.
+var _play_seconds := 0.0
 
-func setup(p_simulation: FarmSimulation, p_world_manager: WorldManager, p_player: PlayerController) -> void:
+func setup(p_simulation: FarmSimulation, p_world_manager: WorldManager, p_player: PlayerController,
+		p_slot: int = -1) -> void:
 	simulation = p_simulation
 	world_manager = p_world_manager
 	player = p_player
+	slot = p_slot
+	world_manager.slept.connect(_on_slept)
+
+func _process(delta: float) -> void:
+	_play_seconds += delta
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return slot >= 0 and SaveSlots.exists(slot)
 
-func save_game() -> void:
+## Returns whether it was saved (not without a slot, or if writing failed).
+func save_game() -> bool:
+	if slot < 0:
+		return false
 	var data := simulation.to_save_data()
 	data["save_version"] = SAVE_VERSION
 	data["zone_id"] = world_manager.current_zone_id
 	data["return_point"] = world_manager.get_return_point()
 	data["player_position"] = {"x": player.global_position.x, "y": player.global_position.y}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	file.store_string(JSON.stringify(data))
+	data["summary"] = {
+		"day": simulation.state.day,
+		"money": simulation.state.money,
+		"play_seconds": int(_play_seconds),
+		"saved_at": int(Time.get_unix_time_from_system()),
+	}
+	return SaveSlots.write(slot, data)
+
+## A night's sleep: the new morning is saved.
+func _on_slept() -> void:
+	night_saved.emit(save_game())
 
 ## Restores simulation state, then re-enters the saved zone at the saved
 ## position instead of the zone's default spawn marker.
 func load_game() -> bool:
 	if not has_save():
 		return false
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	var data = JSON.parse_string(file.get_as_text())
-	if typeof(data) != TYPE_DICTIONARY:
+	var data := SaveSlots.read(slot)
+	if data.is_empty():
 		return false
+	_play_seconds = float(data.get("summary", {}).get("play_seconds", 0)) if data.get("summary") is Dictionary else 0.0
 
 	var save_version := int(data.get("save_version", 0))
 	if save_version > SAVE_VERSION:
@@ -85,6 +117,10 @@ func _migrate(data: Dictionary, from_version: int) -> Dictionary:
 		data = _migrate_to_v5(data)
 	if from_version < 6:
 		data = _migrate_to_v6(data)
+	if from_version < 7:
+		data = _migrate_to_v7(data)
+	if from_version < 8:
+		data = _migrate_to_v8(data)
 	return data
 
 ## v0 (unversioned save, predates this field entirely) -> v1: zone_id was
@@ -207,8 +243,186 @@ func _migrate_to_v6(data: Dictionary) -> Dictionary:
 		plot["y"] = cell.y
 	return data
 
+## v6 -> v7: the player's farm left the village for a zone of its own
+## ("farm", tools/split_farm.gd), at the same coordinates. What was the farm
+## goes with it: every village plot (all were farm fields), the orchard's
+## trees, a way back out of the house or the coop, and a player saved in the
+## village's west part (where the farm was). Hardcoded snapshot, same reason
+## as v1.
+const _V7_FARM_WIDTH := 1440.0
+const _V7_FARM_TREES := "village:Trees/Verger_Manguier_"
+const _V7_FARM_DOORS := ["HouseGroup/House", "ChickenCoopBuilding"]
+func _migrate_to_v7(data: Dictionary) -> Dictionary:
+	var plots = data.get("plots")
+	if plots is Dictionary:
+		for key in plots:
+			var plot: Dictionary = plots[key]
+			if plot.get("zone", "village") == "village":
+				plot["zone"] = "farm"
+	var trees = data.get("trees")
+	if trees is Dictionary:
+		for tree_id in trees.keys():
+			if str(tree_id).begins_with(_V7_FARM_TREES):
+				trees[str(tree_id).replace("village:", "farm:")] = trees[tree_id]
+				trees.erase(tree_id)
+	var back = data.get("return_point")
+	if back is Dictionary and back.get("zone") == "village":
+		for door: String in _V7_FARM_DOORS:
+			if str(back.get("spawn", "")).begins_with(door):
+				back["zone"] = "farm"
+	var position = data.get("player_position")
+	if data.get("zone_id", DEFAULT_ZONE_ID) == "village" and position is Dictionary \
+			and float(position.get("x", 0.0)) < _V7_FARM_WIDTH:
+		data["zone_id"] = "farm"
+	return data
+
+## v7 -> v8: every id, file and node name moved to English (French and
+## Malagasy words stay in player-facing text only): the "bourg" zone became
+## "market_town", items and farm zones got English ids, and scene nodes were
+## renamed word by word (Haie_Sud_1_01 -> Hedge_South_1_01) - which changes
+## tree ids ("<zone>:Trees/<node>"), neighbour paddy ids ("<zone>:<node>")
+## and the return point's node path. tools/rename_to_english.gd renamed the
+## scenes with the same tables (v8_english_name), so both always agree.
+## Hardcoded snapshot, same reason as v1.
+const _V8_ZONE_IDS := {"bourg": "market_town"}
+const _V8_ITEM_IDS := {
+	"food_vary_sy_laoka": "food_rice_and_side_dish",
+	"food_vary_amin_anana": "food_rice_with_greens",
+	"tool_angady": "tool_spade",
+}
+const _V8_FARM_ZONE_IDS := {
+	"riziere_haute": "upper_paddy",
+	"riziere_basse": "lower_paddy",
+	"tany_lonaka_nord": "fertile_land_north",
+	"tany_lonaka_sud": "fertile_land_south",
+}
+## Whole node names first (word order, or a better English name), then word
+## by word on "_"-separated parts; digits are kept as they are.
+const _V8_NAME_OVERRIDES := {
+	"Bourg": "MarketTown",
+	"CentreVillage": "VillageCenter",
+	"Riziere_Haute": "UpperPaddy",
+	"Riziere_Basse": "LowerPaddy",
+	"RizieresVoisins": "NeighbourPaddies",
+	"Riziere_Voisins": "NeighbourPaddy",
+	"Tsena": "MarketSquare",
+	"Tsena_Omby": "ZebuMarket",
+	"TsenaOmby": "ZebuMarket",
+	"Trano": "House",
+	"ToBourg": "ToMarketTown",
+	"SpawnFrom_BOURG": "SpawnFrom_MARKET_TOWN",
+	"Vers_bourg": "To_market_town",
+	"Route_Bourg": "Road_MarketTown",
+	"NiggaHen": "BlackHen",
+	"MarketStallLamba": "MarketStallCloth",
+}
+const _V8_NAME_WORDS := {
+	"Aigrettes": "Egrets", "Ala": "Forest", "Akoho": "Hens", "Andrefana": "West",
+	"Atsimo": "South", "Atsinanana": "East", "Avaratra": "North", "Banc": "Bench",
+	"Basse": "Lower", "Bois": "Woodpile", "Bosquet": "Grove", "BotteRiz": "RiceBundle",
+	"But": "Goal", "Cabane": "Hut", "Centre": "Center", "Cour": "Yard", "Cuisine": "Kitchen",
+	"Dada": "Father", "Drapeau": "Flag", "Epicerie": "Grocery", "Est": "East",
+	"Fanoto": "Mortar", "Fantsakana": "WaterPoint", "Ferme": "Farm", "Foin": "Hay",
+	"Foyer": "Hearth", "Gerbe": "Sheaf", "GerbeRiz": "RiceSheaf", "Gony": "RiceSacks",
+	"GrandeMaison": "BigHouse", "Grenier": "Granary", "Haie": "Hedge", "Haute": "Upper",
+	"Hotely": "Eatery", "Jarres": "Jars", "Kianja": "Pitch", "Lamba": "Cloth",
+	"Lanterne": "Lantern", "Lavoir": "WashingStones", "Legioma": "Vegetables",
+	"Linge": "Laundry", "Maison": "House", "MaisonEst": "HouseEast",
+	"MaisonOuest": "HouseWest", "MaisonSud": "HouseSouth", "Manga": "Mango",
+	"Manguier": "MangoTree", "Marche": "Market", "Mpanangona": "Collector",
+	"NatteRiz": "RiceMat", "Neny": "Mother", "Nord": "North", "NordEst": "NorthEast",
+	"Omby": "Zebu", "Ouest": "West", "Panier": "Basket", "Panneau": "Sign",
+	"PetitPanier": "SmallBasket", "Place": "Square", "Pont": "Bridge",
+	"Poulailler": "Coop", "Remise": "Shed", "Renirano": "River", "Riziere": "Paddy",
+	"RiziereBasse": "LowerPaddy", "RiziereHaute": "UpperPaddy", "Roseaux": "Reeds",
+	"Route": "Road", "Sarety": "ZebuCart", "Sekoly": "School", "Sinibe": "WaterJar",
+	"Siny": "Jars", "Sobika": "Basket", "Sud": "South", "TanyLonaka": "FertileLand",
+	"TanyLonakaNord": "FertileLandNorth", "TanyLonakaSud": "FertileLandSouth",
+	"TaxiBrousse": "BushTaxi", "Trano": "House", "TranoGasy": "HouseTraditional",
+	"TranoKely": "HouseSmall", "Tsena": "Market", "Verger": "Orchard", "Vers": "To",
+	"Voisins": "Neighbours",
+}
+## The English name of a v7 node name (unchanged if it had nothing to
+## translate). Also used by tools/rename_to_english.gd.
+static func v8_english_name(old_name: String) -> String:
+	if _V8_NAME_OVERRIDES.has(old_name):
+		return _V8_NAME_OVERRIDES[old_name]
+	var parts := old_name.split("_")
+	# "Riziere_Voisins_1": a whole-name override, then the number.
+	for cut in range(parts.size() - 1, 0, -1):
+		var head := "_".join(parts.slice(0, cut))
+		if _V8_NAME_OVERRIDES.has(head) and Array(parts.slice(cut)).all(func(p: String) -> bool: return p.is_valid_int()):
+			return "_".join([_V8_NAME_OVERRIDES[head]] + Array(parts.slice(cut)))
+	var out: Array[String] = []
+	for part in parts:
+		# "Riziere1", "TranoKely01": the word, then its digits.
+		var word := part
+		var digits := ""
+		while not word.is_empty() and word[word.length() - 1].is_valid_int():
+			digits = word[word.length() - 1] + digits
+			word = word.left(word.length() - 1)
+		out.append(_V8_NAME_WORDS.get(word, word) + digits)
+	return "_".join(out)
+
+## A node path ("HouseGroup/TranoKely01/ExitSpawn"), name by name.
+static func v8_english_path(old_path: String) -> String:
+	return "/".join(Array(old_path.split("/")).map(func(n: String) -> String: return v8_english_name(n)))
+
+func _migrate_to_v8(data: Dictionary) -> Dictionary:
+	var zone_of := func(zone_id) -> String: return _V8_ZONE_IDS.get(str(zone_id), str(zone_id))
+	if data.has("zone_id"):
+		data["zone_id"] = zone_of.call(data["zone_id"])
+	var back = data.get("return_point")
+	if back is Dictionary:
+		if back.has("zone"):
+			back["zone"] = zone_of.call(back["zone"])
+		if back.has("spawn"):
+			back["spawn"] = v8_english_path(str(back["spawn"]))
+	var plots = data.get("plots")
+	if plots is Dictionary:
+		for key in plots:
+			var plot: Dictionary = plots[key]
+			if plot.has("zone"):
+				plot["zone"] = zone_of.call(plot["zone"])
+	# "<zone>:<node path>" keys: trees, neighbours' paddies.
+	for field in ["trees", "neighbour_harvest"]:
+		var table = data.get(field)
+		if not table is Dictionary:
+			continue
+		for key in table.keys():
+			var text := str(key)
+			var zone := text.get_slice(":", 0)
+			var renamed := "%s:%s" % [zone_of.call(zone), v8_english_path(text.substr(zone.length() + 1))]
+			if renamed != text:
+				table[renamed] = table[key]
+				table.erase(key)
+	var inventory = data.get("inventory")
+	if inventory is Dictionary:
+		for old_id in _V8_ITEM_IDS:
+			if inventory.has(old_id):
+				inventory[_V8_ITEM_IDS[old_id]] = inventory[old_id]
+				inventory.erase(old_id)
+	var hotbar = data.get("hotbar")
+	if hotbar is Array:
+		for i in hotbar.size():
+			hotbar[i] = _V8_ITEM_IDS.get(str(hotbar[i]), hotbar[i])
+	var orders = data.get("orders")
+	if orders is Dictionary:
+		for villager_id in orders:
+			var order = orders[villager_id]
+			if order is Dictionary and order.has("item"):
+				order["item"] = _V8_ITEM_IDS.get(str(order["item"]), order["item"])
+	var unlocked = data.get("unlocked_zone_ids")
+	if unlocked is Array:
+		data["unlocked_zone_ids"] = unlocked.map(func(id) -> String: return _V8_FARM_ZONE_IDS.get(str(id), str(id)))
+	return data
+
+## Development only: save or reload at any time.
 func _unhandled_input(event: InputEvent) -> void:
+	if not OS.is_debug_build():
+		return
 	if event.is_action_pressed("save_game"):
-		save_game()
+		if save_game():
+			print("[dev] saved in slot %d" % (slot + 1))
 	elif event.is_action_pressed("load_game"):
 		load_game()

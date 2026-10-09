@@ -9,6 +9,7 @@ extends Control
 ## every UI showing tools (hotbar, inventory book) goes through.
 const GLYPH_BY_ACTION := {
 	FarmAction.Type.TILL: "hoe",
+	FarmAction.Type.PLOUGH: "hoe",
 	FarmAction.Type.WATER: "watering_can",
 }
 

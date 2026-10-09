@@ -1,0 +1,101 @@
+[gd_resource type="Resource" script_class="VillagerData" load_steps=21 format=3 uid="uid://dihinkmtik154"]
+
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_tagj8"]
+[ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_hva55"]
+[ext_resource type="Texture2D" uid="uid://dbudckdywttlh" path="res://assets/sprites/characters/villager/example_trousers.png" id="3_23l5m"]
+[ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="4_6ikpw"]
+[ext_resource type="Texture2D" uid="uid://c8fse4uenivl2" path="res://assets/sprites/characters/villager/example_hair.png" id="5_a1685"]
+[ext_resource type="Texture2D" uid="uid://dlywe88eiapxn" path="res://assets/sprites/characters/villager/example_hat.png" id="6_khfu3"]
+[ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="7_uowk7"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="8_sdi2s"]
+[ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="9_fyn6f"]
+[ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="10_jangi"]
+
+[sub_resource type="Resource" id="Resource_bpvb5"]
+script = ExtResource("2_hva55")
+texture = ExtResource("3_23l5m")
+color = Color(0.35, 0.32, 0.28, 1)
+
+[sub_resource type="Resource" id="Resource_kpad0"]
+script = ExtResource("2_hva55")
+texture = ExtResource("4_6ikpw")
+color = Color(0.75, 0.6, 0.4, 1)
+
+[sub_resource type="Resource" id="Resource_w24jl"]
+script = ExtResource("2_hva55")
+texture = ExtResource("5_a1685")
+color = Color(0.1, 0.08, 0.06, 1)
+
+[sub_resource type="Resource" id="Resource_1c2ht"]
+script = ExtResource("2_hva55")
+texture = ExtResource("6_khfu3")
+color = Color(0.84, 0.72, 0.45, 1)
+
+[sub_resource type="Resource" id="Resource_f6o2q"]
+script = ExtResource("7_uowk7")
+skin_color = Color(0.45, 0.29, 0.19, 1)
+layers = Array[ExtResource("2_hva55")]([SubResource("Resource_bpvb5"), SubResource("Resource_kpad0"), SubResource("Resource_w24jl"), SubResource("Resource_1c2ht")])
+
+[sub_resource type="Resource" id="Resource_3tgho"]
+script = ExtResource("9_fyn6f")
+hour = 6
+minute = 30
+zone = ""
+spot = "Orchard"
+activity = 3
+days = 0
+rain_proof = true
+
+[sub_resource type="Resource" id="Resource_u2yvt"]
+script = ExtResource("9_fyn6f")
+hour = 11
+minute = 30
+zone = ""
+spot = "House"
+activity = 2
+days = 0
+rain_proof = true
+
+[sub_resource type="Resource" id="Resource_452me"]
+script = ExtResource("9_fyn6f")
+hour = 13
+minute = 30
+zone = ""
+spot = "Woodpile"
+activity = 3
+days = 0
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_ktkwo"]
+script = ExtResource("9_fyn6f")
+hour = 16
+minute = 0
+zone = "village"
+spot = "Eatery"
+activity = 0
+days = 0
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_hioeb"]
+script = ExtResource("9_fyn6f")
+hour = 18
+minute = 30
+zone = ""
+spot = "House"
+activity = 2
+days = 0
+rain_proof = true
+
+[resource]
+script = ExtResource("10_jangi")
+display_name = "Dada"
+role = "Ton père"
+family = true
+look = SubResource("Resource_f6o2q")
+size = 1.05
+home_zone = "farm"
+home = "House"
+routine = Array[ExtResource("9_fyn6f")]([SubResource("Resource_3tgho"), SubResource("Resource_u2yvt"), SubResource("Resource_452me"), SubResource("Resource_ktkwo"), SubResource("Resource_hioeb")])
+greetings = PackedStringArray("Le manioc pousse en toute saison : c\'est une valeur sûre.", "En Asara, plante du riz et du maïs ; en Asotry, des patates douces et des arachides.", "Garde un peu d\'argent pour agrandir nos terres.", "Aide les voisins à la moisson, ils te le rendront.")
+orders = Array[ExtResource("8_sdi2s")]([])
+friendship_rewards = Array[ExtResource("1_tagj8")]([])

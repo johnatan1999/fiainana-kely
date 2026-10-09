@@ -31,11 +31,10 @@ func _check(condition: bool, description: String) -> void:
 	if not condition:
 		set_meta("failed", true)
 
-## World.tscn auto-loads a real user://savegame.json if one exists on this
-## machine (it does, from interactive playtesting) - so this can't assume a
-## fresh game. Every check below is written as a delta or an explicit reset
-## instead of an absolute value, so it passes regardless of what's already
-## in that save.
+## World.tscn run on its own (no save slot picked on the title screen)
+## starts a new game and never saves. Every check below is still written as
+## a delta or an explicit reset instead of an absolute value, so it doesn't
+## depend on what a new game starts with.
 func _run_flow() -> void:
 	# The GameSettings autoload applies the player's saved language (user://
 	# settings.cfg) at startup - pin French, the source language the text
@@ -47,7 +46,7 @@ func _run_flow() -> void:
 
 	# Land-sign checks (ZoneMarker_*/ModularFarmZoneSign/FarmZoneSign) live in
 	# the Village zone - run those first, then move on to the coop.
-	world_manager.change_zone("village", "SpawnDefault")
+	world_manager.change_zone("farm", "SpawnDefault")
 	_run_zone_manager_checks()
 
 	# The real, simulated ChickenCoop/AnimalContainer live in their own
@@ -90,7 +89,7 @@ func _run_flow() -> void:
 	print("\n%s" % ("SOME CHECKS FAILED" if has_meta("failed") else "all integration checks passed"))
 
 ## Verifies FarmLandManager actually registered the FarmFields painted in
-## the village scene - a field missing its zone_data or painted empty would
+## the farm scene - a field missing its zone_data or painted empty would
 ## pass every unit test (which register fields by hand) but leave land
 ## unbuyable in game, so it needs its own dedicated check here.
 func _run_zone_manager_checks() -> void:
@@ -101,7 +100,7 @@ func _run_zone_manager_checks() -> void:
 
 	_check(
 		farm_view.get_fields().size() == 4,
-		"the village's four FarmFields are found by FarmView"
+		"the farm's four FarmFields are found by FarmView"
 	)
 	_check(
 		zone_manager.get_zone_tile_count("zone_east") == 24
@@ -110,7 +109,7 @@ func _run_zone_manager_checks() -> void:
 		"FarmLandManager registered both zones and the progressive field with their painted cells"
 	)
 	_check(
-		simulation.get_plot_id_at(0, 0, "village") != -1 and simulation.get_plot_id_at(3, 3, "village") != -1,
+		simulation.get_plot_id_at(0, 0, "farm") != -1 and simulation.get_plot_id_at(3, 3, "farm") != -1,
 		"the starter field's cells are owned plots"
 	)
 
@@ -118,7 +117,7 @@ func _run_zone_manager_checks() -> void:
 	simulation.state.unlocked_zone_ids.erase("zone_east")
 	var ok = shop_controller.buy_zone("zone_east")
 	_check(
-		ok and simulation.get_plot_id_at(8, 9, "village") != -1 and simulation.get_plot_id_at(11, 14, "village") != -1,
+		ok and simulation.get_plot_id_at(8, 9, "farm") != -1 and simulation.get_plot_id_at(11, 14, "farm") != -1,
 		"buying a zone through ShopController turns its field's cells into plots"
 	)
 

@@ -12,4 +12,10 @@ enum Type {
 	WATER = 2,
 	PLANT = 3,
 	HARVEST = 4,
+	## Tills up to FarmSimulation.PLOUGH_REACH plots in a row at once, with
+	## the zebu team (the plough, angadin'omby).
+	PLOUGH = 5,
+	## Spreads zebu manure on a plot: a bigger harvest
+	## (FarmSimulation.MANURE_YIELD_MULTIPLIER).
+	FERTILIZE = 6,
 }

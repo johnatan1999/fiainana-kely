@@ -10,7 +10,7 @@ extends Node2D
 ## village is just painting more ground. Zones without one (interiors, a
 ## single room image) set camera_limit_* by hand instead.
 
-enum BGM { NONE, EXTERIOR, INTERIOR }
+enum BGM {NONE, EXTERIOR, INTERIOR}
 
 ## Thickness of the invisible walls around the painted ground.
 const EDGE_WALL_THICKNESS := 32.0
@@ -20,10 +20,11 @@ const EDGE_WALL_THICKNESS := 32.0
 @export var camera_limit_top: int = -10000
 @export var camera_limit_right: int = 10000
 @export var camera_limit_bottom: int = 10000
-## Exteriors 1.05 (~23 x 13 tiles in view: room to plan fields and find
-## your way), interiors ~1.4 (closer, cosier). One consistent value per kind
-## of place - the player's on-screen size shouldn't jump around.
-@export var camera_zoom: float = 1.05
+## Exteriors 0.9 (~27 x 15 tiles in view at the 1152 x 648 base size: room
+## to plan fields, see villagers coming and find your way), interiors ~1.4
+## (closer, cosier). One consistent value per kind of place - the player's
+## on-screen size shouldn't jump around.
+@export var camera_zoom: float = 0.9
 @export var bgm: BGM = BGM.NONE
 ## Lit from inside (DayNightController): no sky tint, a warm dim light at
 ## night instead of the blue outdoors.

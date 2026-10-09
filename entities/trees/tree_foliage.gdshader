@@ -1,16 +1,14 @@
 shader_type canvas_item;
 
-// Tree foliage: a slow sway of the whole crown, leaves shimmering inside
-// it, and both stronger while the player stands under the tree. Applied by
-// TreeVisual, in game only, to its Canopy sprites - or to every state
-// sprite (and the placeholder drawing) when it has none.
+// Tree foliage: a slow sway of the whole crown in the wind, leaves
+// shimmering inside it. The player doesn't move it - walking past a tree
+// doesn't shake its crown (tall grass and crops react, they're brushed
+// against). Applied by TreeVisual, in game only, to its Canopy sprites - or
+// to every state sprite (and the placeholder drawing) when it has none.
 //
 // Same anchoring as crops: a sprite's bottom edge is at local y = 0 and
 // stays put, its top moves. A canopy sprite placed above the trunk pivots on
 // its own bottom edge.
-
-// Global, set by PlayerController (see [shader_globals] in project.godot).
-global uniform vec2 player_position;
 
 // Sway: tip offset as a fraction of the height - slower and smaller than
 // crops, a tree is heavier.
@@ -23,13 +21,7 @@ uniform float shimmer_px = 0.6;
 uniform float shimmer_speed = 2.2;
 uniform float shimmer_scale = 0.17; // higher = smaller ripples
 
-// Player under the tree.
-uniform float rustle_radius = 48.0;
-uniform float rustle_shimmer_boost = 2.5;
-uniform float rustle_tilt = 0.03;
-
 varying float v_bend; // 0 at the bottom edge, 1 from 40 px up
-varying float v_rustle; // 1 right under the tree, 0 away from it
 varying vec2 v_world;
 
 void vertex() {
@@ -38,21 +30,15 @@ void vertex() {
 	v_world = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
 	v_bend = clamp(height / 40.0, 0.0, 1.0);
 
-	vec2 from_player = foot - player_position;
-	v_rustle = 1.0 - smoothstep(rustle_radius * 0.3, rustle_radius, length(from_player));
-
 	float phase = (foot.x + foot.y * 0.3) / sway_wavelength * 6.2832;
 	float tilt = sin(TIME * sway_speed + phase) * sway_tilt
 			+ sin(TIME * sway_speed * 2.1 + phase * 1.6) * sway_tilt * 0.35;
-	// Away from the player in the world: undo a mirrored (flipped) sprite.
-	float local_right = sign(MODEL_MATRIX[0].x);
-	tilt += (from_player.x >= 0.0 ? 1.0 : -1.0) * local_right * v_rustle * rustle_tilt;
 
 	VERTEX.x += tilt * height;
 }
 
 void fragment() {
-	float strength = shimmer_px * v_bend * (1.0 + v_rustle * rustle_shimmer_boost);
+	float strength = shimmer_px * v_bend;
 	vec2 wobble = vec2(
 			sin(v_world.y * shimmer_scale + TIME * shimmer_speed),
 			cos(v_world.x * shimmer_scale * 1.3 + TIME * shimmer_speed * 1.2));

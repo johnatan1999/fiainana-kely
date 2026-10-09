@@ -1,0 +1,136 @@
+[gd_resource type="Resource" script_class="VillagerData" load_steps=24 format=3 uid="uid://bqo7310iadw3r"]
+
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_7f7j8"]
+[ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_5brsn"]
+[ext_resource type="Texture2D" uid="uid://degyjvm0ywcdc" path="res://assets/sprites/characters/villager/example_skirt.png" id="3_ev31d"]
+[ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="4_ivsic"]
+[ext_resource type="Texture2D" uid="uid://djnfoyu2methn" path="res://assets/sprites/characters/villager/example_hair_bun.png" id="5_8mg2f"]
+[ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="6_wxfpx"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="7_3mpay"]
+[ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="8_ku2a0"]
+[ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="9_phd3k"]
+
+[sub_resource type="Resource" id="Resource_yr2m1"]
+script = ExtResource("1_7f7j8")
+hearts = 2
+item_id = "bean_seed"
+quantity = 6
+line = "Des haricots de ma récolte, pour ta ferme."
+
+[sub_resource type="Resource" id="Resource_570nv"]
+script = ExtResource("1_7f7j8")
+hearts = 4
+item_id = "clove_seed"
+quantity = 2
+line = "Mon frère cultive le girofle sur la côte. Tiens, quelques graines."
+
+[sub_resource type="Resource" id="Resource_y4gct"]
+script = ExtResource("2_5brsn")
+texture = ExtResource("3_ev31d")
+color = Color(0.55, 0.3, 0.55, 1)
+
+[sub_resource type="Resource" id="Resource_fwyxv"]
+script = ExtResource("2_5brsn")
+texture = ExtResource("4_ivsic")
+color = Color(0.95, 0.9, 0.75, 1)
+
+[sub_resource type="Resource" id="Resource_886jx"]
+script = ExtResource("2_5brsn")
+texture = ExtResource("5_8mg2f")
+color = Color(0.12, 0.09, 0.07, 1)
+
+[sub_resource type="Resource" id="Resource_14h54"]
+script = ExtResource("6_wxfpx")
+skin_color = Color(0.52, 0.34, 0.22, 1)
+layers = Array[ExtResource("2_5brsn")]([SubResource("Resource_y4gct"), SubResource("Resource_fwyxv"), SubResource("Resource_886jx")])
+
+[sub_resource type="Resource" id="Resource_xvvwo"]
+script = ExtResource("7_3mpay")
+item_id = "tomato"
+quantity = Vector2i(4, 6)
+unit_reward = 6500
+days = 9
+request_line = "Il me faut %d tomates pour l'étal du zoma."
+thanks_line = "Merci ! Elles partiront vite."
+
+[sub_resource type="Resource" id="Resource_511rv"]
+script = ExtResource("7_3mpay")
+item_id = "bean"
+quantity = Vector2i(4, 6)
+unit_reward = 3500
+days = 9
+request_line = "Tu m'apportes %d haricots pour le zoma ?"
+thanks_line = "Merci beaucoup !"
+
+[sub_resource type="Resource" id="Resource_nc8fi"]
+script = ExtResource("7_3mpay")
+item_id = "groundnut"
+quantity = Vector2i(3, 5)
+unit_reward = 4000
+days = 10
+request_line = "Les arachides se vendent bien au bourg : %d, ça te va ?"
+thanks_line = "Merci, à zoma !"
+
+[sub_resource type="Resource" id="Resource_6a860"]
+script = ExtResource("8_ku2a0")
+hour = 6
+minute = 0
+zone = ""
+spot = "Market_Vegetables_1"
+activity = 0
+days = 16
+rain_proof = true
+
+[sub_resource type="Resource" id="Resource_xxaei"]
+script = ExtResource("8_ku2a0")
+hour = 7
+minute = 30
+zone = ""
+spot = "WashingStones"
+activity = 0
+days = 111
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_8wb13"]
+script = ExtResource("8_ku2a0")
+hour = 11
+minute = 0
+zone = ""
+spot = "House_Lalao"
+activity = 2
+days = 111
+rain_proof = true
+
+[sub_resource type="Resource" id="Resource_2cc3r"]
+script = ExtResource("8_ku2a0")
+hour = 15
+minute = 0
+zone = ""
+spot = "Bridge"
+activity = 0
+days = 111
+rain_proof = false
+
+[sub_resource type="Resource" id="Resource_kihyf"]
+script = ExtResource("8_ku2a0")
+hour = 17
+minute = 0
+zone = ""
+spot = "House_Lalao"
+activity = 2
+days = 0
+rain_proof = true
+
+[resource]
+script = ExtResource("9_phd3k")
+display_name = "Lalao"
+role = "Marchande de légumes au tsena du bourg"
+family = false
+look = SubResource("Resource_14h54")
+size = 0.95
+home_zone = "market_town"
+home = "House_Lalao"
+routine = Array[ExtResource("8_ku2a0")]([SubResource("Resource_6a860"), SubResource("Resource_xxaei"), SubResource("Resource_8wb13"), SubResource("Resource_2cc3r"), SubResource("Resource_kihyf")])
+greetings = PackedStringArray("Tomates, haricots, brèdes ! Viens voir mon étal le zoma.", "Le zoma, tout le monde descend au bourg.", "Je lave le linge à la rivière quand il n\'y a pas marché.")
+orders = Array[ExtResource("7_3mpay")]([SubResource("Resource_xvvwo"), SubResource("Resource_511rv"), SubResource("Resource_nc8fi")])
+friendship_rewards = Array[ExtResource("1_7f7j8")]([SubResource("Resource_yr2m1"), SubResource("Resource_570nv")])

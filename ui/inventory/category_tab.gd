@@ -32,8 +32,20 @@ func _ready() -> void:
 func set_count(count: int) -> void:
 	if count == 0:
 		count_label.text = tr("vide")
+	elif category == InventoryCatalog.Category.VILLAGERS:
+		count_label.text = tr("%d villageois") % count
 	else:
 		count_label.text = (tr("%d objets") if count > 1 else tr("%d objet")) % count
+
+## A shorter tab (the book's left page holds more of them): `height` px,
+## its icon and labels moved up to stay centered.
+func set_compact(height: float) -> void:
+	var shift := (custom_minimum_size.y - height) / 2.0
+	custom_minimum_size.y = height
+	size.y = height
+	body.size.y = height
+	for child: Control in [icon_rect, name_label, count_label]:
+		child.position.y -= shift
 
 func set_selected(selected: bool, animate := true) -> void:
 	var target_x := SELECTED_OFFSET if selected else 0.0

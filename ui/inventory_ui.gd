@@ -7,9 +7,15 @@ extends Control
 ## card describing the selected (or hovered) item on the right page.
 ## Item names/icons/details come from InventoryCatalog. The Élevage tab also
 ## lists the animals themselves - waiting to be settled, then settled with
-## today's care - before their products.
+## today's care - before their products. The Villageois tab (added in code,
+## the tabs made shorter to fit) lists the villagers: portrait, friendship,
+## next gift, order, where they are now.
 
 const SlotScene := preload("res://ui/inventory/inventory_slot.tscn")
+const TabScene := preload("res://ui/inventory/category_tab.tscn")
+## With the Villageois tab, five tabs share the left page.
+const TAB_HEIGHT := 66.0
+const TAB_GAP := 4
 
 const OPEN_TIME := 0.18
 const CLOSE_TIME := 0.14
@@ -35,6 +41,7 @@ var _hotbar: Hotbar
 var _shop_ui: ShopUI
 var _open_tween: Tween
 var _tabs: Array[InventoryCategoryTab] = []
+var _villagers: Dictionary = {} # villager_id -> VillagerData
 
 var _category := InventoryCatalog.Category.CROPS
 var _selected_id := ""
@@ -61,10 +68,14 @@ func setup(simulation: FarmSimulation, shop_ui: ShopUI, item_db: ItemDatabase, h
 	# ses propres boutons et son tween d'ouverture/fermeture se figeraient aussi.
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
+	_villagers = VillagerData.load_all()
+	_add_villagers_tab()
 	for child in category_list.get_children():
 		if child is InventoryCategoryTab:
 			_tabs.append(child)
 			child.chosen.connect(_select_category)
+			child.set_compact(TAB_HEIGHT)
+	category_list.add_theme_constant_override("separation", TAB_GAP)
 	dim.gui_input.connect(_on_dim_input)
 	close_button.pressed.connect(close)
 	_style_scrollbar()
@@ -80,6 +91,16 @@ func setup(simulation: FarmSimulation, shop_ui: ShopUI, item_db: ItemDatabase, h
 	visible = false
 	modulate.a = 0.0
 	scale = CLOSED_SCALE
+
+## The Villageois tab, after the scene's own - its icon is the first
+## villager's portrait.
+func _add_villagers_tab() -> void:
+	var tab: InventoryCategoryTab = TabScene.instantiate()
+	tab.name = "VillagersTab"
+	tab.category = InventoryCatalog.Category.VILLAGERS
+	if not _villagers.is_empty():
+		tab.icon = VillagerPortrait.make((_villagers.values()[0] as VillagerData).look)
+	category_list.add_child(tab)
 
 func _style_scrollbar() -> void:
 	var bar := item_scroll.get_v_scroll_bar()
@@ -123,6 +144,13 @@ func _collect_items() -> Dictionary:
 		livestock.append({"info": InventoryCatalog.describe_pending(_item_db, species, count), "quantity": count})
 	for animal_id in _simulation.get_all_animal_ids():
 		livestock.append({"info": InventoryCatalog.describe_animal(_item_db, _simulation.get_animal(animal_id)), "quantity": 1})
+	for zebu_id: String in _simulation.get_zebu_ids():
+		livestock.append({"info": InventoryCatalog.describe_zebu(_simulation, zebu_id), "quantity": 1})
+	for villager_id: String in _villagers:
+		by_category[InventoryCatalog.Category.VILLAGERS].append({
+			"info": InventoryCatalog.describe_villager(_item_db, _simulation, villager_id, _villagers[villager_id]),
+			"quantity": 1,
+		})
 	for category in by_category:
 		by_category[category].sort_custom(_sort_entries)
 	return by_category

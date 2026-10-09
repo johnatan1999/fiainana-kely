@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://cakcpyhmnv5n8"]
+
+[ext_resource type="Script" path="res://entities/props/prop.gd" id="1_y1qru"]
+[ext_resource type="Texture2D" uid="uid://ccyhf34t0801g" path="res://assets/sprites/props/village_center.png" id="2_hp85u"]
+
+[node name="WashingStones" type="Node2D"]
+script = ExtResource("1_y1qru")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 4
+scale = Vector2(0.85, 0.85)
+texture = ExtResource("2_hp85u")
+region_enabled = true
+region_rect = Rect2(192, 0, 192, 192)

@@ -14,9 +14,14 @@
 ## Détails techniques
 - **`entities/zebu_cart/zebu_cart.tscn`** (`ZebuCart`, un `PathFollow2D`) : à placer comme
   enfant d'un `Path2D` tracé sur un chemin. Le `Path2D` doit être y-sorté.
-  - Dans le village : `CartRoute_Est`, de la sortie est (hors écran) au marché.
+  - Dans le village : `CartRoute_East`, de la sortie est (hors écran) au marché.
   - Trajet : `OUT` (début → fin), `STOPPED` (pause à la fin), `BACK` (retour), `AWAY` (caché
     hors écran, puis nouveau départ).
+  - **Approche hors champ** : au démarrage, la charrette ajoute au début de sa route un point
+    `LEAD_IN × art_scale` plus loin (environ 210 px), dans le prolongement du premier tronçon.
+    Elle arrive ainsi entière depuis l'extérieur, au lieu d'apparaître avec ses zébus déjà
+    sur la carte. Cet ajout se fait sur une copie de la courbe : la scène n'est pas
+    modifiée.
   - Exports : `away_time`, `stop_time`, `first_delay`, **`art_scale`** (taille de l'ensemble :
     dessin, collision et zone de détection).
   - Horaires de départ : `FIRST_DEPARTURE` et `LAST_DEPARTURE`. Elle suit l'**horloge**
@@ -35,9 +40,12 @@
   Le tout est assemblé dans `Visual` (zébu de derrière assombri, joug en `Line2D`, roues
   séparées).
 - **Test** : `tests/behaviour_test.gd` vérifie qu'elle ne part pas la nuit, qu'elle part de
-  jour, qu'elle attend si le joueur barre la route et qu'elle repart ensuite.
+  jour depuis l'extérieur de la carte (aucune partie visible au départ), qu'elle attend si le joueur barre la route et qu'elle repart ensuite.
 
 ## À savoir
+- **Tracer une route** : faire commencer le `Path2D` au bord de la carte (ou juste après),
+  avec un premier tronçon orienté vers l'extérieur. L'approche hors champ le prolonge
+  d'elle-même.
 - **Vue de profil seulement** : les routes doivent être surtout horizontales. Sur une portion
   verticale, la charrette resterait de profil. Avec des dessins de face et de dos, on pourra
   choisir l'image selon la direction.

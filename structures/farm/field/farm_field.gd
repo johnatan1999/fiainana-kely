@@ -67,6 +67,9 @@ const PADDY_WATER_TILE := Vector2i(0, 0)
 var _cells: Array[Vector2i] = []
 var _cells_read := false
 var _locked_layer: TileMapLayer
+## What each layer shows now (sorted cells), to skip repainting a layer
+## whose cells didn't change - tilling a plot only touches TilledLayer.
+var _painted: Dictionary = {} # layer -> Array[Vector2i]
 var _tilled_layer: TileMapLayer
 var _wet_layer: TileMapLayer
 var _water_layer: TileMapLayer # flooded only: water over the owned cells
@@ -156,16 +159,41 @@ func _add_layer(layer_name: String) -> TileMapLayer:
 	return layer
 
 ## Repaints the whole layer at once: a cell's autotile depends on its 8
-## neighbours, so painting cell by cell would leave stale borders.
+## neighbours, so painting cell by cell would leave stale borders. Skipped
+## when the layer already shows these cells; when cells were only added
+## (tilling, watering), just those are connected - set_cells_terrain_connect
+## fixes up their neighbours' borders itself, and a big field isn't
+## repainted for one plot.
 func _paint(layer: TileMapLayer, cells: Array[Vector2i], terrain: Vector2i) -> void:
+	var before: Array = _painted.get(layer, [])
+	if not _changed(layer, cells):
+		return
+	if terrain.x != -1 and not before.is_empty() and before.all(func(cell): return cells.has(cell)):
+		var added: Array[Vector2i] = []
+		for cell in cells:
+			if not before.has(cell):
+				added.append(cell)
+		layer.set_cells_terrain_connect(added, terrain.x, terrain.y)
+		return
 	layer.clear()
 	if terrain.x != -1 and not cells.is_empty():
 		layer.set_cells_terrain_connect(cells, terrain.x, terrain.y)
 
 func _flood(layer: TileMapLayer, cells: Array[Vector2i]) -> void:
+	if not _changed(layer, cells):
+		return
 	layer.clear()
 	for cell in cells:
 		layer.set_cell(cell, 0, PADDY_WATER_TILE)
+
+## Whether `layer` shows other cells than `cells` - and remembers these.
+func _changed(layer: TileMapLayer, cells: Array[Vector2i]) -> bool:
+	var sorted := cells.duplicate()
+	sorted.sort()
+	if _painted.get(layer) == sorted:
+		return false
+	_painted[layer] = sorted
+	return true
 
 func _to_local(cells: Array[Vector2i], origin: Vector2i) -> Array[Vector2i]:
 	var local: Array[Vector2i] = []

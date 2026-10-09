@@ -43,8 +43,9 @@ func _ready() -> void:
 ## locked = true when the item's unlock_day hasn't been reached yet: shown,
 ## greyed out, and non-interactive rather than hidden, so the player knows
 ## it exists and can plan for it. owned_count drives the "Tu as : N" label and
-## whether the Sell button is enabled.
-func setup(item: ItemData, locked: bool = false, owned_count: int = 0) -> void:
+## whether the Sell button is enabled. sell_price: what this shop pays for
+## one (ShopProfile) - -1 = the item's own sell_price.
+func setup(item: ItemData, locked: bool = false, owned_count: int = 0, sell_price: int = -1) -> void:
 	_item = item
 	_quantity = 1
 
@@ -69,8 +70,9 @@ func setup(item: ItemData, locked: bool = false, owned_count: int = 0) -> void:
 	qty_row.visible = buyable
 	add_button.visible = buyable
 
-	sell_button.visible = item.sell_price > 0
-	sell_button.text = tr("Vendre 1 (%s)") % Currency.format(item.sell_price)
+	var unit_sell_price := item.sell_price if sell_price < 0 else sell_price
+	sell_button.visible = unit_sell_price > 0
+	sell_button.text = tr("Vendre 1 (%s)") % Currency.format(unit_sell_price)
 	sell_button.disabled = owned_count <= 0
 
 	_refresh_quantity_label()

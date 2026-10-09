@@ -1,0 +1,26 @@
+[gd_scene load_steps=5 format=3 uid="uid://bhkgg7y6c4bsl"]
+
+[ext_resource type="Script" path="res://entities/zebu/zebu_trough.gd" id="1_de1fs"]
+[ext_resource type="Texture2D" uid="uid://d2onmml8svabu" path="res://assets/sprites/props/zebu_market.png" id="2_k2cye"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="3_7a8rg"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_mpklk"]
+size = Vector2(85, 12)
+
+[node name="ZebuTrough" type="Node2D"]
+script = ExtResource("1_de1fs")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 4
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_k2cye")
+region_enabled = true
+region_rect = Rect2(0, 0, 192, 192)
+
+[node name="Base" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Base"]
+position = Vector2(0, -6)
+shape = SubResource("RectangleShape2D_mpklk")
+
+[node name="InteractableComponent" parent="." instance=ExtResource("3_7a8rg")]

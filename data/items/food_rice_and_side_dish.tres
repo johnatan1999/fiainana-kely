@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3 uid="uid://bcu2pwqwglnq0"]
+
+[ext_resource type="Script" path="res://core/data/item_data.gd" id="1_food"]
+
+[resource]
+script = ExtResource("1_food")
+id = "food_rice_and_side_dish"
+display_name = "Riz et accompagnement"
+malagasy_name = "Vary sy laoka"
+description = "Le repas de base malgache : riz accompagné d'un petit plat."
+category = 2
+price = 800
+sell_price = 0
+crop_id = ""
+animal_species = 0
+tool_action = 0
+sold_in_shop = true

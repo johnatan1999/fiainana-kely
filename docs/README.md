@@ -12,13 +12,21 @@ la fiche concernée, ou en crée une nouvelle ajoutée à cet index.
 
 | Fiche | Contrôleur / système |
 |---|---|
-| [day_night.md](day_night.md) | `DayNightController` : heure, cycle jour/nuit, lanternes, HUD |
+| [day_night.md](day_night.md) | `DayNightController` : heure, jours de la semaine, cycle jour/nuit, lanternes, HUD |
 | [farming.md](farming.md) | `FarmingController`, `FarmView`, `FarmLandManager` : champs, rizières, cultures |
 | [trees.md](trees.md) | `TreeManager` : arbres, arbres fruitiers, feuillage |
 | [animals.md](animals.md) | `AnimalManager` / `Chicken` : poules et poulailler |
 | [ambient_life.md](ambient_life.md) | `AmbientLife` : papillons, oiseaux, lucioles |
-| [world_zones.md](world_zones.md) | `WorldManager` et scènes de zone : village, rizières, décor |
+| [world_zones.md](world_zones.md) | `WorldManager` et scènes de zone : ferme du joueur, village, bourg, rizières, décor |
 | [zebu_cart.md](zebu_cart.md) | `ZebuCart` : charrettes à zébus sur les routes |
-| [zebus.md](zebus.md) | `GrazingZebu`, `ZebuPen` : zébus en liberté, parc à zébus |
+| [zebus.md](zebus.md) | `GrazingZebu`, `ZebuPen`, `ZebuManager`, `ZebuMarketPanel` : zébus en liberté, parcs, zébus du joueur, marché aux zébus |
+| [villagers.md](villagers.md) | `Villager`, `VillagerRoads`, `VillagerVisual`, `VillagePaddy`, `NeighbourPaddyManager` : villageois, journées, fermiers et moisson chez les voisins, apparence par calques |
+| [orders.md](orders.md) | `OrderManager`, `OrderTemplate` : commandes des villageois, panneau, suivi |
+| [home_screen.md](home_screen.md) | `HomeScreen`, `Campfire`, `SaveSlotsPanel`, `SettingsPanel` : écran d'accueil (nuit au village, feu de camp), liste des parties, paramètres |
+| [save.md](save.md) | `SaveController`, `SaveSlots` : 3 parties, sauvegarde au coucher, menu pause |
+| [cockfight.md](cockfight.md) | `CockfightManager`, `TetheredRooster`, `CockfightRing` : coq de combat du joueur, tournoi de l'Alahady au bourg, classement |
+| [school.md](school.md) | `SchoolManager`, `SchoolPanel` : écolage de Fara, directrice de l'école, Fara renvoyée à la maison |
+| [friendship.md](friendship.md) | `FriendshipManager`, `FriendshipReward` : amitié avec les villageois, cœurs, cadeaux, prix d'ami |
+| [shops.md](shops.md) | `Shop`, `ShopProfile`, `ShopUI` : épicerie du village, marché du zoma au bourg |
 | [weather.md](weather.md) | `WeatherController` : pluie, ciel couvert, arrosage par la pluie |
 | [hud.md](hud.md) | `HUD`, `HotbarUI`, retours visuels : interface en jeu |

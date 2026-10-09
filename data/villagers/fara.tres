@@ -1,0 +1,129 @@
+[gd_resource type="Resource" script_class="VillagerData" load_steps=21 format=3 uid="uid://bogw8wg2husan"]
+
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_8atsl"]
+[ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_k2s0d"]
+[ext_resource type="Texture2D" uid="uid://degyjvm0ywcdc" path="res://assets/sprites/characters/villager/example_skirt.png" id="3_36v54"]
+[ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="4_dnwe3"]
+[ext_resource type="Texture2D" uid="uid://c8fse4uenivl2" path="res://assets/sprites/characters/villager/example_hair.png" id="5_uimhg"]
+[ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="6_m1sru"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="7_jcfn5"]
+[ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="8_7nemj"]
+[ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="9_g2ro8"]
+
+[sub_resource type="Resource" id="Resource_j3bag"]
+script = ExtResource("2_k2s0d")
+texture = ExtResource("3_36v54")
+color = Color(0.85, 0.4, 0.55, 1)
+
+[sub_resource type="Resource" id="Resource_n46tt"]
+script = ExtResource("2_k2s0d")
+texture = ExtResource("4_dnwe3")
+color = Color(0.98, 0.95, 0.9, 1)
+
+[sub_resource type="Resource" id="Resource_gimfs"]
+script = ExtResource("2_k2s0d")
+texture = ExtResource("5_uimhg")
+color = Color(0.12, 0.09, 0.07, 1)
+
+[sub_resource type="Resource" id="Resource_il8fm"]
+script = ExtResource("6_m1sru")
+skin_color = Color(0.5, 0.33, 0.22, 1)
+layers = Array[ExtResource("2_k2s0d")]([SubResource("Resource_j3bag"), SubResource("Resource_n46tt"), SubResource("Resource_gimfs")])
+
+[sub_resource type="Resource" id="Resource_1q77p"]
+script = ExtResource("8_7nemj")
+hour = 7
+minute = 15
+zone = "village"
+spot = "School"
+activity = 0
+days = 31
+rain_proof = true
+only_if = ""
+unless = "school_fees_overdue"
+
+[sub_resource type="Resource" id="Resource_ii3t4"]
+script = ExtResource("8_7nemj")
+hour = 7
+minute = 15
+zone = ""
+spot = "Mortar"
+activity = 3
+days = 31
+rain_proof = true
+only_if = "school_fees_overdue"
+unless = ""
+
+[sub_resource type="Resource" id="Resource_rridq"]
+script = ExtResource("8_7nemj")
+hour = 9
+minute = 0
+zone = ""
+spot = "Coop"
+activity = 1
+days = 96
+rain_proof = false
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_voinw"]
+script = ExtResource("8_7nemj")
+hour = 12
+minute = 15
+zone = ""
+spot = "Coop"
+activity = 1
+days = 0
+rain_proof = false
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_wlbxe"]
+script = ExtResource("8_7nemj")
+hour = 14
+minute = 30
+zone = ""
+spot = "House"
+activity = 2
+days = 0
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_6j4v3"]
+script = ExtResource("8_7nemj")
+hour = 16
+minute = 0
+zone = "village"
+spot = "Pitch"
+activity = 1
+days = 0
+rain_proof = false
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_mq103"]
+script = ExtResource("8_7nemj")
+hour = 17
+minute = 45
+zone = ""
+spot = "House"
+activity = 2
+days = 0
+rain_proof = true
+only_if = ""
+unless = ""
+
+[resource]
+script = ExtResource("9_g2ro8")
+display_name = "Fara"
+role = "Ta petite sœur"
+family = true
+look = SubResource("Resource_il8fm")
+size = 0.75
+home_zone = "farm"
+home = "House"
+routine = Array[ExtResource("8_7nemj")]([SubResource("Resource_1q77p"), SubResource("Resource_ii3t4"), SubResource("Resource_rridq"), SubResource("Resource_voinw"), SubResource("Resource_wlbxe"), SubResource("Resource_6j4v3"), SubResource("Resource_mq103")])
+greetings = PackedStringArray("Tu joues avec moi ?", "Koto est trop fort au foot !", "Les poules m\'ont suivie jusqu\'au poulailler !", "Maman dit que tu travailles bien.")
+orders = Array[ExtResource("7_jcfn5")]([])
+friendship_rewards = Array[ExtResource("1_8atsl")]([])

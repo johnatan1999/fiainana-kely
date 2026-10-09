@@ -94,9 +94,9 @@ func _tree_data(tree_id: String) -> TreeData:
 
 static func _season_name(season: CropData.Season) -> String:
 	match season:
-		CropData.Season.ASARA:
+		CropData.Season.RAINY:
 			return "Asara"
-		CropData.Season.ASOTRY:
+		CropData.Season.DRY:
 			return "Asotry"
 	return "toute saison"
 

@@ -1,0 +1,164 @@
+[gd_resource type="Resource" script_class="VillagerData" load_steps=27 format=3 uid="uid://wodptj1vp74l"]
+
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_imk1k"]
+[ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_gke82"]
+[ext_resource type="Texture2D" uid="uid://dbudckdywttlh" path="res://assets/sprites/characters/villager/example_trousers.png" id="3_ucgtp"]
+[ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="4_u6fdd"]
+[ext_resource type="Texture2D" uid="uid://c8fse4uenivl2" path="res://assets/sprites/characters/villager/example_hair.png" id="5_s2iqx"]
+[ext_resource type="Texture2D" uid="uid://dlywe88eiapxn" path="res://assets/sprites/characters/villager/example_hat.png" id="6_hekpr"]
+[ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="7_m5geq"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="8_rqhqr"]
+[ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="9_hrdae"]
+[ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="10_am5p6"]
+
+[sub_resource type="Resource" id="Resource_15cj1"]
+script = ExtResource("1_imk1k")
+hearts = 2
+item_id = "rice_seed"
+quantity = 6
+line = "Tiens, du riz de semence de ma récolte. Il pousse bien par ici."
+
+[sub_resource type="Resource" id="Resource_mv2wj"]
+script = ExtResource("1_imk1k")
+hearts = 4
+item_id = "rice_seed"
+quantity = 12
+line = "Tu es comme de la famille. Prends ce riz de semence, tu en feras bon usage."
+
+[sub_resource type="Resource" id="Resource_i1wcw"]
+script = ExtResource("2_gke82")
+texture = ExtResource("3_ucgtp")
+color = Color(0.45, 0.35, 0.25, 1)
+
+[sub_resource type="Resource" id="Resource_4jxxj"]
+script = ExtResource("2_gke82")
+texture = ExtResource("4_u6fdd")
+color = Color(0.92, 0.9, 0.82, 1)
+
+[sub_resource type="Resource" id="Resource_ffu2k"]
+script = ExtResource("2_gke82")
+texture = ExtResource("5_s2iqx")
+color = Color(0.1, 0.08, 0.06, 1)
+
+[sub_resource type="Resource" id="Resource_xskdk"]
+script = ExtResource("2_gke82")
+texture = ExtResource("6_hekpr")
+color = Color(0.86, 0.74, 0.46, 1)
+
+[sub_resource type="Resource" id="Resource_vnidk"]
+script = ExtResource("7_m5geq")
+skin_color = Color(0.45, 0.29, 0.19, 1)
+layers = Array[ExtResource("2_gke82")]([SubResource("Resource_i1wcw"), SubResource("Resource_4jxxj"), SubResource("Resource_ffu2k"), SubResource("Resource_xskdk")])
+
+[sub_resource type="Resource" id="Resource_trlud"]
+script = ExtResource("8_rqhqr")
+item_id = "rice"
+quantity = Vector2i(5, 8)
+unit_reward = 5500
+days = 14
+request_line = "Ma rizière ne suffira pas cette saison. Tu me vendrais %d mesures de riz ?"
+thanks_line = "Misaotra ! Avec ça, la famille mangera jusqu'à la récolte."
+
+[sub_resource type="Resource" id="Resource_fmxk5"]
+script = ExtResource("8_rqhqr")
+item_id = "cassava"
+quantity = Vector2i(6, 8)
+unit_reward = 1400
+days = 10
+request_line = "Il me faut %d racines de manioc pour la famille. Tu peux ?"
+thanks_line = "Merci, voisin !"
+
+[sub_resource type="Resource" id="Resource_j8686"]
+script = ExtResource("8_rqhqr")
+item_id = "corn"
+quantity = Vector2i(6, 8)
+unit_reward = 1600
+days = 7
+request_line = "Tu aurais %d épis de maïs pour moi ?"
+thanks_line = "Parfait, merci !"
+
+[sub_resource type="Resource" id="Resource_w4tjw"]
+script = ExtResource("9_hrdae")
+hour = 6
+minute = 30
+zone = "rice_fields"
+spot = "NeighbourPaddy_1"
+activity = 3
+days = 0
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_gkr2f"]
+script = ExtResource("9_hrdae")
+hour = 12
+minute = 0
+zone = "rice_fields"
+spot = "Hut"
+activity = 0
+days = 0
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_dbbqa"]
+script = ExtResource("9_hrdae")
+hour = 13
+minute = 0
+zone = "rice_fields"
+spot = "NeighbourPaddy_1"
+activity = 3
+days = 63
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_m4c7o"]
+script = ExtResource("9_hrdae")
+hour = 13
+minute = 30
+zone = "market_town"
+spot = "Cockfight_South"
+activity = 0
+days = 64
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_sg3e1"]
+script = ExtResource("9_hrdae")
+hour = 16
+minute = 0
+zone = ""
+spot = "Eatery"
+activity = 0
+days = 63
+rain_proof = false
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_gol73"]
+script = ExtResource("9_hrdae")
+hour = 18
+minute = 0
+zone = ""
+spot = "House_West"
+activity = 2
+days = 0
+rain_proof = true
+only_if = ""
+unless = ""
+
+[resource]
+script = ExtResource("10_am5p6")
+display_name = "Rakoto"
+role = "Fermier, il cultive la rizière des voisins"
+family = false
+look = SubResource("Resource_vnidk")
+size = 1.0
+home_zone = "village"
+home = "House_West"
+routine = Array[ExtResource("9_hrdae")]([SubResource("Resource_w4tjw"), SubResource("Resource_gkr2f"), SubResource("Resource_dbbqa"), SubResource("Resource_m4c7o"), SubResource("Resource_sg3e1"), SubResource("Resource_gol73")])
+greetings = PackedStringArray("Bonjour ! Le riz pousse bien cette année.", "Les rizières ont besoin de bras, tu sais.")
+orders = Array[ExtResource("8_rqhqr")]([SubResource("Resource_trlud"), SubResource("Resource_fmxk5"), SubResource("Resource_j8686")])
+friendship_rewards = Array[ExtResource("1_imk1k")]([SubResource("Resource_15cj1"), SubResource("Resource_mv2wj")])

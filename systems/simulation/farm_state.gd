@@ -46,6 +46,63 @@ var progressive_tiles_unlocked: int = 0
 ## Fruit trees, keyed by their place in the world ("<zone_id>:<node path>",
 ## see TreeManager) - registered the first time their zone loads.
 var trees: Dictionary = {} # tree_id: String -> TreeState
+
+## The tufts the player cut in the neighbours' paddies
+## (FarmSimulation.help_neighbour_harvest), per paddy ("<zone_id>:<node
+## name>"): {"season": index of the season (0, 1, 2...), "cells": ["x,y"]}.
+## A season's entry is ignored once the season is over.
+var neighbour_harvest: Dictionary = {}
+
+## Villagers' orders (FarmSimulation's order API), one at most per villager
+## (the VillagerData file's name): {"item": item id, "quantity": n,
+## "reward": Ariary for all, "template": index in VillagerData.orders (for
+## its lines), "since": day it was offered, "deadline": last day to deliver
+## - -1 while it's only offered, not accepted yet}.
+var orders: Dictionary = {}
+## Villager -> first day they may offer a new order (after a delivery, a
+## refusal, an order that ran out).
+var order_cooldowns: Dictionary = {}
+## The day new orders were last offered (once a day, in the morning).
+var order_roll_day: int = 0
+
+## Friendship with each villager (FarmSimulation's friendship API), in
+## points: FarmSimulation.FRIENDSHIP_PER_HEART per heart.
+var friendship: Dictionary = {} # villager_id -> points
+## The last day the player talked to each villager (talking counts once a
+## day).
+var friendship_talk_day: Dictionary = {} # villager_id -> day
+
+## The player's zebus (FarmSimulation's zebu API), bought at the market-day zebu
+## market: zebu_id -> {"name": String, "coat": int (GrazingZebu.COATS),
+## "grown_days": int (days of care so far)}.
+var zebus: Dictionary = {}
+var next_zebu_index: int = 0
+## Today's water and hay in the farm pen's trough - for the whole herd.
+var zebu_trough_full: bool = false
+## Plots the zebu team has ploughed today (FarmSimulation.plough).
+var plough_cells_today: int = 0
+## Manure heaped by the farm pen, waiting to be picked up.
+var manure_pile: int = 0
+
+## Fara's school fees (FarmSimulation's school API): what's still owed, the
+## last day to pay it, and the last season billed (0, 1, 2... - the first
+## one is paid by the parents).
+var school_debt: int = 0
+var school_due_day: int = 0
+var school_billed_season: int = 0
+
+## The player's fighting rooster (FarmSimulation's rooster API), {} until
+## Rakoto gives one: {"name", "force", "endurance", "fed_day",
+## "trained_day"}.
+var rooster: Dictionary = {}
+## The cockfight season: points by rooster id ("player" or a
+## FightingRoosterData id), the villagers' roosters' bouts already fought
+## this week (against the player's), the day the player last entered, and
+## the village's best rooster (last season's top - "" before the first).
+var cockfight_points: Dictionary = {}
+var cockfight_week_bouts: Dictionary = {}
+var cockfight_entered_day: int = 0
+var cockfight_champion: String = ""
 const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
@@ -161,6 +218,7 @@ func to_dict() -> Dictionary:
 			"tilled": plot.tilled,
 			"watered": plot.watered,
 			"flooded": plot.flooded,
+			"fertilized": plot.fertilized,
 			"crop": crop_data,
 		}
 
@@ -204,6 +262,25 @@ func to_dict() -> Dictionary:
 		"progressive_tiles_unlocked": progressive_tiles_unlocked,
 		"hotbar": hotbar.duplicate(),
 		"trees": trees_data,
+		"neighbour_harvest": neighbour_harvest.duplicate(true),
+		"orders": orders.duplicate(true),
+		"order_cooldowns": order_cooldowns.duplicate(),
+		"order_roll_day": order_roll_day,
+		"friendship": friendship.duplicate(),
+		"friendship_talk_day": friendship_talk_day.duplicate(),
+		"zebus": zebus.duplicate(true),
+		"next_zebu_index": next_zebu_index,
+		"zebu_trough_full": zebu_trough_full,
+		"plough_cells_today": plough_cells_today,
+		"manure_pile": manure_pile,
+		"school_debt": school_debt,
+		"school_due_day": school_due_day,
+		"school_billed_season": school_billed_season,
+		"rooster": rooster.duplicate(),
+		"cockfight_points": cockfight_points.duplicate(),
+		"cockfight_week_bouts": cockfight_week_bouts.duplicate(),
+		"cockfight_entered_day": cockfight_entered_day,
+		"cockfight_champion": cockfight_champion,
 	}
 
 ## JSON object keys are strings: species saved as "0", "4"...
@@ -246,6 +323,8 @@ func load_dict(data: Dictionary) -> void:
 		plot.tilled = plot_data.get("tilled", false)
 		plot.watered = plot_data.get("watered", false)
 		plot.flooded = plot_data.get("flooded", false)
+		# Optional key (older saves have none): not fertilized.
+		plot.fertilized = plot_data.get("fertilized", false)
 		var crop_data = plot_data.get("crop")
 		if crop_data != null:
 			var crop := CropState.new(str(crop_data["crop_id"]), int(crop_data["growth_days"]))
@@ -287,6 +366,88 @@ func load_dict(data: Dictionary) -> void:
 		unlocked_zone_ids[zone_id] = true
 	progressive_tiles_unlocked = int(data.get("progressive_tiles_unlocked", 0))
 	hotbar = Array(data.get("hotbar", [])).map(func(item_id): return str(item_id))
+
+	# Optional keys (older saves have none): no orders yet.
+	orders.clear()
+	var orders_data = data.get("orders", {})
+	if orders_data is Dictionary:
+		for villager_id in orders_data:
+			var order: Dictionary = orders_data[villager_id]
+			orders[str(villager_id)] = {
+				"item": str(order.get("item", "")),
+				"quantity": int(order.get("quantity", 1)),
+				"reward": int(order.get("reward", 0)),
+				"template": int(order.get("template", -1)),
+				"since": int(order.get("since", 0)),
+				"deadline": int(order.get("deadline", -1)),
+			}
+	order_cooldowns.clear()
+	var cooldowns_data = data.get("order_cooldowns", {})
+	if cooldowns_data is Dictionary:
+		for villager_id in cooldowns_data:
+			order_cooldowns[str(villager_id)] = int(cooldowns_data[villager_id])
+	order_roll_day = int(data.get("order_roll_day", 0))
+	# Optional keys (older saves have none): strangers to everyone.
+	friendship.clear()
+	var friendship_data = data.get("friendship", {})
+	if friendship_data is Dictionary:
+		for villager_id in friendship_data:
+			friendship[str(villager_id)] = int(friendship_data[villager_id])
+	friendship_talk_day.clear()
+	var talk_data = data.get("friendship_talk_day", {})
+	if talk_data is Dictionary:
+		for villager_id in talk_data:
+			friendship_talk_day[str(villager_id)] = int(talk_data[villager_id])
+	# Optional keys (older saves have none): no zebus yet.
+	zebus.clear()
+	var zebus_data = data.get("zebus", {})
+	if zebus_data is Dictionary:
+		for zebu_id in zebus_data:
+			var zebu: Dictionary = zebus_data[zebu_id]
+			zebus[str(zebu_id)] = {
+				"name": str(zebu.get("name", "")),
+				"coat": int(zebu.get("coat", 0)),
+				"grown_days": int(zebu.get("grown_days", 0)),
+			}
+	next_zebu_index = int(data.get("next_zebu_index", zebus.size()))
+	zebu_trough_full = bool(data.get("zebu_trough_full", false))
+	plough_cells_today = int(data.get("plough_cells_today", 0))
+	manure_pile = int(data.get("manure_pile", 0))
+	# Optional keys (older saves have none): this season counts as paid.
+	school_debt = int(data.get("school_debt", 0))
+	school_due_day = int(data.get("school_due_day", 0))
+	school_billed_season = int(data.get("school_billed_season", (day - 1) / GameClock.DAYS_PER_SEASON))
+	# Optional keys (older saves have none): no rooster, no tournament yet.
+	rooster.clear()
+	var rooster_data = data.get("rooster", {})
+	if rooster_data is Dictionary and not rooster_data.is_empty():
+		rooster = {
+			"name": str(rooster_data.get("name", "")),
+			"force": int(rooster_data.get("force", 0)),
+			"endurance": int(rooster_data.get("endurance", 0)),
+			"fed_day": int(rooster_data.get("fed_day", 0)),
+			"trained_day": int(rooster_data.get("trained_day", 0)),
+		}
+	for key in ["cockfight_points", "cockfight_week_bouts"]:
+		var target: Dictionary = get(key)
+		target.clear()
+		var saved = data.get(key, {})
+		if saved is Dictionary:
+			for rooster_id in saved:
+				target[str(rooster_id)] = int(saved[rooster_id])
+	cockfight_entered_day = int(data.get("cockfight_entered_day", 0))
+	cockfight_champion = str(data.get("cockfight_champion", ""))
+
+	# Optional key (older saves have none): no tufts cut yet.
+	neighbour_harvest.clear()
+	var harvest_data = data.get("neighbour_harvest", {})
+	if harvest_data is Dictionary:
+		for paddy_id in harvest_data:
+			var entry: Dictionary = harvest_data[paddy_id]
+			neighbour_harvest[str(paddy_id)] = {
+				"season": int(entry.get("season", -1)),
+				"cells": Array(entry.get("cells", [])).map(func(cell): return str(cell)),
+			}
 
 	# Optional key (older saves have none): their trees register fresh on load.
 	trees.clear()

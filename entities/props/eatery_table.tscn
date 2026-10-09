@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3 uid="uid://ctdybcaaruxwi"]
+
+[ext_resource type="Script" path="res://entities/props/prop.gd" id="1_n5bew"]
+[ext_resource type="Texture2D" uid="uid://ccyhf34t0801g" path="res://assets/sprites/props/village_center.png" id="2_m6hr5"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rx8u3"]
+size = Vector2(120, 12)
+
+[node name="EateryTable" type="Node2D"]
+script = ExtResource("1_n5bew")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 4
+scale = Vector2(0.75, 0.75)
+texture = ExtResource("2_m6hr5")
+region_enabled = true
+region_rect = Rect2(576, 0, 192, 192)
+
+[node name="Base" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Base"]
+position = Vector2(0, -6)
+shape = SubResource("RectangleShape2D_rx8u3")

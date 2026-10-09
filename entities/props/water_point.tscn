@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3 uid="uid://sk51sbvqw77e"]
+
+[ext_resource type="Script" path="res://entities/props/prop.gd" id="1_3pgxa"]
+[ext_resource type="Texture2D" uid="uid://ccyhf34t0801g" path="res://assets/sprites/props/village_center.png" id="2_yejps"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_2plly"]
+size = Vector2(88, 17.6)
+
+[node name="WaterPoint" type="Node2D"]
+script = ExtResource("1_3pgxa")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 4
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("2_yejps")
+region_enabled = true
+region_rect = Rect2(0, 0, 192, 192)
+
+[node name="Base" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Base"]
+position = Vector2(0, -8.8)
+shape = SubResource("RectangleShape2D_2plly")

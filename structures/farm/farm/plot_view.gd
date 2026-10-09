@@ -20,7 +20,14 @@ const DIRT_PUFF_COLOR := Color(0.45, 0.3, 0.18)
 const WATER_PUFF_COLOR := Color(0.55, 0.78, 1.0)
 const PLUCK_DURATION := 0.28
 
+## Manure spread on the plot (PlotState.fertilized): clods over the soil,
+## under the crop and under anyone walking there (z -1, like the soil).
+const MANURE_SHEET := preload("res://assets/sprites/props/manure.png")
+const MANURE_REGION := Rect2(576, 0, 192, 192)
+
 @onready var crop_placeholder: ColorRect = $Crop
+
+var _manure: Sprite2D
 
 ## -1 sentinel = no crop yet, never matches a real CropState.Stage value -
 ## tracks the last stage actually rendered so update_view() (called on every
@@ -43,6 +50,7 @@ var _reaction_tween: Tween
 ## rather than crash the whole farm view over one bad plot). Soil itself is
 ## drawn by the FarmField the plot belongs to, not here.
 func update_view(plot: PlotState, crop_data: CropData) -> void:
+	_show_manure(plot.fertilized)
 	if plot.crop == null:
 		if _harvesting and _visual != null:
 			_pluck_out(_visual)
@@ -79,7 +87,7 @@ func update_view(plot: PlotState, crop_data: CropData) -> void:
 ## rather than just disappearing.
 func react(action: FarmAction.Type) -> void:
 	match action:
-		FarmAction.Type.TILL, FarmAction.Type.PLANT:
+		FarmAction.Type.TILL, FarmAction.Type.PLOUGH, FarmAction.Type.PLANT, FarmAction.Type.FERTILIZE:
 			# A planted seed also pops in, through its new growth stage.
 			_puff(DIRT_PUFF_COLOR, 8, 90.0)
 		FarmAction.Type.WATER:
@@ -87,6 +95,25 @@ func react(action: FarmAction.Type) -> void:
 			_squash(_crop_node)
 		FarmAction.Type.HARVEST:
 			_harvesting = true
+
+func _show_manure(shown: bool) -> void:
+	if shown and _manure == null:
+		_manure = Sprite2D.new()
+		_manure.name = "Manure"
+		_manure.texture = MANURE_SHEET
+		_manure.region_enabled = true
+		_manure.region_rect = MANURE_REGION
+		_manure.scale = Vector2.ONE * (CELL_SIZE / MANURE_REGION.size.x)
+		_manure.position = Vector2(0, -CELL_SIZE / 2.0)
+		_manure.z_index = -1
+		_manure.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+		add_child(_manure)
+		move_child(_manure, 0)
+	if _manure != null:
+		_manure.visible = shown
+
+func is_manure_shown() -> bool:
+	return _manure != null and _manure.visible
 
 ## Squash then stretch then settle, from the foot - a crop that just drank.
 func _squash(node: CanvasItem) -> void:

@@ -18,12 +18,20 @@
 - Les intérieurs (maison, poulailler) ne prennent pas la couleur du ciel : ils deviennent
   chauds et tamisés la nuit.
 - Le HUD n'est jamais assombri.
+- **La semaine malgache** : chaque jour a son nom, affiché dans le HUD à côté de la saison
+  (« Asara · Talata »). Le jour 1 est un Alatsinainy (lundi) : Alatsinainy, Talata, Alarobia,
+  Alakamisy, **Zoma** (jour de marché au bourg), Sabotsy, Alahady. Les enfants ne vont à
+  l'école qu'en semaine, et le zoma, on descend au marché (voir `villagers.md`, `shops.md`).
 
 ## Détails techniques
 **Simulation**
 - `GameClock.minute_of_day` : minutes depuis minuit (au-delà de 1440 = après minuit, toujours
   le même jour). `DAY_START_MINUTE = 360`, `LATEST_MINUTE = 1560` (2:00).
   `advance_minutes()`, `get_hour()`, `get_minute()`. `advance_day()` remet 6:00.
+- **Semaine** : `GameClock.Weekday` (`MONDAY` … `SUNDAY`), `WEEKDAY_NAMES`,
+  `get_weekday()` (tiré de `current_day`, rien de plus n'est sauvegardé),
+  `get_weekday_on(day)`, `get_weekday_name(weekday)`, `MARKET_DAY` (`FRIDAY`),
+  `is_market_day()`, `days_to_market()`.
 - `FarmSimulation.advance_time(minutes: float)` : cumule les fractions et émet
   `time_changed(minute_of_day)` à chaque minute entière.
 - Sauvegarde : clé `"minute"` dans `FarmState.to_dict()`. Les anciennes sauvegardes, sans
@@ -36,12 +44,16 @@
 - Tableau `SKY` : heure → couleur, interpolé en douceur. Intérieur : `INDOOR_DAY` →
   `INDOOR_NIGHT` selon la nuit.
 - `get_night_amount()` : 0 le jour, 1 en pleine nuit (déduit de la luminosité du ciel).
-- **Deux canaux, volontairement séparés.** Les deux sont aussi envoyés au chargement d'une
+- **Canaux d'horloge, volontairement séparés.** Tous sont aussi envoyés au chargement d'une
   zone, pour que ses nœuds démarrent dans le bon état.
   - **`LIGHT_GROUP`** (`"light_listeners"`) : `set_night(amount)` quand la lumière change.
     **Uniquement pour le visuel** : `NightLight`, `AmbientLife`.
   - **`CLOCK_GROUP`** (`"clock_listeners"`) : `set_time_of_day(minute_of_day)` à chaque
-    minute. **Pour tout comportement réglé sur l'heure** : `Chicken`.
+    minute. **Pour tout comportement réglé sur l'heure** : `Chicken`, `GrazingZebu`,
+    `ZebuCart`, `Villager`.
+  - **`CALENDAR_GROUP`** (`"calendar_listeners"`) : `set_weekday(weekday)` à chaque nouveau
+    jour, avant le premier `set_time_of_day` du jour. Pour ce qui suit **la semaine** :
+    `Villager` (école en semaine, marché le zoma), `Shop` (jours d'ouverture).
   - Règle : un comportement ne doit jamais dépendre de la lumière. Les couleurs du ciel
     (`SKY`) sont un réglage visuel qu'on doit pouvoir retoucher librement.
 - `ZoneRoot.indoor` (export) : coché sur `player_interior_house` et `chicken_coop_interior`.

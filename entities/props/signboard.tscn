@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://bub176arlv6dd"]
+
+[ext_resource type="Script" path="res://entities/props/signboard.gd" id="1_w7gkr"]
+[ext_resource type="Texture2D" uid="uid://ccyhf34t0801g" path="res://assets/sprites/props/village_center.png" id="2_omogs"]
+
+[node name="Signboard" type="Node2D"]
+script = ExtResource("1_w7gkr")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 4
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_omogs")
+region_enabled = true
+region_rect = Rect2(384, 192, 192, 192)

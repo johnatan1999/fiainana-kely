@@ -38,6 +38,11 @@ const WALK_FRAMES := 4
 ## cart facing right - mirrored when it faces left.
 const BODY_CENTER_X := 32.0
 const AHEAD_CENTER_X := 128.0
+## How far the zebus reach ahead of the cart's origin (art px, before
+## art_scale), plus a margin: the road is lengthened by this much before
+## its start, off the map, so the cart comes in whole instead of popping up
+## with its zebus already on screen.
+const LEAD_IN := 130.0
 
 enum Leg { OUT, STOPPED, BACK, AWAY }
 
@@ -57,6 +62,7 @@ var _facing := 1.0
 func _ready() -> void:
 	rotates = false
 	loop = false
+	_add_lead_in()
 	_visual.scale = Vector2(art_scale, art_scale)
 	(_body_shape.shape as RectangleShape2D).size *= art_scale
 	(_ahead_shape.shape as RectangleShape2D).size *= art_scale
@@ -65,6 +71,19 @@ func _ready() -> void:
 	add_to_group(DayNightController.CLOCK_GROUP)
 	_go_away()
 	_timer = randf_range(first_delay.x, first_delay.y)
+
+## Prepends a point to the road, LEAD_IN further out along its first
+## segment. On a copy of the curve: the scene's own isn't touched (and a
+## reloaded zone doesn't get it twice).
+func _add_lead_in() -> void:
+	var road := get_parent() as Path2D
+	if road == null or road.curve == null or road.curve.point_count < 2:
+		return
+	var curve := road.curve.duplicate() as Curve2D
+	var start := curve.get_point_position(0)
+	var outwards := (start - curve.get_point_position(1)).normalized()
+	curve.add_point(start + outwards * LEAD_IN * art_scale, Vector2.ZERO, Vector2.ZERO, 0)
+	road.curve = curve
 
 func set_time_of_day(minute_of_day: int) -> void:
 	_minute = minute_of_day

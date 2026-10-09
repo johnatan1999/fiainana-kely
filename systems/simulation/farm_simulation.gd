@@ -40,11 +40,163 @@ signal hotbar_changed
 signal product_ready(animal_id: String, product_id: String)
 ## A fruit tree ripened, was picked, or its fruit rotted at season's end.
 signal tree_changed(tree_id: String)
+## The player cut a tuft in a neighbours' paddy (help_neighbour_harvest).
+signal neighbour_paddy_changed(paddy_id: String)
+## A villager's order changed: offered, accepted, declined, delivered...
+signal order_changed(villager_id: String)
+## An accepted order ran out before it was delivered.
+signal order_expired(villager_id: String)
+## Friendship with a villager grew (points); `hearts` is the new count.
+signal friendship_changed(villager_id: String, hearts: int)
+## The player's zebus changed: one bought or sold, the trough filled, a day
+## of growth.
+signal zebus_changed
+## A new heart was reached; `reward` is the gift for it (already in the
+## inventory), or null.
+signal friendship_level_up(villager_id: String, hearts: int, reward: FriendshipReward)
+## Fara's school fees changed: a new bill, a payment, or they fell overdue.
+signal school_fees_changed
+## The player's fighting rooster changed: given, fed, trained, a day of care.
+signal rooster_changed
+## The cockfight ranking changed: a tournament, the villagers' weekly bouts,
+## a new season.
+signal cockfight_changed
+## A season of cockfights is over: `champion_id` ("player" or a
+## FightingRoosterData id) is the village's best rooster until the next.
+signal cockfight_season_ended(champion_id: String)
 
 const COOP_COST := 6000
 ## Chance of a rainy day, per season: Asara is the rainy season. A rainy day
 ## waters every tilled plot from the morning - see set_weather().
-const RAIN_CHANCE := {GameClock.Season.ASARA: 0.45, GameClock.Season.ASOTRY: 0.08}
+const RAIN_CHANCE := {GameClock.Season.RAINY: 0.45, GameClock.Season.DRY: 0.08}
+
+## The neighbours' paddies (VillagePaddy - decor, not the player's): their
+## rice follows the calendar, two crops a year. Planted out at the start of
+## each season, it grows through NEIGHBOUR_RICE_STAGES (day of the season ->
+## CropVisual stage), then the farmers cut it over NEIGHBOUR_HARVEST_DAYS
+## from NEIGHBOUR_HARVEST_FROM_DAY, during their working hours, column by
+## column from the west. The player can lend a hand: each tuft they cut
+## earns NEIGHBOUR_HARVEST_REWARD - seed rice, the neighbours' way of
+## sharing.
+const NEIGHBOUR_RICE_STAGES := {1: 1, 9: 2, 22: 3}
+const NEIGHBOUR_HARVEST_FROM_DAY := 26
+const NEIGHBOUR_HARVEST_DAYS := 3
+const NEIGHBOUR_WORK_HOURS := Vector2i(6 * 60 + 30, 16 * 60)
+const NEIGHBOUR_HARVEST_REWARD := "rice_seed"
+
+## Villagers' orders (VillagerData.orders): every morning, a villager with
+## no order (and no cooldown) may offer one - only one the player can
+## fulfil in time. The player accepts or declines it, then has the
+## template's days to bring the items; it pays the template's unit_reward
+## each, above the shop's price. At most ORDER_MAX_ACTIVE accepted at once.
+## An offer not taken stays ORDER_OFFER_DAYS; after a delivery, a refusal or
+## an order that ran out, the villager waits ORDER_COOLDOWN_DAYS. Nothing
+## is lost when an order runs out - a cosy game rewards, it doesn't punish.
+const ORDER_MAX_ACTIVE := 3
+const ORDER_OFFER_DAYS := 2
+const ORDER_COOLDOWN_DAYS := 2
+const ORDER_OFFER_CHANCE := 0.5
+## How many offers can wait at once (not overwhelming the player).
+const ORDER_MAX_OFFERS := 2
+
+## Friendship with each villager: points, FRIENDSHIP_PER_HEART a heart, up
+## to FRIENDSHIP_MAX_HEARTS. Earned by talking to them (once a day), by
+## delivering their orders, and - for the farmers - by helping with the
+## neighbours' harvest. Never lost. Each heart: a gift at some levels
+## (VillagerData.friendship_rewards) and a better price on their orders
+## (ORDER_BONUS_PER_HEART).
+const FRIENDSHIP_PER_HEART := 100
+const FRIENDSHIP_MAX_HEARTS := 5
+const FRIENDSHIP_TALK := 10
+const FRIENDSHIP_ORDER := 60
+const FRIENDSHIP_HARVEST_HELP := 5
+const ORDER_BONUS_PER_HEART := 0.05
+
+## The player's zebus: bought young at the market-day zebu market (in the market town),
+## they live in the farm's pen and graze on their own. Each day the pen's
+## trough is filled (by the player, or by the rain), every zebu grows a day;
+## grown, a zebu is worth far more than its price - the Malagasy savings
+## bank on four legs. Sold back at the zebu market, at their worth.
+const ZEBU_PEN_CAPACITY := 4
+const ZEBU_PRICE := 25000
+## What a zebu is worth when bought (the dealer's margin) and full grown.
+const ZEBU_CALF_VALUE := 18000
+const ZEBU_ADULT_VALUE := 60000
+const ZEBU_GROW_DAYS := 30
+## Names by coat (GrazingZebu.COATS): brown, fawn, grey, near-black, white.
+const ZEBU_NAMES := ["Mena", "Mavo", "Lavenona", "Mainty", "Fotsy"]
+const ZEBU_COATS := 5
+## Ploughing (the plough tool, FarmAction.PLOUGH): a team of ZEBU_TEAM_SIZE
+## zebus, each with at least ZEBU_WORK_MIN_DAYS of growth, tills up to
+## PLOUGH_REACH plots in a row in one go - PLOUGH_CELLS_PER_DAY a day, then
+## the team is tired until tomorrow.
+const ZEBU_TEAM_SIZE := 2
+const ZEBU_WORK_MIN_DAYS := 15
+const PLOUGH_REACH := 4
+const PLOUGH_CELLS_PER_DAY := 24
+enum PloughCheck { OK, NO_TEAM, TIRED }
+## Manure (zezik'omby): each zebu leaves MANURE_PER_ZEBU a day on the heap by
+## the pen - only on days it was cared for (trough full) - up to
+## MANURE_PILE_MAX. Picked up as the "manure" item, spread on a plot
+## (fertilize), it multiplies that plot's next harvest.
+const MANURE_ITEM := "manure"
+const MANURE_PER_ZEBU := 1
+const MANURE_PILE_MAX := 12
+const MANURE_YIELD_MULTIPLIER := 1.5
+
+## Fara's school fees (ecolage) - the player's share, the parents pay the
+## rest. One bill a season: it comes SCHOOL_NOTICE_DAYS before the season
+## starts and is due SCHOOL_GRACE_DAYS into it. The parents paid the first
+## season. Paid at the school, in Ariary or in rice (SCHOOL_RICE_ITEM, taken
+## at the weekly market's price - the change is given back). Unpaid past
+## the due day, Fara is sent home until it is (CONDITION_SCHOOL_FEES_OVERDUE):
+## nothing else is lost, and a new bill adds up without moving the due day.
+const SCHOOL_FEE := 10000
+const SCHOOL_NOTICE_DAYS := 7
+const SCHOOL_GRACE_DAYS := 7
+const SCHOOL_RICE_ITEM := "rice"
+const SCHOOL_RICE_PRICE_MULTIPLIER := 1.25
+## A story condition (get_conditions()): villagers' steps can depend on it
+## (VillagerStop.only_if / unless).
+const CONDITION_SCHOOL_FEES_OVERDUE := "school_fees_overdue"
+
+## The player's fighting rooster (akoho gasy), given by Rakoto: one at a
+## time, tethered at the farm. Fed a grain a day (ROOSTER_FEED_ITEMS) it
+## gains endurance; fed and trained, force too - by the day's end, up to
+## ROOSTER_MAX_STAT each. Never loses anything: neglect only stalls it.
+## Its power is force + endurance.
+const ROOSTER_NAME := "Kotroka"
+const ROOSTER_START_STAT := 20
+const ROOSTER_MAX_STAT := 100
+const ROOSTER_FEED_ITEMS := ["corn", "rice"]
+const ROOSTER_FED_ENDURANCE := 1
+const ROOSTER_TRAINED_FORCE := 2
+const ROOSTER_TRAINED_ENDURANCE := 1
+## The Sunday tournament (ady akoho), at the market town's ring: once a
+## week, COCKFIGHT_HOURS. The player's rooster fights COCKFIGHT_BOUTS
+## villagers' roosters (FightingRoosterData); each bout's winner is drawn
+## from the powers (COCKFIGHT_POWER_SCALE: a gap that much wins ~73 %).
+## No betting: entering pays a small prize, every bout brings the rooster's
+## owner closer, and points (a win COCKFIGHT_WIN_POINTS, a loss
+## COCKFIGHT_LOSS_POINTS) rank the roosters over the season. The villagers'
+## roosters fight their bouts among themselves too. At the season's end, the
+## top rooster is the village's best until the next one.
+const PLAYER_ROOSTER_ID := "player"
+const COCKFIGHT_DAY := GameClock.Weekday.SUNDAY
+const COCKFIGHT_HOURS := Vector2i(14 * 60, 17 * 60)
+const COCKFIGHT_BOUTS := 3
+const COCKFIGHT_WIN_POINTS := 3
+const COCKFIGHT_LOSS_POINTS := 1
+const COCKFIGHT_ENTRY_PRIZE := 2000
+const COCKFIGHT_POWER_SCALE := 20.0
+const COCKFIGHT_NPC_MAX_POWER := 190
+## A bout, as shown: the winner lands this many blows, the loser fewer.
+const COCKFIGHT_HITS_TO_WIN := 3
+const FRIENDSHIP_COCKFIGHT := 15
+## Friendship with every rooster owner when the player's rooster is the
+## season's best.
+const FRIENDSHIP_CHAMPION := 40
+enum CockfightCheck { OK, NO_ROOSTER, CLOSED, ALREADY_ENTERED }
 
 ## Why an animal can or can't be settled right now - the UI turns it into a
 ## message ("Coop full (6/6)"...).
@@ -62,6 +214,13 @@ var _tree_registry: Dictionary = {} # tree_type_id: String -> TreeData
 var rain_chance: Dictionary = RAIN_CHANCE.duplicate()
 ## Fraction of a minute accumulated by advance_time(), not saved.
 var _minute_fraction := 0.0
+var _neighbour_paddies: Dictionary = {} # paddy_id: String -> size in cells (Vector2i)
+var _order_givers: Dictionary = {} # villager_id: String -> Array[OrderTemplate]
+var _friendship_rewards: Dictionary = {} # villager_id: String -> Array[FriendshipReward]
+var _fighting_roosters: Dictionary = {} # rooster_id: String -> FightingRoosterData
+## The chance a villager offers an order on a given morning (tests set 1.0
+## or 0.0 to make it certain).
+var order_offer_chance := ORDER_OFFER_CHANCE
 
 func _init(p_grid_width: int, p_grid_height: int, crop_registry: Dictionary, animal_registry: Dictionary = {}, tree_registry: Dictionary = {}) -> void:
 	grid_width = p_grid_width
@@ -224,8 +383,11 @@ func harvest(plot_id: int) -> bool:
 	var crop_id := plot.crop.crop_id
 	var crop_data := get_crop_data(crop_id)
 	var under_watered := plot.crop.get_watered_ratio() < crop_data.min_watered_ratio_for_quality
-	var off_season := crop_data.ideal_season != CropData.Season.TOUTE_SAISON 			and int(crop_data.ideal_season) != state.clock.get_season()
+	var off_season := crop_data.ideal_season != CropData.Season.ALL_YEAR 			and int(crop_data.ideal_season) != state.clock.get_season()
 	var quantity := _compute_harvest_quantity(crop_data, under_watered, off_season)
+	if plot.fertilized:
+		quantity = ceili(quantity * MANURE_YIELD_MULTIPLIER)
+		plot.fertilized = false
 	state.add_inventory(crop_id, quantity)
 	plot.crop = null
 	plot.watered = false
@@ -257,10 +419,19 @@ func advance_day() -> void:
 		plot.watered = false
 		plot_changed.emit(plot_id)
 	_advance_animals()
+	_advance_zebus()
 	_advance_trees()
+	_advance_rooster()
+	if state.clock.get_weekday() == COCKFIGHT_DAY:
+		_play_villagers_bouts()
+	var season_before := state.clock.get_season()
 	state.clock.advance_day()
+	if state.clock.get_season() != season_before:
+		_end_cockfight_season()
 	_minute_fraction = 0.0
 	set_weather(_roll_weather())
+	_advance_orders()
+	_advance_school_fees()
 	day_changed.emit(state.day)
 	time_changed.emit(state.clock.minute_of_day)
 
@@ -411,9 +582,730 @@ func get_tree_days_until_fruit(tree_id: String) -> int:
 		return -1
 	return maxi(1, tree_data.fruit_cycle_days - tree.days_growing)
 
+# --- Friendship ------------------------------------------------------------------------
+
+## Registered by FriendshipManager for every villager (their VillagerData
+## file's name and its gifts).
+func register_friend(villager_id: String, rewards: Array[FriendshipReward]) -> void:
+	_friendship_rewards[villager_id] = rewards
+
+func get_friendship(villager_id: String) -> int:
+	return state.friendship.get(villager_id, 0)
+
+func get_hearts(villager_id: String) -> int:
+	return mini(get_friendship(villager_id) / FRIENDSHIP_PER_HEART, FRIENDSHIP_MAX_HEARTS)
+
+## Progress towards the next heart, 0..1 (1 at the most hearts).
+func get_heart_progress(villager_id: String) -> float:
+	if get_hearts(villager_id) >= FRIENDSHIP_MAX_HEARTS:
+		return 1.0
+	return float(get_friendship(villager_id) % FRIENDSHIP_PER_HEART) / FRIENDSHIP_PER_HEART
+
+## Adds friendship points; each heart reached gives its gift (if any).
+func add_friendship(villager_id: String, points: int) -> void:
+	if points <= 0:
+		return
+	var before := get_hearts(villager_id)
+	var cap := FRIENDSHIP_PER_HEART * FRIENDSHIP_MAX_HEARTS
+	state.friendship[villager_id] = mini(get_friendship(villager_id) + points, cap)
+	var after := get_hearts(villager_id)
+	friendship_changed.emit(villager_id, after)
+	for hearts in range(before + 1, after + 1):
+		var reward := _friendship_reward(villager_id, hearts)
+		if reward != null:
+			state.add_inventory(reward.item_id, reward.quantity)
+			inventory_changed.emit(reward.item_id, state.get_inventory_count(reward.item_id))
+		friendship_level_up.emit(villager_id, hearts, reward)
+
+## Talking to a villager: friendship once a day. Returns whether it counted.
+func talk_to(villager_id: String) -> bool:
+	if state.friendship_talk_day.get(villager_id, 0) == state.day:
+		return false
+	state.friendship_talk_day[villager_id] = state.day
+	add_friendship(villager_id, FRIENDSHIP_TALK)
+	return true
+
+func _friendship_reward(villager_id: String, hearts: int) -> FriendshipReward:
+	for reward: FriendshipReward in _friendship_rewards.get(villager_id, []):
+		if reward != null and reward.hearts == hearts:
+			return reward
+	return null
+
+# --- The fighting rooster and the Sunday tournament ------------------------------------
+
+func has_rooster() -> bool:
+	return not state.rooster.is_empty()
+
+## {"name", "force", "endurance", "fed_day", "trained_day"} - {} without one.
+func get_rooster() -> Dictionary:
+	return state.rooster
+
+## Rakoto's gift. False if the player already has one.
+func adopt_rooster(rooster_name := ROOSTER_NAME) -> bool:
+	if has_rooster():
+		return false
+	state.rooster = {"name": rooster_name, "force": ROOSTER_START_STAT, "endurance": ROOSTER_START_STAT,
+		"fed_day": 0, "trained_day": 0}
+	rooster_changed.emit()
+	cockfight_changed.emit()
+	return true
+
+func get_rooster_power() -> int:
+	return int(state.rooster.get("force", 0)) + int(state.rooster.get("endurance", 0))
+
+func is_rooster_fed_today() -> bool:
+	return has_rooster() and int(state.rooster["fed_day"]) == state.day
+
+func is_rooster_trained_today() -> bool:
+	return has_rooster() and int(state.rooster["trained_day"]) == state.day
+
+func can_feed_rooster(item_id: String) -> bool:
+	return has_rooster() and not is_rooster_fed_today() and item_id in ROOSTER_FEED_ITEMS \
+		and state.get_inventory_count(item_id) > 0
+
+## A grain of `item_id` for today.
+func feed_rooster(item_id: String) -> bool:
+	if not can_feed_rooster(item_id):
+		return false
+	state.add_inventory(item_id, -1)
+	inventory_changed.emit(item_id, state.get_inventory_count(item_id))
+	state.rooster["fed_day"] = state.day
+	rooster_changed.emit()
+	return true
+
+func can_train_rooster() -> bool:
+	return has_rooster() and not is_rooster_trained_today()
+
+func train_rooster() -> bool:
+	if not can_train_rooster():
+		return false
+	state.rooster["trained_day"] = state.day
+	rooster_changed.emit()
+	return true
+
+## The day that ends: what the day's care is worth.
+func _advance_rooster() -> void:
+	if not is_rooster_fed_today():
+		return
+	var endurance := ROOSTER_FED_ENDURANCE
+	if is_rooster_trained_today():
+		endurance += ROOSTER_TRAINED_ENDURANCE
+		state.rooster["force"] = mini(int(state.rooster["force"]) + ROOSTER_TRAINED_FORCE, ROOSTER_MAX_STAT)
+	state.rooster["endurance"] = mini(int(state.rooster["endurance"]) + endurance, ROOSTER_MAX_STAT)
+	rooster_changed.emit()
+
+## Registered by CockfightManager: the villagers' roosters (data/roosters/).
+func register_fighting_rooster(rooster_id: String, data: FightingRoosterData) -> void:
+	_fighting_roosters[rooster_id] = data
+
+func get_fighting_rooster(rooster_id: String) -> FightingRoosterData:
+	return _fighting_roosters.get(rooster_id)
+
+## A rooster's power today: the player's, or a villager's (it grows weekly).
+func get_cockfight_power(rooster_id: String) -> int:
+	if rooster_id == PLAYER_ROOSTER_ID:
+		return get_rooster_power()
+	var data := get_fighting_rooster(rooster_id)
+	if data == null:
+		return 0
+	var weeks := (state.day - 1) / GameClock.WEEKDAY_NAMES.size()
+	return mini(data.base_power + data.power_per_week * weeks, COCKFIGHT_NPC_MAX_POWER)
+
+func is_cockfight_on() -> bool:
+	var minute := state.clock.minute_of_day
+	return state.clock.get_weekday() == COCKFIGHT_DAY and minute >= COCKFIGHT_HOURS.x and minute < COCKFIGHT_HOURS.y
+
+func check_cockfight() -> CockfightCheck:
+	if not has_rooster():
+		return CockfightCheck.NO_ROOSTER
+	if not is_cockfight_on():
+		return CockfightCheck.CLOSED
+	if state.cockfight_entered_day == state.day:
+		return CockfightCheck.ALREADY_ENTERED
+	return CockfightCheck.OK
+
+## The player's rooster fights today's tournament: COCKFIGHT_BOUTS of the
+## villagers' roosters, weakest first. Returns the bouts, in order -
+## {"opponent": id, "won": bool, "hits": [bool...] (true = the player's
+## rooster lands the blow)} - or [] if it can't (check_cockfight()).
+func enter_cockfight() -> Array:
+	if check_cockfight() != CockfightCheck.OK or _fighting_roosters.is_empty():
+		return []
+	state.cockfight_entered_day = state.day
+	var opponents := _fighting_roosters.keys()
+	opponents.shuffle()
+	opponents = opponents.slice(0, COCKFIGHT_BOUTS)
+	opponents.sort_custom(func(a, b): return get_cockfight_power(a) < get_cockfight_power(b))
+	var bouts := []
+	for opponent: String in opponents:
+		var bout := _bout(PLAYER_ROOSTER_ID, opponent)
+		_score(opponent, not bout["won"])
+		bout["opponent"] = opponent
+		bouts.append(bout)
+		state.cockfight_week_bouts[opponent] = int(state.cockfight_week_bouts.get(opponent, 0)) + 1
+		var owner := get_fighting_rooster(opponent).owner_id
+		if not owner.is_empty():
+			add_friendship(owner, FRIENDSHIP_COCKFIGHT)
+	state.money += COCKFIGHT_ENTRY_PRIZE
+	money_changed.emit(state.money)
+	cockfight_changed.emit()
+	return bouts
+
+## Season points, by rooster id ("player" included once they have one).
+func get_cockfight_points(rooster_id: String) -> int:
+	return int(state.cockfight_points.get(rooster_id, 0))
+
+## Every rooster, best first: points, then power. [{"id", "points", "power"}]
+func get_cockfight_ranking() -> Array:
+	var ids := _fighting_roosters.keys()
+	if has_rooster():
+		ids.append(PLAYER_ROOSTER_ID)
+	var ranking := ids.map(func(id: String) -> Dictionary:
+		return {"id": id, "points": get_cockfight_points(id), "power": get_cockfight_power(id)})
+	ranking.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a["points"] > b["points"] if a["points"] != b["points"] else a["power"] > b["power"])
+	return ranking
+
+## 1-based place of a rooster in the ranking (0 if it isn't in it).
+func get_cockfight_rank(rooster_id: String) -> int:
+	var ranking := get_cockfight_ranking()
+	for i in ranking.size():
+		if ranking[i]["id"] == rooster_id:
+			return i + 1
+	return 0
+
+## The village's best rooster (last season's top), "" before the first.
+func get_cockfight_champion() -> String:
+	return state.cockfight_champion
+
+## One bout between rooster `a` and rooster `b`: the winner drawn from
+## their powers, `a`'s points counted (not `b`'s: the caller decides), and
+## the blows as they'll be shown - the winner's last.
+func _bout(a: String, b: String) -> Dictionary:
+	var gap := get_cockfight_power(a) - get_cockfight_power(b)
+	var won := randf() < 1.0 / (1.0 + exp(-gap / COCKFIGHT_POWER_SCALE))
+	var hits := []
+	for i in randi_range(0, COCKFIGHT_HITS_TO_WIN - 1):
+		hits.append(not won)
+	for i in COCKFIGHT_HITS_TO_WIN - 1:
+		hits.append(won)
+	hits.shuffle()
+	hits.append(won)
+	_score(a, won)
+	return {"won": won, "hits": hits}
+
+func _score(rooster_id: String, won: bool) -> void:
+	state.cockfight_points[rooster_id] = get_cockfight_points(rooster_id) \
+		+ (COCKFIGHT_WIN_POINTS if won else COCKFIGHT_LOSS_POINTS)
+
+## The Sunday that ends: each villager's rooster fights the rest of its
+## COCKFIGHT_BOUTS against the others (those against the player's count).
+## Only its own result counts - its opponent has bouts of its own.
+func _play_villagers_bouts() -> void:
+	var ids := _fighting_roosters.keys()
+	if ids.size() < 2:
+		return
+	for rooster_id: String in ids:
+		var others := ids.filter(func(id): return id != rooster_id)
+		for i in COCKFIGHT_BOUTS - int(state.cockfight_week_bouts.get(rooster_id, 0)):
+			_bout(rooster_id, others.pick_random())
+	state.cockfight_week_bouts.clear()
+	cockfight_changed.emit()
+
+## The new season's first morning: the top rooster of the one that ended is
+## the village's best; points start again.
+func _end_cockfight_season() -> void:
+	var ranking := get_cockfight_ranking()
+	if ranking.is_empty() or ranking[0]["points"] <= 0:
+		return
+	state.cockfight_champion = ranking[0]["id"]
+	if state.cockfight_champion == PLAYER_ROOSTER_ID:
+		for data: FightingRoosterData in _fighting_roosters.values():
+			if not data.owner_id.is_empty():
+				add_friendship(data.owner_id, FRIENDSHIP_CHAMPION)
+	state.cockfight_points.clear()
+	cockfight_changed.emit()
+	cockfight_season_ended.emit(state.cockfight_champion)
+
+# --- Fara's school fees -----------------------------------------------------------------
+
+## What the player still owes the school (0 = all paid).
+func get_school_debt() -> int:
+	return state.school_debt
+
+## Days left to pay, today included (1 = today is the last day, 0 or less =
+## overdue). Only meaningful while there's a debt.
+func get_school_days_left() -> int:
+	return state.school_due_day - state.day + 1
+
+func is_school_fee_due() -> bool:
+	return state.school_debt > 0
+
+## Past the due day and not all paid: Fara stays home from school.
+func is_school_fees_overdue() -> bool:
+	return state.school_debt > 0 and state.day > state.school_due_day
+
+## What the school takes a rice for (the weekly market's price), 0 if rice
+## isn't a known crop.
+func get_school_rice_price() -> int:
+	var rice := get_crop_data(SCHOOL_RICE_ITEM)
+	return roundi(rice.sell_price * SCHOOL_RICE_PRICE_MULTIPLIER) if rice != null else 0
+
+## Rice it would take to pay off the debt.
+func get_school_rice_needed() -> int:
+	var price := get_school_rice_price()
+	return ceili(float(state.school_debt) / price) if price > 0 else 0
+
+## Pays up to `amount` Ariary towards the fees - never more than owed or
+## owned. Returns what was paid.
+func pay_school_fees(amount: int) -> int:
+	var paid := mini(amount, mini(state.school_debt, state.money))
+	if paid <= 0:
+		return 0
+	state.money -= paid
+	state.school_debt -= paid
+	money_changed.emit(state.money)
+	school_fees_changed.emit()
+	return paid
+
+## Pays with up to `count` rice - never more than owned or than the debt
+## needs; what the last one is worth over the debt comes back in Ariary.
+## Returns how many rice were given.
+func pay_school_fees_in_rice(count: int) -> int:
+	var price := get_school_rice_price()
+	count = mini(count, mini(state.get_inventory_count(SCHOOL_RICE_ITEM), get_school_rice_needed()))
+	if count <= 0 or price <= 0:
+		return 0
+	var value := count * price
+	state.add_inventory(SCHOOL_RICE_ITEM, -count)
+	inventory_changed.emit(SCHOOL_RICE_ITEM, state.get_inventory_count(SCHOOL_RICE_ITEM))
+	if value > state.school_debt:
+		state.money += value - state.school_debt
+		money_changed.emit(state.money)
+	state.school_debt = maxi(state.school_debt - value, 0)
+	school_fees_changed.emit()
+	return count
+
+## Story conditions true today (name -> true), for the villagers' steps
+## (VillagerStop.only_if / unless).
+func get_conditions() -> Dictionary:
+	var conditions := {}
+	if is_school_fees_overdue():
+		conditions[CONDITION_SCHOOL_FEES_OVERDUE] = true
+	return conditions
+
+## Morning: the bill for the coming season, SCHOOL_NOTICE_DAYS ahead - at
+## least SCHOOL_GRACE_DAYS to pay it. An unpaid debt keeps its due day.
+func _advance_school_fees() -> void:
+	var changed := false
+	var season := (state.day + SCHOOL_NOTICE_DAYS - 1) / GameClock.DAYS_PER_SEASON
+	if season > state.school_billed_season:
+		state.school_billed_season = season
+		if state.school_debt <= 0:
+			var season_start := season * GameClock.DAYS_PER_SEASON + 1
+			state.school_due_day = maxi(season_start, state.day) + SCHOOL_GRACE_DAYS - 1
+		state.school_debt += SCHOOL_FEE
+		changed = true
+	if state.school_debt > 0 and state.day == state.school_due_day + 1:
+		changed = true # just fell overdue
+	if changed:
+		school_fees_changed.emit()
+
+# --- Villagers' orders --------------------------------------------------------------
+
+## Registered by OrderManager for every villager (their VillagerData file's
+## name and its orders), at the start of the game.
+func register_order_giver(villager_id: String, templates: Array[OrderTemplate]) -> void:
+	_order_givers[villager_id] = templates
+
+## The order of `villager_id` ({} = none) - see FarmState.orders.
+func get_order(villager_id: String) -> Dictionary:
+	return state.orders.get(villager_id, {})
+
+func is_order_offered(villager_id: String) -> bool:
+	return get_order(villager_id).get("deadline", 0) == -1
+
+func is_order_active(villager_id: String) -> bool:
+	return get_order(villager_id).get("deadline", -1) >= 0
+
+## Villagers with an accepted order, oldest deadline first.
+func get_active_orders() -> Array[String]:
+	var active: Array[String] = []
+	for villager_id: String in state.orders:
+		if is_order_active(villager_id):
+			active.append(villager_id)
+	active.sort_custom(func(a, b): return state.orders[a]["deadline"] < state.orders[b]["deadline"])
+	return active
+
+## Days left to deliver, today included (1 = today is the last day).
+func get_order_days_left(villager_id: String) -> int:
+	return get_order(villager_id).get("deadline", -1) - state.day + 1
+
+func get_order_template(villager_id: String) -> OrderTemplate:
+	var templates: Array = _order_givers.get(villager_id, [])
+	var index: int = get_order(villager_id).get("template", -1)
+	return templates[index] if index >= 0 and index < templates.size() else null
+
+func can_accept_order(villager_id: String) -> bool:
+	return is_order_offered(villager_id) and get_active_orders().size() < ORDER_MAX_ACTIVE
+
+func accept_order(villager_id: String) -> bool:
+	if not can_accept_order(villager_id):
+		return false
+	var order: Dictionary = state.orders[villager_id]
+	var template := get_order_template(villager_id)
+	order["deadline"] = state.day + (template.days if template else 5) - 1
+	order_changed.emit(villager_id)
+	return true
+
+func decline_order(villager_id: String) -> bool:
+	if not is_order_offered(villager_id):
+		return false
+	_close_order(villager_id)
+	return true
+
+func can_deliver_order(villager_id: String) -> bool:
+	var order := get_order(villager_id)
+	return is_order_active(villager_id) and state.get_inventory_count(order["item"]) >= order["quantity"]
+
+## What delivering the order pays: its reward, plus the friendship bonus
+## (ORDER_BONUS_PER_HEART a heart), rounded to 100 Ar.
+func get_order_payment(villager_id: String) -> int:
+	var reward: int = get_order(villager_id).get("reward", 0)
+	var bonus := reward * ORDER_BONUS_PER_HEART * get_hearts(villager_id)
+	return reward + roundi(bonus / 100.0) * 100
+
+## Hands the items over. Returns the Ariary earned (0 if it can't be
+## delivered). A delivered order brings the villager closer
+## (FRIENDSHIP_ORDER).
+func deliver_order(villager_id: String) -> int:
+	if not can_deliver_order(villager_id):
+		return 0
+	var order := get_order(villager_id)
+	var payment := get_order_payment(villager_id)
+	state.add_inventory(order["item"], -order["quantity"])
+	inventory_changed.emit(order["item"], state.get_inventory_count(order["item"]))
+	state.money += payment
+	money_changed.emit(state.money)
+	_close_order(villager_id)
+	add_friendship(villager_id, FRIENDSHIP_ORDER)
+	return payment
+
+## Whether the player can have `quantity` of `item_id` within `days`:
+## already in the inventory, or growable in time - a crop of this season
+## (or of every season), quick enough, in a paddy if it needs one; eggs
+## with hens; fruit in season from a tree of theirs.
+func can_fulfil(item_id: String, quantity: int, days: int) -> bool:
+	if state.get_inventory_count(item_id) >= quantity:
+		return true
+	var season := state.clock.get_season()
+	var crop_data := get_crop_data(item_id)
+	if crop_data != null:
+		if crop_data.ideal_season != CropData.Season.ALL_YEAR and int(crop_data.ideal_season) != season:
+			return false
+		if crop_data.growth_days + 1 > days:
+			return false
+		if crop_data.grows_in_paddy:
+			return state.plots.values().any(func(plot: PlotState): return plot.flooded)
+		return true
+	for animal: AnimalState in state.animals.values():
+		var animal_data := get_animal_data(animal.species)
+		if animal_data != null and animal_data.product_id == item_id:
+			return true
+	for tree: TreeState in state.trees.values():
+		var tree_data := get_tree_data(tree.tree_type_id)
+		if tree_data != null and tree_data.fruit_item_id == item_id and tree_data.is_in_season(season):
+			return true
+	return false
+
+## Morning: expires what ran out, then offers new orders - once a day.
+## Also called by OrderManager when the givers are registered, so the very
+## first day has some.
+func refresh_order_offers() -> void:
+	if state.order_roll_day == state.day:
+		return
+	state.order_roll_day = state.day
+	var offers := state.orders.keys().filter(func(id): return is_order_offered(id)).size()
+	var givers := _order_givers.keys()
+	givers.shuffle()
+	for villager_id: String in givers:
+		if offers >= ORDER_MAX_OFFERS:
+			break
+		if state.orders.has(villager_id) or state.order_cooldowns.get(villager_id, 0) > state.day:
+			continue
+		if randf() >= order_offer_chance:
+			continue
+		if _offer_order(villager_id):
+			offers += 1
+
+func _offer_order(villager_id: String) -> bool:
+	var templates: Array = _order_givers[villager_id]
+	var candidates: Array[int] = []
+	for index in templates.size():
+		var template: OrderTemplate = templates[index]
+		if template != null and can_fulfil(template.item_id, template.quantity.x, template.days):
+			candidates.append(index)
+	if candidates.is_empty():
+		return false
+	var index: int = candidates.pick_random()
+	var template: OrderTemplate = templates[index]
+	var quantity := randi_range(template.quantity.x, template.quantity.y)
+	if not can_fulfil(template.item_id, quantity, template.days):
+		quantity = template.quantity.x
+	state.orders[villager_id] = {
+		"item": template.item_id, "quantity": quantity, "reward": template.unit_reward * quantity,
+		"template": index, "since": state.day, "deadline": -1,
+	}
+	order_changed.emit(villager_id)
+	return true
+
+func _close_order(villager_id: String) -> void:
+	state.orders.erase(villager_id)
+	state.order_cooldowns[villager_id] = state.day + ORDER_COOLDOWN_DAYS
+	order_changed.emit(villager_id)
+
+func _advance_orders() -> void:
+	for villager_id: String in state.orders.keys():
+		var order: Dictionary = state.orders[villager_id]
+		if order["deadline"] >= 0 and order["deadline"] < state.day:
+			_close_order(villager_id)
+			order_expired.emit(villager_id)
+		elif order["deadline"] == -1 and state.day - order["since"] >= ORDER_OFFER_DAYS:
+			_close_order(villager_id)
+	refresh_order_offers()
+
+# --- The neighbours' paddies -----------------------------------------------------
+
+## Registered by NeighbourPaddyManager when its zone loads.
+func register_neighbour_paddy(paddy_id: String, size: Vector2i) -> void:
+	_neighbour_paddies[paddy_id] = size
+
+## The CropVisual stage of the neighbours' rice still standing today.
+func get_neighbour_rice_stage() -> int:
+	var day := state.clock.get_day_of_season()
+	var stage := 1
+	for from_day: int in NEIGHBOUR_RICE_STAGES:
+		if day >= from_day:
+			stage = NEIGHBOUR_RICE_STAGES[from_day]
+	return stage
+
+## How much of the farmers' harvest is done, 0..1: through the working
+## hours of the harvest days.
+func get_neighbour_harvest_progress() -> float:
+	var day := state.clock.get_day_of_season()
+	if day < NEIGHBOUR_HARVEST_FROM_DAY:
+		return 0.0
+	var hours := NEIGHBOUR_WORK_HOURS
+	var today := clampf(float(state.clock.minute_of_day - hours.x) / (hours.y - hours.x), 0.0, 1.0)
+	return clampf((day - NEIGHBOUR_HARVEST_FROM_DAY + today) / NEIGHBOUR_HARVEST_DAYS, 0.0, 1.0)
+
+## Harvest time: from its first day until all is cut.
+func is_neighbour_harvest_on() -> bool:
+	return state.clock.get_day_of_season() >= NEIGHBOUR_HARVEST_FROM_DAY \
+			and get_neighbour_harvest_progress() < 1.0
+
+func is_neighbour_tuft_cut(paddy_id: String, cell: Vector2i) -> bool:
+	var size: Vector2i = _neighbour_paddies.get(paddy_id, Vector2i.ZERO)
+	var order := _harvest_index(size, cell)
+	if order < 0:
+		return false
+	var cut_by_farmers := int(get_neighbour_harvest_progress() * size.x * size.y)
+	return order < cut_by_farmers or _player_cut_cells(paddy_id).has(_cell_key(cell))
+
+## The player cuts the tuft at `cell` of a neighbours' paddy. Returns the
+## seed rice earned (0 when it can't be cut: not harvest time, already cut,
+## not a cell of that paddy).
+func help_neighbour_harvest(paddy_id: String, cell: Vector2i) -> int:
+	var size: Vector2i = _neighbour_paddies.get(paddy_id, Vector2i.ZERO)
+	if not is_neighbour_harvest_on() or _harvest_index(size, cell) < 0 \
+			or is_neighbour_tuft_cut(paddy_id, cell):
+		return 0
+	var season := _season_index()
+	var entry: Dictionary = state.neighbour_harvest.get(paddy_id, {})
+	if entry.get("season", -1) != season:
+		entry = {"season": season, "cells": []}
+		state.neighbour_harvest[paddy_id] = entry
+	entry["cells"].append(_cell_key(cell))
+	state.add_inventory(NEIGHBOUR_HARVEST_REWARD, 1)
+	inventory_changed.emit(NEIGHBOUR_HARVEST_REWARD, state.get_inventory_count(NEIGHBOUR_HARVEST_REWARD))
+	neighbour_paddy_changed.emit(paddy_id)
+	return 1
+
+## How many tufts the player cut in that paddy this season.
+func get_neighbour_tufts_helped(paddy_id: String) -> int:
+	return _player_cut_cells(paddy_id).size()
+
+func _player_cut_cells(paddy_id: String) -> Array:
+	var entry: Dictionary = state.neighbour_harvest.get(paddy_id, {})
+	return entry.get("cells", []) if entry.get("season", -1) == _season_index() else []
+
+func _season_index() -> int:
+	return (state.clock.current_day - 1) / GameClock.DAYS_PER_SEASON
+
+## The order the farmers cut the tufts in - column by column from the west,
+## top to bottom - or -1 outside the paddy.
+static func _harvest_index(size: Vector2i, cell: Vector2i) -> int:
+	if cell.x < 0 or cell.y < 0 or cell.x >= size.x or cell.y >= size.y:
+		return -1
+	return cell.x * size.y + cell.y
+
+static func _cell_key(cell: Vector2i) -> String:
+	return "%d,%d" % [cell.x, cell.y]
+
 ## Run before the clock advances, so "in season" means the day that just
 ## ended. Fruit only grows in season, and whatever is left on the tree when
 ## the season ends rots - picking is a seasonal rush, not a stockpile.
+# --- zebus ---------------------------------------------------------------------
+
+## Zebu ids, in the order they were bought.
+func get_zebu_ids() -> Array:
+	var ids := state.zebus.keys()
+	ids.sort_custom(func(a: String, b: String) -> bool: return int(a.get_slice("_", 1)) < int(b.get_slice("_", 1)))
+	return ids
+
+func get_zebu(zebu_id: String) -> Dictionary:
+	return state.zebus.get(zebu_id, {})
+
+func can_buy_zebu() -> bool:
+	return state.zebus.size() < ZEBU_PEN_CAPACITY and state.money >= ZEBU_PRICE
+
+## A young zebu for ZEBU_PRICE, straight to the farm pen. `coat` -1 = at
+## random. Returns its id, "" if the pen is full or money short.
+func buy_zebu(coat: int = -1) -> String:
+	if not can_buy_zebu():
+		return ""
+	state.money -= ZEBU_PRICE
+	money_changed.emit(state.money)
+	if coat < 0 or coat >= ZEBU_COATS:
+		coat = randi() % ZEBU_COATS
+	var zebu_id := "zebu_%d" % state.next_zebu_index
+	state.next_zebu_index += 1
+	state.zebus[zebu_id] = {"name": _zebu_name(coat), "coat": coat, "grown_days": 0}
+	zebus_changed.emit()
+	return zebu_id
+
+## The coat's name, numbered if the herd already has one.
+func _zebu_name(coat: int) -> String:
+	var base: String = ZEBU_NAMES[coat]
+	var taken := state.zebus.values().map(func(zebu: Dictionary) -> String: return zebu["name"])
+	if not base in taken:
+		return base
+	var number := 2
+	while "%s %d" % [base, number] in taken:
+		number += 1
+	return "%s %d" % [base, number]
+
+## What the zebu market pays for it today: from ZEBU_CALF_VALUE to
+## ZEBU_ADULT_VALUE over ZEBU_GROW_DAYS days of care, by 500 Ar.
+func get_zebu_value(zebu_id: String) -> int:
+	var zebu := get_zebu(zebu_id)
+	if zebu.is_empty():
+		return 0
+	var t := clampf(float(zebu["grown_days"]) / ZEBU_GROW_DAYS, 0.0, 1.0)
+	return roundi(lerpf(ZEBU_CALF_VALUE, ZEBU_ADULT_VALUE, t) / 500.0) * 500
+
+func is_zebu_grown(zebu_id: String) -> bool:
+	return int(get_zebu(zebu_id).get("grown_days", 0)) >= ZEBU_GROW_DAYS
+
+## Sells it at its worth. Returns what it paid, 0 for an unknown id.
+func sell_zebu(zebu_id: String) -> int:
+	var value := get_zebu_value(zebu_id)
+	if value <= 0:
+		return 0
+	state.zebus.erase(zebu_id)
+	state.money += value
+	money_changed.emit(state.money)
+	zebus_changed.emit()
+	return value
+
+## Water and hay for today. False if there's no zebu or it's already full.
+func fill_zebu_trough() -> bool:
+	if state.zebus.is_empty() or is_zebu_trough_full():
+		return false
+	state.zebu_trough_full = true
+	zebus_changed.emit()
+	return true
+
+## Full today - filled by the player, or by the rain.
+func is_zebu_trough_full() -> bool:
+	return state.zebu_trough_full or is_raining()
+
+## Zebus strong enough to pull the plough.
+func get_work_zebu_count() -> int:
+	return state.zebus.values().filter(func(zebu: Dictionary) -> bool:
+		return int(zebu["grown_days"]) >= ZEBU_WORK_MIN_DAYS).size()
+
+func check_plough() -> PloughCheck:
+	if get_work_zebu_count() < ZEBU_TEAM_SIZE:
+		return PloughCheck.NO_TEAM
+	if state.plough_cells_today >= PLOUGH_CELLS_PER_DAY:
+		return PloughCheck.TIRED
+	return PloughCheck.OK
+
+func get_plough_cells_left() -> int:
+	return maxi(PLOUGH_CELLS_PER_DAY - state.plough_cells_today, 0)
+
+## Fallow ground the plough can turn: no crop, not tilled yet - the team
+## isn't wasted on worked soil.
+func is_ploughable(plot_id: int) -> bool:
+	return can_till(plot_id) and not get_plot(plot_id).tilled
+
+func can_plough(plot_id: int) -> bool:
+	return check_plough() == PloughCheck.OK and is_ploughable(plot_id)
+
+## Tills one plot with the team - FarmingController calls it for each plot
+## of the furrow as the team reaches it. False if it can't (anymore).
+func plough(plot_id: int) -> bool:
+	if not can_plough(plot_id):
+		return false
+	state.plough_cells_today += 1
+	return till(plot_id)
+
+# --- manure ----------------------------------------------------------------------
+
+func get_manure_pile() -> int:
+	return state.manure_pile
+
+## Takes the whole heap into the inventory. Returns how much.
+func collect_manure() -> int:
+	var amount := state.manure_pile
+	if amount <= 0:
+		return 0
+	state.manure_pile = 0
+	state.add_inventory(MANURE_ITEM, amount)
+	inventory_changed.emit(MANURE_ITEM, state.get_inventory_count(MANURE_ITEM))
+	zebus_changed.emit()
+	return amount
+
+## Worked soil or a growing crop, not fertilized yet, and manure in hand.
+func can_fertilize(plot_id: int) -> bool:
+	var plot := get_plot(plot_id)
+	return plot != null and not plot.fertilized and (plot.tilled or plot.crop != null) \
+		and state.get_inventory_count(MANURE_ITEM) > 0
+
+func fertilize(plot_id: int) -> bool:
+	if not can_fertilize(plot_id):
+		return false
+	get_plot(plot_id).fertilized = true
+	state.add_inventory(MANURE_ITEM, -1)
+	inventory_changed.emit(MANURE_ITEM, state.get_inventory_count(MANURE_ITEM))
+	plot_changed.emit(plot_id)
+	return true
+
+## The day that ends: a day of growth for each zebu if the trough was full,
+## and its manure on the heap; the team is rested.
+func _advance_zebus() -> void:
+	state.plough_cells_today = 0
+	if state.zebus.is_empty():
+		state.zebu_trough_full = false
+		return
+	if is_zebu_trough_full():
+		state.manure_pile = mini(state.manure_pile + MANURE_PER_ZEBU * state.zebus.size(), MANURE_PILE_MAX)
+		for zebu: Dictionary in state.zebus.values():
+			zebu["grown_days"] = mini(int(zebu["grown_days"]) + 1, ZEBU_GROW_DAYS)
+	state.zebu_trough_full = false
+	zebus_changed.emit()
+
 func _advance_trees() -> void:
 	var season := state.clock.get_season()
 	var next_season := state.clock.get_season_on(state.day + 1)
@@ -554,8 +1446,10 @@ func buy_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
 	inventory_changed.emit(item_id, state.get_inventory_count(item_id))
 	return true
 
-func sell(item_id: String, quantity: int = 1) -> bool:
-	if quantity <= 0:
+## `price_multiplier`: what the shop pays on top of the crop's sell_price
+## (ShopProfile.sell_multiplier - the weekly market pays more).
+func sell(item_id: String, quantity: int = 1, price_multiplier: float = 1.0) -> bool:
+	if quantity <= 0 or price_multiplier <= 0.0:
 		return false
 	var crop_data := get_crop_data(item_id)
 	if crop_data == null:
@@ -564,7 +1458,7 @@ func sell(item_id: String, quantity: int = 1) -> bool:
 		return false
 	state.add_inventory(item_id, -quantity)
 	inventory_changed.emit(item_id, state.get_inventory_count(item_id))
-	state.money += crop_data.sell_price * quantity
+	state.money += roundi(crop_data.sell_price * price_multiplier) * quantity
 	money_changed.emit(state.money)
 	return true
 
@@ -603,6 +1497,10 @@ func load_save_data(data: Dictionary) -> void:
 	state_loaded.emit()
 	hotbar_changed.emit()
 	pending_animals_changed.emit()
+	zebus_changed.emit()
+	school_fees_changed.emit()
+	rooster_changed.emit()
+	cockfight_changed.emit()
 
 	var bounds := state.get_grid_bounds()
 	grid_width = bounds.size.x

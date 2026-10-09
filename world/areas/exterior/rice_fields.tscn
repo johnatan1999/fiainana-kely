@@ -1,4 +1,4 @@
-[gd_scene load_steps=35 format=4 uid="uid://c5velu0qg7ft6"]
+[gd_scene load_steps=40 format=4 uid="uid://c5velu0qg7ft6"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_zone"]
 [ext_resource type="Script" path="res://environment/ground/ground_layer.gd" id="2_ground"]
@@ -18,10 +18,15 @@
 [ext_resource type="Script" path="res://components/zone_transition.gd" id="16_transition"]
 [ext_resource type="TileSet" path="res://assets/tileset/cliff_tileset.tres" id="17_cliff"]
 [ext_resource type="TileSet" path="res://assets/tileset/fence_tileset.tres" id="18_fence"]
-[ext_resource type="Resource" path="res://data/zones/riziere_haute.tres" id="20_zh"]
-[ext_resource type="Resource" path="res://data/zones/riziere_basse.tres" id="21_zb"]
-[ext_resource type="Resource" path="res://data/zones/tany_lonaka_nord.tres" id="22_tn"]
-[ext_resource type="Resource" path="res://data/zones/tany_lonaka_sud.tres" id="23_ts"]
+[ext_resource type="Resource" path="res://data/zones/upper_paddy.tres" id="20_zh"]
+[ext_resource type="Resource" path="res://data/zones/lower_paddy.tres" id="21_zb"]
+[ext_resource type="Resource" path="res://data/zones/fertile_land_north.tres" id="22_tn"]
+[ext_resource type="Resource" path="res://data/zones/fertile_land_south.tres" id="23_ts"]
+[ext_resource type="Script" path="res://entities/villager/villager_roads.gd" id="32_nk0pf"]
+[ext_resource type="Script" path="res://structures/farm/village_paddy/village_paddy.gd" id="33_fe14c"]
+[ext_resource type="PackedScene" uid="uid://ctd2newmp7phc" path="res://entities/villager/villager.tscn" id="34_2txwo"]
+[ext_resource type="Resource" uid="uid://wodptj1vp74l" path="res://data/villagers/rakoto.tres" id="35_ek1n3"]
+[ext_resource type="Resource" uid="uid://b8ua56irvcthp" path="res://data/villagers/naivo.tres" id="36_5v2cg"]
 [ext_resource type="PackedScene" path="res://entities/props/basket.tscn" id="40_prop_basket"]
 [ext_resource type="PackedScene" path="res://entities/props/drying_mat.tscn" id="41_prop_drying_mat"]
 [ext_resource type="PackedScene" path="res://entities/props/hay_bundle.tscn" id="42_prop_hay_bundle"]
@@ -81,21 +86,21 @@ tile_set = ExtResource("17_cliff")
 
 [node name="FarmView" parent="." instance=ExtResource("5_farmview")]
 
-[node name="Riziere_Haute" parent="FarmView" instance=ExtResource("6_field")]
+[node name="UpperPaddy" parent="FarmView" instance=ExtResource("6_field")]
 tile_map_data = PackedByteArray("AAAEAAUABQAIAAQAAAAFAAUABQAKAAQAAAAGAAUABQAKAAQAAAAHAAUABQALAAQAAAAJAAUABQAIAAQAAAAKAAUABQAKAAQAAAALAAUABQAKAAQAAAAMAAUABQALAAQAAAAOAAUABQAIAAQAAAAPAAUABQAKAAQAAAAQAAUABQAKAAQAAAARAAUABQALAAQAAAAEAAYABQAIAAUAAAAFAAYABQAJAAYAAAAGAAYABQAJAAYAAAAHAAYABQALAAYAAAAJAAYABQAIAAUAAAAKAAYABQAJAAYAAAALAAYABQAJAAYAAAAMAAYABQALAAYAAAAOAAYABQAIAAUAAAAPAAYABQAJAAYAAAAQAAYABQAJAAYAAAARAAYABQALAAYAAAAEAAcABQAIAAUAAAAFAAcABQAJAAYAAAAGAAcABQAJAAYAAAAHAAcABQALAAYAAAAJAAcABQAIAAUAAAAKAAcABQAJAAYAAAALAAcABQAJAAYAAAAMAAcABQALAAYAAAAOAAcABQAIAAUAAAAPAAcABQAJAAYAAAAQAAcABQAJAAYAAAARAAcABQALAAYAAAAEAAgABQAIAAcAAAAFAAgABQAJAAcAAAAGAAgABQAJAAcAAAAHAAgABQALAAcAAAAJAAgABQAIAAcAAAAKAAgABQAJAAcAAAALAAgABQAJAAcAAAAMAAgABQALAAcAAAAOAAgABQAIAAcAAAAPAAgABQAJAAcAAAAQAAgABQAJAAcAAAARAAgABQALAAcAAAA=")
 zone_data = ExtResource("20_zh")
 flooded = true
 
-[node name="Riziere_Basse" parent="FarmView" instance=ExtResource("6_field")]
+[node name="LowerPaddy" parent="FarmView" instance=ExtResource("6_field")]
 tile_map_data = PackedByteArray("AAAEAAwABQAIAAQAAAAFAAwABQAKAAQAAAAGAAwABQAKAAQAAAAHAAwABQALAAQAAAAJAAwABQAIAAQAAAAKAAwABQAKAAQAAAALAAwABQAKAAQAAAAMAAwABQALAAQAAAAOAAwABQAIAAQAAAAPAAwABQAKAAQAAAAQAAwABQAKAAQAAAARAAwABQALAAQAAAAEAA0ABQAIAAUAAAAFAA0ABQAJAAYAAAAGAA0ABQAJAAYAAAAHAA0ABQALAAYAAAAJAA0ABQAIAAUAAAAKAA0ABQAJAAYAAAALAA0ABQAJAAYAAAAMAA0ABQALAAYAAAAOAA0ABQAIAAUAAAAPAA0ABQAJAAYAAAAQAA0ABQAJAAYAAAARAA0ABQALAAYAAAAEAA4ABQAIAAUAAAAFAA4ABQAJAAYAAAAGAA4ABQAJAAYAAAAHAA4ABQALAAYAAAAJAA4ABQAIAAUAAAAKAA4ABQAJAAYAAAALAA4ABQAJAAYAAAAMAA4ABQALAAYAAAAOAA4ABQAIAAUAAAAPAA4ABQAJAAYAAAAQAA4ABQAJAAYAAAARAA4ABQALAAYAAAAEAA8ABQAIAAcAAAAFAA8ABQAJAAcAAAAGAA8ABQAJAAcAAAAHAA8ABQALAAcAAAAJAA8ABQAIAAcAAAAKAA8ABQAJAAcAAAALAA8ABQAJAAcAAAAMAA8ABQALAAcAAAAOAA8ABQAIAAcAAAAPAA8ABQAJAAcAAAAQAA8ABQAJAAcAAAARAA8ABQALAAcAAAA=")
 zone_data = ExtResource("21_zb")
 flooded = true
 
-[node name="TanyLonaka_Nord" parent="FarmView" instance=ExtResource("6_field")]
+[node name="FertileLand_North" parent="FarmView" instance=ExtResource("6_field")]
 tile_map_data = PackedByteArray("AAAYAAYABQAIAAQAAAAZAAYABQAKAAQAAAAaAAYABQAKAAQAAAAbAAYABQAKAAQAAAAcAAYABQAKAAQAAAAdAAYABQAKAAQAAAAeAAYABQAKAAQAAAAfAAYABQALAAQAAAAYAAcABQAIAAUAAAAZAAcABQAJAAYAAAAaAAcABQAJAAYAAAAbAAcABQAJAAYAAAAcAAcABQAJAAYAAAAdAAcABQAJAAYAAAAeAAcABQAJAAYAAAAfAAcABQALAAYAAAAYAAgABQAIAAUAAAAZAAgABQAJAAYAAAAaAAgABQAJAAYAAAAbAAgABQAJAAYAAAAcAAgABQAJAAYAAAAdAAgABQAJAAYAAAAeAAgABQAJAAYAAAAfAAgABQALAAYAAAAYAAkABQAIAAUAAAAZAAkABQAJAAYAAAAaAAkABQAJAAYAAAAbAAkABQAJAAYAAAAcAAkABQAJAAYAAAAdAAkABQAJAAYAAAAeAAkABQAJAAYAAAAfAAkABQALAAYAAAAYAAoABQAIAAcAAAAZAAoABQAJAAcAAAAaAAoABQAJAAcAAAAbAAoABQAJAAcAAAAcAAoABQAJAAcAAAAdAAoABQAJAAcAAAAeAAoABQAJAAcAAAAfAAoABQALAAcAAAA=")
 zone_data = ExtResource("22_tn")
 
-[node name="TanyLonaka_Sud" parent="FarmView" instance=ExtResource("6_field")]
+[node name="FertileLand_South" parent="FarmView" instance=ExtResource("6_field")]
 tile_map_data = PackedByteArray("AAAYAA0ABQAIAAQAAAAZAA0ABQAKAAQAAAAaAA0ABQAKAAQAAAAbAA0ABQAKAAQAAAAcAA0ABQAKAAQAAAAdAA0ABQAKAAQAAAAeAA0ABQAKAAQAAAAfAA0ABQAKAAQAAAAgAA0ABQAKAAQAAAAhAA0ABQALAAQAAAAYAA4ABQAIAAUAAAAZAA4ABQAJAAYAAAAaAA4ABQAJAAYAAAAbAA4ABQAJAAYAAAAcAA4ABQAJAAYAAAAdAA4ABQAJAAYAAAAeAA4ABQAJAAYAAAAfAA4ABQAJAAYAAAAgAA4ABQAJAAYAAAAhAA4ABQALAAYAAAAYAA8ABQAIAAUAAAAZAA8ABQAJAAYAAAAaAA8ABQAJAAYAAAAbAA8ABQAJAAYAAAAcAA8ABQAJAAYAAAAdAA8ABQAJAAYAAAAeAA8ABQAJAAYAAAAfAA8ABQAJAAYAAAAgAA8ABQAJAAYAAAAhAA8ABQALAAYAAAAYABAABQAIAAUAAAAZABAABQAJAAYAAAAaABAABQAJAAYAAAAbABAABQAJAAYAAAAcABAABQAJAAYAAAAdABAABQAJAAYAAAAeABAABQAJAAYAAAAfABAABQAJAAYAAAAgABAABQAJAAYAAAAhABAABQALAAYAAAAYABEABQAIAAcAAAAZABEABQAJAAcAAAAaABEABQAJAAcAAAAbABEABQAJAAcAAAAcABEABQAJAAcAAAAdABEABQAJAAcAAAAeABEABQAJAAcAAAAfABEABQAJAAcAAAAgABEABQAJAAcAAAAhABEABQALAAcAAAA=")
 zone_data = ExtResource("23_ts")
 
@@ -114,214 +119,195 @@ tile_set = ExtResource("18_fence")
 [node name="Trees" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="Haie_Sud_1_01" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_South_1_01" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(237, 1288)
-tree_id = "Trees/Haie_Sud_1_01"
+tree_id = "Trees/Hedge_South_1_01"
 tree_data = ExtResource("11_euca")
 size_scale = 0.9
 
-[node name="Haie_Sud_1_02" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_South_1_02" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(121, 1271)
-tree_id = "Trees/Haie_Sud_1_02"
+tree_id = "Trees/Hedge_South_1_02"
 tree_data = ExtResource("11_euca")
 flip = true
 
-[node name="Haie_Sud_1_03" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_South_1_03" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(34, 1307)
-tree_id = "Trees/Haie_Sud_1_03"
+tree_id = "Trees/Hedge_South_1_03"
 tree_data = ExtResource("11_euca")
 size_scale = 1.3
 
-[node name="Haie_Sud_2_01" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_South_2_01" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(513, 1314)
-tree_id = "Trees/Haie_Sud_2_01"
+tree_id = "Trees/Hedge_South_2_01"
 tree_data = ExtResource("11_euca")
 flip = true
 size_scale = 1.3
 
-[node name="Haie_Sud_2_02" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_South_2_02" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(372, 1294)
-tree_id = "Trees/Haie_Sud_2_02"
+tree_id = "Trees/Hedge_South_2_02"
 tree_data = ExtResource("11_euca")
 size_scale = 0.9
 
-[node name="Haie_Sud_2_03" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_South_2_03" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(447, 1255)
-tree_id = "Trees/Haie_Sud_2_03"
+tree_id = "Trees/Hedge_South_2_03"
 tree_data = ExtResource("11_euca")
 
-[node name="Haie_Sud_3_01" parent="Trees" instance=ExtResource("9_tree")]
-position = Vector2(1405, 1305)
-tree_id = "Trees/Haie_Sud_3_01"
-tree_data = ExtResource("11_euca")
-flip = true
-size_scale = 0.85
-
-[node name="Haie_Sud_3_02" parent="Trees" instance=ExtResource("9_tree")]
-position = Vector2(1489, 1324)
-tree_id = "Trees/Haie_Sud_3_02"
-tree_data = ExtResource("11_euca")
-size_scale = 0.85
-
-[node name="Haie_Sud_3_03" parent="Trees" instance=ExtResource("9_tree")]
-position = Vector2(1324, 1275)
-tree_id = "Trees/Haie_Sud_3_03"
-tree_data = ExtResource("11_euca")
-size_scale = 0.9
-
-[node name="Haie_Sud_4_01" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_South_4_01" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1726, 1260)
-tree_id = "Trees/Haie_Sud_4_01"
+tree_id = "Trees/Hedge_South_4_01"
 tree_data = ExtResource("11_euca")
 flip = true
 size_scale = 0.85
 
-[node name="Haie_Sud_4_02" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_South_4_02" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1660, 1323)
-tree_id = "Trees/Haie_Sud_4_02"
+tree_id = "Trees/Hedge_South_4_02"
 tree_data = ExtResource("11_euca")
 flip = true
 size_scale = 1.3
 
-[node name="Haie_Sud_4_03" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_South_4_03" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1801, 1300)
-tree_id = "Trees/Haie_Sud_4_03"
+tree_id = "Trees/Hedge_South_4_03"
 tree_data = ExtResource("11_euca")
 size_scale = 1.1
 
-[node name="Haie_Est_1_01" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_East_1_01" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1869, 375)
-tree_id = "Trees/Haie_Est_1_01"
+tree_id = "Trees/Hedge_East_1_01"
 tree_data = ExtResource("11_euca")
 size_scale = 0.9
 
-[node name="Haie_Est_1_02" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_East_1_02" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1835, 462)
-tree_id = "Trees/Haie_Est_1_02"
+tree_id = "Trees/Hedge_East_1_02"
 tree_data = ExtResource("11_euca")
 size_scale = 0.9
 
-[node name="Haie_Est_1_03" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_East_1_03" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1838, 301)
-tree_id = "Trees/Haie_Est_1_03"
+tree_id = "Trees/Hedge_East_1_03"
 tree_data = ExtResource("11_euca")
 
-[node name="Haie_Est_2_01" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_East_2_01" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1872, 874)
-tree_id = "Trees/Haie_Est_2_01"
+tree_id = "Trees/Hedge_East_2_01"
 tree_data = ExtResource("11_euca")
 size_scale = 1.1
 
-[node name="Haie_Est_2_02" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_East_2_02" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1841, 793)
-tree_id = "Trees/Haie_Est_2_02"
+tree_id = "Trees/Hedge_East_2_02"
 tree_data = ExtResource("11_euca")
 flip = true
 size_scale = 1.3
 
-[node name="Haie_Est_2_03" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_East_2_03" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1859, 705)
-tree_id = "Trees/Haie_Est_2_03"
+tree_id = "Trees/Hedge_East_2_03"
 tree_data = ExtResource("11_euca")
 size_scale = 1.2
 
-[node name="Haie_Est_3_01" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_East_3_01" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1834, 1191)
-tree_id = "Trees/Haie_Est_3_01"
+tree_id = "Trees/Hedge_East_3_01"
 tree_data = ExtResource("11_euca")
 size_scale = 1.1
 
-[node name="Haie_Est_3_02" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_East_3_02" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1893, 998)
-tree_id = "Trees/Haie_Est_3_02"
+tree_id = "Trees/Hedge_East_3_02"
 tree_data = ExtResource("11_euca")
 flip = true
 
-[node name="Haie_Est_3_03" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Hedge_East_3_03" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1886, 1110)
-tree_id = "Trees/Haie_Est_3_03"
+tree_id = "Trees/Hedge_East_3_03"
 tree_data = ExtResource("11_euca")
 flip = true
 size_scale = 1.3
 
-[node name="Bosquet_Ouest_01" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Grove_West_01" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(110, 1068)
-tree_id = "Trees/Bosquet_Ouest_01"
+tree_id = "Trees/Grove_West_01"
 tree_data = ExtResource("11_euca")
 size_scale = 0.85
 
-[node name="Bosquet_Ouest_02" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Grove_West_02" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(234, 887)
-tree_id = "Trees/Bosquet_Ouest_02"
+tree_id = "Trees/Grove_West_02"
 tree_data = ExtResource("11_euca")
 flip = true
 size_scale = 0.9
 
-[node name="Bosquet_Ouest_03" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Grove_West_03" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(177, 1020)
-tree_id = "Trees/Bosquet_Ouest_03"
+tree_id = "Trees/Grove_West_03"
 tree_data = ExtResource("11_euca")
 size_scale = 0.9
 
-[node name="Bosquet_Ouest_04" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Grove_West_04" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(106, 962)
-tree_id = "Trees/Bosquet_Ouest_04"
+tree_id = "Trees/Grove_West_04"
 tree_data = ExtResource("11_euca")
 flip = true
 
-[node name="Bosquet_Centre_01" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Grove_Center_01" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(687, 1077)
-tree_id = "Trees/Bosquet_Centre_01"
+tree_id = "Trees/Grove_Center_01"
 tree_data = ExtResource("11_euca")
 flip = true
 size_scale = 1.2
 
-[node name="Bosquet_Centre_02" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Grove_Center_02" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(635, 986)
-tree_id = "Trees/Bosquet_Centre_02"
+tree_id = "Trees/Grove_Center_02"
 tree_data = ExtResource("11_euca")
 flip = true
 size_scale = 1.1
 
-[node name="Bosquet_Centre_03" parent="Trees" instance=ExtResource("9_tree")]
+[node name="Grove_Center_03" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(460, 1083)
-tree_id = "Trees/Bosquet_Centre_03"
+tree_id = "Trees/Grove_Center_03"
 tree_data = ExtResource("11_euca")
 size_scale = 1.1
 
-[node name="Manguier_01" parent="Trees" instance=ExtResource("9_tree")]
+[node name="MangoTree_01" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1200, 1000)
-tree_id = "Trees/Manguier_01"
+tree_id = "Trees/MangoTree_01"
 tree_data = ExtResource("10_mango")
 flip = true
 size_scale = 0.95
 
-[node name="Manguier_02" parent="Trees" instance=ExtResource("9_tree")]
+[node name="MangoTree_02" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(1500, 1060)
-tree_id = "Trees/Manguier_02"
+tree_id = "Trees/MangoTree_02"
 tree_data = ExtResource("10_mango")
 size_scale = 1.1
 
-[node name="Manguier_03" parent="Trees" instance=ExtResource("9_tree")]
+[node name="MangoTree_03" parent="Trees" instance=ExtResource("9_tree")]
 position = Vector2(720, 880)
-tree_id = "Trees/Manguier_03"
+tree_id = "Trees/MangoTree_03"
 tree_data = ExtResource("10_mango")
 flip = true
 size_scale = 1.05
 
-[node name="Panneau_RiziereHaute" parent="." instance=ExtResource("15_sign")]
+[node name="Sign_UpperPaddy" parent="." instance=ExtResource("15_sign")]
 position = Vector2(170, 345)
 zone_id = "riziere_haute"
 
-[node name="Panneau_RiziereBasse" parent="." instance=ExtResource("15_sign")]
+[node name="Sign_LowerPaddy" parent="." instance=ExtResource("15_sign")]
 position = Vector2(170, 700)
 zone_id = "riziere_basse"
 
-[node name="Panneau_TanyLonakaNord" parent="." instance=ExtResource("15_sign")]
+[node name="Sign_FertileLandNorth" parent="." instance=ExtResource("15_sign")]
 position = Vector2(1095, 410)
 zone_id = "tany_lonaka_nord"
 
-[node name="Panneau_TanyLonakaSud" parent="." instance=ExtResource("15_sign")]
+[node name="Sign_FertileLandSouth" parent="." instance=ExtResource("15_sign")]
 position = Vector2(1095, 760)
 zone_id = "tany_lonaka_sud"
 
@@ -337,28 +323,28 @@ shape = SubResource("RectangleShape2D_exit")
 [node name="Props" type="Node2D" parent="."]
 y_sort_enabled = true
 
-[node name="Cabane" parent="Props" instance=ExtResource("44_prop_thatched_hut")]
+[node name="Hut" parent="Props" instance=ExtResource("44_prop_thatched_hut")]
 position = Vector2(1120, 1078)
 
-[node name="Cabane_NatteRiz" parent="Props" instance=ExtResource("41_prop_drying_mat")]
+[node name="Hut_RiceMat" parent="Props" instance=ExtResource("41_prop_drying_mat")]
 position = Vector2(1210, 1130)
 
-[node name="Cabane_Panier" parent="Props" instance=ExtResource("40_prop_basket")]
+[node name="Hut_Basket" parent="Props" instance=ExtResource("40_prop_basket")]
 position = Vector2(1050, 1090)
 
-[node name="Sarety" parent="Props" instance=ExtResource("45_prop_zebu_cart")]
+[node name="ZebuCart" parent="Props" instance=ExtResource("45_prop_zebu_cart")]
 position = Vector2(1090, 1210)
 
-[node name="GerbeRiz_01" parent="Props" instance=ExtResource("43_prop_hay_sheaf")]
+[node name="RiceSheaf_01" parent="Props" instance=ExtResource("43_prop_hay_sheaf")]
 position = Vector2(420, 884)
 
-[node name="GerbeRiz_02" parent="Props" instance=ExtResource("43_prop_hay_sheaf")]
+[node name="RiceSheaf_02" parent="Props" instance=ExtResource("43_prop_hay_sheaf")]
 position = Vector2(454, 896)
 
-[node name="GerbeRiz_03" parent="Props" instance=ExtResource("43_prop_hay_sheaf")]
+[node name="RiceSheaf_03" parent="Props" instance=ExtResource("43_prop_hay_sheaf")]
 position = Vector2(488, 882)
 
-[node name="BotteRiz" parent="Props" instance=ExtResource("42_prop_hay_bundle")]
+[node name="RiceBundle" parent="Props" instance=ExtResource("42_prop_hay_bundle")]
 position = Vector2(546, 900)
 
 [node name="AmbientLife" type="Node2D" parent="."]
@@ -366,7 +352,7 @@ y_sort_enabled = true
 script = ExtResource("61_ambient")
 ground_bird_count = 4
 
-[node name="Aigrettes" type="Node2D" parent="."]
+[node name="Egrets" type="Node2D" parent="."]
 y_sort_enabled = true
 script = ExtResource("61_ambient")
 butterfly_count = 0
@@ -377,7 +363,7 @@ flocks = false
 [node name="NightLights" type="Node2D" parent="."]
 z_index = 1
 
-[node name="Lanterne_Cabane" type="Node2D" parent="NightLights"]
+[node name="Lantern_Hut" type="Node2D" parent="NightLights"]
 position = Vector2(1152, 1050)
 script = ExtResource("62_nightlight")
 
@@ -385,10 +371,57 @@ script = ExtResource("62_nightlight")
 y_sort_enabled = true
 
 [node name="Zebu1" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1420, 1130)
+position = Vector2(1600, 1160)
 
 [node name="Zebu2" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1560, 1180)
+position = Vector2(1720, 1090)
 
 [node name="Zebu3" parent="ZebuHerd" instance=ExtResource("64_zebu")]
-position = Vector2(1680, 1110)
+position = Vector2(1650, 1240)
+
+[node name="VillagerRoads" type="Node2D" parent="."]
+script = ExtResource("32_nk0pf")
+zone_id = "rice_fields"
+
+[node name="Road_Village" type="Line2D" parent="VillagerRoads"]
+points = PackedVector2Array(960, 1320, 960, 1180, 1135, 1150, 1235, 1150)
+width = 6.0
+default_color = Color(1, 0.85, 0.3, 0.6)
+
+[node name="Spots" type="Node2D" parent="VillagerRoads"]
+
+[node name="To_village" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(960, 1320)
+gizmo_extents = 16.0
+
+[node name="Hut" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1135, 1125)
+gizmo_extents = 16.0
+
+[node name="NeighbourPaddy_1" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1310, 1115)
+gizmo_extents = 16.0
+
+[node name="NeighbourPaddy_2" type="Marker2D" parent="VillagerRoads/Spots"]
+position = Vector2(1420, 1205)
+gizmo_extents = 16.0
+
+[node name="NeighbourPaddies" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Paddy1" type="Node2D" parent="NeighbourPaddies"]
+y_sort_enabled = true
+position = Vector2(1248, 1056)
+script = ExtResource("33_fe14c")
+size = Vector2i(5, 4)
+
+[node name="Villagers" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Rakoto" parent="Villagers" instance=ExtResource("34_2txwo")]
+position = Vector2(960, 1320)
+data = ExtResource("35_ek1n3")
+
+[node name="Naivo" parent="Villagers" instance=ExtResource("34_2txwo")]
+position = Vector2(960, 1320)
+data = ExtResource("36_5v2cg")

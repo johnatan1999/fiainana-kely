@@ -1,0 +1,105 @@
+[gd_resource type="Resource" script_class="VillagerData" load_steps=19 format=3 uid="uid://dldtvbutk6hqd"]
+
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_ntfe7"]
+[ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_goh58"]
+[ext_resource type="Texture2D" uid="uid://degyjvm0ywcdc" path="res://assets/sprites/characters/villager/example_skirt.png" id="3_fj1hj"]
+[ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="4_tyyux"]
+[ext_resource type="Texture2D" uid="uid://djnfoyu2methn" path="res://assets/sprites/characters/villager/example_hair_bun.png" id="5_wb7nn"]
+[ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="6_vbtfa"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="7_50k7j"]
+[ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="8_mdmfl"]
+[ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="9_0xe0t"]
+
+[sub_resource type="Resource" id="Resource_5mbo0"]
+script = ExtResource("2_goh58")
+texture = ExtResource("3_fj1hj")
+color = Color(0.2, 0.3, 0.55, 1)
+
+[sub_resource type="Resource" id="Resource_8vb7e"]
+script = ExtResource("2_goh58")
+texture = ExtResource("4_tyyux")
+color = Color(0.95, 0.95, 0.98, 1)
+
+[sub_resource type="Resource" id="Resource_fj1wb"]
+script = ExtResource("2_goh58")
+texture = ExtResource("5_wb7nn")
+color = Color(0.1, 0.08, 0.06, 1)
+
+[sub_resource type="Resource" id="Resource_wkous"]
+script = ExtResource("6_vbtfa")
+skin_color = Color(0.52, 0.34, 0.23, 1)
+layers = Array[ExtResource("2_goh58")]([SubResource("Resource_5mbo0"), SubResource("Resource_8vb7e"), SubResource("Resource_fj1wb")])
+
+[sub_resource type="Resource" id="Resource_u0ic5"]
+script = ExtResource("8_mdmfl")
+hour = 7
+minute = 0
+zone = ""
+spot = "School"
+activity = 0
+days = 31
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_fxes3"]
+script = ExtResource("8_mdmfl")
+hour = 8
+minute = 30
+zone = ""
+spot = "Square"
+activity = 1
+days = 96
+rain_proof = false
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_v1opi"]
+script = ExtResource("8_mdmfl")
+hour = 12
+minute = 0
+zone = ""
+spot = "Eatery"
+activity = 0
+days = 0
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_mjn0w"]
+script = ExtResource("8_mdmfl")
+hour = 13
+minute = 30
+zone = ""
+spot = "School"
+activity = 0
+days = 0
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_v0i1h"]
+script = ExtResource("8_mdmfl")
+hour = 17
+minute = 30
+zone = ""
+spot = "School"
+activity = 2
+days = 0
+rain_proof = true
+only_if = ""
+unless = ""
+
+[resource]
+script = ExtResource("9_0xe0t")
+display_name = "Ramatoa Hanta"
+role = "La directrice de l'école du village, l'institutrice de Fara"
+family = false
+look = SubResource("Resource_wkous")
+size = 1.0
+home_zone = "village"
+home = "School"
+routine = Array[ExtResource("8_mdmfl")]([SubResource("Resource_u0ic5"), SubResource("Resource_fxes3"), SubResource("Resource_v1opi"), SubResource("Resource_mjn0w"), SubResource("Resource_v0i1h")])
+greetings = PackedStringArray("Fara est une élève appliquée, tu sais.", "L\'école, c\'est l\'avenir du village.", "Cette semaine, nous apprenons les fleuves de Madagasikara.", "Le lundi matin, les enfants chantent l\'hymne devant le drapeau.")
+orders = Array[ExtResource("7_50k7j")]([])
+friendship_rewards = Array[ExtResource("1_ntfe7")]([])

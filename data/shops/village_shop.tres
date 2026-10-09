@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ShopProfile" load_steps=2 format=3 uid="uid://dmyhb6iljwbrj"]
+
+[ext_resource type="Script" path="res://core/data/shop_profile.gd" id="1_jl3my"]
+
+[resource]
+script = ExtResource("1_jl3my")
+title = "Marché du village"
+seeds = 0
+sells_tools = true
+sells_food = true
+sells_animals = true
+sell_multiplier = 1.0
+open_days = 0
+opens_at = 0
+closes_at = 1560
+closed_message = ""

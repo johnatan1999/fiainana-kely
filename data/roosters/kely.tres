@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="FightingRoosterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/fighting_rooster_data.gd" id="1_rooster"]
+
+[resource]
+script = ExtResource("1_rooster")
+display_name = "Kely"
+owner_id = "koto"
+base_power = 45
+power_per_week = 2
+color = Color(1, 0.96, 0.86, 1)

@@ -22,18 +22,19 @@ enum Kind { SEED, CROP, AUTHORED, UNKNOWN }
 ## compile time could run while item_data.gd itself was still compiling
 ## (load cycle through the scripts that reference ItemDatabase), leaving the
 ## entries as bare Resources with no ItemData script.
-## animal_zebu.tres is deliberately left out: FarmSimulation already supports
-## buying any species, but there's no Zebu scene in AnimalManager and no
-## structure to place one in - add it back here once both exist.
+## animal_zebu.tres is deliberately left out: zebus aren't items - they're
+## bought one by one at the market-day zebu market (FarmSimulation's zebu API).
 const ITEM_PATHS := [
 	"res://data/items/tool_hoe.tres",
 	"res://data/items/tool_watering_can.tres",
-	"res://data/items/tool_angady.tres",
+	"res://data/items/tool_spade.tres",
 	"res://data/items/tool_watering_can_tin.tres",
-	"res://data/items/food_vary_sy_laoka.tres",
-	"res://data/items/food_vary_amin_anana.tres",
+	"res://data/items/tool_plough.tres",
+	"res://data/items/food_rice_and_side_dish.tres",
+	"res://data/items/food_rice_with_greens.tres",
 	"res://data/items/animal_chicken.tres",
 	"res://data/items/egg.tres",
+	"res://data/items/manure.tres",
 	"res://data/items/mango.tres",
 ]
 
@@ -93,6 +94,23 @@ func get_item(item_id: String) -> ItemData:
 	if _seed_items.has(item_id):
 		return _seed_items[item_id]
 	return _items.get(item_id)
+
+## The name shown for any id - a seed, a harvested crop or an item -
+## translated; the id itself if it's unknown.
+func get_display_name(item_id: String) -> String:
+	var item := get_item(item_id)
+	if item != null:
+		return item.get_display_name()
+	var crop := get_crop(item_id)
+	return tr(crop.display_name) if crop != null else item_id
+
+## The icon for any id - a seed, a harvested crop or an item - or null.
+func get_icon(item_id: String) -> Texture2D:
+	var item := get_item(item_id)
+	if item != null:
+		return item.icon
+	var crop := get_crop(item_id)
+	return crop.icon if crop != null else null
 
 ## What a species is (name, icon, product cycle...), or null if unregistered.
 func get_animal(species: AnimalData.Species) -> AnimalData:

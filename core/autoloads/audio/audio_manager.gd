@@ -8,7 +8,7 @@ extends Node
 const BUS_MUSIC := "Music"
 const BUS_SFX := "SFX"
 
-const BGM_EXTERIOR: AudioStream = preload("res://assets/audio/BGM/Audio_BGM_Exterieur_Vorona_Kely.mp3")
+const BGM_EXTERIOR: AudioStream = preload("res://assets/audio/BGM/Audio_BGM_Exterior_Vorona_Kely.mp3")
 const BGM_INTERIOR: AudioStream = preload("res://assets/audio/BGM/Audio_BGM_vorona-o-barijaona.ogg")
 
 const DEFAULT_CROSSFADE_TIME := 1.5

@@ -1,0 +1,185 @@
+[gd_resource type="Resource" script_class="VillagerData" load_steps=29 format=3 uid="uid://b8ua56irvcthp"]
+
+[ext_resource type="Script" path="res://core/data/friendship_reward.gd" id="1_4rslo"]
+[ext_resource type="Script" path="res://entities/villager/villager_layer.gd" id="2_21a7j"]
+[ext_resource type="Texture2D" uid="uid://dhq33khe5w4m5" path="res://assets/sprites/characters/villager/example_shorts.png" id="3_686lm"]
+[ext_resource type="Texture2D" uid="uid://ct8hagtxfsu8y" path="res://assets/sprites/characters/villager/example_shirt.png" id="4_iet8y"]
+[ext_resource type="Texture2D" uid="uid://c8fse4uenivl2" path="res://assets/sprites/characters/villager/example_hair.png" id="5_ytjpu"]
+[ext_resource type="Texture2D" uid="uid://dlywe88eiapxn" path="res://assets/sprites/characters/villager/example_hat.png" id="6_0yoka"]
+[ext_resource type="Script" path="res://entities/villager/villager_look.gd" id="7_uy7b1"]
+[ext_resource type="Script" path="res://core/data/order_template.gd" id="8_8q1yg"]
+[ext_resource type="Script" path="res://entities/villager/villager_stop.gd" id="9_pet6q"]
+[ext_resource type="Script" path="res://entities/villager/villager_data.gd" id="10_u3ha4"]
+
+[sub_resource type="Resource" id="Resource_7luax"]
+script = ExtResource("1_4rslo")
+hearts = 2
+item_id = "groundnut_seed"
+quantity = 5
+line = "Des graines d'arachide, pour la saison sèche."
+
+[sub_resource type="Resource" id="Resource_q530i"]
+script = ExtResource("1_4rslo")
+hearts = 4
+item_id = "sweet_potato_seed"
+quantity = 6
+line = "Des boutures de patate douce. Tu es un bon voisin."
+
+[sub_resource type="Resource" id="Resource_rboru"]
+script = ExtResource("2_21a7j")
+texture = ExtResource("3_686lm")
+color = Color(0.3, 0.4, 0.3, 1)
+
+[sub_resource type="Resource" id="Resource_sdj7f"]
+script = ExtResource("2_21a7j")
+texture = ExtResource("4_iet8y")
+color = Color(0.6, 0.45, 0.3, 1)
+
+[sub_resource type="Resource" id="Resource_batf4"]
+script = ExtResource("2_21a7j")
+texture = ExtResource("5_ytjpu")
+color = Color(0.1, 0.08, 0.06, 1)
+
+[sub_resource type="Resource" id="Resource_gnjdu"]
+script = ExtResource("2_21a7j")
+texture = ExtResource("6_0yoka")
+color = Color(0.8, 0.68, 0.42, 1)
+
+[sub_resource type="Resource" id="Resource_msaf2"]
+script = ExtResource("7_uy7b1")
+skin_color = Color(0.62, 0.42, 0.28, 1)
+layers = Array[ExtResource("2_21a7j")]([SubResource("Resource_rboru"), SubResource("Resource_sdj7f"), SubResource("Resource_batf4"), SubResource("Resource_gnjdu")])
+
+[sub_resource type="Resource" id="Resource_prq8r"]
+script = ExtResource("8_8q1yg")
+item_id = "sweet_potato"
+quantity = Vector2i(5, 7)
+unit_reward = 1900
+days = 8
+request_line = "Il me faudrait %d patates douces pour la saison sèche."
+thanks_line = "Merci, voisin !"
+
+[sub_resource type="Resource" id="Resource_82pav"]
+script = ExtResource("8_8q1yg")
+item_id = "groundnut"
+quantity = Vector2i(4, 6)
+unit_reward = 3900
+days = 10
+request_line = "Tu cultives des arachides ? J'en voudrais %d."
+thanks_line = "Parfait, merci !"
+
+[sub_resource type="Resource" id="Resource_si3f5"]
+script = ExtResource("8_8q1yg")
+item_id = "bean"
+quantity = Vector2i(4, 6)
+unit_reward = 3400
+days = 9
+request_line = "J'ai besoin de %d haricots pour ma femme."
+thanks_line = "Merci, elle sera contente !"
+
+[sub_resource type="Resource" id="Resource_i4f87"]
+script = ExtResource("8_8q1yg")
+item_id = "corn"
+quantity = Vector2i(5, 7)
+unit_reward = 1600
+days = 7
+request_line = "%d épis de maïs, tu peux m'en trouver ?"
+thanks_line = "Merci beaucoup !"
+
+[sub_resource type="Resource" id="Resource_4lnt8"]
+script = ExtResource("9_pet6q")
+hour = 6
+minute = 15
+zone = "rice_fields"
+spot = "NeighbourPaddy_2"
+activity = 3
+days = 0
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_smrv4"]
+script = ExtResource("9_pet6q")
+hour = 11
+minute = 30
+zone = "rice_fields"
+spot = "Hut"
+activity = 0
+days = 0
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_4s3ro"]
+script = ExtResource("9_pet6q")
+hour = 12
+minute = 30
+zone = "rice_fields"
+spot = "NeighbourPaddy_2"
+activity = 3
+days = 63
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_fnfr7"]
+script = ExtResource("9_pet6q")
+hour = 13
+minute = 30
+zone = "market_town"
+spot = "Cockfight_West"
+activity = 0
+days = 64
+rain_proof = true
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_35ta1"]
+script = ExtResource("9_pet6q")
+hour = 15
+minute = 30
+zone = ""
+spot = "Grocery"
+activity = 0
+days = 63
+rain_proof = false
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_y1iwt"]
+script = ExtResource("9_pet6q")
+hour = 17
+minute = 0
+zone = ""
+spot = "Eatery"
+activity = 0
+days = 0
+rain_proof = false
+only_if = ""
+unless = ""
+
+[sub_resource type="Resource" id="Resource_jqmb6"]
+script = ExtResource("9_pet6q")
+hour = 18
+minute = 15
+zone = ""
+spot = "House_East"
+activity = 2
+days = 0
+rain_proof = true
+only_if = ""
+unless = ""
+
+[resource]
+script = ExtResource("10_u3ha4")
+display_name = "Naivo"
+role = "Fermier, il cultive la rizière des voisins"
+family = false
+look = SubResource("Resource_msaf2")
+size = 1.05
+home_zone = "village"
+home = "House_East"
+routine = Array[ExtResource("9_pet6q")]([SubResource("Resource_4lnt8"), SubResource("Resource_smrv4"), SubResource("Resource_4s3ro"), SubResource("Resource_fnfr7"), SubResource("Resource_35ta1"), SubResource("Resource_y1iwt"), SubResource("Resource_jqmb6")])
+greetings = PackedStringArray("Belle journée pour travailler la terre.", "Bonjour, voisin !", "Le repiquage, ça casse le dos !")
+orders = Array[ExtResource("8_8q1yg")]([SubResource("Resource_prq8r"), SubResource("Resource_82pav"), SubResource("Resource_si3f5"), SubResource("Resource_i4f87")])
+friendship_rewards = Array[ExtResource("1_4rslo")]([SubResource("Resource_7luax"), SubResource("Resource_q530i")])

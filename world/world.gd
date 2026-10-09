@@ -15,6 +15,8 @@ const CROP_RESOURCES: Array[CropData] = [
 	preload("res://data/crops/litchi.tres"),
 ]
 
+const HOME_SCREEN := "res://ui/home/home_screen.tscn"
+
 ## What a brand-new game starts with (a loaded save replaces it entirely).
 const STARTER_INVENTORY := {
 	"tool_hoe": 1,
@@ -41,6 +43,9 @@ const TREE_RESOURCES: Array[TreeData] = [
 @onready var animal_manager: AnimalManager = $Gameplay/AnimalManager
 @onready var farm_land_manager: FarmLandManager = $Gameplay/FarmLandManager
 @onready var tree_manager: TreeManager = $Gameplay/TreeManager
+@onready var neighbour_paddies: NeighbourPaddyManager = $Gameplay/NeighbourPaddyManager
+@onready var order_manager: OrderManager = $Gameplay/OrderManager
+@onready var friendship_manager: FriendshipManager = $Gameplay/FriendshipManager
 @onready var day_night: DayNightController = $Gameplay/DayNightController
 @onready var weather: WeatherController = $Gameplay/WeatherController
 @onready var hotbar: Hotbar = $Gameplay/Hotbar
@@ -50,6 +55,15 @@ const TREE_RESOURCES: Array[TreeData] = [
 @onready var shop_ui: ShopUI = $UI/ShopUI
 @onready var inventory_ui: InventoryUI = $UI/InventoryUI
 @onready var pause_menu: PauseMenu = $UI/PauseMenu
+@onready var orders_tracker: OrdersTracker = $UI/OrdersTracker
+@onready var order_panel: OrderPanel = $UI/OrderPanel
+@onready var zebu_manager: ZebuManager = $Gameplay/ZebuManager
+@onready var zebu_market_panel: ZebuMarketPanel = $UI/ZebuMarketPanel
+@onready var school_manager: SchoolManager = $Gameplay/SchoolManager
+@onready var school_panel: SchoolPanel = $UI/SchoolPanel
+@onready var cockfight_manager: CockfightManager = $Gameplay/CockfightManager
+@onready var rooster_panel: RoosterPanel = $UI/RoosterPanel
+@onready var cockfight_panel: CockfightPanel = $UI/CockfightPanel
 
 var simulation: FarmSimulation
 var item_db: ItemDatabase
@@ -87,14 +101,31 @@ func _ready() -> void:
 	pause_menu.setup(shop_ui, inventory_ui)
 	animal_manager.setup(simulation, world_manager)
 	tree_manager.setup(simulation, item_db, world_manager)
+	neighbour_paddies.setup(simulation, item_db, world_manager, player)
+	friendship_manager.setup(simulation, item_db, world_manager)
+	order_manager.setup(simulation, item_db, world_manager, player, order_panel, orders_tracker)
+	zebu_manager.setup(simulation, world_manager, zebu_market_panel)
+	# After OrderManager: the head teacher greets (OrderManager), then the panel opens.
+	school_manager.setup(simulation, item_db, world_manager, school_panel, orders_tracker)
+	# After OrderManager too: Rakoto greets, then hands over his rooster.
+	cockfight_manager.setup(simulation, item_db, world_manager, rooster_panel, cockfight_panel)
 	day_night.setup(simulation, world_manager)
 	weather.setup(simulation, world_manager, day_night, player)
-	save_controller.setup(simulation, world_manager, player)
+	# The slot picked on the home screen (SaveSlots.current); none when the
+	# world runs on its own (tests, F6 in the editor): a new game, never saved.
+	save_controller.setup(simulation, world_manager, player, SaveSlots.current)
 
-	pause_menu.save_requested.connect(save_controller.save_game)
+	save_controller.night_saved.connect(func(saved: bool):
+		if saved:
+			UIEvents.notify(tr("Bonne nuit ! La partie est sauvegardée."))
+		elif save_controller.slot >= 0:
+			UIEvents.notify(tr("La sauvegarde a échoué : la partie n'a pas pu être enregistrée.")))
+	pause_menu.title_requested.connect(func(): get_tree().change_scene_to_file(HOME_SCREEN))
 	pause_menu.quit_requested.connect(get_tree().quit)
 
 	if save_controller.has_save():
 		save_controller.load_game()
 	else:
-		world_manager.change_zone("village", "SpawnDefault")
+		world_manager.change_zone("farm", "SpawnDefault")
+		# A new game: its slot shows on the home screen from now on.
+		save_controller.save_game()

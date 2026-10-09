@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ShopProfile" load_steps=2 format=3 uid="uid://6wgo11i2b581"]
+
+[ext_resource type="Script" path="res://core/data/shop_profile.gd" id="1_7yd0v"]
+
+[resource]
+script = ExtResource("1_7yd0v")
+title = "Tsena omby"
+seeds = 2
+sells_tools = true
+sells_food = true
+sells_animals = true
+sell_multiplier = 1.0
+open_days = 16
+opens_at = 360
+closes_at = 1020
+closed_message = "Le tsena omby n'ouvre que le zoma, de 6:00 à 17:00."

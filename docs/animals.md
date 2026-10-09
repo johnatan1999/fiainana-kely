@@ -1,7 +1,7 @@
 # Animaux : `AnimalManager` / `Chicken`
 
 ## Ce que voit le joueur
-- **Au village**, les poules picorent en liberté autour de leur coin.
+- **À la ferme**, les poules picorent en liberté autour de leur coin.
 - **À 18:45**, elles se dirigent vers la porte du poulailler, un peu plus vite
   que d'habitude, et entrent une à une. La nuit, la cour est vide, y compris si le joueur
   revient en pleine nuit.
@@ -14,7 +14,7 @@
 - **Deux sortes de poules** :
   - **simulées** : créées par `AnimalManager` dans le poulailler intérieur, avec un
     `AnimalState` ;
-  - **en liberté** (`start_wild` ou `setup_wild`) : placées dans la scène du village, ou
+  - **en liberté** (`start_wild` ou `setup_wild`) : placées dans la scène de la ferme, ou
     décoratives et créées par `WorldManager._spawn_decorative_chickens()`.
 - **Suivi de l'heure** : `Chicken` rejoint `DayNightController.CLOCK_GROUP` et reçoit
   `set_time_of_day(minute)` (voir `day_night.md`). Elle suit **l'horloge, pas la lumière** :
@@ -38,6 +38,6 @@
 - **Poules simulées la nuit** : elles passent en `SLEEP` pendant les heures de nuit.
 
 ## À savoir
-- Le poulailler du village est à `(232, 580)`, entre la colline et la maison de l'ouest. Son
+- Le poulailler de la ferme est à `(232, 580)`, sous la colline. Son
   point d'arrivée est `SpawnFrom_CHICKEN_COOP`.
 - Une zone sans `Coop` : les poules en liberté continuent simplement de picorer la nuit.

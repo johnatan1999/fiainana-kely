@@ -8,19 +8,62 @@ extends RefCounted
 ## already translated to the current language (the French texts in the
 ## tables below are the keys of localization/translations.csv).
 
-enum Category { CROPS, ANIMALS, TOOLS, FOOD }
+enum Category { CROPS, ANIMALS, TOOLS, FOOD, VILLAGERS }
 
 const CATEGORY_NAMES := {
 	Category.CROPS: "Cultures",
 	Category.ANIMALS: "Élevage",
 	Category.TOOLS: "Outils",
 	Category.FOOD: "Nourriture",
+	Category.VILLAGERS: "Villageois",
 }
 
+## Where a villager is, by the spot of their current step (VillagerRoads
+## markers) - "En ce moment : au marché". A spot missing here reads as
+## "quelque part au village".
+const SPOT_PLACES := {
+	"Market": "au marché",
+	"Square": "sur la place",
+	"Bench_East": "sur le banc, près de la maison de l'est",
+	"Hut": "à la cabane des rizières",
+	"NeighbourPaddy_1": "dans la rizière des voisins",
+	"NeighbourPaddy_2": "dans la rizière des voisins",
+	"School": "à l'école",
+	"Pitch": "sur le terrain de foot",
+	"WaterPoint": "au point d'eau",
+	"Eatery": "à la gargote",
+	"Grocery": "à l'épicerie",
+	"Mortar": "au mortier, devant la maison",
+	"Laundry": "à la corde à linge",
+	"Kitchen": "à la cuisine",
+	"Coop": "au poulailler",
+	"Orchard": "au verger",
+	"Woodpile": "au tas de bois",
+	"Bridge": "sur le pont du bourg",
+	"WashingStones": "au lavoir du bourg",
+	"MarketSquare": "sur la place du marché, au bourg",
+	"Market_Collector": "à son étal du tsena, au bourg",
+	"Market_Vegetables_1": "à son étal du tsena, au bourg",
+	"Market_Vegetables_3": "à son étal du tsena, au bourg",
+	"Market_Cloth_1": "à son étal du tsena, au bourg",
+	"Taxi": "à l'arrêt du taxi-brousse",
+	"ZebuMarket": "au tsena omby du bourg, avec ses zébus",
+}
+const HOME_PLACES := {
+	"House_West": "la maison de l'ouest",
+	"House_East": "la maison de l'est",
+	"House_South": "la maison du sud",
+	"House_Rabe": "une maison du bourg, à l'est du marché",
+	"House_Lalao": "une maison du bourg, à l'ouest du marché",
+	"House_Ratsimba": "une maison du bourg, au sud-est du marché",
+	"School": "le logement de l'école",
+}
+const PLACEHOLDER_VILLAGER := Color(0.62, 0.45, 0.32)
+
 const SEASON_NAMES := {
-	CropData.Season.ASARA: "Asara",
-	CropData.Season.ASOTRY: "Asotry",
-	CropData.Season.TOUTE_SAISON: "Toute saison",
+	CropData.Season.RAINY: "Asara",
+	CropData.Season.DRY: "Asotry",
+	CropData.Season.ALL_YEAR: "Toute saison",
 }
 
 const WATER_NEED_NAMES := {
@@ -30,8 +73,8 @@ const WATER_NEED_NAMES := {
 }
 
 const CROP_TYPE_NAMES := {
-	CropData.Category.VIVRIER: "Culture vivrière",
-	CropData.Category.RENTE: "Culture de rente",
+	CropData.Category.FOOD: "Culture vivrière",
+	CropData.Category.CASH: "Culture de rente",
 	CropData.Category.EXPORT: "Culture d'export",
 }
 
@@ -131,7 +174,106 @@ static func describe_animal(db: ItemDatabase, animal: AnimalState) -> Dictionary
 	entry["sort_group"] = 1
 	return entry
 
+## One of the player's zebus (FarmSimulation's zebu API): its growth, its
+## worth at the zebu market, today's trough.
+static func describe_zebu(simulation: FarmSimulation, zebu_id: String) -> Dictionary:
+	var zebu := simulation.get_zebu(zebu_id)
+	var grown := simulation.is_zebu_grown(zebu_id)
+	var details: Array = [
+		[_t("Croissance"), _t("Adulte") if grown
+			else "%d / %d" % [zebu["grown_days"], FarmSimulation.ZEBU_GROW_DAYS]],
+		[_t("Valeur au marché"), Currency.format(simulation.get_zebu_value(zebu_id))],
+		[_t("Abreuvoir"), _t("Plein aujourd'hui") if simulation.is_zebu_trough_full() else _t("À remplir")],
+	]
+	var description := _t("Un zébu adulte, à vendre au tsena omby du bourg le zoma.") if grown \
+		else _t("Il grandit d'un jour chaque jour où l'abreuvoir du parc est rempli (ou qu'il pleut).")
+	var entry := _make("zebu:" + zebu_id, zebu["name"], zebu_icon(), Category.ANIMALS,
+		ItemData.Category.ANIMALS, description, details)
+	entry["meta"] = _t("Au parc de la ferme")
+	entry["sort_group"] = 1
+	return entry
+
+## A zebu standing (frame 0 of the zebu sheet), for icons.
+static func zebu_icon() -> Texture2D:
+	var icon := AtlasTexture.new()
+	icon.atlas = load("res://assets/sprites/animals/zebu.png")
+	icon.region = Rect2(0, 0, 128, 96)
+	return icon
+
 ## French: singular for 0 and 1 ("0 jour", "1 jour", "2 jours").
+## A villager, for the Villageois tab: their portrait, who they are, and
+## the player's friendship, next gift, order and where to find them now.
+## `id` is their VillagerData file's name; the entry's id is
+## "villager:<id>".
+static func describe_villager(db: ItemDatabase, simulation: FarmSimulation, villager_id: String,
+		data: VillagerData) -> Dictionary:
+	if data.family:
+		return _describe_family(villager_id, data, simulation)
+	var hearts := simulation.get_hearts(villager_id)
+	var max_hearts := FarmSimulation.FRIENDSHIP_MAX_HEARTS
+	# Short values (the card's right column is narrow); the longer texts go
+	# in the description, which wraps.
+	var details: Array = [[_t("Amitié"), _t("%d/%d cœurs") % [hearts, max_hearts]]]
+	if hearts < max_hearts:
+		details.append([_t("Prochain cœur"), "%d %%" % roundi(simulation.get_heart_progress(villager_id) * 100.0)])
+	if hearts > 0:
+		details.append([_t("Prix d'ami"), "+%d %%" % roundi(FarmSimulation.ORDER_BONUS_PER_HEART * 100.0 * hearts)])
+	var order := simulation.get_order(villager_id)
+	if order.is_empty():
+		details.append([_t("Commande"), _t("Aucune")])
+	else:
+		details.append([_t("Commande"), "%d %s" % [order["quantity"], db.get_display_name(order["item"]).to_lower()]])
+		if simulation.is_order_offered(villager_id):
+			details.append([_t("Délai"), _t("à voir")])
+		else:
+			details.append([_t("Délai"), _days(simulation.get_order_days_left(villager_id), "%d jour", "%d jours")])
+	details.append([_t("En ce moment"), _place_text(simulation, data)])
+	var description := _t(data.role)
+	var home: String = HOME_PLACES.get(data.home, "")
+	if not home.is_empty():
+		description += (". " if not description.is_empty() else "") + _t("Habite %s.") % _t(home)
+	for gift: FriendshipReward in data.friendship_rewards:
+		if gift != null and gift.hearts > hearts:
+			description += " " + _t("Son cadeau à %d cœurs : %d %s.") % [gift.hearts, gift.quantity, db.get_display_name(gift.item_id).to_lower()]
+			break
+	var entry := {
+		"id": "villager:" + villager_id,
+		"name": data.display_name,
+		"icon": VillagerPortrait.make(data.look),
+		"color": PLACEHOLDER_VILLAGER,
+		"category": Category.VILLAGERS,
+		"description": description,
+		"details": details,
+		"meta": _t("%d/%d cœurs") % [hearts, max_hearts],
+	}
+	return entry
+
+## The player's family: who they are and where they are now - no
+## friendship or orders with them.
+static func _describe_family(villager_id: String, data: VillagerData, simulation: FarmSimulation) -> Dictionary:
+	return {
+		"id": "villager:" + villager_id,
+		"name": data.display_name,
+		"icon": VillagerPortrait.make(data.look),
+		"color": PLACEHOLDER_VILLAGER,
+		"category": Category.VILLAGERS,
+		"description": _t(data.role),
+		"details": [[_t("En ce moment"), _place_text(simulation, data)]],
+		"meta": _t("Famille"),
+		"sort_group": 0, # the family first
+	}
+
+## Where they are now, by their routine (and the weather) - the same rule
+## as Villager, without needing their zone to be loaded.
+static func _place_text(simulation: FarmSimulation, data: VillagerData) -> String:
+	var clock := simulation.state.clock
+	var stop := data.get_stop(clock.minute_of_day, clock.get_weekday(), simulation.get_conditions())
+	if stop != null and simulation.is_raining() and not stop.rain_proof:
+		stop = null
+	if stop == null or (stop.spot == data.home and stop.activity == VillagerStop.Activity.INSIDE):
+		return _t("à la maison")
+	return _t(SPOT_PLACES.get(stop.spot, "quelque part au village"))
+
 static func _days(count: int, singular: String, plural: String) -> String:
 	return _t(singular if count <= 1 else plural) % count
 

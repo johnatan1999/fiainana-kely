@@ -35,7 +35,7 @@ extends Resource
 @export var yield_max: int = 4
 ## Fruits only grow in this season; unpicked fruit rots when it ends.
 ## Same enum as crops, so both follow the GameClock seasons the same way.
-@export var fruit_season: CropData.Season = CropData.Season.TOUTE_SAISON
+@export var fruit_season: CropData.Season = CropData.Season.ALL_YEAR
 
 ## Every look of the species: visual_scene first, then visual_variants.
 func get_visual_scenes() -> Array[PackedScene]:
@@ -51,4 +51,4 @@ func bears_fruit() -> bool:
 	return fruit_item_id != ""
 
 func is_in_season(season: GameClock.Season) -> bool:
-	return fruit_season == CropData.Season.TOUTE_SAISON or int(fruit_season) == int(season)
+	return fruit_season == CropData.Season.ALL_YEAR or int(fruit_season) == int(season)
