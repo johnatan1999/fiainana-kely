@@ -53,8 +53,9 @@ descend le **zoma** (vendredi), jour de marché.
 - Quatre **maisons** autour de la place (portes fermées), des manguiers pour l'ombre.
 - Au nord de la rivière, à gauche de la route, le **marché aux zébus** (tsena omby) : un
   enclos, et le poteau du marchand Ratsimba (voir `zebus.md`).
-- **La forêt (`forest`)**, par la lisière est du village (panneau « ALA ») : une zone
-  sauvage, avec son sentier, sa clairière, son ruisseau et sa source, et le vieil amontana.
+- **La forêt (`forest`)**, par la lisière est du village (panneau « ALA ») : une grande
+  forêt fermée, un labyrinthe de sentiers entre des murs de fourré, avec ses clairières
+  ensoleillées, son ruisseau, sa source et le vieil amontana.
   On y observe des animaux et on y cueille des plantes (voir `forest.md`).
 - Au sud de la rivière, à droite du pont, sur l'herbe, **l'arène des combats de coqs**
   (kianja ady akoho) et son panneau « ADY AKOHO » : le tournoi de l'Alahady (voir

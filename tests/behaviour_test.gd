@@ -61,6 +61,7 @@ func _ready() -> void:
 	await _test_zebu_manure()
 	await _test_family_projects()
 	await _test_forest()
+	await _test_forest_maze()
 	await _test_quests()
 	await _test_more_quests()
 	await _test_chicken_thieves()
@@ -1016,6 +1017,42 @@ func _test_family_projects() -> void:
 
 # --- the forest and the notebook ------------------------------------------------------------
 
+func _test_forest_maze() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_set_time(10 * 60)
+	await _go_to_zone("village")
+	var dn: DayNightController = _world.get_node("Gameplay/DayNightController")
+	await _frames(3)
+	var open_sky := dn._canvas_modulate.color
+	await _go_to_zone("forest")
+	await _frames(3)
+	var zone := _zone()
+	var big := zone.get_camera_bounds().size.x >= 4000 and zone.get_camera_bounds().size.y >= 3000
+	var shaded := dn._canvas_modulate.color.v < open_sky.v - 0.1
+	# A wall of thicket, open ground in front of it (south): walking north
+	# into it, the player is stopped.
+	var thicket: TileMapLayer = zone.get_node("ThicketLayer")
+	var wall := Vector2i(-1, -1)
+	for cell in thicket.get_used_cells():
+		var below := cell + Vector2i.DOWN
+		if thicket.get_cell_source_id(below) == -1 and thicket.get_cell_source_id(below + Vector2i.DOWN) == -1 				and zone.get_node("StreamLayer").get_cell_source_id(below) == -1 				and zone.get_node("StreamLayer").get_cell_source_id(below + Vector2i.DOWN) == -1 				and cell.x > 4 and cell.y > 4:
+			wall = cell
+			break
+	var front := thicket.map_to_local(wall + Vector2i.DOWN * 2)
+	var ended := await _walk(front, thicket.map_to_local(wall + Vector2i.UP), 1.5)
+	var stopped := ended.y > thicket.map_to_local(wall).y + 10.0
+	_check(big and shaded and wall.x >= 0 and stopped,
+		"forest: a big woodland in the shade of its leaves - its walls of thicket stop the player")
+	var sun: Sunbeam = zone.get_node("Sunlight/Sun_Clearing")
+	var lit := sun.visible
+	_set_time(22 * 60)
+	await _frames(5)
+	var dark := not sun.visible
+	_set_time(10 * 60)
+	await _frames(3)
+	_check(lit and dark, "forest: sunlight falls into the clearing by day, not at night")
+
+
 func _test_forest() -> void:
 	_sim.set_weather(FarmState.Weather.CLEAR)
 	var state := _sim.state
@@ -1031,7 +1068,7 @@ func _test_forest() -> void:
 	var walk_done := func() -> bool: return not _player.is_auto_walking()
 	await _wait_for(walk_done, 5.0)
 	await _frames(5)
-	_player.global_position = Vector2(700, 1300)
+	_player.global_position = _zone().get_node("Spawns/SpawnDefault").global_position
 	var sifaka: WildAnimal = _zone().get_node("Wildlife/Sifaka")
 	var tenrec: WildAnimal = _zone().get_node("Wildlife/Tenrec")
 	var dawn := sifaka.is_present() and not tenrec.is_present()
@@ -1050,7 +1087,7 @@ func _test_forest() -> void:
 			and _sim.notebook.is_discovered("wild_greens") and not greens._interactable.is_interactable
 			and _sim.notebook.get_notebook_progress().x == pages + 2,
 		"forest: the sifaka at dawn, the tenrec at night - watching one, gathering greens: new pages in the notebook")
-	_player.global_position = Vector2(840, 700)
+	_player.global_position = _zone().get_node("Places/Place_Clearing").global_position
 	var clearing := func() -> bool: return _sim.notebook.is_discovered("clearing")
 	_check(await _wait_for(clearing, 2.0), "forest: walking into the clearing finds it")
 	var inventory: InventoryUI = _world.get_node("UI/InventoryUI")

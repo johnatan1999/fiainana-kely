@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TreeData" load_steps=3 format=3 uid="uid://do41wfpxxof4b"]
+
+[ext_resource type="Script" path="res://core/data/tree_data.gd" id="1_3lhc8"]
+[ext_resource type="PackedScene" path="res://entities/trees/mango/mango_visual.tscn" id="2_yrrfr"]
+
+[resource]
+script = ExtResource("1_3lhc8")
+id = "forest_tree"
+display_name = "Arbre de la forêt"
+malagasy_name = "Hazo an'ala"
+visual_scene = ExtResource("2_yrrfr")
+visual_variants = Array[PackedScene]([])
+fruit_item_id = ""
+fruit_cycle_days = 4
+yield_min = 2
+yield_max = 4
+fruit_season = 2

@@ -1,10 +1,10 @@
 [gd_resource type="Resource" script_class="ZoneData" load_steps=3 format=3 uid="uid://b6jywpsvduwgg"]
 
-[ext_resource type="PackedScene" uid="uid://dfh337dp28tem" path="res://world/areas/exterior/forest.tscn" id="1_an4bj"]
-[ext_resource type="Script" path="res://core/data/zone_data.gd" id="2_4ibdw"]
+[ext_resource type="PackedScene" uid="uid://dfh337dp28tem" path="res://world/areas/exterior/forest.tscn" id="1_2p4ve"]
+[ext_resource type="Script" path="res://core/data/zone_data.gd" id="2_y6c1r"]
 
 [resource]
-script = ExtResource("2_4ibdw")
+script = ExtResource("2_y6c1r")
 id = "forest"
 display_name = "Forêt"
-scene = ExtResource("1_an4bj")
+scene = ExtResource("1_2p4ve")

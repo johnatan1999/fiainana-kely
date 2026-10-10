@@ -133,6 +133,10 @@ Côté game design :
 - **Posées par `tools/place_quest_targets.gd`** (avec `--editor`), d'après sa table
   `TARGETS`. Elles vont sous `QuestTargets` (y-trié) dans chaque zone, et une cible du même
   nom est remplacée. On peut aussi les poser à la main dans l'éditeur.
+  - Une ligne donne une `position`, ou une `anchor` : un repère de la zone. La forêt est
+    générée (`tools/build_forest.gd`) et ses repères (`Anchors/Tracks`, `LostZebu`,
+    `SpringJar`) suivent le labyrinthe. Après une reconstruction de la forêt, relancer
+    l'outil.
 
 **Lien avec le jeu : `QuestManager`** (`systems/quests/`, `Gameplay/QuestManager`)
 - **Un seul rafraîchissement par image** (`_queue_refresh`) : l'inventaire change souvent (une

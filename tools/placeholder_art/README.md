@@ -25,6 +25,7 @@ godot --headless --path . --script res://tools/placeholder_art/gen_<nom>.gd
 | `gen_annexes.gd` | `assets/sprites/props/house_annexes.png` | 2 cases de 256×320 (grenier sur pilotis, cuisine), densité 2×, posées sur le bord bas et centrées |
 | `gen_forest.gd` | `assets/sprites/props/forest.png` | Cases de 128×128, densité 2×, posées sur y = 120 et centrées. Rangée 0 : les animaux, deux images chacun (sifaka, maki, caméléon, tenrec, martin-pêcheur). Rangée 1 : les plantes, prêtes puis cueillies (brèdes, miel, ravintsara, champignons) |
 | `gen_dog.gd` | `assets/sprites/animals/dog.png`, `assets/sprites/props/dog_props.png` | Chien : profil vers la droite, densité 2×, cases de 112×96 (4×3), pattes sur y = 92 : 0–3 trot, 4–5 assis, 6 couché, 7 endormi, 8 aboie, 9 renifle, 10 content, 11 caressé. Robe claire (teintée en jeu). Accessoires : cases de 192×192 (4×1), posés sur le bord bas : niche, gamelle vide, gamelle pleine, panier de chiots |
+| `gen_thicket.gd` | `assets/tileset/thicket.png` | Fourré de la forêt : 10 variantes de 96×96 (deux cases de sol), 6 grandes puis 4 petites (les bords des murs), touffe centrée, son pied sur y = 84. Le jeu de tuiles (`thicket_tileset.tres`) est écrit par `tools/build_forest.gd` |
 | `gen_water.gd` | `assets/tileset/water_placeholder.png` | Deux tuiles blanches : c'est le shader qui colore |
 
 Ces scripts ne touchent **qu'aux images**. Les scènes (zones, champs, arbres, clôtures,

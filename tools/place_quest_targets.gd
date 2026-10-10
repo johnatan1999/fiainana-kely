@@ -18,17 +18,18 @@ const VILLAGE := "res://world/areas/exterior/player_village.tscn"
 ## - "scene", "name" (the node), "target" (QuestStep.target);
 ## - "appears": QuestTarget.Show ("during": while a step is there, "after":
 ##   once "quest" is done);
-## - "position", and "reach" (walk into this area) or "interact" (use it
-##   within this size);
+## - "position", or "anchor": a marker of the zone (its Anchors: the forest
+##   is generated, tools/build_forest.gd) - and "reach" (walk into this
+##   area) or "interact" (use it within this size);
 ## - "look": "hoof_prints" (with "direction"), "zebu" (with "frame",
 ##   "flip") or "scene" (an instance of "path": a prop...).
 const TARGETS := [
 	# Rakoto's lost zebu (data/quests/rakoto_lost_zebu.tres).
 	{"scene": FOREST, "name": "ZebuTracks", "target": "zebu_tracks", "appears": "during",
-		"position": Vector2(1220, 718), "reach": Vector2(170, 110),
+		"anchor": "Anchors/Tracks", "reach": Vector2(170, 110),
 		"look": "hoof_prints", "direction": Vector2(1, 0.25)},
 	{"scene": FOREST, "name": "LostZebu", "target": "lost_zebu", "appears": "during",
-		"position": Vector2(1500, 860), "interact": Vector2(130, 100),
+		"anchor": "Anchors/LostZebu", "interact": Vector2(130, 100),
 		"look": "zebu", "frame": 0, "flip": true},
 	{"scene": VILLAGE, "name": "Volamena", "target": "volamena_home", "appears": "after",
 		"quest": "rakoto_lost_zebu", "position": Vector2(330, 1270),
@@ -36,7 +37,7 @@ const TARGETS := [
 	# Neny Soa's remedy (data/quests/neny_soa_remedy.tres): the jar she left
 	# by the forest spring.
 	{"scene": FOREST, "name": "NenySoaJar", "target": "spring_jar", "appears": "during",
-		"position": Vector2(1135, 190), "interact": Vector2(130, 100),
+		"anchor": "Anchors/SpringJar", "interact": Vector2(130, 100),
 		"look": "scene", "path": "res://entities/props/water_jar.tscn"},
 	# Rakoto's puppy (data/quests/rakoto_puppy.tres): the basket in front of
 	# his house, the mother lying by it.
@@ -75,7 +76,12 @@ func _place(zone: Node, row: Dictionary) -> void:
 	target.name = row["name"]
 	target.set_script(load(QUEST_TARGET))
 	target.set("target_id", row["target"])
-	target.position = row["position"]
+	if row.has("anchor"):
+		var anchor := zone.get_node_or_null(NodePath(row["anchor"])) as Node2D
+		assert(anchor != null, "%s: no %s" % [zone.name, row["anchor"]])
+		target.position = anchor.position
+	else:
+		target.position = row["position"]
 	if row["appears"] == "after":
 		target.set("appears", 1) # QuestTarget.Show.AFTER_DONE
 		target.set("quest_id", row["quest"])

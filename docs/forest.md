@@ -2,23 +2,40 @@
 
 ## Ce que voit le joueur
 - **La forêt (*ala*)** s'ouvre à l'est du village : un panneau « ALA » marque la lisière,
-  entre les grands eucalyptus, sous le parc à zébus du village. C'est une zone **sauvage**,
-  sans champ :
-  - un sentier depuis le village jusqu'à une **clairière** ;
-  - un **ruisseau** qui descend de sa **source** (un bassin au nord-est), avec un **gué** là
-    où passe le sentier ;
-  - des bosquets, de l'herbe haute ;
-  - et le **vieil amontana**, un figuier géant, au sud-est.
+  sous le parc à zébus du village. C'est une **grande forêt fermée**, sans champ, environ
+  3,5 écrans de large sur 5 de haut :
+  - **un labyrinthe de sentiers** entre des murs de fourré et de grands arbres (des
+    eucalyptus et des arbres à larges feuilles). Les couloirs serpentent, se resserrent et
+    s'élargissent. Il y a **beaucoup de boucles et peu d'impasses** : on peut s'y égarer un
+    moment, pas s'y perdre ;
+  - **sous les feuilles, il fait sombre** : la lumière du jour est tamisée et verte. Les
+    arbres deviennent transparents quand on passe dessous ;
+  - **des clairières** s'ouvrent dans le labyrinthe, où **le soleil tombe en rayons** : la
+    grande clairière, trois petites clairières cachées, la source, le vieil amontana. Les
+    rayons s'éteignent au crépuscule ;
+  - un **ruisseau** descend de sa **source** (un bassin au nord) jusqu'au sud de la forêt :
+    il coupe la forêt en deux, et **on ne le traverse qu'au gué** ;
+  - le **vieil amontana**, un figuier géant, au fond du labyrinthe, à l'est du ruisseau.
+    Personne n'y cueille de fruits : c'est *fady* ;
+  - **un sentier de terre battue** relie la lisière à la clairière, au gué et à l'amontana.
+    Des branches mènent à **chaque clairière** et à la source. Aux embranchements, un
+    **panneau** nomme le lieu : « LOHARANO » (la source), « SIMPONA » (la clairière du
+    sifaka), « TANTELY » (celle des ruches), « AMONTANA » au gué. Dans les grands lieux, un
+    panneau « TANÀNA » (le village) rappelle que le sentier ramène à la maison. En suivant
+    la terre battue, on ne se perd jamais ; hors du sentier, c'est l'aventure ;
+  - **au bout des impasses**, des récompenses : des champignons, des brèdes, le caméléon, le
+    tenrec ;
+  - trois **manguiers** donnent des fruits, dans les clairières.
 - **Les animaux à observer** (« Observer : sifaka ») ont chacun **leurs heures et leurs
   saisons**, comme les vrais :
 
 | Animal | Nom malgache | Quand | Où |
 |---|---|---|---|
-| Sifaka | Simpona | à l'aube (6:00–9:00), toute l'année | dans les arbres, à l'ouest |
-| Maki | Maky | l'après-midi (14:00–17:00), en Asotry | dans la clairière |
-| Caméléon | Tana | en journée (9:00–16:00), en Asara | sur un buisson |
-| Tenrec | Trandraka | la nuit (19:00–2:00), en Asara : il dort tout l'Asotry | au pied d'un arbre |
-| Martin-pêcheur | Vintsy | le matin (7:00–11:00), toute l'année | au bord du ruisseau |
+| Sifaka | Simpona | à l'aube (6:00–9:00), toute l'année | dans une clairière cachée, au nord-ouest |
+| Maki | Maky | l'après-midi (14:00–17:00), en Asotry | dans la grande clairière |
+| Caméléon | Tana | en journée (9:00–16:00), en Asara | au bout d'une impasse |
+| Tenrec | Trandraka | la nuit (19:00–2:00), en Asara : il dort tout l'Asotry | au bout d'une impasse |
+| Martin-pêcheur | Vintsy | le matin (7:00–11:00), toute l'année | au bord du ruisseau, avant le gué |
 
   Le sifaka, le maki et le martin-pêcheur se cachent quand il pleut. Ils apparaissent et
   disparaissent en fondu, et bougent un peu (deux images).
@@ -51,6 +68,9 @@ Côté game design :
   arroser. Il n'y a ni combat ni danger.
 - **Les heures et les saisons des animaux** donnent une raison de revenir, et de penser au
   calendrier : le tenrec ne se voit qu'en Asara, la nuit.
+- **Se sentir dans la forêt** : fermée, sombre, grande, on y avance à vue. Mais c'est un
+  jeu cosy : le sentier et les panneaux ramènent toujours quelque part, les boucles évitent
+  les longs culs-de-sac, et explorer les impasses est récompensé.
 - **La forêt nourrit l'économie** sans la déséquilibrer : la cueillette est petite et lente
   à repousser, et le miel, la meilleure, ne vient qu'en saison sèche.
 
@@ -98,12 +118,70 @@ Côté game design :
   Rangée 0 : les animaux, deux images chacun. Rangée 1 : les plantes, prêtes puis cueillies.
   Densité 2× (nets).
 
-**La zone** : `world/areas/exterior/forest.tscn`, construite par `tools/build_forest.gd`
-(avec `--editor`) d'après ses tables : sol, herbe, herbe haute, ruisseau et gué, arbres et
-amontana, animaux (`Wildlife`), plantes (`WildPlants`), lieux (`Places`), vie ambiante,
-sortie `ToVillage`. Elle crée aussi `data/world_zones/forest.tres` et, au village,
-`ToForest`, `SpawnFrom_FOREST` et le panneau `Sign_Forest`. Comme pour le bourg, la scène
-ne se reconstruit pas si elle existe (`-- --force` pour la refaire).
+**La zone** : `world/areas/exterior/forest.tscn`, 96×72 cases (4 608×3 456 px), générée
+par `tools/build_forest.gd` (avec `--editor`) à partir d'une graine fixe (`SEED`) et de
+ses tables :
+1. **Le labyrinthe** : un arbre couvrant aléatoire (parcours en profondeur) sur une grille
+   de 18×14 pièces (`MAZE_*` : couloirs de 3 cases, murs de 2). Ensuite :
+   - `BRAID` (0,9) : presque toutes les impasses s'ouvrent sur une voisine, ce qui crée
+     des boucles. Il en reste quelques-unes, pour les récompenses ;
+   - `EROSION` : les bords des murs sont rongés ;
+   - `BULGE` : le fourré gonfle dans les couloirs, guidé par un bruit, sans jamais les
+     réduire à moins de 2 cases ni couper un passage (`_can_close`, le test du « point
+     simple »). Plus `BULGE` est haut, moins il y a de renflements ;
+   - `_round_corners` : les coins de fourré qui avancent dans l'ouvert (plus de cases
+     ouvertes que de fourré autour) sont dégagés, ce qui donne des murs plus ronds et des
+     virages plus larges.
+2. **Les lieux** (`REGIONS`) sont creusés en ovales irréguliers : la lisière, la
+   clairière, la source, le gué, l'amontana, trois petites clairières.
+3. **L'eau** : le bassin de la source et le ruisseau (`STREAM_*`), sauf au gué. L'eau
+   bloque le joueur.
+4. **L'accessibilité** : tout ce qui n'est pas relié à l'arrivée est rebouché, et chaque
+   lieu doit être accessible, sinon l'outil s'arrête.
+5. **Le sentier** : le plus court chemin (diagonales permises en terrain ouvert) de
+   l'arrivée à la clairière, au gué et à l'amontana (`TRAIL_STOPS`). Ensuite, une branche
+   vers chaque lieu de `TRAIL_BRANCHES`, depuis le point du sentier le plus proche, avec un
+   panneau à l'embranchement. Le tout fait 2 cases de large. Des panneaux (`SIGNS`) sont
+   posés dans les lieux, dont les « TANÀNA ».
+6. **Les buissons isolés** (`SHRUBS`) dans les espaces ouverts, jamais côte à côte ni près
+   du sentier : ils ne bloquent rien.
+
+Calques et nœuds de la scène :
+- `ThicketLayer` : une touffe de feuillage par case de mur. C'est une `TileMapLayer`
+  triée en profondeur avec le joueur (le pied de la touffe est au bas de la case), avec
+  collision.
+  - Les cases du bord, ouvertes sur 2 côtés ou plus, reçoivent une touffe plus petite et
+    plus ronde (`THICKET_SMALL_FROM`) : les murs n'ont pas un contour carré.
+  - Chaque touffe est un peu décalée de sa case (une tuile alternative par décalage,
+    `THICKET_JITTER`) : plus de lignes de grille. La collision, elle, reste sur la case.
+  - Le jeu de tuiles `assets/tileset/thicket_tileset.tres` est écrit par l'outil. Le
+    dessin `thicket.png` (10 variantes de 96×96 : 6 grandes, 4 petites, deux cases de large
+    pour se chevaucher) vient de `tools/placeholder_art/gen_thicket.gd`.
+- `Trees` : environ 250 arbres sur les bords des murs, surtout côté sud, là où l'on voit
+  leur pied. Ce sont des eucalyptus et des `forest_tree` (`data/trees/forest_tree.tres`,
+  écrit par l'outil : le dessin du manguier, sans fruits, donc décoratif). S'y ajoutent
+  le vieil amontana (décoratif aussi) et trois manguiers fruitiers (`FRUIT_MANGOS`).
+- `Sunlight` : un `Sunbeam` par clairière (`environment/lighting/sunbeam.gd`) :
+  - une `PointLight2D` chaude éclaircit la clairière par-dessus l'ombre de la zone ;
+  - des rayons obliques dessinés en code respirent doucement (redessinés 10 fois par
+    seconde) ;
+  - il est dans `DayNightController.LIGHT_GROUP` et s'éteint au crépuscule.
+- **L'ombre de la canopée** : `ZoneRoot.shade` (`SHADE`), multipliée par
+  `DayNightController` à la teinte du ciel.
+- `Anchors` : des repères pour d'autres outils (`Tracks`, `LostZebu`, `SpringJar`).
+  `tools/place_quest_targets.gd` y pose les cibles des quêtes, qui suivent donc la forêt
+  quand elle est regénérée.
+- `Wildlife`, `WildPlants`, `Places`, `Props` (roseaux, panneaux), `AmbientLife`, et la
+  sortie `ToVillage`.
+
+L'outil crée aussi `data/world_zones/forest.tres` et, au village, `ToForest`,
+`SpawnFrom_FOREST` et le panneau `Sign_Forest`. La scène ne se reconstruit pas si elle
+existe : `-- --force` la refait, puis il faut relancer `place_quest_targets.gd`.
+
+**Performances** (mesurées, sans synchro verticale, avec la première version de 400
+arbres) : environ 7,4 ms par image dans la forêt, contre 4,9 ms au village. Les arbres en
+coûtaient environ 1 ms ; les rayons de soleil moins encore depuis qu'ils ne se
+redessinent plus à chaque image. Il y a maintenant moins d'arbres.
 
 **Lien avec le jeu : `ForestManager`** (`systems/forest/`, `Gameplay/ForestManager`)
 - Enregistre les entrées.
@@ -128,17 +206,33 @@ page.
   - le sifaka à l'aube et le tenrec la nuit ;
   - observer et cueillir écrivent des pages ;
   - la clairière se trouve en y entrant ;
+  - la forêt est grande et ombragée, et ses murs de fourré arrêtent le joueur ;
+  - le soleil tombe dans la clairière de jour, pas la nuit ;
   - l'onglet Carnet de l'inventaire.
 - `zone_wiring_test.gd` vérifie tout seul les sorties de la nouvelle zone.
 
 ## À savoir
 - **Ajouter une entrée** : un `.tres` dans `data/discoveries/`, puis l'animal, la plante ou
-  le lieu dans la table de `tools/build_forest.gd` (ou à la main dans l'éditeur), et son
-  dessin dans `gen_forest.gd`, dont la colonne va dans `sheet_column`. Aucun code à
-  toucher.
+  le lieu dans la table de `tools/build_forest.gd` (`ANIMALS`, `PLANTS` : une région, une
+  impasse `dead_end:<n>` ou `stream`), et son dessin dans `gen_forest.gd`, dont la colonne
+  va dans `sheet_column`. Aucun code à toucher.
+- **Changer la forêt** : modifier les tables ou la graine (`SEED`), puis la reconstruire
+  avec `-- --force` et relancer `place_quest_targets.gd`. Une autre graine donne un tout
+  autre labyrinthe : les lieux restent à leur place, mais les impasses changent.
+- **Régler la difficulté** : `BRAID` (plus haut : moins d'impasses), `BULGE` (plus haut :
+  couloirs plus larges), `TRAIL_BRANCHES` (où mène le sentier), `SIGNS`. Une première
+  version, avec `BRAID` à 0,55 et `BULGE` à 0,15, était trop difficile : on s'y perdait.
+- **Retouches à la main** : possibles dans l'éditeur, mais une reconstruction les efface.
+  Mieux vaut régler les tables.
+- **L'identifiant des plantes** est leur nom de nœud (`Greens_1`...). Le garder d'une
+  reconstruction à l'autre garde leur repousse dans les sauvegardes.
 - **Dessins provisoires** : les animaux et les plantes sont dessinés en code. Les lieux et
   les plats n'ont pas encore d'icône dans le carnet (une couleur à la place). Le grand
-  amontana est un manguier agrandi en attendant son dessin.
+  amontana est un arbre à larges feuilles agrandi, en attendant son dessin. Le fourré est
+  un dessin provisoire en touffes.
+- **Pistes pour la forêt** : des bruits d'oiseaux et de feuilles, des feuilles qui
+  tombent, une brume le matin, Fara qui note les chemins sur une carte du carnet, une
+  deuxième traversée du ruisseau (un tronc couché).
 - **Le carnet ne donne pas encore de récompense** au-delà du plaisir de le remplir. Pistes :
   - une page complète donne un conte (*angano*) de Neny Soa au repas du soir ;
   - une recette avec les produits de la forêt (brèdes sauvages, champignons) ;

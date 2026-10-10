@@ -50,6 +50,8 @@ const OVERCAST_TINT := Color(0.72, 0.76, 0.86)
 var simulation: FarmSimulation
 var _canvas_modulate: CanvasModulate
 var _indoor := false
+## The zone's canopy (ZoneRoot.shade).
+var _shade := Color.WHITE
 ## 0 = clear, 1 = fully overcast - set by WeatherController.
 var _overcast := 0.0
 var _night := -1.0
@@ -64,6 +66,7 @@ func setup(p_simulation: FarmSimulation, world_manager: WorldManager) -> void:
 
 func _on_zone_loaded(zone: ZoneRoot) -> void:
 	_indoor = zone.indoor
+	_shade = zone.shade
 	# Nodes of the new zone get the current state right away.
 	_night = -1.0
 	_apply.call_deferred()
@@ -96,7 +99,7 @@ func _minute() -> float:
 func _apply() -> void:
 	var night := get_night_amount()
 	var tint := INDOOR_DAY.lerp(INDOOR_NIGHT, night) if _indoor else sky_color(_minute())
-	_canvas_modulate.color = tint * Color.WHITE.lerp(OVERCAST_TINT, _overcast)
+	_canvas_modulate.color = tint * Color.WHITE.lerp(OVERCAST_TINT, _overcast) * _shade
 	if absf(night - _night) > 0.01:
 		_night = night
 		get_tree().call_group(LIGHT_GROUP, "set_night", night)

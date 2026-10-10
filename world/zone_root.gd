@@ -29,6 +29,9 @@ const EDGE_WALL_THICKNESS := 32.0
 ## Lit from inside (DayNightController): no sky tint, a warm dim light at
 ## night instead of the blue outdoors.
 @export var indoor := false
+## Under a canopy (the forest): the daylight is dimmed and tinted by the
+## leaves, on top of the time of day (DayNightController). White: open sky.
+@export var shade := Color.WHITE
 
 func _ready() -> void:
 	var ground := _ground_rect()

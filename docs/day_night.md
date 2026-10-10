@@ -24,6 +24,9 @@
   l'école qu'en semaine, et le zoma, on descend au marché (voir `villagers.md`, `shops.md`).
 
 ## Détails techniques
+- **Ombre de canopée** : `ZoneRoot.shade` (blanc par défaut) multiplie la teinte du ciel.
+  La forêt est ainsi tamisée et verte de jour (voir `forest.md`), et ses clairières
+  éclairées par des `Sunbeam`.
 **Simulation**
 - `GameClock.minute_of_day` : minutes depuis minuit (au-delà de 1440 = après minuit, toujours
   le même jour). `DAY_START_MINUTE = 360`, `LATEST_MINUTE = 1560` (2:00).
