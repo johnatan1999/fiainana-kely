@@ -1,0 +1,39 @@
+[gd_scene load_steps=3 format=4 uid="uid://dsujcx6db4e8v"]
+
+[ext_resource type="Script" path="res://entities/zebu/zebu_pen.gd" id="1_gf1ec"]
+[ext_resource type="TileSet" path="res://assets/tileset/fence_tileset.tres" id="2_j6cg2"]
+
+[node name="ZebuPen" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_gf1ec")
+
+[node name="Fence" type="TileMapLayer" parent="."]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAHAAMAAAABAAAAAAAHAAIAAAABAAEAAAAHAAEAAAABAAEAAAAHAAAAAAAAAAMAAAAGAAAAAAACAAIAAAAFAAMAAAAAAAIAAAAFAAAAAAACAAIAAAAEAAMAAAACAAIAAAAEAAAAAAACAAIAAAADAAMAAAACAAIAAAADAAAAAAACAAIAAAACAAMAAAACAAIAAAACAAAAAAACAAIAAAABAAMAAAACAAIAAAABAAAAAAACAAIAAAAAAAMAAAADAAAAAAAAAAIAAAABAAEAAAAAAAEAAAABAAEAAAAAAAAAAAACAAEAAAA=")
+tile_set = ExtResource("2_j6cg2")
+
+[node name="Gate" type="Marker2D" parent="."]
+position = Vector2(312, 216)
+
+[node name="Entrance" type="Marker2D" parent="."]
+position = Vector2(312, 115.2)
+
+[node name="Spots" type="Node2D" parent="."]
+
+[node name="Spot1" type="Marker2D" parent="Spots"]
+position = Vector2(81.6, 81.6)
+
+[node name="Spot2" type="Marker2D" parent="Spots"]
+position = Vector2(158.4, 86.4)
+
+[node name="Spot3" type="Marker2D" parent="Spots"]
+position = Vector2(235.2, 81.6)
+
+[node name="Spot4" type="Marker2D" parent="Spots"]
+position = Vector2(302.4, 86.4)
+
+[node name="Spot5" type="Marker2D" parent="Spots"]
+position = Vector2(105.6, 139.2)
+
+[node name="Spot6" type="Marker2D" parent="Spots"]
+position = Vector2(187.2, 144)

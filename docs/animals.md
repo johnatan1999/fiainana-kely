@@ -41,3 +41,6 @@
 - Le poulailler de la ferme est à `(232, 580)`, sous la colline. Son
   point d'arrivée est `SpawnFrom_CHICKEN_COOP`.
 - Une zone sans `Coop` : les poules en liberté continuent simplement de picorer la nuit.
+- **Le poulailler grandit** avec les projets de famille (voir `family_projects.md`) : 4,
+  puis 8, puis 12 poules (`coop_capacity`). Son visage change aussi (`Coop.set_level`).
+  Au niveau 3, les œufs vont directement dans le sac au lieu d'être posés au sol.

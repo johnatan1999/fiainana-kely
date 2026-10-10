@@ -87,7 +87,8 @@ semaine, ce qui oblige à prévoir.
   vers le pré, sans obstacle entre le pré et `Gate`.
 
 **Les règles : `FarmSimulation`** (comme les poules)
-- Constantes : `ZEBU_PEN_CAPACITY` (4), `ZEBU_PRICE` (25 000), `ZEBU_CALF_VALUE` (18 000),
+- Constantes : `ZEBU_CAPACITY_BY_LEVEL` (4, 6, 8 selon le niveau du parc, voir
+  `family_projects.md` ; `get_zebu_capacity()`), `ZEBU_PRICE` (25 000), `ZEBU_CALF_VALUE` (18 000),
   `ZEBU_ADULT_VALUE` (60 000), `ZEBU_GROW_DAYS` (30), `ZEBU_NAMES` (par robe).
 - `buy_zebu(coat = -1)` → id (`"zebu_<n>"`), `can_buy_zebu()`, `sell_zebu(id)` → ce qui est
   payé, `get_zebu_ids()`, `get_zebu(id)`, `get_zebu_value(id)` (interpolée, arrondie à
@@ -96,7 +97,8 @@ semaine, ce qui oblige à prévoir.
 - `advance_day()` : un jour de croissance si l'abreuvoir était plein, et le fumier sur le
   tas, puis l'abreuvoir se vide.
 - **Fumier** : `MANURE_ITEM` (`"manure"`, objet `data/items/manure.tres`, catégorie Élevage,
-  action `FERTILIZE`), `MANURE_PER_ZEBU` (1), `MANURE_PILE_MAX` (12),
+  action `FERTILIZE`), `MANURE_PER_ZEBU` (1), `MANURE_MAX_BY_LEVEL` (12, 18, 24 selon le parc ;
+  `get_manure_max()`),
   `MANURE_YIELD_MULTIPLIER` (1,5) ; `get_manure_pile()`, `collect_manure()`,
   `can_fertilize(plot)`, `fertilize(plot)`. Sauvegarde : `FarmState.manure_pile`.
 - Signal `zebus_changed`.
@@ -169,8 +171,9 @@ semaine, ce qui oblige à prévoir.
   faites à la main.
 - Les zébus du joueur servent à **épargner** et à **labourer**. Labourer ne les fatigue que
   pour la journée : ça ne change ni leur croissance ni leur valeur.
-- Le parc de la ferme a une place par zébu (`ZebuPen.Spots`, 4) : augmenter
-  `ZEBU_PEN_CAPACITY` demande un parc plus grand.
+- Le parc de la ferme a une place par zébu (`ZebuPen.Spots`) et grandit avec les projets de
+  famille (`zebu_pen_2.tscn`, `zebu_pen_3.tscn`, voir `family_projects.md`). Au niveau 3,
+  l'abreuvoir rempli tient deux jours.
 - **Pistes** :
   - zébus utiles : **charrette** du joueur (transport, vente en gros), piétinement des
     rizières (hitsakitsaka) ;

@@ -94,7 +94,7 @@ func _sync_herd() -> void:
 		zebu.coat = simulation.get_zebu(zebu_id)["coat"]
 		zebu.wander_radius = WANDER_RADIUS
 		# Each its own place around the pasture, the same every time.
-		var angle := TAU * i / FarmSimulation.ZEBU_PEN_CAPACITY + 0.4
+		var angle := TAU * i / simulation.get_zebu_capacity() + 0.4
 		zebu.position = _herd.to_local(_pasture + Vector2.from_angle(angle) * SPREAD)
 		_herd.add_child(zebu)
 		# ZebuPen.nearest() only pairs a zebu with a pen of its own zone.
@@ -138,12 +138,12 @@ func _show_market() -> void:
 			"value": simulation.get_zebu_value(zebu_id),
 		})
 	var note := ""
-	if zebus.size() >= FarmSimulation.ZEBU_PEN_CAPACITY:
+	if zebus.size() >= simulation.get_zebu_capacity():
 		note = tr("Ton parc est plein.")
 	elif simulation.state.money < FarmSimulation.ZEBU_PRICE:
 		note = tr("Pas assez d'argent.")
 	panel.show_market(_market_title, FarmSimulation.ZEBU_PRICE, simulation.can_buy_zebu(), note, zebus,
-		FarmSimulation.ZEBU_PEN_CAPACITY)
+		simulation.get_zebu_capacity())
 
 func _on_buy_requested() -> void:
 	var zebu_id := simulation.buy_zebu()

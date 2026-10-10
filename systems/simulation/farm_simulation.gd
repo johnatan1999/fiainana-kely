@@ -64,6 +64,13 @@ signal cockfight_changed
 ## A season of cockfights is over: `champion_id` ("player" or a
 ## FightingRoosterData id) is the village's best rooster until the next.
 signal cockfight_season_ended(champion_id: String)
+## A family project: work started on it, or the building is finished (its
+## new level in place).
+signal project_started(project_id: String)
+signal project_completed(project_id: String)
+## The brick coop's basket (coop level 3): the eggs laid overnight went
+## straight into the bag.
+signal basket_collected(item_id: String, quantity: int)
 
 const COOP_COST := 6000
 ## Chance of a rainy day, per season: Asara is the rainy season. A rainy day
@@ -117,7 +124,8 @@ const ORDER_BONUS_PER_HEART := 0.05
 ## trough is filled (by the player, or by the rain), every zebu grows a day;
 ## grown, a zebu is worth far more than its price - the Malagasy savings
 ## bank on four legs. Sold back at the zebu market, at their worth.
-const ZEBU_PEN_CAPACITY := 4
+## Places in the pen, by its level (FamilyProject "zebu_pen" - 1 at start).
+const ZEBU_CAPACITY_BY_LEVEL := [0, 4, 6, 8]
 const ZEBU_PRICE := 25000
 ## What a zebu is worth when bought (the dealer's margin) and full grown.
 const ZEBU_CALF_VALUE := 18000
@@ -137,11 +145,12 @@ const PLOUGH_CELLS_PER_DAY := 24
 enum PloughCheck { OK, NO_TEAM, TIRED }
 ## Manure (zezik'omby): each zebu leaves MANURE_PER_ZEBU a day on the heap by
 ## the pen - only on days it was cared for (trough full) - up to
-## MANURE_PILE_MAX. Picked up as the "manure" item, spread on a plot
+## get_manure_max() (by the pen's level). Picked up as the "manure" item, spread on a plot
 ## (fertilize), it multiplies that plot's next harvest.
 const MANURE_ITEM := "manure"
 const MANURE_PER_ZEBU := 1
-const MANURE_PILE_MAX := 12
+## What the heap by the pen holds, by the pen's level.
+const MANURE_MAX_BY_LEVEL := [0, 12, 18, 24]
 const MANURE_YIELD_MULTIPLIER := 1.5
 
 ## Fara's school fees (ecolage) - the player's share, the parents pay the
@@ -198,6 +207,22 @@ const FRIENDSHIP_COCKFIGHT := 15
 const FRIENDSHIP_CHAMPION := 40
 enum CockfightCheck { OK, NO_ROOSTER, CLOSED, ALREADY_ENTERED }
 
+## Family projects (FamilyProject, data/projects/): the farm's buildings
+## and their level - the coop (0 = still a ruin, 1 once built, then 2, 3)
+## and the zebu pen (1 to 3). One building site at a time: paid up front,
+## finished PROJECT_DAYS later in the morning - a day less for each friend
+## (PROJECT_HELPER_HEARTS hearts and up) who comes to help, at most
+## PROJECT_MAX_HELPERS of them, never under a day: the valin-tanana.
+const BUILDINGS := ["coop", "zebu_pen"]
+const COOP_CAPACITY_BY_LEVEL := [0, 4, 8, 12]
+## From this coop level, the eggs go straight into the bag.
+const COOP_BASKET_LEVEL := 3
+## From this pen level, a filled trough lasts two days.
+const ZEBU_TROUGH_TWO_DAYS_LEVEL := 3
+const PROJECT_HELPER_HEARTS := 2
+const PROJECT_MAX_HELPERS := 2
+enum ProjectState { DONE, BUILDING, AVAILABLE, LOCKED, BUSY }
+
 ## Why an animal can or can't be settled right now - the UI turns it into a
 ## message ("Coop full (6/6)"...).
 enum PlaceCheck { OK, NO_BUILDING, FULL, NONE_WAITING }
@@ -218,12 +243,15 @@ var _neighbour_paddies: Dictionary = {} # paddy_id: String -> size in cells (Vec
 var _order_givers: Dictionary = {} # villager_id: String -> Array[OrderTemplate]
 var _friendship_rewards: Dictionary = {} # villager_id: String -> Array[FriendshipReward]
 var _fighting_roosters: Dictionary = {} # rooster_id: String -> FightingRoosterData
+var _projects: Dictionary = {} # project_id: String -> FamilyProject
 ## The chance a villager offers an order on a given morning (tests set 1.0
 ## or 0.0 to make it certain).
 var order_offer_chance := ORDER_OFFER_CHANCE
 ## What happened today (the evening meal tells it) - started afresh each
 ## morning and on load. See DayLog.
 var day_log := DayLog.new()
+## Laid overnight in the brick coop, waiting for the new day to begin.
+var _basket: Dictionary = {}
 ## The money as last seen by _on_money_changed(), to tell what came in or
 ## went out.
 var _last_money := 0
@@ -442,6 +470,12 @@ func advance_day() -> void:
 	set_weather(_roll_weather())
 	_advance_orders()
 	_advance_school_fees()
+	_advance_projects()
+	# The brick coop's basket, now that the new day's log has begun.
+	for product_id: String in _basket:
+		collect_product(product_id, _basket[product_id])
+		basket_collected.emit(product_id, _basket[product_id])
+	_basket = {}
 	day_changed.emit(state.day)
 	time_changed.emit(state.clock.minute_of_day)
 
@@ -451,6 +485,7 @@ func advance_day() -> void:
 ## reset for the next day, exactly like PlotState.watered.
 func _advance_animals() -> void:
 	var qualifying_by_species: Dictionary = {} # AnimalData.Species -> count
+	var basket: Dictionary = {} # product_id -> laid overnight, for the basket
 	for animal_id in state.animals.keys():
 		var animal: AnimalState = state.animals[animal_id]
 		var animal_data := get_animal_data(animal.species)
@@ -474,7 +509,10 @@ func _advance_animals() -> void:
 
 		if animal_data.product_id != "" and animal.days_since_product >= animal_data.product_cycle_days:
 			animal.days_since_product = 0
-			product_ready.emit(animal_id, animal_data.product_id)
+			if get_building_level("coop") >= COOP_BASKET_LEVEL:
+				basket[animal_data.product_id] = int(basket.get(animal_data.product_id, 0)) + 1
+			else:
+				product_ready.emit(animal_id, animal_data.product_id)
 
 		if animal.days_well_cared >= animal_data.breeding_days_required:
 			qualifying_by_species[animal.species] = qualifying_by_species.get(animal.species, 0) + 1
@@ -484,6 +522,7 @@ func _advance_animals() -> void:
 	for species in qualifying_by_species:
 		if qualifying_by_species[species] >= 2:
 			_attempt_breeding(species)
+	_basket = basket
 
 ## One roll per species per day (not per pair) once at least 2 adults qualify,
 ## so a full coop doesn't produce multiple babies from a single day's care.
@@ -843,6 +882,106 @@ func _end_cockfight_season() -> void:
 	cockfight_changed.emit()
 	cockfight_season_ended.emit(state.cockfight_champion)
 
+# --- Family projects (the farm's buildings) ----------------------------------------------
+
+## Registered by FamilyProjectManager (data/projects/).
+func register_project(project_id: String, project: FamilyProject) -> void:
+	_projects[project_id] = project
+
+func get_project(project_id: String) -> FamilyProject:
+	return _projects.get(project_id)
+
+## Projects ids, building by building, level by level.
+func get_project_ids() -> Array:
+	var ids := _projects.keys()
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		var pa: FamilyProject = _projects[a]
+		var pb: FamilyProject = _projects[b]
+		if pa.building != pb.building:
+			return BUILDINGS.find(pa.building) < BUILDINGS.find(pb.building)
+		return pa.level < pb.level)
+	return ids
+
+## The coop: 0 while it's a ruin, 1 once built (build_coop()), then what
+## projects brought it to. The zebu pen: 1 to start with.
+func get_building_level(building: String) -> int:
+	if building == "coop" and not state.has_coop:
+		return 0
+	return int(state.building_levels.get(building, 1))
+
+func get_zebu_capacity() -> int:
+	return ZEBU_CAPACITY_BY_LEVEL[clampi(get_building_level("zebu_pen"), 1, ZEBU_CAPACITY_BY_LEVEL.size() - 1)]
+
+func get_manure_max() -> int:
+	return MANURE_MAX_BY_LEVEL[clampi(get_building_level("zebu_pen"), 1, MANURE_MAX_BY_LEVEL.size() - 1)]
+
+## The building site under way: {"project", "done_day", "helpers": [ids]},
+## {} with none.
+func get_construction() -> Dictionary:
+	return state.construction
+
+func get_project_state(project_id: String) -> ProjectState:
+	var project := get_project(project_id)
+	if project == null:
+		return ProjectState.LOCKED
+	if get_building_level(project.building) >= project.level:
+		return ProjectState.DONE
+	if state.construction.get("project", "") == project_id:
+		return ProjectState.BUILDING
+	if get_building_level(project.building) < project.level - 1:
+		return ProjectState.LOCKED
+	if not state.construction.is_empty():
+		return ProjectState.BUSY
+	return ProjectState.AVAILABLE
+
+## The friends who'd come and help build (villager ids, the closest first).
+func get_project_helpers() -> Array[String]:
+	var friends: Array[String] = []
+	for villager_id: String in state.friendship:
+		if get_hearts(villager_id) >= PROJECT_HELPER_HEARTS:
+			friends.append(villager_id)
+	friends.sort_custom(func(a, b): return get_friendship(a) > get_friendship(b))
+	return friends.slice(0, PROJECT_MAX_HELPERS)
+
+## Days the work would take, starting today, with the friends who'd help.
+func get_project_days(project_id: String) -> int:
+	var project := get_project(project_id)
+	if project == null:
+		return 0
+	return maxi(project.build_days - get_project_helpers().size(), 1)
+
+func can_start_project(project_id: String) -> bool:
+	return get_project_state(project_id) == ProjectState.AVAILABLE \
+		and state.money >= get_project(project_id).cost
+
+## Pays and starts the work: finished get_project_days() later, in the
+## morning.
+func start_project(project_id: String) -> bool:
+	if not can_start_project(project_id):
+		return false
+	var project := get_project(project_id)
+	state.money -= project.cost
+	money_changed.emit(state.money)
+	state.construction = {"project": project_id, "done_day": state.day + get_project_days(project_id),
+		"helpers": get_project_helpers()}
+	project_started.emit(project_id)
+	return true
+
+## Morning: the building site finished today, if any.
+func _advance_projects() -> void:
+	if state.construction.is_empty() or state.day < int(state.construction["done_day"]):
+		return
+	var project_id: String = state.construction["project"]
+	var project := get_project(project_id)
+	state.construction = {}
+	if project == null:
+		return
+	state.building_levels[project.building] = project.level
+	if project.building == "coop":
+		state.coop_capacity = COOP_CAPACITY_BY_LEVEL[project.level]
+	project_completed.emit(project_id)
+	zebus_changed.emit()
+
 # --- Fara's school fees -----------------------------------------------------------------
 
 ## What the player still owes the school (0 = all paid).
@@ -1187,7 +1326,7 @@ func get_zebu(zebu_id: String) -> Dictionary:
 	return state.zebus.get(zebu_id, {})
 
 func can_buy_zebu() -> bool:
-	return state.zebus.size() < ZEBU_PEN_CAPACITY and state.money >= ZEBU_PRICE
+	return state.zebus.size() < get_zebu_capacity() and state.money >= ZEBU_PRICE
 
 ## A young zebu for ZEBU_PRICE, straight to the farm pen. `coat` -1 = at
 ## random. Returns its id, "" if the pen is full or money short.
@@ -1243,6 +1382,8 @@ func fill_zebu_trough() -> bool:
 	if state.zebus.is_empty() or is_zebu_trough_full():
 		return false
 	state.zebu_trough_full = true
+	# The big pen's trough: tomorrow's water and hay too.
+	state.zebu_trough_spare = get_building_level("zebu_pen") >= ZEBU_TROUGH_TWO_DAYS_LEVEL
 	zebus_changed.emit()
 	return true
 
@@ -1318,12 +1459,14 @@ func _advance_zebus() -> void:
 	state.plough_cells_today = 0
 	if state.zebus.is_empty():
 		state.zebu_trough_full = false
+		state.zebu_trough_spare = false
 		return
 	if is_zebu_trough_full():
-		state.manure_pile = mini(state.manure_pile + MANURE_PER_ZEBU * state.zebus.size(), MANURE_PILE_MAX)
+		state.manure_pile = mini(state.manure_pile + MANURE_PER_ZEBU * state.zebus.size(), get_manure_max())
 		for zebu: Dictionary in state.zebus.values():
 			zebu["grown_days"] = mini(int(zebu["grown_days"]) + 1, ZEBU_GROW_DAYS)
-	state.zebu_trough_full = false
+	state.zebu_trough_full = state.zebu_trough_spare
+	state.zebu_trough_spare = false
 	zebus_changed.emit()
 
 func _advance_trees() -> void:
@@ -1351,6 +1494,7 @@ func build_coop() -> bool:
 	state.money -= COOP_COST
 	money_changed.emit(state.money)
 	state.has_coop = true
+	state.coop_capacity = COOP_CAPACITY_BY_LEVEL[1]
 	return true
 
 ## Buying doesn't put the animal anywhere yet: it waits (the seller keeps it)

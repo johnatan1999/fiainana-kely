@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FamilyProject" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/family_project.gd" id="1_project"]
+
+[resource]
+script = ExtResource("1_project")
+display_name = "Poulailler en briques"
+malagasy_name = "Tranon'akoho biriky"
+description = "Des murs en briques et un toit en tôle : 12 poules, et les œufs vont tout seuls dans le panier."
+building = "coop"
+level = 3
+cost = 35000
+build_days = 4

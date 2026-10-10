@@ -29,7 +29,7 @@ Six villageois vivent au village, chacun avec sa journée :
 | Qui | Sa journée |
 |---|---|
 | **Neny**, la mère | Pile le riz au mortier devant la maison dès 6:00, va chercher l'eau au point d'eau du village vers 9:00, étend le linge, cuisine, nourrit les poules, rentre à 18:00 |
-| **Dada**, le père | Travaille au verger le matin, déjeune à la maison, coupe du bois l'après-midi, rejoint les hommes à la gargote du village à 16:00, rentre à 18:30 |
+| **Dada**, le père | Travaille au verger le matin, déjeune à la maison, coupe du bois l'après-midi, rejoint les hommes à la gargote du village à 16:00, rentre à 18:30. **Lui parler ouvre les projets de la famille** (voir `family_projects.md`) |
 | **Fara**, la petite sœur | Va à l'école du village le matin en semaine (le week-end, joue avec les poules dès 9:00), joue avec les poules à midi, au foot au village l'après-midi, rentre vers 17:45. **Écolage en retard** : renvoyée de l'école, elle aide Neny au mortier les matins de semaine (voir `school.md`) |
 
   - Leurs répliques sont des **conseils** : arroser, acheter les graines au marché, les

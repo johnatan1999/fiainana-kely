@@ -14,7 +14,8 @@
     case(s)... Il est encore temps, avant de dormir. »
   - **Fara** parle de l'école (l'écolage bientôt dû, ou son envie d'y retourner si elle
     est renvoyée), du coq (nourri ou pas, le tournoi du jour) et des œufs ramassés.
-  - **Demain** : le changement de saison, le dernier jour d'une commande, les cases mûres
+  - **Demain** : le changement de saison, un chantier qui finit (voir `family_projects.md`),
+    le dernier jour d'une commande, les cases mûres
     au matin, l'Alahady et son tournoi, ou le zoma.
   - Les répliques arrivent une par une, comme quand on parle. Une touche les montre toutes.
     Une personne qui enchaîne garde la parole : une seule bulle.

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FamilyProject" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/family_project.gd" id="1_project"]
+
+[resource]
+script = ExtResource("1_project")
+display_name = "Parc agrandi"
+malagasy_name = "Vala lehibe"
+description = "Une clôture plus large : 6 zébus au lieu de 4, et plus de fumier gardé au tas."
+building = "zebu_pen"
+level = 2
+cost = 30000
+build_days = 3

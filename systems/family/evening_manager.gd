@@ -184,6 +184,11 @@ func _tomorrow_lines() -> Array:
 	if clock.get_days_left_in_season() == 0:
 		var next: String = SEASON_NAMES[clock.get_season_on(clock.current_day + 1)]
 		lines.append([FATHER_ID, tr("Demain commence %s. Pense à ce que tu vas planter.") % next])
+	var site := simulation.get_construction()
+	if not site.is_empty() and int(site["done_day"]) == clock.current_day + 1:
+		var project := simulation.get_project(site["project"])
+		if project != null:
+			lines.append([FATHER_ID, tr("Demain matin, le chantier sera fini : %s !") % tr(project.display_name).to_lower()])
 	for villager_id in simulation.get_orders_due_tomorrow():
 		lines.append([MOTHER_ID, tr("Demain, c'est le dernier jour pour la commande de %s.") % _names.get(villager_id, villager_id)])
 	var ripening := simulation.get_ripening_tomorrow()

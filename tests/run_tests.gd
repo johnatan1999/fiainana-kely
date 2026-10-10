@@ -196,6 +196,11 @@ func _run_all() -> void:
 	test_day_log_starts_afresh()
 	test_tomorrow_plans()
 	test_evening_plurals()
+	test_projects_follow_the_levels()
+	test_projects_friends_help_build()
+	test_projects_bigger_zebu_pen()
+	test_projects_brick_coop_basket()
+	test_projects_save_load()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -1235,12 +1240,12 @@ func test_zebu_pen_capacity_and_money() -> void:
 	sim.state.money = FarmSimulation.ZEBU_PRICE - 1
 	_check(sim.buy_zebu() == "", "no zebu without the money")
 	sim.state.money = 1000000
-	for i in FarmSimulation.ZEBU_PEN_CAPACITY:
+	for i in sim.get_zebu_capacity():
 		sim.buy_zebu(0)
 	var names := sim.get_zebu_ids().map(func(zebu_id: String) -> String: return sim.get_zebu(zebu_id)["name"])
-	_check(sim.buy_zebu() == "" and sim.get_zebu_ids().size() == FarmSimulation.ZEBU_PEN_CAPACITY
+	_check(sim.buy_zebu() == "" and sim.get_zebu_ids().size() == sim.get_zebu_capacity()
 			and names == ["Mena", "Mena 2", "Mena 3", "Mena 4"],
-		"the pen holds ZEBU_PEN_CAPACITY zebus; same coats get numbered names")
+		"the pen holds its capacity of zebus; same coats get numbered names")
 	_check(not _make_sim().fill_zebu_trough(), "no trough to fill without zebus")
 
 func test_zebus_save_load() -> void:
@@ -1308,13 +1313,13 @@ func test_zebus_make_manure() -> void:
 	for i in 20:
 		sim.fill_zebu_trough()
 		sim.advance_day()
-	_check(sim.get_manure_pile() == FarmSimulation.MANURE_PILE_MAX, "the heap stops growing at MANURE_PILE_MAX")
+	_check(sim.get_manure_pile() == sim.get_manure_max(), "the heap stops growing at its maximum")
 	var data: Dictionary = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var other := _make_sim()
 	other.load_save_data(data)
-	_check(other.get_manure_pile() == FarmSimulation.MANURE_PILE_MAX, "the heap survives a save/load")
-	_check(sim.collect_manure() == FarmSimulation.MANURE_PILE_MAX and sim.get_manure_pile() == 0
-			and sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM) == FarmSimulation.MANURE_PILE_MAX,
+	_check(other.get_manure_pile() == sim.get_manure_max(), "the heap survives a save/load")
+	_check(sim.collect_manure() == sim.get_manure_max() and sim.get_manure_pile() == 0
+			and sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM) == sim.get_manure_max(),
 		"picking up the heap puts it all in the inventory")
 
 func test_manure_grows_a_bigger_harvest() -> void:
@@ -1959,3 +1964,94 @@ func test_evening_plurals() -> void:
 			and EveningManager.plural("pomme de terre", 4) == "pommes de terre"
 			and EveningManager.plural("graine de riz", 2) == "graines de riz",
 		"evening meal: item names in the plural, the French way")
+
+# --- Family projects -------------------------------------------------------------------------
+
+func _register_projects(sim: FarmSimulation) -> void:
+	var projects := FamilyProject.load_all()
+	for project_id: String in projects:
+		sim.register_project(project_id, projects[project_id])
+
+func test_projects_follow_the_levels() -> void:
+	var sim := _make_sim_for_school()
+	_register_projects(sim)
+	var completed := []
+	sim.project_completed.connect(func(id): completed.append(id))
+	var ruin := sim.get_building_level("coop") == 0 and sim.get_project_state("coop_2") == FarmSimulation.ProjectState.LOCKED
+	sim.state.money = 100000
+	sim.build_coop()
+	var built := sim.get_building_level("coop") == 1 and sim.get_project_state("coop_2") == FarmSimulation.ProjectState.AVAILABLE \
+		and sim.get_project_state("coop_3") == FarmSimulation.ProjectState.LOCKED
+	var money := sim.state.money
+	sim.start_project("coop_2")
+	var building: bool = sim.get_project_state("coop_2") == FarmSimulation.ProjectState.BUILDING \
+		and sim.get_project_state("zebu_pen_2") == FarmSimulation.ProjectState.BUSY and not sim.start_project("zebu_pen_2") \
+		and sim.state.money == money - 15000 and sim.get_construction()["done_day"] == sim.state.day + 3
+	sim.advance_day()
+	sim.advance_day()
+	var not_yet := sim.get_building_level("coop") == 1
+	sim.advance_day()
+	_check(ruin and built and building and not_yet and sim.get_building_level("coop") == 2
+			and sim.state.coop_capacity == 8 and completed == ["coop_2"] and sim.get_construction().is_empty()
+			and sim.get_project_state("coop_3") == FarmSimulation.ProjectState.AVAILABLE,
+		"projects: a level after the other, one building site at a time, paid up front, done a few mornings later")
+
+func test_projects_friends_help_build() -> void:
+	var sim := _make_sim_for_school()
+	_register_projects(sim)
+	sim.state.money = 100000
+	for villager_id in ["ravao", "koto", "naivo"]:
+		sim.add_friendship(villager_id, 250 if villager_id != "naivo" else 150)
+	var helpers := sim.get_project_helpers()
+	sim.start_project("zebu_pen_2")
+	sim.advance_day()
+	_check(helpers.size() == 2 and not "naivo" in helpers and sim.get_project_days("zebu_pen_3") == 3
+			and sim.get_building_level("zebu_pen") == 2,
+		"projects: friends (2 hearts and up, at most 2) come to help - a day less each, never under one")
+
+func test_projects_bigger_zebu_pen() -> void:
+	var sim := _make_sim_for_school()
+	sim.state.money = 1000000
+	var small := sim.get_zebu_capacity() == 4 and sim.get_manure_max() == 12
+	sim.state.building_levels["zebu_pen"] = 2
+	var medium := sim.get_zebu_capacity() == 6 and sim.get_manure_max() == 18
+	for i in 6:
+		sim.buy_zebu()
+	var six := sim.get_zebu_ids().size() == 6 and not sim.can_buy_zebu()
+	sim.state.building_levels["zebu_pen"] = 3
+	sim.fill_zebu_trough()
+	sim.advance_day()
+	var still_full := sim.is_zebu_trough_full()
+	sim.advance_day()
+	_check(small and medium and six and sim.get_zebu_capacity() == 8 and still_full and not sim.is_zebu_trough_full(),
+		"projects: a bigger pen holds more zebus and manure - the big one's trough lasts two days")
+
+func test_projects_brick_coop_basket() -> void:
+	var sim := _make_sim_with_chicken(0.0)
+	sim.state.has_coop = true
+	sim.state.building_levels["coop"] = 3
+	sim.state.animals["chicken_0"] = AnimalState.new("chicken_0", AnimalData.Species.CHICKEN)
+	var spawned := [0]
+	var basket := [0]
+	sim.product_ready.connect(func(_id, _product): spawned[0] += 1)
+	sim.basket_collected.connect(func(_item, quantity): basket[0] += quantity)
+	for i in 6:
+		sim.feed_animal("chicken_0")
+		sim.water_animal("chicken_0")
+		sim.advance_day()
+	_check(spawned[0] == 0 and basket[0] > 0 and sim.state.get_inventory_count("egg") == basket[0],
+		"projects: in the brick coop, the eggs go straight into the bag")
+
+func test_projects_save_load() -> void:
+	var sim := _make_sim_for_school()
+	_register_projects(sim)
+	sim.state.money = 100000
+	sim.state.building_levels["zebu_pen"] = 2
+	sim.start_project("zebu_pen_3")
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var loaded := _make_sim_for_school()
+	_register_projects(loaded)
+	loaded.load_save_data(data)
+	_check(loaded.get_building_level("zebu_pen") == 2 and loaded.get_construction() == sim.get_construction()
+			and loaded.get_project_state("zebu_pen_3") == FarmSimulation.ProjectState.BUILDING,
+		"projects: the buildings' levels and the building site survive a save/load")

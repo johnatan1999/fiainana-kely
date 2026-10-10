@@ -79,6 +79,8 @@ var zebus: Dictionary = {}
 var next_zebu_index: int = 0
 ## Today's water and hay in the farm pen's trough - for the whole herd.
 var zebu_trough_full: bool = false
+## The big pen's trough holds tomorrow's too (FamilyProject zebu_pen 3).
+var zebu_trough_spare: bool = false
 ## Plots the zebu team has ploughed today (FarmSimulation.plough).
 var plough_cells_today: int = 0
 ## Manure heaped by the farm pen, waiting to be picked up.
@@ -103,6 +105,12 @@ var cockfight_points: Dictionary = {}
 var cockfight_week_bouts: Dictionary = {}
 var cockfight_entered_day: int = 0
 var cockfight_champion: String = ""
+
+## Family projects (FarmSimulation's project API): the farm's buildings and
+## the level projects brought them to (building -> level; none = 1), and the
+## building site under way: {"project", "done_day", "helpers"}, {} with none.
+var building_levels: Dictionary = {}
+var construction: Dictionary = {}
 const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
@@ -281,6 +289,9 @@ func to_dict() -> Dictionary:
 		"cockfight_week_bouts": cockfight_week_bouts.duplicate(),
 		"cockfight_entered_day": cockfight_entered_day,
 		"cockfight_champion": cockfight_champion,
+		"zebu_trough_spare": zebu_trough_spare,
+		"building_levels": building_levels.duplicate(),
+		"construction": construction.duplicate(true),
 	}
 
 ## JSON object keys are strings: species saved as "0", "4"...
@@ -437,6 +448,21 @@ func load_dict(data: Dictionary) -> void:
 				target[str(rooster_id)] = int(saved[rooster_id])
 	cockfight_entered_day = int(data.get("cockfight_entered_day", 0))
 	cockfight_champion = str(data.get("cockfight_champion", ""))
+	# Optional keys (older saves have none): every building at its start.
+	zebu_trough_spare = bool(data.get("zebu_trough_spare", false))
+	building_levels.clear()
+	var levels_data = data.get("building_levels", {})
+	if levels_data is Dictionary:
+		for building in levels_data:
+			building_levels[str(building)] = int(levels_data[building])
+	construction = {}
+	var site = data.get("construction", {})
+	if site is Dictionary and site.has("project"):
+		construction = {
+			"project": str(site["project"]),
+			"done_day": int(site.get("done_day", 0)),
+			"helpers": Array(site.get("helpers", [])).map(func(id): return str(id)),
+		}
 
 	# Optional key (older saves have none): no tufts cut yet.
 	neighbour_harvest.clear()

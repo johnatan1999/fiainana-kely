@@ -1,0 +1,49 @@
+[gd_scene load_steps=4 format=4 uid="uid://8w1mtus8mj7m"]
+
+[ext_resource type="Script" path="res://entities/zebu/zebu_pen.gd" id="1_exgpn"]
+[ext_resource type="TileSet" path="res://assets/tileset/fence_tileset.tres" id="2_heiqe"]
+[ext_resource type="PackedScene" path="res://entities/props/thatched_hut.tscn" id="3_wjfpu"]
+
+[node name="ZebuPen" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_exgpn")
+
+[node name="Fence" type="TileMapLayer" parent="."]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAAHAAQAAAABAAAAAAAHAAMAAAABAAEAAAAHAAIAAAABAAEAAAAHAAEAAAABAAEAAAAHAAAAAAAAAAMAAAAGAAAAAAACAAIAAAAFAAQAAAAAAAIAAAAFAAAAAAACAAIAAAAEAAQAAAACAAIAAAAEAAAAAAACAAIAAAADAAQAAAACAAIAAAADAAAAAAACAAIAAAACAAQAAAACAAIAAAACAAAAAAACAAIAAAABAAQAAAACAAIAAAABAAAAAAACAAIAAAAAAAQAAAADAAAAAAAAAAMAAAABAAEAAAAAAAIAAAABAAEAAAAAAAEAAAABAAEAAAAAAAAAAAACAAEAAAA=")
+tile_set = ExtResource("2_heiqe")
+
+[node name="Gate" type="Marker2D" parent="."]
+position = Vector2(312, 264)
+
+[node name="Entrance" type="Marker2D" parent="."]
+position = Vector2(312, 163.2)
+
+[node name="Spots" type="Node2D" parent="."]
+
+[node name="Spot1" type="Marker2D" parent="Spots"]
+position = Vector2(76.8, 153.6)
+
+[node name="Spot2" type="Marker2D" parent="Spots"]
+position = Vector2(139.2, 163.2)
+
+[node name="Spot3" type="Marker2D" parent="Spots"]
+position = Vector2(196.8, 81.6)
+
+[node name="Spot4" type="Marker2D" parent="Spots"]
+position = Vector2(259.2, 86.4)
+
+[node name="Spot5" type="Marker2D" parent="Spots"]
+position = Vector2(307.2, 81.6)
+
+[node name="Spot6" type="Marker2D" parent="Spots"]
+position = Vector2(211.2, 139.2)
+
+[node name="Spot7" type="Marker2D" parent="Spots"]
+position = Vector2(273.6, 144)
+
+[node name="Spot8" type="Marker2D" parent="Spots"]
+position = Vector2(192, 187.2)
+
+[node name="Shelter" parent="." instance=ExtResource("3_wjfpu")]
+position = Vector2(110.4, 124.8)

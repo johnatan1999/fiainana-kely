@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FamilyProject" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/family_project.gd" id="1_project"]
+
+[resource]
+script = ExtResource("1_project")
+display_name = "Grand parc avec abri"
+malagasy_name = "Vala misy fialofana"
+description = "Un rang de plus et un abri de chaume : 8 zébus, encore plus de fumier, et l'abreuvoir tient deux jours."
+building = "zebu_pen"
+level = 3
+cost = 60000
+build_days = 5

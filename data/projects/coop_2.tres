@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FamilyProject" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/family_project.gd" id="1_project"]
+
+[resource]
+script = ExtResource("1_project")
+display_name = "Poulailler agrandi"
+malagasy_name = "Tranon'akoho lehibe"
+description = "Une aile de plus et des pondoirs : 8 poules au lieu de 4."
+building = "coop"
+level = 2
+cost = 15000
+build_days = 3

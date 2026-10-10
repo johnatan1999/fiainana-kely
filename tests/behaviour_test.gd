@@ -55,6 +55,7 @@ func _ready() -> void:
 	await _test_zebu_market()
 	await _test_zebu_plough()
 	await _test_zebu_manure()
+	await _test_family_projects()
 	# Last: it takes over the camera.
 	await _test_home_screen()
 
@@ -923,6 +924,53 @@ func _test_save_at_bedtime() -> void:
 	SaveSlots.dir = "user://saves/"
 	SaveSlots.legacy_path = "user://savegame.json"
 	await _go_to_zone("farm")
+
+# --- family projects ------------------------------------------------------------------------
+
+func _test_family_projects() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	_set_time(10 * 60)
+	var state := _sim.state
+	var money := state.money
+	var had_coop := state.has_coop
+	state.money = 200000
+	state.has_coop = true
+	await _go_to_zone("village")
+	await _go_to_zone("farm")
+	await _frames(3)
+	_player.global_position = Vector2(700, 1500)
+	var father: Villager = _zone().get_node("Villagers/Father")
+	var panel: FamilyProjectsPanel = _world.get_node("UI/FamilyProjectsPanel")
+	father.interacted.emit()
+	await _frames(3)
+	var opened := panel.visible and father.talk_prompt == tr("Parler des projets de la famille")
+	panel.start_requested.emit("coop_2")
+	await _frames(3)
+	var started := _sim.get_project_state("coop_2") == FarmSimulation.ProjectState.BUILDING \
+		and _zone().get_node_or_null("ConstructionSite") != null and state.money == 200000 - 15000
+	panel.close()
+	_check(opened and started,
+		"family projects: Dada shows the family's projects - starting one puts up a building site at the coop")
+	# The work done; on the farm again, the buildings at their new level.
+	state.construction["done_day"] = state.day
+	_sim._advance_projects()
+	state.building_levels["zebu_pen"] = 2
+	await _go_to_zone("village")
+	await _go_to_zone("farm")
+	await _frames(3)
+	var coop: Coop = _zone().get_node("ChickenCoopBuilding")
+	var pen: ZebuPen = _zone().get_node("ZebuPen")
+	_check(_sim.get_building_level("coop") == 2 and state.coop_capacity == 8 and coop._level_sprite != null
+			and coop._level_sprite.visible and not coop.get_node("WallSprite").visible
+			and pen.scene_file_path.ends_with("zebu_pen_2.tscn") and pen.get_node("Spots").get_child_count() == 6
+			and _zone().get_node_or_null("ConstructionSite") == null,
+		"family projects: done - the coop rebuilt bigger, the zebu pen grown to its level's size")
+	state.building_levels.clear()
+	state.construction = {}
+	state.coop_capacity = FarmSimulation.COOP_CAPACITY_BY_LEVEL[1]
+	state.has_coop = had_coop
+	state.money = money
+	await _go_to_zone("village")
 
 # --- home screen ----------------------------------------------------------------------------
 
