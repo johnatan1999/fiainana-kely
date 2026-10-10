@@ -955,6 +955,10 @@ func _test_family_projects() -> void:
 	state.construction["done_day"] = state.day
 	_sim._advance_projects()
 	state.building_levels["zebu_pen"] = 2
+	var granary_before: HouseAnnex = _zone().get_node("Granary")
+	var unbuilt := not granary_before.is_built() and not granary_before._sprite.visible
+	state.building_levels["granary"] = 1
+	state.building_levels["kitchen"] = 1
 	await _go_to_zone("village")
 	await _go_to_zone("farm")
 	await _frames(3)
@@ -965,10 +969,39 @@ func _test_family_projects() -> void:
 			and pen.scene_file_path.ends_with("zebu_pen_2.tscn") and pen.get_node("Spots").get_child_count() == 6
 			and _zone().get_node_or_null("ConstructionSite") == null,
 		"family projects: done - the coop rebuilt bigger, the zebu pen grown to its level's size")
+	# The house's annexes: the kitchen cooks.
+	var kitchen: HouseAnnex = _zone().get_node("Kitchen")
+	var cooking: CookingPanel = _world.get_node("UI/CookingPanel")
+	state.add_inventory("corn", 3)
+	_sim.inventory_changed.emit("corn", state.get_inventory_count("corn"))
+	var dishes := state.get_inventory_count("food_grilled_corn")
+	kitchen.interacted.emit()
+	await _frames(3)
+	var opened_kitchen := cooking.visible
+	cooking.cook_requested.emit("grilled_corn", 1)
+	await _frames(3)
+	cooking.close()
+	_check(unbuilt and kitchen.is_built() and (_zone().get_node("Granary") as HouseAnnex).is_built()
+			and opened_kitchen and state.get_inventory_count("food_grilled_corn") == dishes + 1,
+		"family projects: the granary and the kitchen appear once built - the kitchen cooks the harvest")
+	# Inside the enlarged coop: a bigger room, everything placed from its size.
+	await _go_to_zone("chicken_coop")
+	await _frames(3)
+	var room: CoopInterior = _zone().get_node("CoopInterior")
+	var floor_rect := room.get_floor()
+	var hens: Control = _zone().get_node("ChickenArea")
+	var door: Node2D = _zone().get_node("ExitDoor")
+	_check(floor_rect.size == Vector2(CoopInterior.LEVELS[2]["cells"] * CoopInterior.TILE)
+			and floor_rect.encloses(hens.get_rect()) and door.position.y > floor_rect.end.y
+			and (_zone() as ZoneRoot).camera_limit_right >= floor_rect.end.x
+			and floor_rect.size.x > Vector2(CoopInterior.LEVELS[1]["cells"] * CoopInterior.TILE).x,
+		"family projects: the coop's inside grows with it - a bigger room, its door, bowls and hens' area placed from its size")
+	await _go_to_zone("farm")
 	state.building_levels.clear()
 	state.construction = {}
 	state.coop_capacity = FarmSimulation.COOP_CAPACITY_BY_LEVEL[1]
 	state.has_coop = had_coop
+	CoopInterior.level = _sim.get_building_level("coop")
 	state.money = money
 	await _go_to_zone("village")
 

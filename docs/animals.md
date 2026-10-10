@@ -44,3 +44,15 @@
 - **Le poulailler grandit** avec les projets de famille (voir `family_projects.md`) : 4,
   puis 8, puis 12 poules (`coop_capacity`). Son visage change aussi (`Coop.set_level`).
   Au niveau 3, les œufs vont directement dans le sac au lieu d'être posés au sol.
+- **L'intérieur du poulailler** (`chicken_coop_interior.tscn`) n'est plus une image : c'est
+  une pièce construite en code par `CoopInterior`
+  (`structures/chicken_coop/coop_interior.gd`), nette à tout zoom, à la taille du niveau
+  (`LEVELS` : cases du sol, murs en terre, en ruine ou en briques, nombre de pondoirs).
+  - Il en déduit les collisions des murs, la porte de sortie, le point d'arrivée, les
+    gamelles (avec leurs images nettes, `coop_bowls.png`), la zone des poules
+    (`ChickenArea`) et les limites de la caméra.
+  - Il se construit dans son `_ready()`, avant que la caméra ne lise les limites, à partir
+    de `CoopInterior.level`, que `FamilyProjectManager` tient à jour.
+  - `tools/build_coop_interior.gd` a mis la scène dans cet état.
+  - **Agrandir encore** = une ligne dans `LEVELS`. `preview_level` montre un niveau dans
+    l'éditeur.

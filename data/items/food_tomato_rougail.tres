@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/item_data.gd" id="1_food"]
+
+[resource]
+script = ExtResource("1_food")
+id = "food_tomato_rougail"
+display_name = "Rougail de tomates"
+malagasy_name = "Lasary voatabia"
+description = "Le condiment de tomates qui accompagne le riz. Cuisiné avec 3 tomates."
+category = 2
+price = 0
+sell_price = 18000
+crop_id = ""
+animal_species = 0
+tool_action = 0
+sold_in_shop = true

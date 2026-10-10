@@ -1,13 +1,17 @@
 extends SceneTree
-## The farm coop's placeholder art, once rebuilt, one per level (FamilyProject
-## "coop"), in cells of 448 x 384 - twice the on-screen 224 x 192, the ruined
-## coop's own footprint (assets/tileset/exterior.png): the building stands on
-## y = 344 (the coop's origin), its door at x 192..252 like the ruin's.
-##   0 level 1, rebuilt: red earth walls, thatched roof, a plank door
-##   1 level 2, enlarged: the same, a lean-to wing on the right with nest
+## The farm coop's placeholder art, one per level (FamilyProject "coop"),
+## in cells of 448 x 384 - twice the on-screen 224 x 192 footprint: the
+## building stands on y = 344 (the coop's origin), its door at x 192..252.
+##   0 level 0, the ruin: earth walls fallen in places, the thatch caved in,
+##     planks across the doorway
+##   1 level 1, rebuilt: red earth walls, thatched roof, a plank door
+##   2 level 2, enlarged: the same, a lean-to wing on the right with nest
 ##     boxes full of straw
-##   2 level 3, in bricks: brick walls, corrugated iron roof, a framed
+##   3 level 3, in bricks: brick walls, corrugated iron roof, a framed
 ##     window, a basket of eggs by the door
+## And its bowls, for the coop's inside (CoopInterior), in coop_bowls.png:
+## row 0 the feeder (cells of 128 x 64), empty then full of grain; row 1 the
+## water jar (cells of 64 x 128), empty then full - twice their size.
 ##   godot --headless --path . --script res://tools/placeholder_art/gen_coop.gd
 const W := 448
 const H := 384
@@ -33,17 +37,73 @@ var rng := RandomNumberGenerator.new()
 
 func _init():
 	rng.seed = 11
-	img = Image.create(W * 3, H, false, Image.FORMAT_RGBA8)
+	img = Image.create(W * 4, H, false, Image.FORMAT_RGBA8)
 	img.fill(Color(0, 0, 0, 0))
-	_cell(0); _coop(1)
-	_cell(1); _coop(2)
-	_cell(2); _coop(3)
+	_cell(0); _ruin()
+	_cell(1); _coop(1)
+	_cell(2); _coop(2)
+	_cell(3); _coop(3)
 	img.save_png("res://assets/sprites/props/coop_levels.png")
 	print("coop_levels.png written")
+	_bowls()
 	quit()
 
 func _cell(i: int) -> void:
 	o = Vector2(i * W, 0)
+
+## The ruin: walls crumbled at the top, the roof caved in with its battens
+## showing, planks nailed across the doorway, weeds.
+func _ruin() -> void:
+	_ellipse(W / 2.0, GROUND + 14, 214, 16, Color(0, 0, 0, 0.25))
+	_walls(18, 430, 170, false)
+	# Crumbled tops: bites out of the wall.
+	for x in [60, 150, 330, 400]:
+		_ellipse(x, 172, 34, 22, Color(0, 0, 0, 0))
+		for yy in range(150, 196):
+			for xx in range(x - 34, x + 34):
+				if pow((xx - x) / 34.0, 2) + pow((yy - 168) / 22.0, 2) <= 1.0:
+					img.set_pixel(int(o.x + xx), yy, Color(0, 0, 0, 0))
+	# What's left of the roof: a few battens and tufts of thatch.
+	for x in range(30, 420, 46):
+		_line(Vector2(x, 176), Vector2(x + 30, 70), 6, WOOD_DARK)
+	_line(Vector2(20, 176), Vector2(428, 176), 7, WOOD_DARK)
+	for i in 14:
+		var x := rng.randf_range(30, 410)
+		var y := rng.randf_range(80, 170)
+		_ellipse(x, y, rng.randf_range(10, 22), rng.randf_range(5, 9), THATCH if i % 3 else THATCH_DARK)
+	# The doorway, boarded up.
+	_rect(DOOR.position.x, DOOR.position.y, DOOR.size.x, DOOR.size.y, Color(0.12, 0.08, 0.05))
+	for i in 3:
+		var y := DOOR.position.y + 18 + i * 26
+		_line(Vector2(DOOR.position.x - 8, y), Vector2(DOOR.end.x + 8, y + 10 - i * 8), 8, WOOD)
+	# Weeds at the foot.
+	for i in 30:
+		var x := rng.randf_range(10, 438)
+		_line(Vector2(x, GROUND), Vector2(x + rng.randf_range(-6, 6), GROUND - rng.randf_range(10, 26)), 2, Color(0.4, 0.55, 0.25))
+
+## The inside's bowls: a wooden feeder, a clay water jar - empty, then full.
+func _bowls() -> void:
+	img = Image.create(256, 192, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	for full in [false, true]:
+		# The feeder: a hollowed log trough.
+		o = Vector2(128 if full else 0, 0)
+		_ellipse(64, 50, 54, 10, Color(0, 0, 0, 0.25))
+		_ellipse(64, 38, 56, 18, WOOD_DARK)
+		_ellipse(64, 34, 52, 14, WOOD)
+		_ellipse(64, 32, 44, 8, WOOD_DARK.darkened(0.2))
+		if full:
+			for i in 70:
+				_ellipse(64 + rng.randf_range(-40, 40), 31 + rng.randf_range(-6, 5), 2.5, 2, STRAW if i % 3 else Color(0.95, 0.85, 0.35))
+		# The water jar.
+		o = Vector2(64 if full else 0, 64)
+		_ellipse(32, 120, 26, 7, Color(0, 0, 0, 0.25))
+		_ellipse(32, 84, 26, 34, Color(0.66, 0.36, 0.22))
+		_ellipse(28, 76, 10, 16, Color(0.78, 0.48, 0.3))
+		_ellipse(32, 46, 16, 7, Color(0.5, 0.26, 0.15))
+		_ellipse(32, 46, 12, 5, Color(0.35, 0.55, 0.75) if full else Color(0.2, 0.12, 0.08))
+	img.save_png("res://assets/sprites/props/coop_bowls.png")
+	print("coop_bowls.png written")
 
 func _px(x: float, y: float, c: Color) -> void:
 	if x < 0 or y < 0 or x >= W or y >= H:
@@ -69,6 +129,12 @@ func _ellipse(cx: float, cy: float, rx: float, ry: float, c: Color) -> void:
 		for xx in range(int(cx - rx), int(cx + rx) + 1):
 			if pow((xx - cx) / rx, 2) + pow((yy - cy) / ry, 2) <= 1.0:
 				_px(xx, yy, c)
+
+func _line(a: Vector2, b: Vector2, width: float, c: Color) -> void:
+	var steps := int(a.distance_to(b)) + 1
+	for s in steps + 1:
+		var p := a.lerp(b, float(s) / steps)
+		_ellipse(p.x, p.y, width / 2.0, width / 2.0, c)
 
 ## A roof over x0..x1, from its ridge at `top` down to its eaves at
 ## `eaves`: a slope drawn row by row, thatch or corrugated iron.

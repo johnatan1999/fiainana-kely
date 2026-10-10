@@ -201,6 +201,9 @@ func _run_all() -> void:
 	test_projects_bigger_zebu_pen()
 	test_projects_brick_coop_basket()
 	test_projects_save_load()
+	test_annexes_start_unbuilt()
+	test_granary_keeps_more_rice()
+	test_kitchen_cooks_dishes()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -2055,3 +2058,53 @@ func test_projects_save_load() -> void:
 	_check(loaded.get_building_level("zebu_pen") == 2 and loaded.get_construction() == sim.get_construction()
 			and loaded.get_project_state("zebu_pen_3") == FarmSimulation.ProjectState.BUILDING,
 		"projects: the buildings' levels and the building site survive a save/load")
+
+# --- The house's annexes: granary and kitchen ------------------------------------------------
+
+func _register_recipes(sim: FarmSimulation) -> void:
+	var recipes := Recipe.load_all()
+	for recipe_id: String in recipes:
+		sim.register_recipe(recipe_id, recipes[recipe_id])
+
+func test_annexes_start_unbuilt() -> void:
+	var sim := _make_sim_for_school()
+	_register_projects(sim)
+	sim.state.money = 100000
+	var unbuilt := sim.get_building_level("granary") == 0 and sim.get_building_level("kitchen") == 0 \
+		and sim.get_project_state("granary_1") == FarmSimulation.ProjectState.AVAILABLE
+	sim.start_project("kitchen_1")
+	for i in 3:
+		sim.advance_day()
+	_check(unbuilt and sim.has_kitchen() and sim.get_building_level("granary") == 0,
+		"annexes: the granary and the kitchen aren't there at first - a family project builds them")
+
+func test_granary_keeps_more_rice() -> void:
+	var sim := _make_sim_for_school()
+	var yields := []
+	for granary in [0, 1]:
+		sim.state.building_levels["granary"] = granary
+		var plot := sim.get_plot(granary)
+		plot.tilled = true
+		plot.crop = CropState.new("rice", 10)
+		plot.crop.age = 10
+		plot.crop.days_watered = 10
+		plot.crop.days_total = 10
+		var before := sim.state.get_inventory_count("rice")
+		sim.harvest(granary)
+		yields.append(sim.state.get_inventory_count("rice") - before)
+	_check(yields[1] == ceili(yields[0] * FarmSimulation.GRANARY_RICE_MULTIPLIER) and yields[1] > yields[0],
+		"granary: no more rice for the rats - a quarter more at each rice harvest (%d -> %d)" % yields)
+
+func test_kitchen_cooks_dishes() -> void:
+	var sim := _make_sim_for_school()
+	_register_recipes(sim)
+	sim.state.add_inventory("corn", 7)
+	var no_kitchen := not sim.can_cook("grilled_corn") and not sim.cook("grilled_corn")
+	sim.state.building_levels["kitchen"] = 1
+	var count := sim.get_cookable_count("grilled_corn")
+	var cooked := sim.cook("grilled_corn") and sim.cook("grilled_corn")
+	var third := sim.cook("grilled_corn")
+	_check(no_kitchen and count == 2 and cooked and not third
+			and sim.state.get_inventory_count("corn") == 1 and sim.state.get_inventory_count("food_grilled_corn") == 2
+			and sim.day_log.cooked == {"grilled_corn": 2} and sim.get_cookable_count("mofo_gasy") == 0,
+		"kitchen: once built, harvests cooked into dishes - only what the bag holds")

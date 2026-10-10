@@ -54,6 +54,8 @@ tous les jours.
   d'export et sans outils, maïs vendu 25 % plus cher, pas de vanille au village).
 
 ## À savoir
+- **Les plats** (rayon « nourriture ») ne s'achètent pas : ils se cuisinent à la cuisine de
+  la ferme (voir `family_projects.md`) et se **vendent** ici, comme les œufs (`price` 0).
 - Le prix d'achat est le même partout : seul le prix de vente change. Une remise d'achat le
   zoma serait un autre levier.
 - L'ouverture ne dépend que du profil, pas de la présence du marchand : l'étal ouvre à 6:00

@@ -1,16 +1,12 @@
-[gd_scene load_steps=11 format=3 uid="uid://dq8hgec32i74o"]
+[gd_scene load_steps=10 format=3 uid="uid://dq8hgec32i74o"]
 
-[ext_resource type="Texture2D" uid="uid://wpq6cib7ujm" path="res://assets/tileset/farm-interior01.png" id="1_dcsrc"]
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_gayrm"]
 [ext_resource type="PackedScene" uid="uid://dj08ehqk2868w" path="res://components/door/exit_door.tscn" id="2_3n2be"]
+[ext_resource type="Script" path="res://structures/chicken_coop/coop_interior.gd" id="2_dapok"]
 [ext_resource type="PackedScene" uid="uid://byhktvnatk5mw" path="res://structures/chicken_coop/feeding_bowl.tscn" id="4_4aw65"]
 [ext_resource type="PackedScene" uid="uid://y7jfr7cu2kqf" path="res://structures/chicken_coop/water_bowl.tscn" id="5_wr2mm"]
 [ext_resource type="Script" path="res://structures/chicken_coop/chicken_coop.gd" id="6_coopgd"]
 [ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="7_coopint"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_465yl"]
-atlas = ExtResource("1_dcsrc")
-region = Rect2(0, 0, 384, 320)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ekeyn"]
 size = Vector2(100, 20)
@@ -21,27 +17,21 @@ size = Vector2(220, 160)
 [node name="ChickenCoopInterior" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_gayrm")
-indoor = true
 camera_limit_left = -192
 camera_limit_top = -160
 camera_limit_right = 192
 camera_limit_bottom = 160
 camera_zoom = 1.4
+indoor = true
+
+[node name="CoopInterior" type="Node2D" parent="."]
+script = ExtResource("2_dapok")
 
 [node name="Spawns" type="Node2D" parent="."]
 position = Vector2(1, 88)
 
 [node name="SpawnFrom_VILLAGE" type="Marker2D" parent="Spawns"]
 position = Vector2(-1, 16)
-
-[node name="Sprite2D" type="Sprite2D" parent="."]
-z_index = -1
-texture = SubResource("AtlasTexture_465yl")
-
-[node name="Walls" type="StaticBody2D" parent="."]
-
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Walls"]
-polygon = PackedVector2Array(-50, 147, -51, 88, -132, 88, -136, -29, -151, -41, -150, -62, -134, -61, -113, -61, 11, -58, 14, -73, 61, -75, 59, -34, 65, -35, 67, -44, 86, -44, 86, -31, 94, -34, 96, -85, 141, -84, 145, -46, 131, -43, 128, 38, 123, 44, 125, 61, 129, 72, 126, 90, 51, 91, 50, 147, 185, 149, 187, -143, -187, -141, -188, 145)
 
 [node name="ExitDoor" parent="." instance=ExtResource("2_3n2be")]
 position = Vector2(0, 138)

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FamilyProject" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/family_project.gd" id="1_project"]
+
+[resource]
+script = ExtResource("1_project")
+display_name = "Grenier à riz"
+malagasy_name = "Fitoeram-bary"
+description = "Un grenier sur pilotis, à l'abri des rats et de l'humidité : 25 % de riz en plus à chaque récolte de riz."
+building = "granary"
+level = 1
+cost = 25000
+build_days = 3

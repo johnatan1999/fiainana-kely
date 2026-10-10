@@ -67,6 +67,8 @@ signal cockfight_season_ended(champion_id: String)
 ## A family project: work started on it, or the building is finished (its
 ## new level in place).
 signal project_started(project_id: String)
+## The ruined coop was rebuilt (build_coop): level 1.
+signal coop_built
 signal project_completed(project_id: String)
 ## The brick coop's basket (coop level 3): the eggs laid overnight went
 ## straight into the bag.
@@ -213,7 +215,14 @@ enum CockfightCheck { OK, NO_ROOSTER, CLOSED, ALREADY_ENTERED }
 ## finished PROJECT_DAYS later in the morning - a day less for each friend
 ## (PROJECT_HELPER_HEARTS hearts and up) who comes to help, at most
 ## PROJECT_MAX_HELPERS of them, never under a day: the valin-tanana.
-const BUILDINGS := ["coop", "zebu_pen"]
+const BUILDINGS := ["coop", "zebu_pen", "granary", "kitchen"]
+## Each building's level at the start of a game: the coop is a ruin until
+## built (has_coop), the pen is there, the house's annexes aren't yet.
+const BUILDING_START_LEVELS := {"zebu_pen": 1, "granary": 0, "kitchen": 0}
+## The granary on stilts: no more rice for the rats - this much more at
+## each rice harvest.
+const GRANARY_RICE_MULTIPLIER := 1.25
+const GRANARY_CROP := "rice"
 const COOP_CAPACITY_BY_LEVEL := [0, 4, 8, 12]
 ## From this coop level, the eggs go straight into the bag.
 const COOP_BASKET_LEVEL := 3
@@ -244,6 +253,7 @@ var _order_givers: Dictionary = {} # villager_id: String -> Array[OrderTemplate]
 var _friendship_rewards: Dictionary = {} # villager_id: String -> Array[FriendshipReward]
 var _fighting_roosters: Dictionary = {} # rooster_id: String -> FightingRoosterData
 var _projects: Dictionary = {} # project_id: String -> FamilyProject
+var _recipes: Dictionary = {} # recipe_id: String -> Recipe
 ## The chance a villager offers an order on a given morning (tests set 1.0
 ## or 0.0 to make it certain).
 var order_offer_chance := ORDER_OFFER_CHANCE
@@ -424,6 +434,8 @@ func harvest(plot_id: int) -> bool:
 	if plot.fertilized:
 		quantity = ceili(quantity * MANURE_YIELD_MULTIPLIER)
 		plot.fertilized = false
+	if crop_id == GRANARY_CROP and get_building_level("granary") >= 1:
+		quantity = ceili(quantity * GRANARY_RICE_MULTIPLIER)
 	state.add_inventory(crop_id, quantity)
 	plot.crop = null
 	plot.watered = false
@@ -907,7 +919,7 @@ func get_project_ids() -> Array:
 func get_building_level(building: String) -> int:
 	if building == "coop" and not state.has_coop:
 		return 0
-	return int(state.building_levels.get(building, 1))
+	return int(state.building_levels.get(building, BUILDING_START_LEVELS.get(building, 1)))
 
 func get_zebu_capacity() -> int:
 	return ZEBU_CAPACITY_BY_LEVEL[clampi(get_building_level("zebu_pen"), 1, ZEBU_CAPACITY_BY_LEVEL.size() - 1)]
@@ -981,6 +993,49 @@ func _advance_projects() -> void:
 		state.coop_capacity = COOP_CAPACITY_BY_LEVEL[project.level]
 	project_completed.emit(project_id)
 	zebus_changed.emit()
+
+# --- The kitchen (cooking) ------------------------------------------------------------------
+
+## Registered by KitchenManager (data/recipes/).
+func register_recipe(recipe_id: String, recipe: Recipe) -> void:
+	_recipes[recipe_id] = recipe
+
+func get_recipe(recipe_id: String) -> Recipe:
+	return _recipes.get(recipe_id)
+
+func get_recipe_ids() -> Array:
+	var ids := _recipes.keys()
+	ids.sort()
+	return ids
+
+func has_kitchen() -> bool:
+	return get_building_level("kitchen") >= 1
+
+## How many times the recipe can be cooked with what's in the bag.
+func get_cookable_count(recipe_id: String) -> int:
+	var recipe := get_recipe(recipe_id)
+	if recipe == null or recipe.ingredients.is_empty():
+		return 0
+	var count := 1 << 30
+	for item_id: String in recipe.ingredients:
+		count = mini(count, state.get_inventory_count(item_id) / int(recipe.ingredients[item_id]))
+	return count
+
+func can_cook(recipe_id: String) -> bool:
+	return has_kitchen() and get_cookable_count(recipe_id) > 0
+
+## The ingredients out of the bag, the dish in. Returns whether it cooked.
+func cook(recipe_id: String) -> bool:
+	if not can_cook(recipe_id):
+		return false
+	var recipe := get_recipe(recipe_id)
+	for item_id: String in recipe.ingredients:
+		state.add_inventory(item_id, -int(recipe.ingredients[item_id]))
+		inventory_changed.emit(item_id, state.get_inventory_count(item_id))
+	state.add_inventory(recipe.result, recipe.quantity)
+	inventory_changed.emit(recipe.result, state.get_inventory_count(recipe.result))
+	day_log.cooked[recipe_id] = int(day_log.cooked.get(recipe_id, 0)) + recipe.quantity
+	return true
 
 # --- Fara's school fees -----------------------------------------------------------------
 
@@ -1495,6 +1550,7 @@ func build_coop() -> bool:
 	money_changed.emit(state.money)
 	state.has_coop = true
 	state.coop_capacity = COOP_CAPACITY_BY_LEVEL[1]
+	coop_built.emit()
 	return true
 
 ## Buying doesn't put the animal anywhere yet: it waits (the seller keeps it)

@@ -24,6 +24,8 @@ var new_hearts: Dictionary = {}
 ## The Sunday tournament, if entered: {"bouts", "wins"}.
 var cockfight: Dictionary = {}
 var school_paid := 0
+## recipe_id -> dishes cooked today in the kitchen.
+var cooked: Dictionary = {}
 
 func add_harvest(item_id: String, quantity: int) -> void:
 	harvested[item_id] = int(harvested.get(item_id, 0)) + quantity
@@ -48,4 +50,4 @@ func get_main_harvest() -> String:
 func is_quiet() -> bool:
 	return earned == 0 and spent == 0 and harvested.is_empty() and products.is_empty() \
 		and orders_delivered.is_empty() and new_hearts.is_empty() and cockfight.is_empty() \
-		and neighbour_tufts == 0
+		and neighbour_tufts == 0 and cooked.is_empty()

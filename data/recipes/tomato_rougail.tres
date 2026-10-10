@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Recipe" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/recipe.gd" id="1_recipe"]
+
+[resource]
+script = ExtResource("1_recipe")
+display_name = "Rougail de tomates"
+malagasy_name = "Lasary voatabia"
+ingredients = {"tomato": 3}
+result = "food_tomato_rougail"
+quantity = 1

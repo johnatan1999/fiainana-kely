@@ -20,7 +20,8 @@
   - Les répliques arrivent une par une, comme quand on parle. Une touche les montre toutes.
     Une personne qui enchaîne garde la parole : une seule bulle.
   - Au plus 6 répliques, dont 2 sur demain : l'essentiel, pas un rapport.
-- **Le plat du soir dépend de la journée** : le riz et ce qu'on a le plus récolté.
+- **Le plat du soir dépend de la journée** : ce que tu as cuisiné à la cuisine, sinon le riz
+  et ce qu'on a le plus récolté.
   - Haricots → *vary sy tsaramaso* ; manioc → *vary sy mangahazo* ; riz → *vary vaovao*
     (le riz nouveau) ; mangues → *vary amin'anana sy manga* ; œufs → *vary sy atody*...
   - Par défaut, *vary amin'anana* (riz aux brèdes).

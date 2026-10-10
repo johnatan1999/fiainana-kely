@@ -8,7 +8,8 @@ extends Node
 ##   to start one;
 ## - on the farm, the buildings as their level says: the coop's look
 ##   (Coop.set_level), the zebu pen's size (PEN_LEVELS: its scene replaces
-##   the level 1 placed in the zone), and a ConstructionSite on the one being
+##   the level 1 placed in the zone), the house's annexes once built
+##   (HouseAnnex: granary, kitchen), and a ConstructionSite on the one being
 ##   worked on;
 ## - the news: work starting (and the friends who come to help), work done.
 ## See docs/family_projects.md.
@@ -26,7 +27,10 @@ const PEN_LEVELS := {
 const PEN_SIZE := Vector2(288, 192)
 ## The coop's footprint, from its origin (the ruin's art and the levels').
 const COOP_AREA := Rect2(0, -172, 224, 172)
-const BUILDING_NAMES := {"coop": "Le poulailler", "zebu_pen": "Le parc à zébus"}
+const BUILDING_NAMES := {"coop": "Le poulailler", "zebu_pen": "Le parc à zébus",
+	"granary": "Le grenier à riz", "kitchen": "La cuisine"}
+## The house's annexes in the farm scene (HouseAnnex), by building.
+const ANNEX_NODES := {"granary": "Granary", "kitchen": "Kitchen"}
 
 var simulation: FarmSimulation
 
@@ -49,7 +53,13 @@ func setup(p_simulation: FarmSimulation, world_manager: WorldManager, panel: Fam
 	_panel.start_requested.connect(_on_start_requested)
 	simulation.project_started.connect(_on_project_started)
 	simulation.project_completed.connect(_on_project_completed)
-	simulation.state_loaded.connect(_dress_zone)
+	simulation.state_loaded.connect(func():
+		_sync_coop_interior()
+		_dress_zone())
+	simulation.coop_built.connect(func():
+		_sync_coop_interior()
+		_dress_zone())
+	_sync_coop_interior()
 	simulation.money_changed.connect(func(_money: int):
 		if _panel.is_open():
 			_show_panel())
@@ -82,6 +92,10 @@ func _dress_zone(fresh := false) -> void:
 		coop.set_level(simulation.get_building_level("coop"))
 	if fresh and _zone.get_node_or_null("ZebuPasture") != null:
 		_size_pen(simulation.get_building_level("zebu_pen"))
+	for building: String in ANNEX_NODES:
+		var annex := _zone.get_node_or_null(ANNEX_NODES[building]) as HouseAnnex
+		if annex != null:
+			annex.set_level(simulation.get_building_level(building))
 	_place_site()
 
 ## The farm's pen at `level`: its scene in place of the one there.
@@ -127,6 +141,12 @@ func _place_site() -> void:
 			var size: Vector2 = PEN_LEVELS[level]["size"] if PEN_LEVELS.has(level) else PEN_SIZE
 			at = pen.position + Vector2(0, size.y)
 			area = Rect2(0, -70, size.x, 70)
+		var annex_building when ANNEX_NODES.has(annex_building):
+			var annex := _zone.get_node_or_null(ANNEX_NODES[annex_building]) as Node2D
+			if annex == null:
+				return
+			at = annex.position
+			area = HouseAnnex.AREA
 		_:
 			return
 	_site = ConstructionSite.new()
@@ -145,7 +165,10 @@ func _show_panel() -> void:
 	for building: String in FarmSimulation.BUILDINGS:
 		var level := simulation.get_building_level(building)
 		var title := tr(BUILDING_NAMES[building])
-		title += " — " + (tr("en ruine") if level == 0 else tr("niveau %d") % level)
+		if building in ANNEX_NODES:
+			title += " — " + (tr("à construire") if level == 0 else tr("construit"))
+		else:
+			title += " — " + (tr("en ruine") if level == 0 else tr("niveau %d") % level)
 		var projects := []
 		for project_id: String in simulation.get_project_ids():
 			var project := simulation.get_project(project_id)
@@ -221,7 +244,14 @@ func _on_project_started(project_id: String) -> void:
 	UIEvents.notify(text)
 	_place_site()
 
+## The coop's inside is built from the coop's level when its zone loads -
+## it reads CoopInterior.level; a room already there is rebuilt.
+func _sync_coop_interior() -> void:
+	CoopInterior.level = simulation.get_building_level("coop")
+	get_tree().call_group(CoopInterior.GROUP, "set_level", CoopInterior.level)
+
 func _on_project_completed(project_id: String) -> void:
+	_sync_coop_interior()
 	var project := simulation.get_project(project_id)
 	UIEvents.notify(tr("C'est fini : %s ! %s") % [tr(project.display_name).to_lower(), tr(project.description)])
 	_dress_zone()

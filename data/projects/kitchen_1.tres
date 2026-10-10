@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FamilyProject" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/family_project.gd" id="1_project"]
+
+[resource]
+script = ExtResource("1_project")
+display_name = "Cuisine"
+malagasy_name = "Lakozia"
+description = "Une cuisine à côté de la maison : cuisiner tes récoltes en plats, qui se vendent mieux que ce qu'on y met."
+building = "kitchen"
+level = 1
+cost = 20000
+build_days = 3

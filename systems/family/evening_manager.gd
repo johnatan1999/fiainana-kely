@@ -75,6 +75,11 @@ func get_dish() -> Array:
 	var log := simulation.day_log
 	if log.earned >= FEAST_EARNINGS:
 		return FEAST_DISH
+	# Cooked in the farm's kitchen today: that's what's on the mat.
+	if not log.cooked.is_empty():
+		var recipe := simulation.get_recipe(log.cooked.keys()[0])
+		if recipe != null:
+			return [recipe.malagasy_name.to_lower(), tr("%s, cuisiné par toi") % tr(recipe.display_name).to_lower()]
 	var main := log.get_main_harvest()
 	if DISHES.has(main):
 		return DISHES[main]
@@ -148,6 +153,13 @@ func _village_lines() -> Array:
 		lines.append([MOTHER_ID, tr("%s t'apprécie de plus en plus, on me l'a dit au point d'eau.") % _names.get(who, who)])
 	elif log.orders_delivered.is_empty() and not log.friendship.is_empty():
 		lines.append([MOTHER_ID, tr("Tu as pris le temps de parler aux voisins. C'est comme ça qu'on se fait des amis.")])
+	if not log.cooked.is_empty():
+		var dishes := log.cooked.keys().map(func(id: String) -> String:
+			var recipe := simulation.get_recipe(id)
+			return tr(recipe.display_name).to_lower() if recipe != null else id)
+		var listed := ", ".join(dishes)
+		listed = listed.left(1).to_upper() + listed.substr(1)
+		lines.append([MOTHER_ID, tr("Ta cuisine sent bon jusqu'au chemin ! %s : de quoi régaler le tsena.") % listed])
 	if log.school_paid > 0:
 		lines.append([MOTHER_ID, tr("Merci pour l'écolage de Fara. Dada et moi, on est fiers de toi.")])
 	return lines

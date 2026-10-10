@@ -18,6 +18,8 @@ const MUTED_COLOR := Color(0.5, 0.38, 0.26)
 const DONE_COLOR := Color(0.2, 0.45, 0.15)
 const BUSY_COLOR := Color(0.6, 0.3, 0.15)
 const WIDTH := 600.0
+## The projects' list, scrolling past this height.
+const LIST_HEIGHT := 400.0
 
 var _line: Label
 var _sections: VBoxContainer
@@ -142,9 +144,15 @@ func _build() -> void:
 	_line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_line.custom_minimum_size = Vector2(WIDTH - 36, 0)
 	box.add_child(HSeparator.new())
+	# Four buildings and their projects don't fit a screen: they scroll.
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(WIDTH - 36, LIST_HEIGHT)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(scroll)
 	_sections = VBoxContainer.new()
 	_sections.add_theme_constant_override("separation", 6)
-	box.add_child(_sections)
+	_sections.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_sections)
 	_close = Button.new()
 	_close.text = tr("Fermer")
 	_close.custom_minimum_size = Vector2(150, 36)

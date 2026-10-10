@@ -165,8 +165,13 @@ descend le **zoma** (vendredi), jour de marché.
 
 ## À savoir
 - **Intérieurs** (maison, poulailler) : la zone est triée en y (`y_sort_enabled`) et l'image
-  de la pièce est un `Sprite2D` en `z_index = -1`, comme un sol. Sinon, toute la pièce est
-  classée à y = 0 et le joueur passe sous l'image dès qu'il est dans la moitié haute.
+  de la pièce (ou la pièce dessinée, `CoopInterior`) est en `z_index = -1`, comme un sol.
+  Sinon, toute la pièce est classée à y = 0 et le joueur passe sous l'image dès qu'il est
+  dans la moitié haute.
+- **Netteté** : une image s'exporte au double de sa taille à l'écran, et s'affiche à
+  l'échelle 0,5 (comme les maisons). Une image en taille simple paraît floue, car elle est
+  agrandie par le zoom de la caméra et la mise à l'échelle de la fenêtre (environ ×2,3 dans
+  un intérieur).
 - **Voir une zone sans ouvrir l'éditeur** : `tools/zone_snapshot.gd` rend une scène de zone
   en PNG, avec une grille de coordonnées tous les 100 px. C'est pratique pour choisir où
   poser un repère ou un décor. Il se lance **sans** `--headless` (il faut un vrai rendu) :

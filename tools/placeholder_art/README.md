@@ -21,7 +21,8 @@ godot --headless --path . --script res://tools/placeholder_art/gen_<nom>.gd
 | `gen_market_town.gd` | `assets/sprites/props/market_town.png` | Cases de 192×192 (4×2), objet sur le bord bas : pont (vu de dessus, échelle 1), étal de légumes, étal de lambas, étal du collecteur, taxi-brousse (échelle 1), sacs de riz, roseaux, poules en cage |
 | `gen_manure.gd` | `assets/sprites/props/manure.png` | Cases de 192×192 (4×1), objet sur le bord bas, double densité : petit tas, gros tas, panier de fumier (icône), fumier épandu vu de dessus (sans contour, affiché au quart pour couvrir une case) |
 | `gen_zebu_market.gd` | `assets/sprites/props/zebu_market.png` | Cases de 192×192 (4×1), objet sur le bord bas, double densité : abreuvoir vide, abreuvoir plein (eau et foin), poteau du marchand de zébus, charrue à zébus (profil, tirée vers la droite) |
-| `gen_coop.gd` | `assets/sprites/props/coop_levels.png` | 3 cases de 448×384 (niveaux 1 à 3 du poulailler), densité 2× : l'emprise de 224×192 de la ruine, bâtiment posé sur y = 344, porte entre x = 192 et 252 |
+| `gen_coop.gd` | `assets/sprites/props/coop_levels.png`, `coop_bowls.png` | Poulailler : 4 cases de 448×384 (0 la ruine, puis niveaux 1 à 3), densité 2× : emprise de 224×192, bâtiment posé sur y = 344, porte entre x = 192 et 252. Gamelles : rangée 0, mangeoire vide puis pleine (cases de 128×64) ; rangée 1, jarre d'eau vide puis pleine (cases de 64×128) |
+| `gen_annexes.gd` | `assets/sprites/props/house_annexes.png` | 2 cases de 256×320 (grenier sur pilotis, cuisine), densité 2×, posées sur le bord bas et centrées |
 | `gen_water.gd` | `assets/tileset/water_placeholder.png` | Deux tuiles blanches : c'est le shader qui colore |
 
 Ces scripts ne touchent **qu'aux images**. Les scènes (zones, champs, arbres, clôtures,
