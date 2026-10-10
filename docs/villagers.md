@@ -93,8 +93,9 @@ Six villageois vivent au village, chacun avec sa journée :
     la précédente continue. `happens_on(weekday)`, `days_mask([...])`.
   - `only_if` / `unless` : une **condition d'histoire** (`FarmSimulation.get_conditions()`)
     dont l'étape a besoin, ou qui l'annule. L'étape est alors sautée, comme un autre jour.
-    Seule condition aujourd'hui : `school_fees_overdue` (Fara va à l'école `unless`, aide au
-    mortier `only_if`). `happens(weekday, conditions)`.
+    Conditions : `school_fees_overdue` (Fara va à l'école `unless`, aide au mortier
+    `only_if`), et pour chaque quête `quest_active:<id>` et `quest_done:<id>` (voir
+    `quests.md`). `happens(weekday, conditions)`.
 - **`get_stop(minute, weekday, conditions)`** : l'étape en cours ce jour-là, ou `null` (= à la maison)
   avant la première. La journée va de 6:00 à 2:00 : après minuit, c'est toujours la dernière
   étape de la veille. Terminer donc la journée par une étape `INSIDE` sur `home`.

@@ -12,7 +12,8 @@
 - **Dans le monde (`HarvestPopup`)** : « +3 Maïs » au-dessus de ce qui vient d'être récolté
   (voir `farming.md`).
 - **En haut à droite (`OrdersTracker`)** : les commandes acceptées (voir `orders.md`), et
-  dessous les rappels à date (`show_reminders()` : l'écolage de Fara, voir `school.md`).
+  dessous les rappels à date (`show_reminders()` : l'écolage de Fara, voir `school.md`), puis
+  les quêtes en cours avec leur prochaine étape (`show_quests()`, voir `quests.md`).
 - **L'inventaire (`InventoryUI`, touche I)** : un livre avec 5 onglets (Cultures, Élevage,
   Outils, Nourriture, **Villageois**), la grille de l'onglet choisi et une fiche détaillée. Dans
   l'onglet Villageois, la grille montre le portrait de chacun, et la fiche son rôle, sa maison,

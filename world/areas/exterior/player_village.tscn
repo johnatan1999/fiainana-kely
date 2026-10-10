@@ -1,4 +1,4 @@
-[gd_scene load_steps=63 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=65 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -48,6 +48,8 @@
 [ext_resource type="Resource" uid="uid://bogw8wg2husan" path="res://data/villagers/fara.tres" id="52_s2hsk"]
 [ext_resource type="Resource" uid="uid://dldtvbutk6hqd" path="res://data/villagers/hanta.tres" id="53_klm3y"]
 [ext_resource type="Resource" uid="uid://b8ua56irvcthp" path="res://data/villagers/naivo.tres" id="53_pd4mh"]
+[ext_resource type="Script" path="res://entities/quest/quest_target.gd" id="54_dilmu"]
+[ext_resource type="Texture2D" uid="uid://d4a5tg8sraiu0" path="res://assets/sprites/animals/zebu.png" id="55_h8lbn"]
 [ext_resource type="PackedScene" path="res://entities/props/brick_shed.tscn" id="60_prop_brick_shed"]
 [ext_resource type="Script" path="res://environment/ambient/ambient_life.gd" id="61_ambient"]
 [ext_resource type="Script" path="res://environment/lighting/night_light.gd" id="62_nightlight"]
@@ -902,3 +904,22 @@ shape = SubResource("RectangleShape2D_3vjsn")
 [node name="Sign_Forest" parent="." instance=ExtResource("43_5fvhf")]
 position = Vector2(2222, 900)
 text = "ALA"
+
+[node name="QuestTargets" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Volamena" type="Node2D" parent="QuestTargets"]
+position = Vector2(330, 1270)
+script = ExtResource("54_dilmu")
+target_id = "volamena_home"
+quest_id = "rakoto_lost_zebu"
+appears = 1
+
+[node name="Sprite2D" type="Sprite2D" parent="QuestTargets/Volamena"]
+texture_filter = 4
+scale = Vector2(0.8, 0.8)
+texture = ExtResource("55_h8lbn")
+offset = Vector2(0, -48)
+hframes = 4
+vframes = 2
+frame = 4

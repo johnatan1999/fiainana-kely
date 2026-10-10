@@ -78,6 +78,9 @@
 - Met à jour les marques (`Villager.set_order_mark` : « ! » ou « ? »), l'action proposée
   (`set_prompt`) et `OrdersTracker`.
 - Annonce le matin qui a une nouvelle commande, et signale les commandes expirées.
+- **S'efface devant les quêtes** : un villageois qu'une quête occupe (une à offrir, une étape
+  avec lui) n'a ni marque ni réponse de commande ; `QuestManager` lui répond (voir
+  `quests.md`).
 
 **Interface** (`ui/orders/`, sous `UI` dans `world.tscn`, construite en code)
 - `OrderPanel` : met le jeu en pause, comme la boutique. Signaux `accepted` et `declined`.

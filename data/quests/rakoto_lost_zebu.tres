@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="Quest" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://core/data/quest.gd" id="1_quest"]
+[ext_resource type="Script" path="res://core/data/quest_step.gd" id="2_step"]
+
+[sub_resource type="Resource" id="Step_tracks"]
+script = ExtResource("2_step")
+kind = 2
+objective = "Cherche des traces de Volamena dans la forêt, à l'est du village."
+target = "zebu_tracks"
+line = "Des traces de sabots dans la boue, près du gué ! Elles filent vers le sud, vers le vieil amontana."
+
+[sub_resource type="Resource" id="Step_find"]
+script = ExtResource("2_step")
+kind = 3
+objective = "Retrouve Volamena du côté du vieil amontana, au sud-est de la forêt."
+target = "lost_zebu"
+prompt = "Approcher le zébu"
+line = "C'est bien Volamena ! Il recule en soufflant : il a peur. Il a l'air affamé... Des brèdes sauvages l'amadoueraient peut-être."
+
+[sub_resource type="Resource" id="Step_calm"]
+script = ExtResource("2_step")
+kind = 3
+objective = "Amadoue Volamena avec des brèdes sauvages (elles poussent dans la forêt)."
+target = "lost_zebu"
+item_id = "wild_greens"
+quantity = 2
+prompt = "Donner des brèdes à Volamena"
+line = "Volamena mange dans ta main et se calme. Puis il reprend tranquillement le sentier du village, comme s'il le connaissait par cœur."
+waiting_line = "Volamena ne se laisse pas approcher. Il te faut 2 brèdes sauvages : elles poussent à l'ombre des arbres de la forêt."
+
+[sub_resource type="Resource" id="Step_tell"]
+script = ExtResource("2_step")
+kind = 0
+objective = "Dis à Rakoto que Volamena est rentré."
+villager = "rakoto"
+prompt = "Parler de Volamena à Rakoto"
+line = "Volamena est rentré tout seul devant ma case ! Misaotra betsaka, tu es un vrai ami."
+
+[resource]
+script = ExtResource("1_quest")
+title = "Le zébu perdu"
+giver = "rakoto"
+offer_line = "Mon zébu Volamena a cassé sa corde cette nuit... Ce matin, son piquet était vide. Des enfants l'ont vu partir vers l'est, vers la forêt. Moi, je ne peux pas laisser la rizière en pleine saison. Tu irais le chercher ?"
+min_day = 3
+steps = Array[ExtResource("2_step")]([SubResource("Step_tracks"), SubResource("Step_find"), SubResource("Step_calm"), SubResource("Step_tell")])
+reward_money = 10000
+reward_friendship = 100
+evening_speaker = "father"
+evening_line = "Rakoto a raconté à toute la gargote que tu as retrouvé Volamena. Un zébu, c'est la richesse d'une famille : il ne l'oubliera pas."

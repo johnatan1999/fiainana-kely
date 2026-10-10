@@ -208,6 +208,11 @@ func _run_all() -> void:
 	test_notebook_pages_once()
 	test_forage_grows_back()
 	test_notebook_save_load()
+	test_quest_offered_when_its_time_comes()
+	test_quest_steps_in_order()
+	test_quest_requirements_bring_and_discover()
+	test_quest_save_load()
+	test_quest_data_is_sound()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -2182,3 +2187,136 @@ func test_notebook_save_load() -> void:
 	_check(loaded.is_discovered("sacred_fig") and loaded.is_discovered("ravintsara")
 			and not loaded.can_forage("Spring_Ravintsara", "ravintsara"),
 		"notebook: the pages and the plants growing back survive a save/load")
+
+# --- Side quests ---------------------------------------------------------------------------
+
+func _make_sim_for_quests() -> FarmSimulation:
+	var sim := _make_sim_for_forest()
+	var quests := Quest.load_all()
+	for quest_id: String in quests:
+		sim.register_quest(quest_id, quests[quest_id])
+	return sim
+
+func _quest_step(kind: QuestStep.Kind, fields: Dictionary) -> QuestStep:
+	var step := QuestStep.new()
+	step.kind = kind
+	for field: String in fields:
+		step.set(field, fields[field])
+	return step
+
+func test_quest_offered_when_its_time_comes() -> void:
+	var sim := _make_sim_for_quests()
+	var too_early := sim.get_quest_offered_by("rakoto").is_empty() and not sim.start_quest("rakoto_lost_zebu")
+	_advance_to_day(sim, 3)
+	var offered := sim.get_quest_offered_by("rakoto") == "rakoto_lost_zebu" and sim.get_quest_offered_by("naivo").is_empty()
+	var started := sim.start_quest("rakoto_lost_zebu")
+	_check(too_early and offered and started and not sim.start_quest("rakoto_lost_zebu")
+			and sim.get_quest_offered_by("rakoto").is_empty() and sim.get_active_quests() == ["rakoto_lost_zebu"]
+			and sim.get_quest_step_index("rakoto_lost_zebu") == 0
+			and sim.get_conditions().has(FarmSimulation.QUEST_ACTIVE_PREFIX + "rakoto_lost_zebu"),
+		"quests: Rakoto offers his lost zebu from day 3 - once accepted, it's under way (a story condition too)")
+
+func test_quest_steps_in_order() -> void:
+	var sim := _make_sim_for_quests()
+	_advance_to_day(sim, 3)
+	sim.start_quest("rakoto_lost_zebu")
+	var money := sim.state.money
+	var out_of_order := sim.quest_trigger("lost_zebu").is_empty() and sim.quest_talk("rakoto").is_empty()
+	var tracks := sim.quest_trigger("zebu_tracks") == "rakoto_lost_zebu"
+	var found := sim.quest_trigger("lost_zebu") == "rakoto_lost_zebu"
+	var waiting_on_rakoto := sim.get_quest_waiting_on("rakoto").is_empty()
+	var no_greens := sim.quest_trigger("lost_zebu").is_empty() and sim.get_quest_item_progress("rakoto_lost_zebu") == Vector2i(0, 2)
+	sim.state.add_inventory("wild_greens", 3)
+	var calmed := sim.quest_trigger("lost_zebu") == "rakoto_lost_zebu"
+	var tell := sim.get_quest_waiting_on("rakoto") == "rakoto_lost_zebu"
+	var completed := []
+	sim.quest_completed.connect(func(id): completed.append(id))
+	var done := sim.quest_talk("rakoto") == "rakoto_lost_zebu"
+	_check(out_of_order and tracks and found and waiting_on_rakoto and no_greens and calmed and tell and done
+			and completed == ["rakoto_lost_zebu"] and sim.state.get_inventory_count("wild_greens") == 1
+			and sim.state.money == money + 10000 and sim.get_friendship("rakoto") == 100
+			and sim.is_quest_done("rakoto_lost_zebu") and sim.get_active_quests().is_empty()
+			and not sim.is_quest_available("rakoto_lost_zebu") and sim.day_log.quests_done == ["rakoto_lost_zebu"]
+			and sim.get_conditions().has(FarmSimulation.QUEST_DONE_PREFIX + "rakoto_lost_zebu"),
+		"quests: the lost zebu step by step - tracks, the zebu, 2 wild greens to calm it, back to Rakoto: 10 000 Ar and a heart")
+
+func test_quest_requirements_bring_and_discover() -> void:
+	var sim := _make_sim_for_quests()
+	var quest := Quest.new()
+	quest.giver = "naivo"
+	quest.min_hearts = 1
+	quest.after_quests = ["rakoto_lost_zebu"]
+	quest.reward_items = {"mango": 2}
+	quest.steps = [
+		_quest_step(QuestStep.Kind.DISCOVER, {"discovery_id": "clearing"}),
+		_quest_step(QuestStep.Kind.DISCOVER, {"discovery_id": "sifaka"}),
+		_quest_step(QuestStep.Kind.BRING, {"villager": "naivo", "item_id": "honey", "quantity": 1}),
+	]
+	sim.register_quest("test_quest", quest)
+	_advance_to_day(sim, 3)
+	sim.add_friendship("naivo", 100)
+	var before_rakoto := not sim.is_quest_available("test_quest")
+	sim.state.quests_done["rakoto_lost_zebu"] = 3
+	sim.discover("clearing")
+	var started := sim.start_quest("test_quest")
+	# The clearing already found: straight on to the sifaka.
+	var skipped := sim.get_quest_step_index("test_quest") == 1 and sim.get_quest_waiting_on("naivo").is_empty()
+	sim.discover("sifaka")
+	var bring := sim.get_quest_waiting_on("naivo") == "test_quest" and sim.quest_talk("naivo").is_empty()
+	sim.state.add_inventory("honey", 1)
+	var given := sim.quest_talk("naivo") == "test_quest"
+	_check(before_rakoto and started and skipped and bring and given and sim.is_quest_done("test_quest")
+			and sim.state.get_inventory_count("honey") == 0 and sim.state.get_inventory_count("mango") == 2,
+		"quests: hearts and earlier quests before it's offered - a notebook page already found counts, items brought are given")
+
+func test_quest_save_load() -> void:
+	var sim := _make_sim_for_quests()
+	_advance_to_day(sim, 3)
+	sim.start_quest("rakoto_lost_zebu")
+	sim.quest_trigger("zebu_tracks")
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var loaded := _make_sim_for_quests()
+	loaded.load_save_data(data)
+	var mid := loaded.get_quest_step_index("rakoto_lost_zebu") == 1 and loaded.get_active_quests() == ["rakoto_lost_zebu"]
+	loaded.state.add_inventory("wild_greens", 2)
+	loaded.quest_trigger("lost_zebu")
+	loaded.quest_trigger("lost_zebu")
+	loaded.quest_talk("rakoto")
+	var again := _make_sim_for_quests()
+	again.load_save_data(JSON.parse_string(JSON.stringify(loaded.to_save_data())))
+	_check(mid and again.is_quest_done("rakoto_lost_zebu") and not again.is_quest_active("rakoto_lost_zebu"),
+		"quests: a quest under way (its step) and the finished ones survive a save/load")
+
+func test_quest_data_is_sound() -> void:
+	var problems := []
+	var villagers := VillagerData.load_all()
+	var db := ItemDatabase.new({}, {})
+	var pages := Discovery.load_all()
+	var quests := Quest.load_all()
+	for quest_id: String in quests:
+		var quest: Quest = quests[quest_id]
+		if quest.title.is_empty() or quest.offer_line.is_empty() or quest.steps.is_empty():
+			problems.append("%s: a title, a story, steps" % quest_id)
+		if not villagers.has(quest.giver):
+			problems.append("%s: giver %s" % [quest_id, quest.giver])
+		for before: String in quest.after_quests:
+			if not quests.has(before):
+				problems.append("%s: after %s" % [quest_id, before])
+		for item_id: String in quest.reward_items:
+			if db.get_item(item_id) == null and db.get_crop(item_id) == null:
+				problems.append("%s: reward %s" % [quest_id, item_id])
+		for step: QuestStep in quest.steps:
+			if step.objective.is_empty():
+				problems.append("%s: a step without objective" % quest_id)
+			if step.kind in [QuestStep.Kind.TALK, QuestStep.Kind.BRING] and not villagers.has(step.villager):
+				problems.append("%s: villager %s" % [quest_id, step.villager])
+			if step.kind in [QuestStep.Kind.REACH, QuestStep.Kind.INTERACT] and step.target.is_empty():
+				problems.append("%s: a step without target" % quest_id)
+			if step.needs_items() and db.get_item(step.item_id) == null and db.get_crop(step.item_id) == null:
+				problems.append("%s: item %s" % [quest_id, step.item_id])
+			if step.kind == QuestStep.Kind.DISCOVER and not pages.has(step.discovery_id):
+				problems.append("%s: page %s" % [quest_id, step.discovery_id])
+	if not problems.is_empty():
+		print("  quest data: ", problems)
+	_check(not quests.is_empty() and problems.is_empty(),
+		"quests: every quest in data/quests/ names real villagers, items, pages and earlier quests")

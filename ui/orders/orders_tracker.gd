@@ -4,15 +4,19 @@ extends Control
 ## The accepted orders, top right: for each, who, the item, how many the
 ## player already has out of how many, and the days left - in green once
 ## it can be delivered, in red on its last day. Below, other things to
-## pay or do by a date (show_reminders(): Fara's school fees). Hidden when
+## pay or do by a date (show_reminders(): Fara's school fees), and the side
+## quests under way, each with what to do next (show_quests()). Hidden when
 ## there's nothing. Built in code; OrderManager fills the orders,
-## SchoolManager the reminders.
+## SchoolManager the reminders, QuestManager the quests.
 
 const PANEL_COLOR := Color(0.96, 0.9, 0.76, 0.92)
 const BORDER_COLOR := Color(0.45, 0.28, 0.15)
 const TEXT_COLOR := Color(0.27, 0.17, 0.09)
 const READY_COLOR := Color(0.2, 0.5, 0.15)
 const URGENT_COLOR := Color(0.7, 0.2, 0.1)
+const QUEST_COLOR := Color(0.13, 0.4, 0.43)
+## A quest's next step wraps past this width.
+const QUEST_WIDTH := 300.0
 const ICON_SIZE := 22.0
 const MARGIN := 16.0
 
@@ -20,6 +24,7 @@ var _panel: PanelContainer
 var _title: Label
 var _rows: VBoxContainer
 var _reminders: VBoxContainer
+var _quests: VBoxContainer
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -48,6 +53,9 @@ func _ready() -> void:
 	_reminders = VBoxContainer.new()
 	_reminders.add_theme_constant_override("separation", 3)
 	box.add_child(_reminders)
+	_quests = VBoxContainer.new()
+	_quests.add_theme_constant_override("separation", 2)
+	box.add_child(_quests)
 	visible = false
 
 ## `orders`: [{"villager", "icon", "item", "have", "need", "days_left"}].
@@ -89,13 +97,31 @@ func show_reminders(reminders: Array) -> void:
 		_reminders.add_child(label)
 	_fit()
 
+## `quests`: [{"title", "objective", "ready" (can be done now: in green)}].
+func show_quests(quests: Array) -> void:
+	_clear(_quests)
+	for quest: Dictionary in quests:
+		var title := Label.new()
+		title.text = "◆ " + quest["title"]
+		title.add_theme_font_size_override("font_size", 15)
+		title.add_theme_color_override("font_color", QUEST_COLOR)
+		_quests.add_child(title)
+		var objective := Label.new()
+		objective.text = quest["objective"]
+		objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		objective.custom_minimum_size = Vector2(QUEST_WIDTH, 0)
+		objective.add_theme_font_size_override("font_size", 13)
+		objective.add_theme_color_override("font_color", READY_COLOR if quest.get("ready", false) else TEXT_COLOR)
+		_quests.add_child(objective)
+	_fit()
+
 func _clear(container: Node) -> void:
 	for child in container.get_children():
 		container.remove_child(child)
 		child.queue_free()
 
 func _fit() -> void:
-	visible = _rows.get_child_count() > 0 or _reminders.get_child_count() > 0
+	visible = _rows.get_child_count() > 0 or _reminders.get_child_count() > 0 or _quests.get_child_count() > 0
 	# Hug the top-right corner, whatever the width.
 	await get_tree().process_frame
 	_panel.reset_size()

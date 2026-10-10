@@ -117,6 +117,11 @@ var construction: Dictionary = {}
 ## day its plant can be gathered again.
 var discoveries: Dictionary = {}
 var forage: Dictionary = {}
+## Side quests (FarmSimulation's quest API): under way, quest id ->
+## {"step" (the current one), "since" (the day it was accepted)}; and
+## finished, quest id -> the day.
+var quests: Dictionary = {}
+var quests_done: Dictionary = {}
 const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
@@ -300,6 +305,8 @@ func to_dict() -> Dictionary:
 		"construction": construction.duplicate(true),
 		"discoveries": discoveries.duplicate(),
 		"forage": forage.duplicate(),
+		"quests": quests.duplicate(true),
+		"quests_done": quests_done.duplicate(),
 	}
 
 ## JSON object keys are strings: species saved as "0", "4"...
@@ -464,13 +471,21 @@ func load_dict(data: Dictionary) -> void:
 		for building in levels_data:
 			building_levels[str(building)] = int(levels_data[building])
 	# Optional keys (older saves have none): an empty notebook.
-	for key in ["discoveries", "forage"]:
+	for key in ["discoveries", "forage", "quests_done"]:
 		var target: Dictionary = get(key)
 		target.clear()
 		var saved = data.get(key, {})
 		if saved is Dictionary:
 			for id in saved:
 				target[str(id)] = int(saved[id])
+	# Optional key (older saves have none): no quest under way.
+	quests.clear()
+	var saved_quests = data.get("quests", {})
+	if saved_quests is Dictionary:
+		for quest_id in saved_quests:
+			var quest = saved_quests[quest_id]
+			if quest is Dictionary:
+				quests[str(quest_id)] = {"step": int(quest.get("step", 0)), "since": int(quest.get("since", 0))}
 	construction = {}
 	var site = data.get("construction", {})
 	if site is Dictionary and site.has("project"):

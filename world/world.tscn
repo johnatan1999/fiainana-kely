@@ -1,4 +1,4 @@
-[gd_scene load_steps=39 format=3 uid="uid://fdjfwhhhgssy"]
+[gd_scene load_steps=41 format=3 uid="uid://fdjfwhhhgssy"]
 
 [ext_resource type="Script" path="res://world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://bf1stuuqjofir" path="res://entities/player/player.tscn" id="2_player"]
@@ -30,6 +30,7 @@
 [ext_resource type="Script" path="res://systems/weather/weather_controller.gd" id="20_weather"]
 [ext_resource type="Script" path="res://ui/orders/orders_tracker.gd" id="21_m3xco"]
 [ext_resource type="Script" path="res://systems/forest/forest_manager.gd" id="21_qorup"]
+[ext_resource type="Script" path="res://systems/quests/quest_manager.gd" id="22_ioh2k"]
 [ext_resource type="Script" path="res://ui/orders/order_panel.gd" id="22_qlvpc"]
 [ext_resource type="Script" path="res://ui/zebu/zebu_market_panel.gd" id="25_btqak"]
 [ext_resource type="Script" path="res://ui/school/school_panel.gd" id="27_2of3s"]
@@ -38,6 +39,7 @@
 [ext_resource type="Script" path="res://ui/evening/evening_panel.gd" id="32_djack"]
 [ext_resource type="Script" path="res://ui/family/family_projects_panel.gd" id="34_ta5h6"]
 [ext_resource type="Script" path="res://ui/family/cooking_panel.gd" id="36_4wynl"]
+[ext_resource type="Script" path="res://ui/quests/quest_panel.gd" id="39_rqcxs"]
 
 [node name="World" type="Node2D"]
 y_sort_enabled = true
@@ -105,6 +107,9 @@ script = ExtResource("20_inwph")
 [node name="ForestManager" type="Node" parent="Gameplay"]
 script = ExtResource("21_qorup")
 
+[node name="QuestManager" type="Node" parent="Gameplay"]
+script = ExtResource("22_ioh2k")
+
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="HUD" parent="UI" instance=ExtResource("7_hud")]
@@ -166,6 +171,11 @@ script = ExtResource("34_ta5h6")
 layout_mode = 3
 anchors_preset = 0
 script = ExtResource("36_4wynl")
+
+[node name="QuestPanel" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("39_rqcxs")
 
 [node name="ZoneContainer" type="Node2D" parent="."]
 y_sort_enabled = true

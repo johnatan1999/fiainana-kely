@@ -57,6 +57,7 @@ func _ready() -> void:
 	await _test_zebu_manure()
 	await _test_family_projects()
 	await _test_forest()
+	await _test_quests()
 	# Last: it takes over the camera.
 	await _test_home_screen()
 
@@ -1062,6 +1063,92 @@ func _test_forest() -> void:
 	state.clock.current_day = day
 	_set_time(10 * 60)
 	await _go_to_zone("village")
+
+# --- side quests ----------------------------------------------------------------------------
+
+func _test_quests() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	var state := _sim.state
+	var money := state.money
+	var friendship := _sim.get_friendship("rakoto")
+	var greens := state.get_inventory_count("wild_greens")
+	var today := _set_weekday(GameClock.Weekday.TUESDAY)
+	state.clock.current_day = maxi(state.clock.current_day, 3)
+	_sim.day_log = DayLog.new()
+	_set_time(10 * 60)
+	await _go_to_zone("rice_fields")
+	_sim.quest_changed.emit("") # the morning's new quests
+	await _frames(3)
+	_player.global_position = Vector2(300, 300)
+	var rakoto := _villager("Rakoto")
+	var offered := rakoto._mark.visible and rakoto._mark.text == "!" \
+		and rakoto._mark.label_settings.font_color == QuestManager.MARK_COLOR
+	var panel: QuestPanel = _world.get_node("UI/QuestPanel")
+	rakoto.interacted.emit()
+	await _frames(2)
+	var panel_open := panel.is_open() and get_tree().paused and panel._title.text == "Le zébu perdu"
+	panel._accept.pressed.emit()
+	await _frames(2)
+	var tracker: OrdersTracker = _world.get_node("UI/OrdersTracker")
+	_check(offered and panel_open and not get_tree().paused and _sim.is_quest_active("rakoto_lost_zebu")
+			and tracker._quests.get_child_count() == 2 and tracker.visible
+			# His quest mark gone (an order's gold "!" may show again).
+			and not (rakoto._mark.visible and rakoto._mark.label_settings.font_color == QuestManager.MARK_COLOR),
+		"quests: a cyan '!' over Rakoto - talking to him tells his lost zebu, accepted: in the tracker with its first step")
+
+	await _go_to_zone("forest")
+	await _frames(3)
+	var tracks: QuestTarget = _zone().get_node("QuestTargets/ZebuTracks")
+	var zebu: QuestTarget = _zone().get_node("QuestTargets/LostZebu")
+	var first := tracks.visible and not zebu.visible
+	_player.global_position = tracks.global_position
+	var at_tracks := func() -> bool: return _sim.get_quest_step_index("rakoto_lost_zebu") == 1
+	var followed := await _wait_for(at_tracks, 2.0)
+	await _frames(2)
+	_check(first and followed and zebu.visible and not tracks.visible,
+		"quests: in the forest, hoof prints by the ford - walking over them, the zebu appears by the old amontana")
+	state.inventory.erase("wild_greens")
+	zebu.triggered.emit()
+	await _frames(2)
+	zebu.triggered.emit() # no greens yet
+	await _frames(2)
+	var waiting := _sim.get_quest_step_index("rakoto_lost_zebu") == 2
+	state.add_inventory("wild_greens", 2)
+	_sim.inventory_changed.emit("wild_greens", 2)
+	zebu.triggered.emit()
+	await _frames(2)
+	_check(waiting and _sim.get_quest_step_index("rakoto_lost_zebu") == 3 and not zebu.visible
+			and state.get_inventory_count("wild_greens") == 0,
+		"quests: the zebu shies away until it's given 2 wild greens - then it goes home")
+
+	await _go_to_zone("rice_fields")
+	await _frames(3)
+	_player.global_position = Vector2(300, 300)
+	rakoto = _villager("Rakoto")
+	var ready := rakoto._mark.visible and rakoto._mark.text == "?"
+	rakoto.interacted.emit()
+	await _frames(2)
+	var evening: EveningManager = _world.get_node("Gameplay/EveningManager")
+	var told := evening.get_lines().any(func(line: Dictionary) -> bool: return "Volamena" in line["text"])
+	_check(ready and _sim.is_quest_done("rakoto_lost_zebu") and state.money == money + 10000
+			and rakoto._bubble.visible and tracker._quests.get_child_count() == 0 and told,
+		"quests: back to Rakoto ('?'): 10 000 Ar, his thanks - and Dada tells it at dinner")
+	await _go_to_zone("village")
+	await _frames(3)
+	_check((_zone().get_node("QuestTargets/Volamena") as QuestTarget).visible,
+		"quests: once found, Volamena grazes by Rakoto's house in the village")
+
+	state.quests_done.erase("rakoto_lost_zebu")
+	state.friendship["rakoto"] = friendship
+	state.money = money
+	state.inventory.erase("wild_greens")
+	if greens > 0:
+		state.add_inventory("wild_greens", greens)
+	_sim.day_log = DayLog.new()
+	state.clock.current_day = today
+	_sim.quest_changed.emit("")
+	_set_time(10 * 60)
+	await _frames(3)
 
 # --- home screen ----------------------------------------------------------------------------
 

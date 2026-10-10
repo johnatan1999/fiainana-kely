@@ -4,6 +4,8 @@
 - **Se coucher ouvre le repas du soir** (*sakafo hariva*). La famille dîne sur la natte, à
   la lumière de la lampe à huile, et **parle de la journée**. Ce n'est pas un tableau de
   chiffres, c'est une conversation.
+  - **Une quête finie dans la journée** passe d'abord : la famille la raconte (« Rakoto a
+    raconté à toute la gargote que tu as retrouvé Volamena. »), voir `quests.md`.
   - **Dada** parle des champs et de l'argent : « Tu as récolté 6 haricots et 3 maïs
     aujourd'hui. Bon travail. », « La journée a rapporté 9 400 Ar, et on a dépensé
     3 000 Ar. ». Les jours calmes : « Une journée calme. La terre aussi a besoin de

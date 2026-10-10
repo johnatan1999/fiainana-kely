@@ -5,6 +5,7 @@ extends Node
 ## (WorldManager.bedtime_requested), the family has dinner together and
 ## talks about the day - from FarmSimulation.day_log - and about tomorrow:
 ## - Dada: the fields (what was harvested) and the money;
+## - a side quest finished today: what the village says of it (Quest.evening_line);
 ## - Neny: the village (orders delivered, who likes the player more) and
 ##   the plots left dry - there's still time to water them;
 ## - Fara: the hens, the rooster, the tournament, her school;
@@ -93,7 +94,7 @@ func get_dish() -> Array:
 ## speaker's lines one after the other make a single turn.
 func get_lines() -> Array:
 	var tomorrow := _tomorrow_lines().slice(0, 2)
-	var day := _dry_lines() + _field_lines() + _village_lines() + _sister_lines()
+	var day := _dry_lines() + _quest_lines() + _field_lines() + _village_lines() + _sister_lines()
 	var lines := day.slice(0, MAX_LINES - tomorrow.size()) + tomorrow
 	# Someone who goes on talking: one turn, not their name twice.
 	var turns := []
@@ -108,6 +109,16 @@ func _line(speaker: String, text: String) -> Dictionary:
 	var data: VillagerData = _family.get(speaker)
 	return {"speaker": speaker, "name": _names.get(speaker, speaker),
 		"portrait": VillagerPortrait.make(data.look) if data != null else null, "text": text}
+
+# --- A side quest finished today: the village talks about it -------------------------------
+
+func _quest_lines() -> Array:
+	var lines := []
+	for quest_id: String in simulation.day_log.quests_done:
+		var quest := simulation.get_quest(quest_id)
+		if quest != null and not quest.evening_line.is_empty():
+			lines.append([quest.evening_speaker, tr(quest.evening_line)])
+	return lines
 
 # --- Dada: the fields and the money ---------------------------------------------------------
 

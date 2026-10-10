@@ -82,6 +82,7 @@ var _bubble_time := 0.0
 var _player: Node2D
 var _spot_offset := Vector2.ZERO
 var _mark_y := 0.0
+var _mark_color := Color.WHITE
 var _hearts: HeartsDisplay
 var _hearts_time := 0.0
 var _t := 0.0
@@ -103,6 +104,9 @@ func _ready() -> void:
 	_bubble.visible = false
 	_mark.visible = false
 	_mark_y = _mark.position.y
+	# Their own settings: the mark's colour changes (an order, a quest).
+	_mark.label_settings = _mark.label_settings.duplicate()
+	_mark_color = _mark.label_settings.font_color
 	_interactable.interacted.connect(interacted.emit)
 	_hearts = HeartsDisplay.new()
 	_hearts.name = "Hearts"
@@ -357,9 +361,10 @@ func get_villager_id() -> String:
 	return data.resource_path.get_file().get_basename() if data != null else ""
 
 ## "!" (an order to offer), "?" (an order the player can deliver now) or ""
-## over their head.
-func set_order_mark(mark: String) -> void:
+## over their head - in gold, or in `color` (a side quest's: QuestManager).
+func set_order_mark(mark: String, color := Color(0, 0, 0, 0)) -> void:
 	_mark.text = mark
+	_mark.label_settings.font_color = color if color.a > 0.0 else _mark_color
 	_mark.visible = not _inside and not mark.is_empty()
 
 ## What talking to them does ("[E] <prompt>"), already translated.

@@ -28,6 +28,8 @@ var school_paid := 0
 var cooked: Dictionary = {}
 ## The notebook's new pages today (discovery ids).
 var discoveries: Array[String] = []
+## Side quests finished today (quest ids).
+var quests_done: Array[String] = []
 
 func add_harvest(item_id: String, quantity: int) -> void:
 	harvested[item_id] = int(harvested.get(item_id, 0)) + quantity
@@ -52,4 +54,5 @@ func get_main_harvest() -> String:
 func is_quiet() -> bool:
 	return earned == 0 and spent == 0 and harvested.is_empty() and products.is_empty() \
 		and orders_delivered.is_empty() and new_hearts.is_empty() and cockfight.is_empty() \
-		and neighbour_tufts == 0 and cooked.is_empty() and discoveries.is_empty()
+		and neighbour_tufts == 0 and cooked.is_empty() and discoveries.is_empty() \
+		and quests_done.is_empty()

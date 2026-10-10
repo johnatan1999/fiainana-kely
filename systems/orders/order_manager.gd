@@ -33,6 +33,9 @@ func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase, p_world_manage
 	_panel.accepted.connect(_on_accepted)
 	_panel.declined.connect(_on_declined)
 	simulation.order_changed.connect(_on_order_changed)
+	# A villager a side quest waits on: QuestManager answers them, until it's
+	# over.
+	simulation.quest_changed.connect(func(_quest_id: String): _refresh())
 	simulation.order_expired.connect(_on_order_expired)
 	simulation.inventory_changed.connect(func(_item: String, _amount: int): _refresh())
 	simulation.day_changed.connect(func(_day: int): _on_morning())
@@ -79,6 +82,8 @@ func _on_morning() -> void:
 
 func _on_villager_interacted(villager: Villager) -> void:
 	var villager_id := villager.get_villager_id()
+	if QuestManager.has_quest_business(simulation, villager_id):
+		return
 	villager.turn_to_player()
 	if simulation.is_order_offered(villager_id):
 		_offer(villager, villager_id)
@@ -134,6 +139,8 @@ func _refresh() -> void:
 	for villager: Villager in get_tree().get_nodes_in_group(Villager.GROUP):
 		var villager_id := villager.get_villager_id()
 		var name: String = villager.data.display_name if villager.data else villager_id
+		if QuestManager.has_quest_business(simulation, villager_id):
+			continue # QuestManager's mark and prompt
 		if simulation.is_order_offered(villager_id):
 			villager.set_order_mark("!")
 			villager.set_prompt(tr("Voir la commande de %s") % name)
