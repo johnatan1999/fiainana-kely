@@ -111,6 +111,12 @@ var cockfight_champion: String = ""
 ## building site under way: {"project", "done_day", "helpers"}, {} with none.
 var building_levels: Dictionary = {}
 var construction: Dictionary = {}
+
+## The player's notebook (FarmSimulation's notebook API): discovery id ->
+## the day it was found. And the forest's forage spots: spot id -> the first
+## day its plant can be gathered again.
+var discoveries: Dictionary = {}
+var forage: Dictionary = {}
 const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
@@ -292,6 +298,8 @@ func to_dict() -> Dictionary:
 		"zebu_trough_spare": zebu_trough_spare,
 		"building_levels": building_levels.duplicate(),
 		"construction": construction.duplicate(true),
+		"discoveries": discoveries.duplicate(),
+		"forage": forage.duplicate(),
 	}
 
 ## JSON object keys are strings: species saved as "0", "4"...
@@ -455,6 +463,14 @@ func load_dict(data: Dictionary) -> void:
 	if levels_data is Dictionary:
 		for building in levels_data:
 			building_levels[str(building)] = int(levels_data[building])
+	# Optional keys (older saves have none): an empty notebook.
+	for key in ["discoveries", "forage"]:
+		var target: Dictionary = get(key)
+		target.clear()
+		var saved = data.get(key, {})
+		if saved is Dictionary:
+			for id in saved:
+				target[str(id)] = int(saved[id])
 	construction = {}
 	var site = data.get("construction", {})
 	if site is Dictionary and site.has("project"):

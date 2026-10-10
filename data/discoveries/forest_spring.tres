@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/discovery.gd" id="1_discovery"]
+
+[resource]
+script = ExtResource("1_discovery")
+category = 2
+display_name = "La source"
+malagasy_name = "Loharano"
+description = "L'eau sort de la terre entre les pierres, claire et froide. C'est elle qui fait le ruisseau."
+hint = "Remonte le ruisseau."
+fara_line = "L'eau est si froide que j'ai eu mal aux dents !"

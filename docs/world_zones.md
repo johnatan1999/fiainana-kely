@@ -53,6 +53,9 @@ descend le **zoma** (vendredi), jour de marché.
 - Quatre **maisons** autour de la place (portes fermées), des manguiers pour l'ombre.
 - Au nord de la rivière, à gauche de la route, le **marché aux zébus** (tsena omby) : un
   enclos, et le poteau du marchand Ratsimba (voir `zebus.md`).
+- **La forêt (`forest`)**, par la lisière est du village (panneau « ALA ») : une zone
+  sauvage, avec son sentier, sa clairière, son ruisseau et sa source, et le vieil amontana.
+  On y observe des animaux et on y cueille des plantes (voir `forest.md`).
 - Au sud de la rivière, à droite du pont, sur l'herbe, **l'arène des combats de coqs**
   (kianja ady akoho) et son panneau « ADY AKOHO » : le tournoi de l'Alahady (voir
   `cockfight.md`).
@@ -184,8 +187,8 @@ descend le **zoma** (vendredi), jour de marché.
   été généré une seule fois. **Les scènes sont maintenant la référence** et s'éditent à la
   main dans l'éditeur, sur les couches et nœuds décrits plus haut. Les planches provisoires,
   elles, se régénèrent avec `tools/placeholder_art/`.
-- La sortie est du village est dessinée mais ne mène nulle part (bord de carte). La sortie sud
-  mène au bourg.
+- La sortie est du village mène à la forêt (`ToForest`, `tools/build_forest.gd`). La sortie
+  sud mène au bourg.
 - La route sud du bourg et son taxi-brousse sont l'amorce des **autres villages** (jusqu'à 7) :
   le taxi-brousse pourra y emmener le joueur.
 - La paroi d'une falaise n'est visible que sur sa face sud, et les côtés du plateau ne bloquent

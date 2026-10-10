@@ -8,7 +8,7 @@ extends RefCounted
 ## already translated to the current language (the French texts in the
 ## tables below are the keys of localization/translations.csv).
 
-enum Category { CROPS, ANIMALS, TOOLS, FOOD, VILLAGERS }
+enum Category { CROPS, ANIMALS, TOOLS, FOOD, VILLAGERS, NOTEBOOK }
 
 const CATEGORY_NAMES := {
 	Category.CROPS: "Cultures",
@@ -16,7 +16,13 @@ const CATEGORY_NAMES := {
 	Category.TOOLS: "Outils",
 	Category.FOOD: "Nourriture",
 	Category.VILLAGERS: "Villageois",
+	Category.NOTEBOOK: "Carnet",
 }
+## The notebook's pages (Discovery.Category, then the dishes).
+const NOTEBOOK_PAGES := ["Faune", "Flore", "Lieux", "Cuisine"]
+const NOTEBOOK_COLORS := [Color(0.55, 0.45, 0.3), Color(0.35, 0.55, 0.3), Color(0.4, 0.5, 0.65), Color(0.75, 0.5, 0.2)]
+const UNKNOWN_COLOR := Color(0.35, 0.3, 0.27)
+const FOREST_SHEET := preload("res://assets/sprites/props/forest.png")
 
 ## Where a villager is, by the spot of their current step (VillagerRoads
 ## markers) - "En ce moment : au marché". A spot missing here reads as
@@ -247,6 +253,68 @@ static func describe_villager(db: ItemDatabase, simulation: FarmSimulation, vill
 		"meta": _t("%d/%d cœurs") % [hearts, max_hearts],
 	}
 	return entry
+
+## A page of the player's notebook (the kahie): found, what it is, with
+## Fara's word under her drawing; not yet, "???" and a hint where to look.
+## `id`: a Discovery id, or "cuisine:<recipe>". The entry's id is
+## "notebook:<id>"; sort_group keeps the pages in order.
+static func describe_discovery(db: ItemDatabase, simulation: FarmSimulation, discovery_id: String) -> Dictionary:
+	var found := simulation.is_discovered(discovery_id)
+	var page := 3
+	var title := ""
+	var malagasy := ""
+	var text := ""
+	var hint := ""
+	var fara := ""
+	var icon: Texture2D = null
+	if discovery_id.begins_with(FarmSimulation.CUISINE_PREFIX):
+		var recipe := simulation.get_recipe(discovery_id.trim_prefix(FarmSimulation.CUISINE_PREFIX))
+		title = _t(recipe.display_name) if recipe != null else discovery_id
+		malagasy = recipe.malagasy_name if recipe != null else ""
+		text = _t("Cuisiné à la cuisine de la ferme.")
+		hint = _t("Une recette à cuisiner à la cuisine de la ferme.")
+		fara = _t("Miam, ça a l'air bon !")
+		if recipe != null:
+			icon = db.get_icon(recipe.result)
+	else:
+		var discovery := simulation.get_discovery(discovery_id)
+		page = discovery.category
+		title = _t(discovery.display_name)
+		malagasy = discovery.malagasy_name
+		text = _t(discovery.description)
+		hint = _t(discovery.hint)
+		fara = _t(discovery.fara_line)
+		icon = _forest_icon(discovery_id, page)
+	var details: Array = [[_t("Page"), _t(NOTEBOOK_PAGES[page])]]
+	if not found:
+		return {
+			"id": "notebook:" + discovery_id, "name": "???", "icon": null, "color": UNKNOWN_COLOR,
+			"category": Category.NOTEBOOK, "description": _t("Pas encore trouvé. ") + hint,
+			"details": details, "meta": _t(NOTEBOOK_PAGES[page]), "sort_group": page,
+		}
+	details.append([_t("Trouvé"), _t("jour %d") % int(simulation.state.discoveries[discovery_id])])
+	return {
+		"id": "notebook:" + discovery_id, "name": "%s · %s" % [title, malagasy] if not malagasy.is_empty() else title,
+		"icon": icon, "color": NOTEBOOK_COLORS[page], "category": Category.NOTEBOOK,
+		"description": text + "\n\n" + _t("Dessin de Fara : « %s »") % fara,
+		"details": details, "meta": _t(NOTEBOOK_PAGES[page]), "sort_group": page,
+	}
+
+## The animal's or the plant's drawing (forest.png), none for a place.
+static func _forest_icon(discovery_id: String, page: int) -> Texture2D:
+	var column := -1
+	var row := 0
+	if page == Discovery.Category.FAUNA:
+		column = WildAnimal.FRAMES.get(discovery_id, -1)
+	elif page == Discovery.Category.FLORA:
+		column = ForageSpot.CELLS.get(discovery_id, -1)
+		row = 1
+	if column < 0:
+		return null
+	var icon := AtlasTexture.new()
+	icon.atlas = FOREST_SHEET
+	icon.region = Rect2(column * 128, row * 128, 128, 128)
+	return icon
 
 ## The player's family: who they are and where they are now - no
 ## friendship or orders with them.

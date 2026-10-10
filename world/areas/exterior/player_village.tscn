@@ -1,4 +1,4 @@
-[gd_scene load_steps=62 format=4 uid="uid://btpsckeuuhxua"]
+[gd_scene load_steps=63 format=4 uid="uid://btpsckeuuhxua"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_o0l50"]
 [ext_resource type="TileSet" uid="uid://bwea2h1tef6ov" path="res://assets/tileset/farm_tileset.tres" id="2_llnbk"]
@@ -90,6 +90,9 @@ size = Vector2(24, 130)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bofs1"]
 size = Vector2(192, 24)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_3vjsn"]
+size = Vector2(25, 220)
+
 [node name="PlayerVillage" type="Node2D"]
 y_sort_enabled = true
 script = ExtResource("1_o0l50")
@@ -108,6 +111,9 @@ position = Vector2(70, 505)
 
 [node name="SpawnFrom_MARKET_TOWN" type="Marker2D" parent="Spawns"]
 position = Vector2(1585, 1560)
+
+[node name="SpawnFrom_FOREST" type="Marker2D" parent="Spawns"]
+position = Vector2(2268, 990)
 
 [node name="GroundLayer" type="TileMapLayer" parent="."]
 z_index = -10
@@ -883,3 +889,16 @@ data = ExtResource("52_s2hsk")
 [node name="Hanta" parent="Villagers" instance=ExtResource("48_mi770")]
 position = Vector2(936, 535)
 data = ExtResource("53_klm3y")
+
+[node name="ToForest" type="Area2D" parent="."]
+script = ExtResource("27_transition")
+target_zone = "forest"
+target_spawn = "SpawnFrom_VILLAGE"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ToForest"]
+position = Vector2(2340.5, 990)
+shape = SubResource("RectangleShape2D_3vjsn")
+
+[node name="Sign_Forest" parent="." instance=ExtResource("43_5fvhf")]
+position = Vector2(2222, 900)
+text = "ALA"

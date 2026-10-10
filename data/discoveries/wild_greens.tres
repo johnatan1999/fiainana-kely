@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/discovery.gd" id="1_discovery"]
+
+[resource]
+script = ExtResource("1_discovery")
+category = 1
+display_name = "Brèdes sauvages"
+malagasy_name = "Anamamy"
+description = "Des brèdes qui poussent seules à l'ombre des arbres. Neny les fait cuire avec le riz."
+hint = "À l'ombre des arbres, toute l'année."
+fara_line = "Neny dit que ça rend fort."
+item_id = "wild_greens"
+quantity = 2
+regrow_days = 2
+seasons = 3

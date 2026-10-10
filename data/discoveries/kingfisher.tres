@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/discovery.gd" id="1_discovery"]
+
+[resource]
+script = ExtResource("1_discovery")
+category = 0
+display_name = "Martin-pêcheur"
+malagasy_name = "Vintsy"
+description = "Le vintsy, petit martin-pêcheur bleu et roux, guette les poissons depuis une branche au-dessus de l'eau, puis plonge comme une flèche."
+hint = "Le matin, au bord du ruisseau."
+fara_line = "Trop rapide pour le dessiner... j'ai fait de mon mieux !"
+active_from = 420
+active_to = 660
+seasons = 3
+shy_of_rain = true

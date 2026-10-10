@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/discovery.gd" id="1_discovery"]
+
+[resource]
+script = ExtResource("1_discovery")
+category = 0
+display_name = "Tenrec"
+malagasy_name = "Trandraka"
+description = "Le tenrec fouille la terre la nuit avec son museau pointu. À la saison sèche, il dort tout le temps au fond de son terrier."
+hint = "La nuit, à la saison des pluies, au pied des arbres."
+fara_line = "Il pique un peu, comme une brosse !"
+active_from = 1140
+active_to = 1560
+seasons = 1

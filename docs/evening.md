@@ -12,7 +12,8 @@
     commande. »), un villageois qui t'apprécie plus (« on me l'a dit au point d'eau »),
     l'écolage payé. Et d'abord, **les cases oubliées** : « Tu as oublié d'arroser 3
     case(s)... Il est encore temps, avant de dormir. »
-  - **Fara** parle de l'école (l'écolage bientôt dû, ou son envie d'y retourner si elle
+  - **Fara** parle d'abord de ce qu'elle a dessiné dans ton carnet aujourd'hui (voir
+    `forest.md`), puis de l'école (l'écolage bientôt dû, ou son envie d'y retourner si elle
     est renvoyée), du coq (nourri ou pas, le tournoi du jour) et des œufs ramassés.
   - **Demain** : le changement de saison, un chantier qui finit (voir `family_projects.md`),
     le dernier jour d'une commande, les cases mûres

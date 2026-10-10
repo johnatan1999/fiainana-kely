@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="Discovery" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/discovery.gd" id="1_discovery"]
+
+[resource]
+script = ExtResource("1_discovery")
+category = 1
+display_name = "Ravintsara"
+malagasy_name = "Ravintsara"
+description = "Les feuilles du ravintsara sentent fort et soignent le rhume. Neny Soa en fait des tisanes."
+hint = "Un arbuste aux feuilles qui sentent fort, près de la source."
+fara_line = "Ça sent comme quand on est malade, mais en bien."
+item_id = "ravintsara"
+quantity = 1
+regrow_days = 4
+seasons = 3

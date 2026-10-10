@@ -13,8 +13,8 @@ extends Control
 
 const SlotScene := preload("res://ui/inventory/inventory_slot.tscn")
 const TabScene := preload("res://ui/inventory/category_tab.tscn")
-## With the Villageois tab, five tabs share the left page.
-const TAB_HEIGHT := 66.0
+## With the Villageois and Carnet tabs, six tabs share the left page.
+const TAB_HEIGHT := 56.0
 const TAB_GAP := 4
 
 const OPEN_TIME := 0.18
@@ -70,6 +70,7 @@ func setup(simulation: FarmSimulation, shop_ui: ShopUI, item_db: ItemDatabase, h
 
 	_villagers = VillagerData.load_all()
 	_add_villagers_tab()
+	_add_notebook_tab()
 	for child in category_list.get_children():
 		if child is InventoryCategoryTab:
 			_tabs.append(child)
@@ -85,6 +86,7 @@ func setup(simulation: FarmSimulation, shop_ui: ShopUI, item_db: ItemDatabase, h
 	for livestock_signal in [simulation.animal_added, simulation.animal_changed]:
 		livestock_signal.connect(func(_animal_id: String): _on_inventory_changed("", 0))
 	simulation.pending_animals_changed.connect(func(): _on_inventory_changed("", 0))
+	simulation.discovery_made.connect(func(_id: String): _on_inventory_changed("", 0))
 	_on_money_changed(simulation.state.money)
 
 	resized.connect(func(): pivot_offset = size / 2.0)
@@ -100,6 +102,15 @@ func _add_villagers_tab() -> void:
 	tab.category = InventoryCatalog.Category.VILLAGERS
 	if not _villagers.is_empty():
 		tab.icon = VillagerPortrait.make((_villagers.values()[0] as VillagerData).look)
+	category_list.add_child(tab)
+
+## The Carnet tab (the player's notebook, the kahie), last - its icon is
+## the sifaka's drawing.
+func _add_notebook_tab() -> void:
+	var tab: InventoryCategoryTab = TabScene.instantiate()
+	tab.name = "NotebookTab"
+	tab.category = InventoryCatalog.Category.NOTEBOOK
+	tab.icon = InventoryCatalog._forest_icon("sifaka", Discovery.Category.FAUNA)
 	category_list.add_child(tab)
 
 func _style_scrollbar() -> void:
@@ -151,8 +162,14 @@ func _collect_items() -> Dictionary:
 			"info": InventoryCatalog.describe_villager(_item_db, _simulation, villager_id, _villagers[villager_id]),
 			"quantity": 1,
 		})
+	for discovery_id in _simulation.get_discovery_ids():
+		by_category[InventoryCatalog.Category.NOTEBOOK].append({
+			"info": InventoryCatalog.describe_discovery(_item_db, _simulation, discovery_id), "quantity": 1,
+		})
 	for category in by_category:
-		by_category[category].sort_custom(_sort_entries)
+		# The notebook keeps its own order (get_discovery_ids: page by page).
+		if category != InventoryCatalog.Category.NOTEBOOK:
+			by_category[category].sort_custom(_sort_entries)
 	return by_category
 
 ## Waiting animals, then settled ones, then items - each group by name.
@@ -166,7 +183,10 @@ static func _sort_entries(a: Dictionary, b: Dictionary) -> bool:
 func _rebuild() -> void:
 	var by_category := _collect_items()
 	for tab in _tabs:
-		tab.set_count(by_category[tab.category].size())
+		if tab.category == InventoryCatalog.Category.NOTEBOOK:
+			tab.set_count(_simulation.get_notebook_progress().x)
+		else:
+			tab.set_count(by_category[tab.category].size())
 		tab.set_selected(tab.category == _category)
 
 	for child in item_grid.get_children():

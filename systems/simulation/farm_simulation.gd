@@ -73,6 +73,10 @@ signal project_completed(project_id: String)
 ## The brick coop's basket (coop level 3): the eggs laid overnight went
 ## straight into the bag.
 signal basket_collected(item_id: String, quantity: int)
+## A new page in the player's notebook (Discovery id, or "cuisine:<recipe>").
+signal discovery_made(discovery_id: String)
+## A wild plant was gathered at a forage spot (it grows back later).
+signal forage_changed(spot_id: String)
 
 const COOP_COST := 6000
 ## Chance of a rainy day, per season: Asara is the rainy season. A rainy day
@@ -254,6 +258,7 @@ var _friendship_rewards: Dictionary = {} # villager_id: String -> Array[Friendsh
 var _fighting_roosters: Dictionary = {} # rooster_id: String -> FightingRoosterData
 var _projects: Dictionary = {} # project_id: String -> FamilyProject
 var _recipes: Dictionary = {} # recipe_id: String -> Recipe
+var _discoveries: Dictionary = {} # discovery_id: String -> Discovery
 ## The chance a villager offers an order on a given morning (tests set 1.0
 ## or 0.0 to make it certain).
 var order_offer_chance := ORDER_OFFER_CHANCE
@@ -1035,7 +1040,86 @@ func cook(recipe_id: String) -> bool:
 	state.add_inventory(recipe.result, recipe.quantity)
 	inventory_changed.emit(recipe.result, state.get_inventory_count(recipe.result))
 	day_log.cooked[recipe_id] = int(day_log.cooked.get(recipe_id, 0)) + recipe.quantity
+	discover(CUISINE_PREFIX + recipe_id)
 	return true
+
+# --- The notebook (kahie) and the forest ----------------------------------------------------
+
+## A dish's page in the notebook: "cuisine:<recipe id>" - found when first
+## cooked.
+const CUISINE_PREFIX := "cuisine:"
+
+## Registered by ForestManager (data/discoveries/).
+func register_discovery(discovery_id: String, discovery: Discovery) -> void:
+	_discoveries[discovery_id] = discovery
+
+func get_discovery(discovery_id: String) -> Discovery:
+	return _discoveries.get(discovery_id)
+
+## The notebook's entries: the registered ones, then a page per recipe.
+func get_discovery_ids() -> Array:
+	var ids := _discoveries.keys()
+	ids.sort_custom(func(a: String, b: String) -> bool:
+		var ca: int = _discoveries[a].category
+		var cb: int = _discoveries[b].category
+		return ca < cb if ca != cb else a < b)
+	for recipe_id in get_recipe_ids():
+		ids.append(CUISINE_PREFIX + recipe_id)
+	return ids
+
+func is_discovered(discovery_id: String) -> bool:
+	return state.discoveries.has(discovery_id)
+
+## How many of the notebook's entries are found, out of how many.
+func get_notebook_progress() -> Vector2i:
+	var ids := get_discovery_ids()
+	return Vector2i(ids.filter(func(id): return is_discovered(id)).size(), ids.size())
+
+## A new page in the notebook - false if it was already there, or isn't an
+## entry at all.
+func discover(discovery_id: String) -> bool:
+	var known := _discoveries.has(discovery_id) or (discovery_id.begins_with(CUISINE_PREFIX)
+		and _recipes.has(discovery_id.trim_prefix(CUISINE_PREFIX)))
+	if not known or is_discovered(discovery_id):
+		return false
+	state.discoveries[discovery_id] = state.day
+	day_log.discoveries.append(discovery_id)
+	discovery_made.emit(discovery_id)
+	return true
+
+## Whether the animal (or plant) is about right now: its hours, its season,
+## the weather.
+func is_wildlife_active(discovery_id: String) -> bool:
+	var discovery := get_discovery(discovery_id)
+	return discovery != null and discovery.is_active(state.clock.minute_of_day, state.clock.get_season(), is_raining())
+
+## The player watches an animal: its page, if it's about.
+func observe(discovery_id: String) -> bool:
+	if not is_wildlife_active(discovery_id):
+		return false
+	discover(discovery_id)
+	return true
+
+## A wild plant at `spot_id` (the plant's Discovery: its item, season and
+## regrowth): ready in its season, once grown back.
+func can_forage(spot_id: String, discovery_id: String) -> bool:
+	var plant := get_discovery(discovery_id)
+	return plant != null and not plant.item_id.is_empty() and plant.is_in_season(state.clock.get_season()) \
+		and state.day >= int(state.forage.get(spot_id, 0))
+
+## Gathers it: the item in the bag, the plant grows back in its
+## regrow_days, its page in the notebook. Returns how many were gathered.
+func forage(spot_id: String, discovery_id: String) -> int:
+	if not can_forage(spot_id, discovery_id):
+		return 0
+	var plant := get_discovery(discovery_id)
+	state.add_inventory(plant.item_id, plant.quantity)
+	inventory_changed.emit(plant.item_id, state.get_inventory_count(plant.item_id))
+	state.forage[spot_id] = state.day + plant.regrow_days
+	day_log.add_harvest(plant.item_id, plant.quantity)
+	forage_changed.emit(spot_id)
+	discover(discovery_id)
+	return plant.quantity
 
 # --- Fara's school fees -----------------------------------------------------------------
 

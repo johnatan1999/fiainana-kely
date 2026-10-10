@@ -56,6 +56,7 @@ func _ready() -> void:
 	await _test_zebu_plough()
 	await _test_zebu_manure()
 	await _test_family_projects()
+	await _test_forest()
 	# Last: it takes over the camera.
 	await _test_home_screen()
 
@@ -1003,6 +1004,63 @@ func _test_family_projects() -> void:
 	state.has_coop = had_coop
 	CoopInterior.level = _sim.get_building_level("coop")
 	state.money = money
+	await _go_to_zone("village")
+
+# --- the forest and the notebook ------------------------------------------------------------
+
+func _test_forest() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	var state := _sim.state
+	var day := state.clock.current_day
+	state.clock.current_day = 1 # Asara
+	_set_time(7 * 60 + 30)
+	await _go_to_zone("village")
+	_player.global_position = Vector2(2240, 990)
+	_player.auto_walk_to(Vector2(2400, 990), 4.0)
+	var in_forest := func() -> bool: return _wm.current_zone_id == "forest"
+	_check(await _wait_for(in_forest, 5.0),
+		"forest: the village's east edge leads into the forest")
+	var walk_done := func() -> bool: return not _player.is_auto_walking()
+	await _wait_for(walk_done, 5.0)
+	await _frames(5)
+	_player.global_position = Vector2(700, 1300)
+	var sifaka: WildAnimal = _zone().get_node("Wildlife/Sifaka")
+	var tenrec: WildAnimal = _zone().get_node("Wildlife/Tenrec")
+	var dawn := sifaka.is_present() and not tenrec.is_present()
+	_set_time(23 * 60)
+	await _frames(3)
+	var night := not sifaka.is_present() and tenrec.is_present()
+	_set_time(7 * 60 + 30)
+	await _frames(3)
+	var pages := _sim.get_notebook_progress().x
+	sifaka.observed.emit()
+	var greens: ForageSpot = _zone().get_node("WildPlants/Greens_2")
+	var bag := state.get_inventory_count("wild_greens")
+	greens.gathered.emit()
+	await _frames(3)
+	_check(dawn and night and _sim.is_discovered("sifaka") and state.get_inventory_count("wild_greens") > bag
+			and _sim.is_discovered("wild_greens") and not greens._interactable.is_interactable
+			and _sim.get_notebook_progress().x == pages + 2,
+		"forest: the sifaka at dawn, the tenrec at night - watching one, gathering greens: new pages in the notebook")
+	_player.global_position = Vector2(840, 700)
+	var clearing := func() -> bool: return _sim.is_discovered("clearing")
+	_check(await _wait_for(clearing, 2.0), "forest: walking into the clearing finds it")
+	var inventory: InventoryUI = _world.get_node("UI/InventoryUI")
+	inventory.open()
+	await _frames(20)
+	inventory._select_category(InventoryCatalog.Category.NOTEBOOK)
+	await _frames(5)
+	var notebook: Array = inventory._collect_items()[InventoryCatalog.Category.NOTEBOOK]
+	var named: Array = notebook.map(func(entry): return entry.info["name"])
+	inventory.close()
+	await _frames(20)
+	_check(notebook.size() == _sim.get_notebook_progress().y and named.has("Sifaka · Simpona") and named.has("???"),
+		"notebook: the inventory's Carnet tab - every page, the found ones drawn, the others still '???'")
+	for id in ["sifaka", "wild_greens", "clearing"]:
+		state.discoveries.erase(id)
+	state.forage.clear()
+	state.clock.current_day = day
+	_set_time(10 * 60)
 	await _go_to_zone("village")
 
 # --- home screen ----------------------------------------------------------------------------

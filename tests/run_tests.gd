@@ -204,6 +204,10 @@ func _run_all() -> void:
 	test_annexes_start_unbuilt()
 	test_granary_keeps_more_rice()
 	test_kitchen_cooks_dishes()
+	test_wildlife_keeps_its_hours()
+	test_notebook_pages_once()
+	test_forage_grows_back()
+	test_notebook_save_load()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -2108,3 +2112,73 @@ func test_kitchen_cooks_dishes() -> void:
 			and sim.state.get_inventory_count("corn") == 1 and sim.state.get_inventory_count("food_grilled_corn") == 2
 			and sim.day_log.cooked == {"grilled_corn": 2} and sim.get_cookable_count("mofo_gasy") == 0,
 		"kitchen: once built, harvests cooked into dishes - only what the bag holds")
+
+# --- The forest and the notebook -------------------------------------------------------------
+
+func _make_sim_for_forest() -> FarmSimulation:
+	var sim := _make_sim_for_school()
+	_register_recipes(sim)
+	var discoveries := Discovery.load_all()
+	for discovery_id: String in discoveries:
+		sim.register_discovery(discovery_id, discoveries[discovery_id])
+	return sim
+
+func test_wildlife_keeps_its_hours() -> void:
+	var sim := _make_sim_for_forest()
+	var clock := sim.state.clock
+	var at := func(minute: int, day: int, id: String) -> bool:
+		clock.current_day = day
+		clock.minute_of_day = minute
+		return sim.is_wildlife_active(id)
+	# Day 1 is Asara (rainy), day 31 Asotry (dry).
+	var sifaka: bool = at.call(7 * 60, 1, "sifaka") and not at.call(12 * 60, 1, "sifaka")
+	var tenrec: bool = at.call(23 * 60, 1, "tenrec") and at.call(60, 1, "tenrec") and not at.call(23 * 60, 31, "tenrec")
+	var maki: bool = at.call(15 * 60, 31, "maki") and not at.call(15 * 60, 1, "maki")
+	clock.current_day = 1
+	clock.minute_of_day = 7 * 60
+	sim.set_weather(FarmState.Weather.RAIN)
+	var rain := not sim.is_wildlife_active("sifaka") and not sim.observe("sifaka")
+	sim.set_weather(FarmState.Weather.CLEAR)
+	_check(sifaka and tenrec and maki and rain and sim.observe("sifaka") and sim.is_discovered("sifaka"),
+		"forest: each animal keeps its hours and seasons - the sifaka at dawn, the tenrec at night in Asara, not in the rain")
+
+func test_notebook_pages_once() -> void:
+	var sim := _make_sim_for_forest()
+	var pages := []
+	sim.discovery_made.connect(func(id): pages.append(id))
+	var total := sim.get_notebook_progress().y
+	sim.discover("clearing")
+	sim.discover("clearing")
+	var bogus := sim.discover("not_an_entry")
+	sim.state.building_levels["kitchen"] = 1
+	sim.state.add_inventory("corn", 3)
+	sim.cook("grilled_corn")
+	_check(pages == ["clearing", "cuisine:grilled_corn"] and not bogus and sim.get_notebook_progress() == Vector2i(2, total)
+			and total == Discovery.load_all().size() + Recipe.load_all().size()
+			and sim.day_log.discoveries.size() == 2,
+		"notebook: a page once per discovery - places, animals, plants, and each dish the first time it's cooked")
+
+func test_forage_grows_back() -> void:
+	var sim := _make_sim_for_forest()
+	var first := sim.forage("Greens_1", "wild_greens")
+	var again := sim.forage("Greens_1", "wild_greens")
+	var other_spot := sim.forage("Greens_2", "wild_greens")
+	var dry_season_honey := sim.forage("Hive", "honey") # Asara: no honey yet
+	sim.advance_day()
+	var too_soon := sim.can_forage("Greens_1", "wild_greens")
+	sim.advance_day()
+	_check(first == 2 and again == 0 and other_spot == 2 and dry_season_honey == 0 and not too_soon
+			and sim.can_forage("Greens_1", "wild_greens") and sim.state.get_inventory_count("wild_greens") == 4
+			and sim.is_discovered("wild_greens") and not sim.is_discovered("honey"),
+		"forest: a wild plant gathered grows back in a few days, only in its season - and goes in the notebook")
+
+func test_notebook_save_load() -> void:
+	var sim := _make_sim_for_forest()
+	sim.discover("sacred_fig")
+	sim.forage("Spring_Ravintsara", "ravintsara")
+	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	var loaded := _make_sim_for_forest()
+	loaded.load_save_data(data)
+	_check(loaded.is_discovered("sacred_fig") and loaded.is_discovered("ravintsara")
+			and not loaded.can_forage("Spring_Ravintsara", "ravintsara"),
+		"notebook: the pages and the plants growing back survive a save/load")

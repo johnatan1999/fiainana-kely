@@ -24,6 +24,7 @@ la fiche concernée, ou en crée une nouvelle ajoutée à cet index.
 | [orders.md](orders.md) | `OrderManager`, `OrderTemplate` : commandes des villageois, panneau, suivi |
 | [home_screen.md](home_screen.md) | `HomeScreen`, `Campfire`, `SaveSlotsPanel`, `SettingsPanel` : écran d'accueil (nuit au village, feu de camp), liste des parties, paramètres |
 | [family_projects.md](family_projects.md) | `FamilyProjectManager`, `FamilyProject`, `FamilyProjectsPanel`, `KitchenManager` : projets de famille avec Dada (poulailler, parc à zébus, grenier, cuisine), chantiers et entraide, cuisine |
+| [forest.md](forest.md) | `ForestManager`, `Discovery`, `WildAnimal`, `ForageSpot`, `DiscoveryPlace` : la forêt (animaux à observer, cueillette, lieux) et le carnet du joueur |
 | [evening.md](evening.md) | `EveningManager`, `EveningPanel`, `DayLog` : le repas du soir en famille au coucher, le bilan de la journée et demain |
 | [save.md](save.md) | `SaveController`, `SaveSlots` : 3 parties, sauvegarde au coucher, menu pause |
 | [cockfight.md](cockfight.md) | `CockfightManager`, `TetheredRooster`, `CockfightRing` : coq de combat du joueur, tournoi de l'Alahady au bourg, classement |

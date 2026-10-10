@@ -70,6 +70,7 @@ const TREE_RESOURCES: Array[TreeData] = [
 @onready var family_projects_panel: FamilyProjectsPanel = $UI/FamilyProjectsPanel
 @onready var kitchen_manager: KitchenManager = $Gameplay/KitchenManager
 @onready var cooking_panel: CookingPanel = $UI/CookingPanel
+@onready var forest_manager: ForestManager = $Gameplay/ForestManager
 
 var simulation: FarmSimulation
 var item_db: ItemDatabase
@@ -119,6 +120,7 @@ func _ready() -> void:
 	# After OrderManager: Dada greets, then the family's projects open.
 	family_project_manager.setup(simulation, world_manager, family_projects_panel)
 	kitchen_manager.setup(simulation, item_db, world_manager, cooking_panel)
+	forest_manager.setup(simulation, item_db, world_manager)
 	day_night.setup(simulation, world_manager)
 	weather.setup(simulation, world_manager, day_night, player)
 	# The slot picked on the home screen (SaveSlots.current); none when the

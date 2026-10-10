@@ -169,6 +169,12 @@ func _village_lines() -> Array:
 func _sister_lines() -> Array:
 	var log := simulation.day_log
 	var lines := []
+	# What she drew in the notebook today (an animal, a plant, a place).
+	var drawn := log.discoveries.filter(func(id: String) -> bool: return simulation.get_discovery(id) != null)
+	if not drawn.is_empty():
+		var discovery := simulation.get_discovery(drawn[0])
+		lines.append([SISTER_ID, tr("J'ai dessiné « %s » dans ton carnet ! Tu m'emmèneras en forêt, un jour ?")
+			% tr(discovery.display_name).to_lower()])
 	if simulation.is_school_fees_overdue():
 		lines.append([SISTER_ID, tr("J'aimerais tellement retourner à l'école...")])
 	elif simulation.is_school_fee_due() and simulation.get_school_days_left() <= 3:

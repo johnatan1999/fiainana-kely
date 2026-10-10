@@ -34,6 +34,8 @@ func set_count(count: int) -> void:
 		count_label.text = tr("vide")
 	elif category == InventoryCatalog.Category.VILLAGERS:
 		count_label.text = tr("%d villageois") % count
+	elif category == InventoryCatalog.Category.NOTEBOOK:
+		count_label.text = (tr("%d pages") if count > 1 else tr("%d page")) % count
 	else:
 		count_label.text = (tr("%d objets") if count > 1 else tr("%d objet")) % count
 
