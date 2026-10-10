@@ -88,18 +88,28 @@ func _ready() -> void:
 
 	_build_sfx_pool()
 
-## An actively-looping AudioStreamMP3/OggVorbis still playing when the engine
-## tears down the scene tree doesn't get a chance to release its playback
-## cleanly, which Godot reports as a leaked resource at exit. Stopping every
-## player here (called for every shutdown path: window close, --quit, or
-## get_tree().quit() from the pause menu) avoids that.
+## Quitting with sounds playing: stop() doesn't free a playback at once - it
+## hands it to the audio thread, which drops it on its next mix. If the
+## engine shuts the AudioServer down with playbacks still waiting (many of
+## them when the game runs faster than real time, --fixed-fps in the tests),
+## they leak - and now and then the mix thread touches them while they're
+## torn down: a crash on exit (signal 11, no trace). So every player is
+## stopped here (called on every way out: window closed, "Quitter",
+## get_tree().quit()), then the audio thread gets SHUTDOWN_FLUSH_MSEC of real
+## time to drop them, before anything else is torn down.
+const SHUTDOWN_FLUSH_MSEC := 120
+
 func _exit_tree() -> void:
-	for player in _bgm_players:
+	var players: Array[AudioStreamPlayer] = []
+	players.append_array(_bgm_players)
+	players.append_array(_sfx_pool)
+	if _rain_player != null:
+		players.append(_rain_player)
+	for player in players:
 		player.stop()
 		player.stream = null
-	for player in _sfx_pool:
-		player.stop()
-		player.stream = null
+	_rain_playback = null
+	OS.delay_msec(SHUTDOWN_FLUSH_MSEC)
 
 
 func _ensure_bus(bus_name: String) -> void:

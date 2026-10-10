@@ -56,6 +56,11 @@ Scène principale : `res://ui/home/home_screen.tscn` (écran d'accueil : nuit au
   `.godot/uid_cache.bin` et `.godot/editor/filesystem_cache*` et relancer
   `<godot> --headless --editor --path . --quit`. Sinon le cache garde les anciens chemins
   (ressources introuvables, plantages intermittents à la fermeture).
+- Son : tout passe par `AudioManager`. Un son arrêté n'est libéré qu'au passage suivant du
+  thread audio. À la fermeture, `AudioManager._exit_tree()` arrête tous les lecteurs et
+  laisse 120 ms au thread pour les libérer. Sans ça, des sons restent en attente (surtout en
+  `--fixed-fps`), fuient, et Godot plante parfois à la fermeture (signal 11, sans trace). Un
+  nouveau lecteur audio doit être ajouté à cet arrêt.
 - Un outil qui réenregistre une scène se lance avec `--editor`
   (`<godot> --headless --editor --path . --script res://tools/<outil>.gd`). Sans ce mode,
   Godot ne connaît pas les valeurs par défaut des scripts et écrit toutes les propriétés
