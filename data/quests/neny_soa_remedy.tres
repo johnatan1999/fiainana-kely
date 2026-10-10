@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="Quest" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://core/data/quest.gd" id="1_quest"]
+[ext_resource type="Script" path="res://core/data/quest_step.gd" id="2_step"]
+
+[sub_resource type="Resource" id="Step_jar"]
+script = ExtResource("2_step")
+kind = 3
+objective = "Remplis la cruche de Neny Soa à la source de la forêt, au nord-est."
+target = "spring_jar"
+prompt = "Remplir la cruche de Neny Soa"
+line = "Tu remplis la cruche de Neny Soa à la source. L'eau est fraîche et claire."
+
+[sub_resource type="Resource" id="Step_leaf"]
+script = ExtResource("2_step")
+kind = 1
+objective = "Rapporte l'eau à Neny Soa, avec une feuille de ravintsara (elle pousse près de la source)."
+villager = "neny_soa"
+item_id = "ravintsara"
+prompt = "Donner l'eau et le ravintsara à Neny Soa"
+line = "Avec ça, je ferai une tisane pour les petits qui toussent. Que Zanahary te bénisse !"
+waiting_line = "Tu as l'eau ? Il me faut aussi une feuille de ravintsara : il pousse près de la source."
+
+[resource]
+script = ExtResource("1_quest")
+title = "La tisane de Neny Soa"
+giver = "neny_soa"
+offer_line = "Les petits du village toussent depuis quelques jours. Je connais une tisane qui les guérit : de l'eau de la source de la forêt et du ravintsara. J'ai laissé ma cruche là-bas hier... mes vieilles jambes ne m'y portent plus. Tu irais pour moi ?"
+min_day = 6
+min_hearts = 1
+steps = Array[ExtResource("2_step")]([SubResource("Step_jar"), SubResource("Step_leaf")])
+reward_items = {
+"food_mofo_gasy": 3
+}
+reward_friendship = 100
+evening_speaker = "mother"
+evening_line = "Neny Soa est passée au point d'eau : sa tisane a guéri tous les petits du village. Elle t'appelle « zafy », comme son petit-enfant."

@@ -20,8 +20,8 @@ const VILLAGE := "res://world/areas/exterior/player_village.tscn"
 ##   once "quest" is done);
 ## - "position", and "reach" (walk into this area) or "interact" (use it
 ##   within this size);
-## - "look": "hoof_prints" (with "direction") or "zebu" (with "frame",
-##   "flip").
+## - "look": "hoof_prints" (with "direction"), "zebu" (with "frame",
+##   "flip") or "scene" (an instance of "path": a prop...).
 const TARGETS := [
 	# Rakoto's lost zebu (data/quests/rakoto_lost_zebu.tres).
 	{"scene": FOREST, "name": "ZebuTracks", "target": "zebu_tracks", "appears": "during",
@@ -33,6 +33,11 @@ const TARGETS := [
 	{"scene": VILLAGE, "name": "Volamena", "target": "volamena_home", "appears": "after",
 		"quest": "rakoto_lost_zebu", "position": Vector2(330, 1270),
 		"look": "zebu", "frame": 4, "flip": false},
+	# Neny Soa's remedy (data/quests/neny_soa_remedy.tres): the jar she left
+	# by the forest spring.
+	{"scene": FOREST, "name": "NenySoaJar", "target": "spring_jar", "appears": "during",
+		"position": Vector2(1135, 190), "interact": Vector2(130, 100),
+		"look": "scene", "path": "res://entities/props/water_jar.tscn"},
 ]
 
 func _initialize() -> void:
@@ -94,6 +99,9 @@ func _place(zone: Node, row: Dictionary) -> void:
 			sprite.scale = Vector2(0.8, 0.8)
 			sprite.offset = Vector2(0, -48)
 			_add(zone, target, sprite)
+		"scene":
+			var look: Node = (load(row["path"]) as PackedScene).instantiate(PackedScene.GEN_EDIT_STATE_INSTANCE)
+			_add(zone, target, look)
 	print("%s: QuestTargets/%s" % [zone.name, row["name"]])
 
 func _add(owner_node: Node, parent: Node, child: Node) -> void:

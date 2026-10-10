@@ -21,7 +21,15 @@
 - **Le monde garde une trace** : ce qu'une quête a changé reste visible (Volamena broute
   devant chez Rakoto).
 
-**La première quête : « Le zébu perdu » (Rakoto, à partir du jour 3)**
+**Les quêtes du village**
+
+| Quête | Qui | Quand | En bref | Récompense |
+|---|---|---|---|---|
+| Le zébu perdu | Rakoto | jour 3 | Retrouver son zébu dans la forêt | 10 000 Ar, un cœur |
+| Le sifaka qui danse | Koto | jour 4 | Voir un sifaka, puis lui apporter le dessin de Fara | 3 mangues, un cœur |
+| La tisane de Neny Soa | Neny Soa | jour 6, 1 cœur | Sa cruche à la source, une feuille de ravintsara | 3 mofo gasy, un cœur |
+
+**« Le zébu perdu » (Rakoto)**
 1. Son zébu Volamena a cassé sa corde et filé vers la forêt. On cherche des **traces** :
    des empreintes de sabots dans la boue, sur le sentier, juste avant le gué.
 2. Les traces mènent au **vieil amontana** : Volamena est là, sur le sentier. On
@@ -31,6 +39,21 @@
 4. On le dit à Rakoto : **10 000 Ar et un cœur d'amitié** (100 points). Le soir, Dada
    raconte que « toute la gargote » en parle. Volamena broute désormais sur l'herbe,
    devant chez Rakoto.
+
+**« Le sifaka qui danse » (Koto)**
+1. Koto a entendu parler d'un lémurien qui danse, mais sa mère ne le laisse pas aller seul
+   en forêt. Il faut **observer un sifaka** (à l'aube, à l'ouest). Si le sifaka est déjà
+   dans le carnet, l'étape est faite tout de suite.
+2. On demande à **Fara** de recopier son dessin du carnet (« ? » cyan au-dessus d'elle).
+3. On porte le dessin à Koto : 3 mangues et un cœur. Le soir, Fara raconte que Koto l'a
+   montré à toute l'école.
+
+**« La tisane de Neny Soa » (Neny Soa, après un cœur d'amitié)**
+1. Les petits du village toussent. Neny Soa a laissé sa **cruche à la source** de la forêt,
+   et ses jambes ne l'y portent plus : on la remplit (la cruche n'est là que pendant cette
+   étape, au bord du bassin, à côté du ravintsara).
+2. On rapporte l'eau avec **une feuille de ravintsara** : 3 mofo gasy et un cœur. Le soir,
+   Neny raconte que Neny Soa t'appelle « zafy », comme son petit-enfant.
 
 Côté game design :
 - **Les quêtes racontent le village** : là où les commandes font de l'économie (vite, avec
@@ -92,8 +115,10 @@ Côté game design :
   - `DURING_STEP` : visible tant qu'une étape l'attend. Avec `reach_size`, on y entre
     (`REACH`) ; sinon on l'utilise, dans `interact_size` (`INTERACT`) ;
   - `AFTER_DONE` : visible une fois `quest_id` finie (décor).
-- Son apparence, ce sont ses enfants : un `Sprite2D`, ou `HoofPrints`
-  (`entities/quest/hoof_prints.gd`, des empreintes de sabots dessinées en code).
+- Son apparence, ce sont ses enfants : un `Sprite2D`, `HoofPrints`
+  (`entities/quest/hoof_prints.gd`, des empreintes de sabots dessinées en code), ou une
+  scène (un décor : la cruche de Neny Soa). Leurs collisions sont coupées tant que la cible
+  est cachée : un décor invisible ne bloque pas le joueur.
 - **Posées par `tools/place_quest_targets.gd`** (avec `--editor`), d'après sa table
   `TARGETS`. Elles vont sous `QuestTargets` (y-trié) dans chaque zone, et une cible du même
   nom est remplacée. On peut aussi les poser à la main dans l'éditeur.
@@ -128,7 +153,9 @@ la journée, en tête de la conversation.
   - la sauvegarde ;
   - **la cohérence des données** : chaque quête de `data/quests/` nomme des villageois, des
     objets, des pages et des quêtes qui existent.
-- `behaviour_test.gd` : la quête de Rakoto de bout en bout. Le « ! » cyan, le panneau, le
+- `behaviour_test.gd` : les trois quêtes. Pour Koto et Neny Soa : les deux « ! », la cruche
+  (et sa collision), l'attente de la feuille, le « ? » sur Fara à la ferme. Et la quête de
+  Rakoto de bout en bout. Le « ! » cyan, le panneau, le
   suivi, les traces, le zébu et les brèdes, le « ? », la récompense, le repas du soir et
   Volamena au village.
 
@@ -158,7 +185,7 @@ Aucun code à écrire tant que les étapes rentrent dans les cinq types.
   joueur).
 
 **Pistes**
-- D'autres quêtes : Koto qui veut voir un sifaka (`DISCOVER`), Neny Soa et ses plantes
-  (`BRING` de ravintsara), une suite pour Rakoto (`after_quests`).
+- D'autres quêtes : une suite pour Rakoto (`after_quests`), Naivo, Ravao, les marchands du
+  bourg. Des quêtes de saison (`seasons` : le miel en Asotry).
 - Une étape « suivre » (le zébu qui suit le joueur jusqu'au village).
 - Des quêtes qui changent la journée d'un villageois (`only_if` avec `quest_active:<id>`).

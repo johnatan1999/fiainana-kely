@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=4 uid="uid://dfh337dp28tem"]
+[gd_scene load_steps=26 format=4 uid="uid://dfh337dp28tem"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_m10t6"]
 [ext_resource type="Texture2D" uid="uid://cxd7faagbgttd" path="res://assets/tileset/farm01_48.png" id="2_indcf"]
@@ -21,6 +21,7 @@
 [ext_resource type="Script" path="res://entities/quest/quest_target.gd" id="19_skgnu"]
 [ext_resource type="Script" path="res://entities/quest/hoof_prints.gd" id="20_memms"]
 [ext_resource type="Texture2D" uid="uid://d4a5tg8sraiu0" path="res://assets/sprites/animals/zebu.png" id="21_d0dc4"]
+[ext_resource type="PackedScene" path="res://entities/props/water_jar.tscn" id="22_o8pf2"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_0n3cw"]
 texture = ExtResource("2_indcf")
@@ -359,3 +360,11 @@ offset = Vector2(0, -48)
 flip_h = true
 hframes = 4
 vframes = 2
+
+[node name="NenySoaJar" type="Node2D" parent="QuestTargets"]
+position = Vector2(1135, 190)
+script = ExtResource("19_skgnu")
+target_id = "spring_jar"
+interact_size = Vector2(130, 100)
+
+[node name="WaterJar" parent="QuestTargets/NenySoaJar" instance=ExtResource("22_o8pf2")]

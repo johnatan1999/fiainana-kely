@@ -213,6 +213,7 @@ func _run_all() -> void:
 	test_quest_requirements_bring_and_discover()
 	test_quest_save_load()
 	test_quest_data_is_sound()
+	test_koto_and_neny_soa_quests()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -2320,3 +2321,24 @@ func test_quest_data_is_sound() -> void:
 		print("  quest data: ", problems)
 	_check(not quests.is_empty() and problems.is_empty(),
 		"quests: every quest in data/quests/ names real villagers, items, pages and earlier quests")
+
+func test_koto_and_neny_soa_quests() -> void:
+	var sim := _make_sim_for_quests()
+	_advance_to_day(sim, 6)
+	# Koto: the sifaka already in the notebook - straight on to Fara.
+	sim.discover("sifaka")
+	var koto := sim.start_quest("koto_dancing_sifaka") and sim.get_quest_waiting_on("fara") == "koto_dancing_sifaka"
+	var drawn := sim.quest_talk("koto").is_empty() and sim.quest_talk("fara") == "koto_dancing_sifaka" \
+		and sim.quest_talk("koto") == "koto_dancing_sifaka"
+	# Neny Soa: not before a heart of friendship.
+	var shy := not sim.is_quest_available("neny_soa_remedy")
+	sim.add_friendship("neny_soa", 100)
+	var started := sim.start_quest("neny_soa_remedy")
+	var jar := sim.quest_trigger("spring_jar") == "neny_soa_remedy"
+	var no_leaf := sim.quest_talk("neny_soa").is_empty()
+	sim.state.add_inventory("ravintsara", 1)
+	var healed := sim.quest_talk("neny_soa") == "neny_soa_remedy"
+	_check(koto and drawn and sim.is_quest_done("koto_dancing_sifaka") and sim.state.get_inventory_count("mango") == 3
+			and shy and started and jar and no_leaf and healed and sim.state.get_inventory_count("food_mofo_gasy") == 3
+			and sim.state.get_inventory_count("ravintsara") == 0 and sim.get_hearts("neny_soa") == 2,
+		"quests: Koto's dancing sifaka (seen, Fara's drawing, to Koto) and Neny Soa's remedy (a heart first, spring water, a ravintsara leaf)")

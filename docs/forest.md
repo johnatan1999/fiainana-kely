@@ -137,8 +137,8 @@ page.
   - une recette avec les produits de la forêt (brèdes sauvages, champignons) ;
   - un titre au village.
 - **Pistes** :
-  - d'autres quêtes dans la forêt (Neny Soa et ses plantes, Koto qui veut voir un sifaka).
-    Le zébu perdu de Rakoto y mène déjà (voir `quests.md`) ;
+  - d'autres quêtes dans la forêt. Le zébu de Rakoto, le sifaka de Koto et la tisane de
+    Neny Soa y mènent déjà (voir `quests.md`) ;
   - la pêche dans le ruisseau ;
   - d'autres lieux à découvrir ;
   - des animaux qui fuient si on court.

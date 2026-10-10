@@ -3,7 +3,8 @@ extends Node2D
 
 ## A spot of a side quest in a zone, its id `target_id` (QuestStep.target):
 ## Rakoto's zebu lost in the forest, hoof prints by the ford... Its children
-## are what it looks like (a sprite, a drawing), shown only when `appears`
+## are what it looks like (a sprite, a drawing, a prop - whose collisions
+## are off while hidden), shown only when `appears`
 ## says so (QuestManager: set_shown):
 ## - DURING_STEP: while a quest's current step is here - to walk to
 ##   (`reach_size` set: walking in does it) or to use (the interaction);
@@ -63,11 +64,19 @@ func set_shown(shown: bool, prompt := "") -> void:
 	_shown = shown
 	visible = shown
 	_set_interactable(shown)
+	# Its look's own bodies (a jar's base): not in the way while hidden.
+	for shape in find_children("*", "CollisionShape2D", true, false):
+		if not _is_own(shape):
+			shape.set_deferred("disabled", not shown)
 	if _interactable != null:
 		_interactable.prompt_message = prompt
 
 func is_shown() -> bool:
 	return _shown
+
+## The interaction's or the area's shape, not its look's.
+func _is_own(shape: Node) -> bool:
+	return (_interactable != null and _interactable.is_ancestor_of(shape)) 		or (_area != null and _area.is_ancestor_of(shape))
 
 ## Its area turned back on: a player already standing in it is walked in all
 ## the same (body_entered).

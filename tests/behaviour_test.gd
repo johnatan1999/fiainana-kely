@@ -58,6 +58,7 @@ func _ready() -> void:
 	await _test_family_projects()
 	await _test_forest()
 	await _test_quests()
+	await _test_more_quests()
 	# Last: it takes over the camera.
 	await _test_home_screen()
 
@@ -1144,6 +1145,93 @@ func _test_quests() -> void:
 	state.inventory.erase("wild_greens")
 	if greens > 0:
 		state.add_inventory("wild_greens", greens)
+	_sim.day_log = DayLog.new()
+	state.clock.current_day = today
+	_sim.quest_changed.emit("")
+	_set_time(10 * 60)
+	await _frames(3)
+
+func _test_more_quests() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	var state := _sim.state
+	var friendship := _sim.get_friendship("neny_soa")
+	var koto_friendship := _sim.get_friendship("koto")
+	var had_sifaka := _sim.is_discovered("sifaka")
+	var today := _set_weekday(GameClock.Weekday.SATURDAY)
+	state.clock.current_day = maxi(state.clock.current_day, 6)
+	state.friendship["neny_soa"] = maxi(friendship, 100)
+	_sim.day_log = DayLog.new()
+	_set_time(10 * 60)
+	await _go_to_zone("rice_fields")
+	await _go_to_zone("village")
+	_sim.quest_changed.emit("")
+	await _frames(3)
+	_player.global_position = Vector2(300, 300)
+	var grandmother := _villager("NenySoa")
+	var koto := _villager("Koto")
+	var marks := grandmother._mark.text == "!" and koto._mark.text == "!" \
+		and grandmother._mark.label_settings.font_color == QuestManager.MARK_COLOR
+	var panel: QuestPanel = _world.get_node("UI/QuestPanel")
+	grandmother.interacted.emit()
+	await _frames(2)
+	var told := panel.is_open() and panel._title.text == "La tisane de Neny Soa"
+	panel._accept.pressed.emit()
+	await _frames(2)
+	_check(marks and told and _sim.is_quest_active("neny_soa_remedy"),
+		"quests: Neny Soa (a heart of friendship) and Koto each have a quest - Neny Soa tells hers: her remedy")
+
+	await _go_to_zone("forest")
+	await _frames(3)
+	var jar: QuestTarget = _zone().get_node("QuestTargets/NenySoaJar")
+	var base: CollisionShape2D = jar.get_node("WaterJar/Base/CollisionShape2D")
+	var there := jar.visible and not base.disabled
+	jar.triggered.emit()
+	await _frames(3)
+	_check(there and not jar.visible and base.disabled and _sim.get_quest_waiting_on("neny_soa") == "neny_soa_remedy",
+		"quests: Neny Soa's jar by the forest spring - filled, it's gone, and its base no longer in the way")
+
+	await _go_to_zone("village")
+	await _frames(3)
+	_player.global_position = Vector2(300, 300)
+	grandmother = _villager("NenySoa")
+	state.inventory.erase("ravintsara")
+	grandmother.interacted.emit()
+	await _frames(2)
+	var waiting := _sim.is_quest_active("neny_soa_remedy") and grandmother._bubble.visible
+	state.add_inventory("ravintsara", 1)
+	_sim.inventory_changed.emit("ravintsara", 1)
+	await _frames(2)
+	var ready := grandmother._mark.text == "?"
+	grandmother.interacted.emit()
+	await _frames(2)
+	_check(waiting and ready and _sim.is_quest_done("neny_soa_remedy") and state.get_inventory_count("food_mofo_gasy") >= 3,
+		"quests: without a ravintsara leaf she waits for one - with it ('?'), the remedy's made: 3 mofo gasy")
+
+	_sim.discover("sifaka")
+	_sim.start_quest("koto_dancing_sifaka")
+	await _go_to_zone("farm")
+	await _frames(3)
+	_player.global_position = Vector2(300, 300)
+	var fara := _villager("Fara")
+	var asked := fara._mark.text == "?" and fara._mark.label_settings.font_color == QuestManager.MARK_COLOR
+	fara.interacted.emit()
+	await _frames(2)
+	await _go_to_zone("village")
+	await _frames(3)
+	koto = _villager("Koto")
+	var to_koto := koto._mark.text == "?"
+	koto.interacted.emit()
+	await _frames(2)
+	_check(asked and to_koto and _sim.is_quest_done("koto_dancing_sifaka") and koto._bubble.visible,
+		"quests: Koto's sifaka seen - Fara draws it for him ('?' over her at the farm), Koto gets the drawing")
+
+	for quest_id in ["neny_soa_remedy", "koto_dancing_sifaka"]:
+		state.quests_done.erase(quest_id)
+	state.friendship["neny_soa"] = friendship
+	state.friendship["koto"] = koto_friendship
+	if not had_sifaka:
+		state.discoveries.erase("sifaka")
+	state.inventory.erase("ravintsara")
 	_sim.day_log = DayLog.new()
 	state.clock.current_day = today
 	_sim.quest_changed.emit("")

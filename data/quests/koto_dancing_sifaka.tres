@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="Quest" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://core/data/quest.gd" id="1_quest"]
+[ext_resource type="Script" path="res://core/data/quest_step.gd" id="2_step"]
+
+[sub_resource type="Resource" id="Step_see"]
+script = ExtResource("2_step")
+kind = 4
+objective = "Observe un sifaka dans la forêt. Il se montre à l'aube, dans les grands arbres de l'ouest."
+discovery_id = "sifaka"
+
+[sub_resource type="Resource" id="Step_drawing"]
+script = ExtResource("2_step")
+kind = 0
+objective = "Demande à Fara de recopier son dessin du sifaka pour Koto."
+villager = "fara"
+prompt = "Demander un dessin à Fara"
+line = "Pour Koto ? D'accord ! Je lui fais le plus beau sifaka du monde."
+
+[sub_resource type="Resource" id="Step_show"]
+script = ExtResource("2_step")
+kind = 0
+objective = "Apporte le dessin de Fara à Koto."
+villager = "koto"
+prompt = "Donner le dessin à Koto"
+line = "Il danse vraiment ! Je l'accroche au-dessus de mon lit. Misaotra !"
+
+[resource]
+script = ExtResource("1_quest")
+title = "Le sifaka qui danse"
+giver = "koto"
+offer_line = "À l'école, on dit que dans la forêt il y a un lémurien qui danse debout, les bras en l'air ! Moi, Neny ne veut pas que j'y aille tout seul. Tu l'as vu, toi ? Tu pourrais me le montrer, même en dessin ?"
+min_day = 4
+steps = Array[ExtResource("2_step")]([SubResource("Step_see"), SubResource("Step_drawing"), SubResource("Step_show")])
+reward_items = {
+"mango": 3
+}
+reward_friendship = 100
+evening_speaker = "fara"
+evening_line = "Koto a montré mon sifaka à toute l'école ! Ramatoa Hanta veut que j'en dessine un pour la classe."
