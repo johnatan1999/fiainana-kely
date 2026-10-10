@@ -1,4 +1,4 @@
-[gd_scene load_steps=41 format=3 uid="uid://fdjfwhhhgssy"]
+[gd_scene load_steps=42 format=3 uid="uid://fdjfwhhhgssy"]
 
 [ext_resource type="Script" path="res://world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" uid="uid://bf1stuuqjofir" path="res://entities/player/player.tscn" id="2_player"]
@@ -32,6 +32,7 @@
 [ext_resource type="Script" path="res://systems/forest/forest_manager.gd" id="21_qorup"]
 [ext_resource type="Script" path="res://systems/quests/quest_manager.gd" id="22_ioh2k"]
 [ext_resource type="Script" path="res://ui/orders/order_panel.gd" id="22_qlvpc"]
+[ext_resource type="Script" path="res://systems/animal/chicken_thief_manager.gd" id="23_ujf0x"]
 [ext_resource type="Script" path="res://ui/zebu/zebu_market_panel.gd" id="25_btqak"]
 [ext_resource type="Script" path="res://ui/school/school_panel.gd" id="27_2of3s"]
 [ext_resource type="Script" path="res://ui/cockfight/rooster_panel.gd" id="29_efn5j"]
@@ -109,6 +110,9 @@ script = ExtResource("21_qorup")
 
 [node name="QuestManager" type="Node" parent="Gameplay"]
 script = ExtResource("22_ioh2k")
+
+[node name="ChickenThiefManager" type="Node" parent="Gameplay"]
+script = ExtResource("23_ujf0x")
 
 [node name="UI" type="CanvasLayer" parent="."]
 

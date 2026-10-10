@@ -54,6 +54,9 @@ tous les jours.
   d'export et sans outils, maïs vendu 25 % plus cher, pas de vanille au village).
 
 ## À savoir
+- **Le cadenas du poulailler** (rayon outils, 5 000 Ar) ne va pas dans le sac : il se pose
+  sur la porte du poulailler. Il n'est en vente que pour un poulailler construit et pas encore
+  sûr (`FarmSimulation.is_item_on_sale`), voir `chicken_thieves.md`.
 - **Les plats** (rayon « nourriture ») ne s'achètent pas : ils se cuisinent à la cuisine de
   la ferme (voir `family_projects.md`) et se **vendent** ici, comme les œufs (`price` 0).
 - Le prix d'achat est le même partout : seul le prix de vente change. Une remise d'achat le

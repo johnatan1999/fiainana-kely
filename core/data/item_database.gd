@@ -30,6 +30,7 @@ const ITEM_PATHS := [
 	"res://data/items/tool_spade.tres",
 	"res://data/items/tool_watering_can_tin.tres",
 	"res://data/items/tool_plough.tres",
+	"res://data/items/coop_padlock.tres",
 	"res://data/items/food_rice_and_side_dish.tres",
 	"res://data/items/food_rice_with_greens.tres",
 	"res://data/items/food_grilled_corn.tres",

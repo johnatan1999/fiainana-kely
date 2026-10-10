@@ -122,6 +122,14 @@ var forage: Dictionary = {}
 ## finished, quest id -> the day.
 var quests: Dictionary = {}
 var quests_done: Dictionary = {}
+## Chicken thieves (FarmSimulation's thief API): about until this day (0:
+## never), no new rumour before that one, whose yard the rumour named, the
+## day a hen was last taken - and the padlock on the coop.
+var thief_alert_until: int = 0
+var thief_next_alert_day: int = 0
+var thief_rumour: String = ""
+var thief_stolen_day: int = 0
+var coop_padlock: bool = false
 const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
@@ -307,6 +315,11 @@ func to_dict() -> Dictionary:
 		"forage": forage.duplicate(),
 		"quests": quests.duplicate(true),
 		"quests_done": quests_done.duplicate(),
+		"thief_alert_until": thief_alert_until,
+		"thief_next_alert_day": thief_next_alert_day,
+		"thief_rumour": thief_rumour,
+		"thief_stolen_day": thief_stolen_day,
+		"coop_padlock": coop_padlock,
 	}
 
 ## JSON object keys are strings: species saved as "0", "4"...
@@ -478,6 +491,12 @@ func load_dict(data: Dictionary) -> void:
 		if saved is Dictionary:
 			for id in saved:
 				target[str(id)] = int(saved[id])
+	# Optional keys (older saves have none): no thieves about, no padlock.
+	thief_alert_until = int(data.get("thief_alert_until", 0))
+	thief_next_alert_day = int(data.get("thief_next_alert_day", 0))
+	thief_rumour = str(data.get("thief_rumour", ""))
+	thief_stolen_day = int(data.get("thief_stolen_day", 0))
+	coop_padlock = bool(data.get("coop_padlock", false))
 	# Optional key (older saves have none): no quest under way.
 	quests.clear()
 	var saved_quests = data.get("quests", {})

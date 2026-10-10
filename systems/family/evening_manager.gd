@@ -6,6 +6,8 @@ extends Node
 ## talks about the day - from FarmSimulation.day_log - and about tomorrow:
 ## - Dada: the fields (what was harvested) and the money;
 ## - a side quest finished today: what the village says of it (Quest.evening_line);
+## - chicken thieves: a hen taken last night, the padlock that held, or the
+##   rumour while they're about;
 ## - Neny: the village (orders delivered, who likes the player more) and
 ##   the plots left dry - there's still time to water them;
 ## - Fara: the hens, the rooster, the tournament, her school;
@@ -94,7 +96,7 @@ func get_dish() -> Array:
 ## speaker's lines one after the other make a single turn.
 func get_lines() -> Array:
 	var tomorrow := _tomorrow_lines().slice(0, 2)
-	var day := _dry_lines() + _quest_lines() + _field_lines() + _village_lines() + _sister_lines()
+	var day := _dry_lines() + _quest_lines() + _thief_lines() + _field_lines() + _village_lines() + _sister_lines()
 	var lines := day.slice(0, MAX_LINES - tomorrow.size()) + tomorrow
 	# Someone who goes on talking: one turn, not their name twice.
 	var turns := []
@@ -119,6 +121,23 @@ func _quest_lines() -> Array:
 		if quest != null and not quest.evening_line.is_empty():
 			lines.append([quest.evening_speaker, tr(quest.evening_line)])
 	return lines
+
+# --- Chicken thieves: last night, and the nights to come -------------------------------------
+
+func _thief_lines() -> Array:
+	var log := simulation.day_log
+	if log.chicken_stolen:
+		var text := tr("Un voleur nous a pris une poule cette nuit...")
+		if not simulation.is_coop_safe():
+			text += " " + tr("Un cadenas coûte moins cher que nos poules.")
+		return [[FATHER_ID, text]]
+	if log.thieves_foiled:
+		return [[FATHER_ID, tr("Les voleurs ont essayé notre poulailler cette nuit. Le cadenas a tenu : ils sont repartis les mains vides !")]]
+	if simulation.is_thief_alert() and simulation.get_hen_ids().size() >= FarmSimulation.THIEF_MIN_HENS:
+		if simulation.is_coop_safe():
+			return [[MOTHER_ID, tr("On parle de voleurs de poules au village. Heureusement, notre poulailler ferme bien.")]]
+		return [[MOTHER_ID, tr("On parle de voleurs de poules au village. Il faudrait un cadenas sur le poulailler, on en vend au marché.")]]
+	return []
 
 # --- Dada: the fields and the money ---------------------------------------------------------
 

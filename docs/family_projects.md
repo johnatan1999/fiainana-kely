@@ -8,7 +8,7 @@
 | Projet | Nom malgache | Coût | Travaux | Apporte |
 |---|---|---|---|---|
 | Poulailler agrandi | Tranon'akoho lehibe | 15 000 Ar | 3 jours | 8 poules au lieu de 4 (une aile et des pondoirs) |
-| Poulailler en briques | Tranon'akoho biriky | 35 000 Ar | 4 jours | 12 poules, et **les œufs vont tout seuls dans le sac** (le panier) |
+| Poulailler en briques | Tranon'akoho biriky | 35 000 Ar | 4 jours | 12 poules, **les œufs vont tout seuls dans le sac** (le panier), et **les voleurs de poules n'y entrent pas** (voir `chicken_thieves.md`) |
 
   - **le parc à zébus** (*vala*) :
 

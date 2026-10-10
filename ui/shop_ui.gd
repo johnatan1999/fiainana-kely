@@ -63,6 +63,8 @@ func setup(shop_controller: ShopController, simulation: FarmSimulation, item_db:
 	simulation.money_changed.connect(_on_money_changed)
 	simulation.day_changed.connect(_on_day_changed)
 	simulation.inventory_changed.connect(_on_inventory_changed)
+	# The padlock, once on the coop, leaves the shelf.
+	simulation.coop_secured.connect(_rebuild_item_grid)
 
 	_on_money_changed(simulation.state.money)
 
@@ -121,6 +123,9 @@ func _rebuild_item_grid() -> void:
 	for child in item_grid.get_children():
 		child.queue_free()
 	for item: ItemData in _catalog.get(_selected_category, []):
+		# Not for now (the padlock, once the coop is safe).
+		if not _simulation.is_item_on_sale(item.id):
+			continue
 		var card: ItemCard = ItemCardScene.instantiate()
 		item_grid.add_child(card)
 		var owned_id := item.crop_id if item.category == ItemData.Category.SEEDS else item.id

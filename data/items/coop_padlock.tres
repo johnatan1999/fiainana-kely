@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/data/item_data.gd" id="1_item"]
+
+[resource]
+script = ExtResource("1_item")
+id = "coop_padlock"
+display_name = "Cadenas du poulailler"
+malagasy_name = "Hidy"
+description = "Un solide cadenas de fer pour la porte du poulailler : les voleurs de poules repartent les mains vides. Il se pose tout de suite sur la porte."
+category = 1
+price = 5000
+sell_price = 0

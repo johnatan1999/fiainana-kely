@@ -28,6 +28,8 @@ signal animal_added(animal_id: String)
 ## Animals bought and waiting to be settled changed (see place_animal()).
 signal pending_animals_changed
 signal animal_changed(animal_id: String)
+## An animal is gone from the farm (a hen taken by a thief).
+signal animal_removed(animal_id: String)
 ## A save was just loaded into `state` - fired right after it's replaced and
 ## before the per-item/per-plot change signals that follow, so listeners can
 ## tell "loaded as it was saved" apart from "just acquired".
@@ -82,6 +84,15 @@ signal forage_changed(spot_id: String)
 signal quest_changed(quest_id: String)
 ## A side quest's last step done: its reward given.
 signal quest_completed(quest_id: String)
+## Chicken thieves (mpangalatra akoho) about: a rumour this morning, from
+## `villager_id`'s yard - for THIEF_ALERT_NIGHTS nights.
+signal thief_alert_started(villager_id: String)
+## Overnight, a thief took a hen from the coop (gone from state.animals).
+signal chicken_stolen(animal_id: String)
+## Overnight, thieves tried the coop - locked, it held.
+signal thieves_foiled
+## The padlock is on the coop's door (bought: put straight on).
+signal coop_secured
 
 const COOP_COST := 6000
 ## Chance of a rainy day, per season: Asara is the rainy season. A rainy day
@@ -268,6 +279,10 @@ var _quests: Dictionary = {} # quest_id: String -> Quest
 ## The chance a villager offers an order on a given morning (tests set 1.0
 ## or 0.0 to make it certain).
 var order_offer_chance := ORDER_OFFER_CHANCE
+## The chance thieves come round on a morning, and that they try the coop
+## on a night they're about (tests set 1.0 or 0.0).
+var thief_alert_chance := THIEF_ALERT_CHANCE
+var thief_night_chance := THIEF_NIGHT_CHANCE
 ## What happened today (the evening meal tells it) - started afresh each
 ## morning and on load. See DayLog.
 var day_log := DayLog.new()
@@ -491,6 +506,7 @@ func advance_day() -> void:
 		_end_cockfight_season()
 	_minute_fraction = 0.0
 	set_weather(_roll_weather())
+	_advance_thieves()
 	_advance_orders()
 	_advance_school_fees()
 	_advance_projects()
@@ -1130,6 +1146,81 @@ func forage(spot_id: String, discovery_id: String) -> int:
 	forage_changed.emit(spot_id)
 	discover(discovery_id)
 	return plant.quantity
+
+# --- Chicken thieves (mpangalatra akoho) ------------------------------------------------------
+
+## Not in the first weeks: the player has barely started.
+const THIEF_FROM_DAY := 15
+const THIEF_ALERT_CHANCE := 0.12
+## Nights the thieves are about once the rumour starts.
+const THIEF_ALERT_NIGHTS := 3
+const THIEF_NIGHT_CHANCE := 0.4
+## Days after an alert before another can start.
+const THIEF_COOLDOWN_DAYS := 12
+## Not with fewer hens: the last one is never taken.
+const THIEF_MIN_HENS := 2
+## Bought, it goes straight on the coop's door (never in the bag).
+const PADLOCK_ITEM := "coop_padlock"
+## Whose hens went missing, in the morning's rumour.
+const THIEF_RUMOUR_NEIGHBOURS := ["naivo", "rakoto", "ravao", "neny_soa"]
+
+## The thieves are about (the nights after the rumour).
+func is_thief_alert() -> bool:
+	return state.day <= state.thief_alert_until
+
+## Thieves can't get in: the brick coop, or a padlock on the door.
+func is_coop_safe() -> bool:
+	return get_building_level("coop") >= 3 or state.coop_padlock
+
+func get_hen_ids() -> Array:
+	return state.animals.keys().filter(func(id: String) -> bool:
+		return (state.animals[id] as AnimalState).species == AnimalData.Species.CHICKEN)
+
+## Whether the shop offers it: the padlock only for a built coop that
+## isn't safe yet.
+func is_item_on_sale(item_id: String) -> bool:
+	if item_id == PADLOCK_ITEM:
+		return state.has_coop and not is_coop_safe()
+	return true
+
+## Morning (advance_day): the night that just passed, if the thieves were
+## about - then maybe a new rumour.
+func _advance_thieves() -> void:
+	if state.thief_alert_until > 0 and state.day - 1 <= state.thief_alert_until and randf() < thief_night_chance:
+		_thieves_come()
+	if is_thief_alert() or state.day < THIEF_FROM_DAY or state.day < state.thief_next_alert_day:
+		return
+	if not state.has_coop or get_hen_ids().size() < THIEF_MIN_HENS or randf() >= thief_alert_chance:
+		return
+	state.thief_alert_until = state.day + THIEF_ALERT_NIGHTS - 1
+	state.thief_next_alert_day = state.thief_alert_until + 1 + THIEF_COOLDOWN_DAYS
+	state.thief_rumour = THIEF_RUMOUR_NEIGHBOURS[randi() % THIEF_RUMOUR_NEIGHBOURS.size()]
+	day_log.thief_rumour = true
+	thief_alert_started.emit(state.thief_rumour)
+
+## A thief at the coop: it holds if it's safe; else a hen is gone (never
+## the last). Either way, the thieves move on.
+func _thieves_come() -> void:
+	var hens := get_hen_ids()
+	if hens.size() < THIEF_MIN_HENS:
+		return
+	state.thief_alert_until = state.day - 1
+	if is_coop_safe():
+		day_log.thieves_foiled = true
+		thieves_foiled.emit()
+		return
+	hens.sort()
+	var animal_id: String = hens[randi() % hens.size()]
+	state.animals.erase(animal_id)
+	state.thief_stolen_day = state.day
+	day_log.chicken_stolen = true
+	animal_removed.emit(animal_id)
+	chicken_stolen.emit(animal_id)
+
+## The padlock goes on the coop's door.
+func _secure_coop() -> void:
+	state.coop_padlock = true
+	coop_secured.emit()
 
 # --- Side quests (fangatahana) ------------------------------------------------------------
 
@@ -1924,8 +2015,15 @@ func buy_seed(crop_id: String, quantity: int = 1) -> bool:
 ## unlike buy_seed(), the caller supplies the price since these items have no
 ## entry in _crop_registry.
 func buy_item(item_id: String, unit_price: int, quantity: int = 1) -> bool:
-	if quantity <= 0 or unit_price < 0:
+	if quantity <= 0 or unit_price < 0 or not is_item_on_sale(item_id):
 		return false
+	if item_id == PADLOCK_ITEM:
+		if state.money < unit_price:
+			return false
+		state.money -= unit_price
+		money_changed.emit(state.money)
+		_secure_coop()
+		return true
 	var cost := unit_price * quantity
 	if state.money < cost:
 		return false

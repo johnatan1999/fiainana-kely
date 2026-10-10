@@ -214,6 +214,10 @@ func _run_all() -> void:
 	test_quest_save_load()
 	test_quest_data_is_sound()
 	test_koto_and_neny_soa_quests()
+	test_thieves_rumour_first()
+	test_thief_takes_one_hen()
+	test_padlock_keeps_thieves_out()
+	test_thieves_save_load()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -2342,3 +2346,85 @@ func test_koto_and_neny_soa_quests() -> void:
 			and shy and started and jar and no_leaf and healed and sim.state.get_inventory_count("food_mofo_gasy") == 3
 			and sim.state.get_inventory_count("ravintsara") == 0 and sim.get_hearts("neny_soa") == 2,
 		"quests: Koto's dancing sifaka (seen, Fara's drawing, to Koto) and Neny Soa's remedy (a heart first, spring water, a ravintsara leaf)")
+
+# --- Chicken thieves ----------------------------------------------------------------------------
+
+func _make_sim_for_thieves(hens: int) -> FarmSimulation:
+	var sim := _make_sim_with_chicken(0.0)
+	sim.build_coop()
+	sim.state.money = 100000
+	sim.buy_chicken(hens)
+	for i in hens:
+		sim.place_chicken()
+	sim.thief_alert_chance = 0.0
+	sim.thief_night_chance = 0.0
+	sim.state.clock.current_day = 20
+	return sim
+
+func test_thieves_rumour_first() -> void:
+	var early := _make_sim_for_thieves(3)
+	early.state.clock.current_day = 5
+	early.thief_alert_chance = 1.0
+	early.advance_day()
+	var lone := _make_sim_for_thieves(1)
+	lone.thief_alert_chance = 1.0
+	lone.advance_day()
+	var sim := _make_sim_for_thieves(3)
+	sim.thief_alert_chance = 1.0
+	var rumours := []
+	sim.thief_alert_started.connect(func(id): rumours.append(id))
+	sim.advance_day()
+	var alert := sim.is_thief_alert() and sim.state.thief_alert_until == sim.state.day + FarmSimulation.THIEF_ALERT_NIGHTS - 1 \
+		and rumours.size() == 1 and FarmSimulation.THIEF_RUMOUR_NEIGHBOURS.has(rumours[0]) and sim.day_log.thief_rumour
+	for i in FarmSimulation.THIEF_ALERT_NIGHTS:
+		sim.advance_day()
+	_check(not early.is_thief_alert() and not lone.is_thief_alert() and alert and not sim.is_thief_alert()
+			and rumours.size() == 1 and sim.get_hen_ids().size() == 3,
+		"thieves: never in the first weeks nor for a lone hen - a rumour first, for 3 nights, then a quiet spell (no night visit: no loss)")
+
+func test_thief_takes_one_hen() -> void:
+	var sim := _make_sim_for_thieves(2)
+	sim.thief_alert_chance = 1.0
+	sim.thief_night_chance = 1.0
+	var removed := []
+	sim.animal_removed.connect(func(id): removed.append(id))
+	sim.advance_day() # the rumour
+	sim.advance_day() # the night: a hen gone
+	var after_theft := sim.get_hen_ids().size() == 1 and removed.size() == 1 and sim.day_log.chicken_stolen \
+		and sim.state.thief_stolen_day == sim.state.day and not sim.is_thief_alert()
+	for i in 20:
+		sim.advance_day()
+	_check(after_theft and sim.get_hen_ids().size() == 1 and removed.size() == 1,
+		"thieves: a night they come to an open coop, one hen is gone and they move on - never the last hen")
+
+func test_padlock_keeps_thieves_out() -> void:
+	var sim := _make_sim_for_thieves(3)
+	var on_sale := sim.is_item_on_sale(FarmSimulation.PADLOCK_ITEM)
+	var money := sim.state.money
+	var bought := sim.buy_item(FarmSimulation.PADLOCK_ITEM, 5000)
+	var put_on := sim.state.coop_padlock and sim.is_coop_safe() and sim.state.money == money - 5000 \
+		and sim.state.get_inventory_count(FarmSimulation.PADLOCK_ITEM) == 0
+	var twice := sim.buy_item(FarmSimulation.PADLOCK_ITEM, 5000)
+	sim.thief_alert_chance = 1.0
+	sim.thief_night_chance = 1.0
+	sim.advance_day()
+	sim.advance_day()
+	var held := sim.get_hen_ids().size() == 3 and sim.day_log.thieves_foiled and not sim.is_thief_alert()
+	var brick := _make_sim_for_thieves(3)
+	brick.state.building_levels["coop"] = 3
+	var no_coop := _make_sim_with_chicken()
+	_check(on_sale and bought and put_on and not twice and not sim.is_item_on_sale(FarmSimulation.PADLOCK_ITEM)
+			and held and brick.is_coop_safe() and not brick.is_item_on_sale(FarmSimulation.PADLOCK_ITEM)
+			and not no_coop.is_item_on_sale(FarmSimulation.PADLOCK_ITEM),
+		"thieves: the padlock goes straight on the coop (sold once, not for a ruin or a brick coop) - and holds")
+
+func test_thieves_save_load() -> void:
+	var sim := _make_sim_for_thieves(3)
+	sim.thief_alert_chance = 1.0
+	sim.advance_day()
+	sim.buy_item(FarmSimulation.PADLOCK_ITEM, 5000)
+	var loaded := _make_sim_for_thieves(3)
+	loaded.load_save_data(JSON.parse_string(JSON.stringify(sim.to_save_data())))
+	_check(loaded.is_thief_alert() and loaded.state.thief_rumour == sim.state.thief_rumour and loaded.state.coop_padlock
+			and loaded.state.thief_next_alert_day == sim.state.thief_next_alert_day,
+		"thieves: the rumour, the quiet spell and the padlock survive a save/load")

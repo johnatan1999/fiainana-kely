@@ -52,6 +52,7 @@ var _pending_products: Array = []
 func setup(p_simulation: FarmSimulation, p_world_manager: WorldManager) -> void:
 	simulation = p_simulation
 	simulation.animal_added.connect(_on_animal_added)
+	simulation.animal_removed.connect(_on_animal_removed)
 	simulation.product_ready.connect(_on_product_ready)
 	p_world_manager.zone_loaded.connect(_on_zone_loaded)
 	p_world_manager.zone_unloading.connect(_on_zone_unloading)
@@ -131,6 +132,13 @@ func _on_animal_added(animal_id: String) -> void:
 	if farm_area == null:
 		return # spawned instead when the zone is next loaded
 	_spawn_animal(animal_id)
+
+## Gone from the farm (taken by a thief): gone from the coop too.
+func _on_animal_removed(animal_id: String) -> void:
+	var node: Node = _animal_nodes.get(animal_id)
+	_animal_nodes.erase(animal_id)
+	if is_instance_valid(node):
+		node.queue_free()
 
 func _spawn_animal(animal_id: String) -> void:
 	if _animal_nodes.has(animal_id):

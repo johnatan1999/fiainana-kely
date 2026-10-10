@@ -59,6 +59,7 @@ func _ready() -> void:
 	await _test_forest()
 	await _test_quests()
 	await _test_more_quests()
+	await _test_chicken_thieves()
 	# Last: it takes over the camera.
 	await _test_home_screen()
 
@@ -1237,6 +1238,82 @@ func _test_more_quests() -> void:
 	_sim.quest_changed.emit("")
 	_set_time(10 * 60)
 	await _frames(3)
+
+# --- chicken thieves ----------------------------------------------------------------------------
+
+func _test_chicken_thieves() -> void:
+	_sim.set_weather(FarmState.Weather.CLEAR)
+	var state := _sim.state
+	var day := state.clock.current_day
+	var money := state.money
+	var had_coop := state.has_coop
+	var animals := state.animals.duplicate()
+	state.has_coop = true
+	state.animals.clear()
+	for i in 3:
+		var hen_id := state.generate_animal_id(AnimalData.Species.CHICKEN)
+		state.animals[hen_id] = AnimalState.new(hen_id, AnimalData.Species.CHICKEN)
+	state.clock.current_day = maxi(day, 20)
+	state.thief_next_alert_day = 0
+	_sim.thief_alert_chance = 1.0
+	_sim.thief_night_chance = 1.0
+	_set_time(10 * 60)
+	await _go_to_zone("farm")
+	await _frames(3)
+	_sim.day_log = DayLog.new()
+	_sim._advance_thieves() # the morning's rumour
+	var evening: EveningManager = _world.get_node("Gameplay/EveningManager")
+	var warned := _sim.is_thief_alert() and evening.get_lines().any(
+		func(line: Dictionary) -> bool: return "cadenas" in line["text"])
+	state.clock.current_day += 1
+	_sim.day_log = DayLog.new()
+	_sim._advance_thieves() # the night
+	_sim.day_changed.emit(state.clock.current_day)
+	await _frames(3)
+	var coop: Coop = get_tree().get_first_node_in_group(Coop.GROUP)
+	var told := evening.get_lines().any(func(line: Dictionary) -> bool: return "voleur" in line["text"])
+	_check(warned and _sim.get_hen_ids().size() == 2 and coop.get_node_or_null("Feathers") is ScatteredFeathers and told,
+		"chicken thieves: a rumour (Neny talks of a padlock at dinner) - the night after, a hen gone, feathers by the coop, Dada tells it")
+
+	var shop: ShopUI = _world.get_node("UI/ShopUI")
+	shop._selected_category = ItemData.Category.TOOLS
+	shop._rebuild_item_grid()
+	await _frames(1)
+	var on_shelf := func() -> bool:
+		return shop.item_grid.get_children().any(func(card) -> bool:
+			return not card.is_queued_for_deletion() and card._item.id == FarmSimulation.PADLOCK_ITEM)
+	var offered: bool = on_shelf.call()
+	state.money = maxi(state.money, 10000)
+	_world.get_node("Gameplay/ShopController").buy_item(FarmSimulation.PADLOCK_ITEM, 5000)
+	await _frames(2)
+	_check(offered and not on_shelf.call() and coop.get_node_or_null("Padlock") is CoopPadlock,
+		"chicken thieves: a padlock on the market's shelf - bought, it's on the coop's door and off the shelf")
+
+	state.thief_next_alert_day = 0
+	_sim._advance_thieves()
+	state.clock.current_day += 1
+	_sim.day_log = DayLog.new()
+	_sim._advance_thieves()
+	_sim.day_changed.emit(state.clock.current_day)
+	await _frames(3)
+	_check(_sim.get_hen_ids().size() == 2 and _sim.day_log.thieves_foiled and coop.get_node_or_null("Feathers") == null,
+		"chicken thieves: they come back - the padlock holds, no hen lost")
+
+	_sim.thief_alert_chance = FarmSimulation.THIEF_ALERT_CHANCE
+	_sim.thief_night_chance = FarmSimulation.THIEF_NIGHT_CHANCE
+	state.animals = animals
+	state.has_coop = had_coop
+	state.coop_padlock = false
+	state.thief_alert_until = 0
+	state.thief_next_alert_day = 0
+	state.thief_stolen_day = 0
+	state.thief_rumour = ""
+	state.money = money
+	state.clock.current_day = day
+	_sim.day_log = DayLog.new()
+	_sim.day_changed.emit(day)
+	_set_time(10 * 60)
+	await _go_to_zone("village")
 
 # --- home screen ----------------------------------------------------------------------------
 
