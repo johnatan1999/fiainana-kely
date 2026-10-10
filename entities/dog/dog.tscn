@@ -1,0 +1,19 @@
+[gd_scene load_steps=4 format=3 uid="uid://dy5i1cs8s7p23"]
+
+[ext_resource type="Script" path="res://entities/dog/dog.gd" id="1_85jt7"]
+[ext_resource type="Texture2D" uid="uid://vwhf1fc88bxb" path="res://assets/sprites/animals/dog.png" id="2_xckpv"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="3_3dac0"]
+
+[node name="Dog" type="Node2D"]
+script = ExtResource("1_85jt7")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 4
+scale = Vector2(0.62, 0.62)
+texture = ExtResource("2_xckpv")
+offset = Vector2(0, -46)
+hframes = 4
+vframes = 3
+
+[node name="InteractableComponent" parent="." instance=ExtResource("3_3dac0")]
+position = Vector2(0, -18)

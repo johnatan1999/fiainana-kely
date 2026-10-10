@@ -130,6 +130,10 @@ var thief_next_alert_day: int = 0
 var thief_rumour: String = ""
 var thief_stolen_day: int = 0
 var coop_padlock: bool = false
+## The family's dog (FarmSimulation's dog API), empty: none yet. "name",
+## "coat", "since" (the day it came), "fed_day" (its bowl last filled),
+## "petted_day", "bond" (days it was petted).
+var dog: Dictionary = {}
 const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
@@ -320,6 +324,7 @@ func to_dict() -> Dictionary:
 		"thief_rumour": thief_rumour,
 		"thief_stolen_day": thief_stolen_day,
 		"coop_padlock": coop_padlock,
+		"dog": dog.duplicate(),
 	}
 
 ## JSON object keys are strings: species saved as "0", "4"...
@@ -497,6 +502,8 @@ func load_dict(data: Dictionary) -> void:
 	thief_rumour = str(data.get("thief_rumour", ""))
 	thief_stolen_day = int(data.get("thief_stolen_day", 0))
 	coop_padlock = bool(data.get("coop_padlock", false))
+	# Optional key (older saves have none): no dog.
+	dog = (data["dog"] as Dictionary).duplicate() if data.get("dog") is Dictionary else {}
 	# Optional key (older saves have none): no quest under way.
 	quests.clear()
 	var saved_quests = data.get("quests", {})

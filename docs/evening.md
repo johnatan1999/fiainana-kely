@@ -6,8 +6,11 @@
   chiffres, c'est une conversation.
   - **Une quête finie dans la journée** passe d'abord : la famille la raconte (« Rakoto a
     raconté à toute la gargote que tu as retrouvé Volamena. »), voir `quests.md`.
-  - **Les voleurs de poules** (voir `chicken_thieves.md`) : Dada parle de la poule volée ou du
-    cadenas qui a tenu ; pendant une alerte, Neny conseille un cadenas.
+  - **Les voleurs de poules** (voir `chicken_thieves.md`) : Dada parle de la poule volée, du
+    cadenas qui a tenu ou du chien qui les a chassés ; pendant une alerte, Neny conseille un
+    cadenas, ou de remplir la gamelle du chien.
+  - **Le chien** (voir `dog.md`) : si sa gamelle est restée vide, Fara remarque qu'il est
+    parti chercher à manger chez les voisins.
   - **Dada** parle des champs et de l'argent : « Tu as récolté 6 haricots et 3 maïs
     aujourd'hui. Bon travail. », « La journée a rapporté 9 400 Ar, et on a dépensé
     3 000 Ar. ». Les jours calmes : « Une journée calme. La terre aussi a besoin de

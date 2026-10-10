@@ -96,7 +96,7 @@ func get_dish() -> Array:
 ## speaker's lines one after the other make a single turn.
 func get_lines() -> Array:
 	var tomorrow := _tomorrow_lines().slice(0, 2)
-	var day := _dry_lines() + _quest_lines() + _thief_lines() + _field_lines() + _village_lines() + _sister_lines()
+	var day := _dry_lines() + _quest_lines() + _thief_lines() + _dog_lines() + _field_lines() + _village_lines() + _sister_lines()
 	var lines := day.slice(0, MAX_LINES - tomorrow.size()) + tomorrow
 	# Someone who goes on talking: one turn, not their name twice.
 	var turns := []
@@ -128,16 +128,29 @@ func _thief_lines() -> Array:
 	var log := simulation.day_log
 	if log.chicken_stolen:
 		var text := tr("Un voleur nous a pris une poule cette nuit...")
-		if not simulation.is_coop_safe():
+		if simulation.has_dog():
+			text += " " + tr("Si %s avait eu à manger, il serait resté pour aboyer.") % simulation.get_dog_name()
+		elif not simulation.is_coop_safe():
 			text += " " + tr("Un cadenas coûte moins cher que nos poules.")
 		return [[FATHER_ID, text]]
+	if log.dog_chased_thieves:
+		return [[FATHER_ID, tr("%s a aboyé toute la nuit, et les voleurs de poules ont détalé. Ce chien vaut bien son bol de riz !") % simulation.get_dog_name()]]
 	if log.thieves_foiled:
 		return [[FATHER_ID, tr("Les voleurs ont essayé notre poulailler cette nuit. Le cadenas a tenu : ils sont repartis les mains vides !")]]
 	if simulation.is_thief_alert() and simulation.get_hen_ids().size() >= FarmSimulation.THIEF_MIN_HENS:
 		if simulation.is_coop_safe():
 			return [[MOTHER_ID, tr("On parle de voleurs de poules au village. Heureusement, notre poulailler ferme bien.")]]
+		if simulation.has_dog():
+			return [[MOTHER_ID, tr("On parle de voleurs de poules au village. Pense à la gamelle de %s : un chien qui a mangé garde la maison.") % simulation.get_dog_name()]]
 		return [[MOTHER_ID, tr("On parle de voleurs de poules au village. Il faudrait un cadenas sur le poulailler, on en vend au marché.")]]
 	return []
+
+# --- The dog: its bowl, empty tonight ---------------------------------------------------------
+
+func _dog_lines() -> Array:
+	if not simulation.has_dog() or simulation.is_dog_fed() or simulation.day_log.quests_done.size() > 0:
+		return []
+	return [[SISTER_ID, tr("La gamelle de %s est restée vide aujourd'hui... Il est parti chercher à manger chez les voisins.") % simulation.get_dog_name()]]
 
 # --- Dada: the fields and the money ---------------------------------------------------------
 

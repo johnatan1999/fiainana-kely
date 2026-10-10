@@ -195,6 +195,8 @@ func _reward_text(quest: Quest) -> String:
 		parts.append(Currency.format(quest.reward_money))
 	for item_id: String in quest.reward_items:
 		parts.append("%d %s" % [int(quest.reward_items[item_id]), _item_name(item_id)])
+	if not quest.reward_unlock_label.is_empty():
+		parts.append(tr(quest.reward_unlock_label))
 	if quest.reward_friendship > 0:
 		parts.append(tr("l'amitié de %s") % _names.get(quest.giver, quest.giver))
 	return ", ".join(parts)

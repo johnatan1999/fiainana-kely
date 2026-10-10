@@ -218,6 +218,10 @@ func _run_all() -> void:
 	test_thief_takes_one_hen()
 	test_padlock_keeps_thieves_out()
 	test_thieves_save_load()
+	test_dog_comes_with_rakotos_puppy()
+	test_dog_bowl_petting_and_name()
+	test_fed_dog_chases_thieves()
+	test_dog_save_load()
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
@@ -2428,3 +2432,78 @@ func test_thieves_save_load() -> void:
 	_check(loaded.is_thief_alert() and loaded.state.thief_rumour == sim.state.thief_rumour and loaded.state.coop_padlock
 			and loaded.state.thief_next_alert_day == sim.state.thief_next_alert_day,
 		"thieves: the rumour, the quiet spell and the padlock survive a save/load")
+
+# --- The dog (alika) ---------------------------------------------------------------------------
+
+func test_dog_comes_with_rakotos_puppy() -> void:
+	var sim := _make_sim_for_quests()
+	_advance_to_day(sim, 8)
+	var not_yet := sim.get_quest_offered_by("rakoto") == "rakoto_lost_zebu"
+	sim.state.quests_done["rakoto_lost_zebu"] = 5
+	var offered := sim.get_quest_offered_by("rakoto") == "rakoto_puppy"
+	sim.start_quest("rakoto_puppy")
+	var adopted := []
+	sim.dog_adopted.connect(func(): adopted.append(true))
+	var basket_first := sim.quest_trigger("puppy_basket").is_empty()
+	var asked := sim.quest_talk("mother") == "rakoto_puppy"
+	var no_dog_yet := not sim.has_dog()
+	var chosen := sim.quest_trigger("puppy_basket") == "rakoto_puppy"
+	_check(not_yet and offered and basket_first and asked and no_dog_yet and chosen and sim.has_dog()
+			and adopted.size() == 1 and sim.is_quest_done("rakoto_puppy")
+			and FarmSimulation.DOG_NAMES.has(sim.get_dog_name()) and sim.get_dog_growth() == 0.0
+			and sim.get_dog_coat() >= 0 and sim.get_dog_coat() < FarmSimulation.DOG_COATS and not sim.adopt_dog(),
+		"dog: after the lost zebu, Rakoto offers a puppy - ask Neny, pick it from the basket: the family has a dog (one)")
+
+func test_dog_bowl_petting_and_name() -> void:
+	var sim := _make_sim()
+	var none := not sim.feed_dog() and not sim.pet_dog() and not sim.rename_dog("Tsiky")
+	sim.adopt_dog(0)
+	var fed := sim.feed_dog() and sim.is_dog_fed() and not sim.feed_dog()
+	var petted: bool = sim.pet_dog() and not sim.pet_dog() and sim.state.dog["bond"] == 1
+	sim.advance_day()
+	var next_day := not sim.is_dog_fed() and sim.dog_kept_watch() and not sim.is_dog_petted()
+	sim.advance_day()
+	var hungry_night := not sim.dog_kept_watch()
+	for i in FarmSimulation.DOG_BOND_PER_HEART * (FarmSimulation.DOG_MAX_HEARTS + 2):
+		sim.pet_dog()
+		sim.advance_day()
+	var named := sim.rename_dog("  Bobaka le Magnifique Chien  ") 		and sim.get_dog_name() == "Bobaka le Magn" 		and not sim.rename_dog("   ")
+	_check(none and fed and petted and next_day and hungry_night and sim.get_dog_hearts() == FarmSimulation.DOG_MAX_HEARTS
+			and sim.get_dog_growth() == 1.0 and named,
+		"dog: its bowl once a day (it keeps watch that night), petted once a day (fonder, up to 5), named by the player")
+
+func test_fed_dog_chases_thieves() -> void:
+	var sim := _make_sim_for_thieves(3)
+	sim.adopt_dog()
+	sim.thief_alert_chance = 1.0
+	sim.thief_night_chance = 1.0
+	var chased := []
+	sim.thieves_chased.connect(func(): chased.append(true))
+	sim.advance_day() # the rumour
+	sim.feed_dog()
+	sim.advance_day() # the night: the dog barks them away
+	var kept := sim.get_hen_ids().size() == 3 and chased.size() == 1 and sim.day_log.dog_chased_thieves 		and not sim.day_log.thieves_foiled and not sim.is_thief_alert()
+	var hungry := _make_sim_for_thieves(3)
+	hungry.adopt_dog()
+	hungry.thief_alert_chance = 1.0
+	hungry.thief_night_chance = 1.0
+	hungry.advance_day()
+	hungry.advance_day() # not fed: it went looking for food
+	_check(kept and hungry.get_hen_ids().size() == 2 and hungry.day_log.chicken_stolen,
+		"dog: fed, it keeps watch and barks the chicken thieves away - hungry, it's off and a hen is gone")
+
+func test_dog_save_load() -> void:
+	var sim := _make_sim()
+	sim.adopt_dog(2)
+	sim.rename_dog("Kintana")
+	sim.feed_dog()
+	sim.pet_dog()
+	var loaded := _make_sim()
+	loaded.load_save_data(JSON.parse_string(JSON.stringify(sim.to_save_data())))
+	var older := _make_sim()
+	var data: Dictionary = JSON.parse_string(JSON.stringify(sim.to_save_data()))
+	data.erase("dog")
+	older.load_save_data(data)
+	_check(loaded.has_dog() and loaded.get_dog_name() == "Kintana" and loaded.get_dog_coat() == 2
+			and loaded.is_dog_fed() and loaded.is_dog_petted() and not older.has_dog(),
+		"dog: its name, coat, bowl and petting survive a save/load - an older save has no dog")

@@ -199,6 +199,29 @@ static func describe_zebu(simulation: FarmSimulation, zebu_id: String) -> Dictio
 	entry["sort_group"] = 1
 	return entry
 
+## The family's dog (FarmSimulation's dog API): its bowl, its fondness for
+## the player, tonight.
+static func describe_dog(simulation: FarmSimulation) -> Dictionary:
+	var fed := simulation.is_dog_fed()
+	var details: Array = [
+		[_t("Gamelle"), _t("Remplie aujourd'hui") if fed else _t("À remplir")],
+		[_t("Attachement"), "%d/%d" % [simulation.get_dog_hearts(), FarmSimulation.DOG_MAX_HEARTS]],
+		[_t("Cette nuit"), _t("Il garde la ferme") if fed else _t("Il ira chercher à manger")],
+	]
+	var description := _t("Ton chien. Il te suit partout dehors. Caresse-le chaque jour, et remplis sa gamelle près de sa niche : un chien qui a mangé garde la ferme la nuit et chasse les voleurs de poules.")
+	var entry := _make("dog:family", simulation.get_dog_name(), dog_icon(), Category.ANIMALS,
+		ItemData.Category.ANIMALS, description, details)
+	entry["meta"] = _t("À tes côtés")
+	entry["sort_group"] = 1
+	return entry
+
+## The dog sitting (frame 4 of the dog sheet), for icons.
+static func dog_icon() -> Texture2D:
+	var icon := AtlasTexture.new()
+	icon.atlas = load("res://assets/sprites/animals/dog.png")
+	icon.region = Rect2(0, 96, 112, 96)
+	return icon
+
 ## A zebu standing (frame 0 of the zebu sheet), for icons.
 static func zebu_icon() -> Texture2D:
 	var icon := AtlasTexture.new()

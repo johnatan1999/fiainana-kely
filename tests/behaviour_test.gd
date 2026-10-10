@@ -60,6 +60,7 @@ func _ready() -> void:
 	await _test_quests()
 	await _test_more_quests()
 	await _test_chicken_thieves()
+	await _test_dog()
 	# Last: it takes over the camera.
 	await _test_home_screen()
 
@@ -1312,6 +1313,81 @@ func _test_chicken_thieves() -> void:
 	state.clock.current_day = day
 	_sim.day_log = DayLog.new()
 	_sim.day_changed.emit(day)
+	_set_time(10 * 60)
+	await _go_to_zone("village")
+
+# --- the dog (alika) ------------------------------------------------------------------------
+
+func _test_dog() -> void:
+	var state := _sim.state
+	var dogs: DogManager = _world.get_node("Gameplay/DogManager")
+	var panel: DogNamePanel = _world.get_node("UI/DogNamePanel")
+	state.dog = {}
+	_set_time(10 * 60)
+	await _go_to_zone("farm")
+	var house: DogHouse = _zone().get_node("DogHouse")
+	var no_dog := not house.visible and dogs.get_dog() == null
+	_player.global_position = Vector2(900, 600)
+	_sim.adopt_dog(0)
+	await _frames(2)
+	var asked := panel.is_open() and FarmSimulation.DOG_NAMES.has(panel.get_typed_name())
+	panel._line.text = "Kintana"
+	panel.confirm()
+	await _frames(2)
+	var dog := dogs.get_dog()
+	_check(no_dog and asked and not panel.is_open() and _sim.get_dog_name() == "Kintana" and dog != null
+			and dog.is_following() and house.visible and not house.is_bowl_full()
+			and house.get_node("InteractableComponent").get_prompt() == "Remplir la gamelle",
+		"dog: no doghouse before - the puppy comes, the player names it, it's at the farm with its doghouse and an empty bowl")
+
+	var start := dog.global_position
+	await _walk(Vector2(860, 600), Vector2(1180, 600), 2.0)
+	var close := func() -> bool:
+		return dog.global_position.distance_to(_player.global_position) < Dog.FOLLOW_DISTANCE + 20.0
+	var followed := await _wait_for(close, 3.0)
+	await _frames(40)
+	var sits := dog.get_frame() in Dog.FRAMES_SIT and dog.global_position.distance_to(_player.global_position) > 20.0
+	_check(followed and dog.global_position.distance_to(start) > 150.0 and sits,
+		"dog: it follows the player at their heels, then sits by them, wagging")
+
+	dog.get_node("InteractableComponent").interact()
+	var petted: bool = _sim.is_dog_petted() and state.dog["bond"] == 1 and dog._happy > 0.0
+	house.get_node("InteractableComponent").interact()
+	await _frames(2)
+	_check(petted and _sim.is_dog_fed() and house.is_bowl_full()
+			and not house.get_node("InteractableComponent").is_interactable,
+		"dog: petted (a heart, fonder), its bowl filled at the doghouse")
+
+	_set_time(21 * 60)
+	var at_bed := func() -> bool:
+		return dog.global_position.distance_to(house.get_bed_position()) < 4.0
+	var went := await _wait_for(at_bed, 6.0)
+	_player.global_position = house.get_bed_position() + Vector2(500, 0)
+	var sleeps := await _wait_for(func() -> bool: return dog.is_asleep(), 2.0)
+	dog._night_bark = 0.0
+	var barks := await _wait_for(func() -> bool: return dog.is_barking(), 1.0)
+	var quiet_again := await _wait_for(func() -> bool: return not dog.is_barking(), 3.0)
+	_check(dog.is_guarding() and went and sleeps and barks and quiet_again,
+		"dog: at night it goes to its doghouse, sleeps there - and barks at the dark now and then")
+
+	_set_time(10 * 60)
+	await _go_to_zone("village")
+	var in_village := dogs.get_dog() != null and dogs.get_dog().is_following() 		and dogs.get_dog().global_position.distance_to(_player.global_position) < 100.0
+	var leaving := dogs.get_dog()
+	_set_time(20 * 60)
+	await _frames(2)
+	var gone := await _wait_for(func() -> bool: return not is_instance_valid(leaving), 3.0)
+	await _go_to_zone("player_house")
+	var not_indoors := dogs.get_dog() == null
+	state.dog["fed_day"] = 0
+	var evening: EveningManager = _world.get_node("Gameplay/EveningManager")
+	var reminded := evening.get_lines().any(func(line: Dictionary) -> bool:
+		return "gamelle de Kintana" in line["text"])
+	_check(in_village and gone and dogs.get_dog() == null and not_indoors and reminded,
+		"dog: it follows the player to the village, trots home at nightfall, waits outside the house - and Fara minds its bowl")
+
+	state.dog = {}
+	_sim.dog_changed.emit()
 	_set_time(10 * 60)
 	await _go_to_zone("village")
 

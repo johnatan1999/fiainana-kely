@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=4 uid="uid://qasuyowkducw"]
+[gd_scene load_steps=49 format=4 uid="uid://qasuyowkducw"]
 
 [ext_resource type="Script" path="res://world/zone_root.gd" id="1_3ta8c"]
 [ext_resource type="Texture2D" uid="uid://cxd7faagbgttd" path="res://assets/tileset/farm01_48.png" id="2_on25c"]
@@ -43,6 +43,7 @@
 [ext_resource type="PackedScene" uid="uid://bhkgg7y6c4bsl" path="res://entities/zebu/zebu_trough.tscn" id="41_wr0cx"]
 [ext_resource type="PackedScene" uid="uid://0cknt7gkxom7" path="res://entities/zebu/manure_heap.tscn" id="42_1ltp7"]
 [ext_resource type="Script" path="res://entities/farm/house_annex.gd" id="43_wtvd5"]
+[ext_resource type="PackedScene" uid="uid://uy6p2oj8pkoa" path="res://entities/dog/dog_house.tscn" id="44_6gr10"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_jeqll"]
 texture = ExtResource("2_on25c")
@@ -610,3 +611,6 @@ building = "granary"
 position = Vector2(1066, 684)
 script = ExtResource("43_wtvd5")
 building = "kitchen"
+
+[node name="DogHouse" parent="." instance=ExtResource("44_6gr10")]
+position = Vector2(712, 594)

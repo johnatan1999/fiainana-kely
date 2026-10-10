@@ -38,6 +38,11 @@ const TARGETS := [
 	{"scene": FOREST, "name": "NenySoaJar", "target": "spring_jar", "appears": "during",
 		"position": Vector2(1135, 190), "interact": Vector2(130, 100),
 		"look": "scene", "path": "res://entities/props/water_jar.tscn"},
+	# Rakoto's puppy (data/quests/rakoto_puppy.tres): the basket in front of
+	# his house, the mother lying by it.
+	{"scene": VILLAGE, "name": "PuppyBasket", "target": "puppy_basket", "appears": "during",
+		"position": Vector2(300, 1180), "interact": Vector2(150, 90),
+		"look": "scene", "path": "res://entities/dog/puppy_basket.tscn"},
 ]
 
 func _initialize() -> void:

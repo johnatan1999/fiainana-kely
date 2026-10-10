@@ -74,6 +74,8 @@ const TREE_RESOURCES: Array[TreeData] = [
 @onready var quest_manager: QuestManager = $Gameplay/QuestManager
 @onready var quest_panel: QuestPanel = $UI/QuestPanel
 @onready var chicken_thief_manager: ChickenThiefManager = $Gameplay/ChickenThiefManager
+@onready var dog_manager: DogManager = $Gameplay/DogManager
+@onready var dog_name_panel: DogNamePanel = $UI/DogNamePanel
 
 var simulation: FarmSimulation
 var item_db: ItemDatabase
@@ -127,6 +129,7 @@ func _ready() -> void:
 	# After OrderManager: it steps aside for a villager a quest waits on.
 	quest_manager.setup(simulation, item_db, world_manager, quest_panel, orders_tracker)
 	chicken_thief_manager.setup(simulation, world_manager)
+	dog_manager.setup(simulation, world_manager, player, dog_name_panel)
 	day_night.setup(simulation, world_manager)
 	weather.setup(simulation, world_manager, day_night, player)
 	# The slot picked on the home screen (SaveSlots.current); none when the

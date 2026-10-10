@@ -28,6 +28,7 @@
 | Le zébu perdu | Rakoto | jour 3 | Retrouver son zébu dans la forêt | 10 000 Ar, un cœur |
 | Le sifaka qui danse | Koto | jour 4 | Voir un sifaka, puis lui apporter le dessin de Fara | 3 mangues, un cœur |
 | La tisane de Neny Soa | Neny Soa | jour 6, 1 cœur | Sa cruche à la source, une feuille de ravintsara | 3 mofo gasy, un cœur |
+| Le chiot de Rakoto | Rakoto | jour 8, après le zébu perdu | Demander à Neny, choisir un chiot | le chien de la famille, un demi-cœur |
 
 **« Le zébu perdu » (Rakoto)**
 1. Son zébu Volamena a cassé sa corde et filé vers la forêt. On cherche des **traces** :
@@ -55,6 +56,14 @@
 2. On rapporte l'eau avec **une feuille de ravintsara** : 3 mofo gasy et un cœur. Le soir,
    Neny raconte que Neny Soa t'appelle « zafy », comme son petit-enfant.
 
+**« Le chiot de Rakoto » (Rakoto, après « Le zébu perdu »)**
+1. Sa chienne Vony a eu des petits, et avec les voleurs de poules qui rôdent, un chien à la
+   ferme serait utile. On demande d'abord à **Neny** (« ? » cyan sur elle). Elle accepte, si
+   c'est toi qui remplis la gamelle.
+2. On choisit un chiot dans le **panier**, devant la case de Rakoto, la mère couchée à côté.
+   Le chiot suit aussitôt le joueur, qui lui donne un nom. Le soir, Fara raconte qu'il a
+   déjà choisi sa place devant la porte. Tout le reste est dans `dog.md`.
+
 Côté game design :
 - **Les quêtes racontent le village** : là où les commandes font de l'économie (vite, avec
   un délai), les quêtes font de l'histoire (lentement, sans pression).
@@ -73,7 +82,9 @@ Côté game design :
     (quêtes à finir avant), `after_discoveries` (pages du carnet), `seasons` ;
   - **Étapes** : `steps` (des `QuestStep`, dans l'ordre) ;
   - **Récompense** : `reward_money`, `reward_items` (id → quantité), `reward_friendship`
-    (points, 100 = un cœur), `evening_speaker` et `evening_line` (la phrase du repas).
+    (points, 100 = un cœur), `reward_unlock` (ce que la quête apporte à la ferme hors objets :
+    `"dog"`, voir `dog.md`) et `reward_unlock_label` (son texte dans la récompense, « un
+    chiot »), `evening_speaker` et `evening_line` (la phrase du repas).
 - `QuestStep` (`core/data/quest_step.gd`), selon son `kind` :
 
 | `kind` | Ce qu'il faut faire | Champs |
@@ -153,7 +164,7 @@ la journée, en tête de la conversation.
   - la sauvegarde ;
   - **la cohérence des données** : chaque quête de `data/quests/` nomme des villageois, des
     objets, des pages et des quêtes qui existent.
-- `behaviour_test.gd` : les trois quêtes. Pour Koto et Neny Soa : les deux « ! », la cruche
+- `behaviour_test.gd` : les trois premières quêtes (le chiot de Rakoto : voir `dog.md`). Pour Koto et Neny Soa : les deux « ! », la cruche
   (et sa collision), l'attente de la feuille, le « ? » sur Fara à la ferme. Et la quête de
   Rakoto de bout en bout. Le « ! » cyan, le panneau, le
   suivi, les traces, le zébu et les brèdes, le « ? », la récompense, le repas du soir et

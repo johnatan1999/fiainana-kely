@@ -4,7 +4,8 @@ extends Node
 ## Chicken thieves (mpangalatra akoho), between FarmSimulation (the rumour,
 ## the nights, the padlock - the rules) and the world. Decides nothing:
 ## - in the morning: the rumour ("des poules ont disparu chez Naivo"), a
-##   hen taken overnight, or the padlock that held;
+##   hen taken overnight, the padlock that held, or the dog that barked
+##   them away;
 ## - the padlock on the farm's coop door (CoopPadlock), once bought;
 ## - feathers in front of the coop the morning after a theft
 ##   (ScatteredFeathers), for the day.
@@ -28,6 +29,7 @@ func setup(p_simulation: FarmSimulation, world_manager: WorldManager) -> void:
 	simulation.thief_alert_started.connect(func(_villager: String): _say_rumour.call_deferred())
 	simulation.chicken_stolen.connect(func(_animal: String): _say_theft.call_deferred())
 	simulation.thieves_foiled.connect(func(): _say_foiled.call_deferred())
+	simulation.thieves_chased.connect(func(): _say_chased.call_deferred())
 	simulation.coop_secured.connect(_on_coop_secured)
 	simulation.day_changed.connect(func(_day: int): _refresh())
 	world_manager.zone_loaded.connect(func(_zone: ZoneRoot): _refresh())
@@ -37,12 +39,20 @@ func _say_rumour() -> void:
 	var text := tr("Mpangalatra akoho ! Des poules ont disparu chez %s cette nuit.") % neighbour
 	if simulation.is_coop_safe():
 		text += " " + tr("Ton poulailler, lui, ferme bien.")
+	elif simulation.has_dog():
+		text += " " + tr("%s veillera, si sa gamelle est remplie le soir.") % simulation.get_dog_name()
 	else:
 		text += " " + tr("Un cadenas sur le poulailler, au marché, ne serait pas de trop.")
 	UIEvents.notify(text)
 
 func _say_theft() -> void:
-	UIEvents.notify(tr("Cette nuit, un voleur est entré dans le poulailler : il manque une poule."))
+	var text := tr("Cette nuit, un voleur est entré dans le poulailler : il manque une poule.")
+	if simulation.has_dog():
+		text += " " + tr("%s, le ventre vide, était parti chercher à manger.") % simulation.get_dog_name()
+	UIEvents.notify(text)
+
+func _say_chased() -> void:
+	UIEvents.notify(tr("Cette nuit, %s a aboyé à pleine voix : les voleurs de poules ont détalé !") % simulation.get_dog_name())
 
 func _say_foiled() -> void:
 	UIEvents.notify(tr("Cette nuit, des voleurs ont essayé d'ouvrir le poulailler : le cadenas a tenu !"))

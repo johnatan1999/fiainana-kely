@@ -24,6 +24,7 @@ godot --headless --path . --script res://tools/placeholder_art/gen_<nom>.gd
 | `gen_coop.gd` | `assets/sprites/props/coop_levels.png`, `coop_bowls.png` | Poulailler : 4 cases de 448×384 (0 la ruine, puis niveaux 1 à 3), densité 2× : emprise de 224×192, bâtiment posé sur y = 344, porte entre x = 192 et 252. Gamelles : rangée 0, mangeoire vide puis pleine (cases de 128×64) ; rangée 1, jarre d'eau vide puis pleine (cases de 64×128) |
 | `gen_annexes.gd` | `assets/sprites/props/house_annexes.png` | 2 cases de 256×320 (grenier sur pilotis, cuisine), densité 2×, posées sur le bord bas et centrées |
 | `gen_forest.gd` | `assets/sprites/props/forest.png` | Cases de 128×128, densité 2×, posées sur y = 120 et centrées. Rangée 0 : les animaux, deux images chacun (sifaka, maki, caméléon, tenrec, martin-pêcheur). Rangée 1 : les plantes, prêtes puis cueillies (brèdes, miel, ravintsara, champignons) |
+| `gen_dog.gd` | `assets/sprites/animals/dog.png`, `assets/sprites/props/dog_props.png` | Chien : profil vers la droite, densité 2×, cases de 112×96 (4×3), pattes sur y = 92 : 0–3 trot, 4–5 assis, 6 couché, 7 endormi, 8 aboie, 9 renifle, 10 content, 11 caressé. Robe claire (teintée en jeu). Accessoires : cases de 192×192 (4×1), posés sur le bord bas : niche, gamelle vide, gamelle pleine, panier de chiots |
 | `gen_water.gd` | `assets/tileset/water_placeholder.png` | Deux tuiles blanches : c'est le shader qui colore |
 
 Ces scripts ne touchent **qu'aux images**. Les scènes (zones, champs, arbres, clôtures,

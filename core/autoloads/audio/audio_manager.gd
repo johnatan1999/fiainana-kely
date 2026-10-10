@@ -49,6 +49,9 @@ const BIRD_FLIGHT_MIN_INTERVAL := 0.6
 @export var sfx_footstep_run: AudioStream
 @export var sfx_action_denied: AudioStream
 @export var sfx_bird_flight: AudioStream
+## The family's dog barking (Dog). Empty = a bark generated in code
+## (_make_bark) stands in until a recording is assigned.
+@export var sfx_dog_bark: AudioStream
 ## Looping rain sound (WeatherController). Empty = a rain hiss generated in
 ## code stands in until a recording is assigned.
 @export var bgs_rain: AudioStream
@@ -258,6 +261,44 @@ func _process(_delta: float) -> void:
 		var sample := _rain_lowpass * 0.9 + white * 0.08 + white * _rain_drop
 		_rain_playback.push_frame(Vector2(sample, sample))
 
+
+## One "woof", `volume_db` from how far the dog is (Dog). Pitch varies a
+## little, so a run of barks doesn't sound like a loop.
+func play_dog_bark_sfx(volume_db := 0.0) -> void:
+	if sfx_dog_bark == null:
+		sfx_dog_bark = _make_bark()
+	play_sfx(sfx_dog_bark, volume_db + DOG_BARK_VOLUME_DB, randf_range(0.92, 1.1))
+
+const DOG_BARK_VOLUME_DB := -6.0
+const BARK_MIX_RATE := 22050
+
+## A placeholder bark: a short buzzy tone (rising, then falling, as a
+## bark's pitch does), a breath of noise at the attack, a fast decay -
+## through a gentle low-pass.
+func _make_bark() -> AudioStreamWAV:
+	var length := int(BARK_MIX_RATE * 0.2)
+	var data := PackedByteArray()
+	data.resize(length * 2)
+	var phase := 0.0
+	var low := 0.0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	for i in length:
+		var t := float(i) / BARK_MIX_RATE
+		var pitch := lerpf(330.0, 560.0, t / 0.03) if t < 0.03 else lerpf(560.0, 280.0, (t - 0.03) / 0.17)
+		phase += TAU * pitch / BARK_MIX_RATE
+		var tone := 0.0
+		for h in 6:
+			tone += sin(phase * (h + 1)) * [1.0, 0.8, 0.6, 0.45, 0.3, 0.2][h]
+		var noise := rng.randf_range(-1.0, 1.0) * (0.9 if t < 0.025 else 0.25)
+		var envelope := minf(t / 0.006, 1.0) * exp(-maxf(t - 0.04, 0.0) / 0.045)
+		low = lerpf(low, (tone * 0.3 + noise) * envelope, 0.45)
+		data.encode_s16(i * 2, int(clampf(low * 0.8, -1.0, 1.0) * 32767.0))
+	var wav := AudioStreamWAV.new()
+	wav.format = AudioStreamWAV.FORMAT_16_BITS
+	wav.mix_rate = BARK_MIX_RATE
+	wav.data = data
+	return wav
 
 func play_chicken_sfx() -> void:
 	play_sfx(sfx_chicken)

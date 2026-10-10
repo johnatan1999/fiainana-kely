@@ -13,6 +13,11 @@
     tenu ! ». Dada s'en réjouit au repas.
   - Dans les deux cas, ils partent ensuite : **jamais plus d'une poule par alerte**.
 - **Les protections** :
+  - **le chien de la famille** (voir `dog.md`), s'il a mangé la veille : il veille toute la
+    nuit, et quand il aboie, les voleurs détalent (« Cette nuit, Kintana a aboyé à pleine
+    voix : les voleurs de poules ont détalé ! »). Dada le félicite au repas. Le ventre vide,
+    il est parti chercher à manger, et la poule est perdue. La rumeur et Neny rappellent sa
+    gamelle ;
   - le **cadenas du poulailler** (*hidy*), 5 000 Ar au marché du village (rayon outils). Il
     se pose tout de suite sur la porte, où on le voit, et quitte l'étalage ;
   - le **poulailler en briques** (projet de famille, niveau 3), qui ferme de lui-même.
@@ -46,6 +51,8 @@ Côté game design :
   2. puis une nouvelle rumeur peut commencer, s'il y a un poulailler, au moins 2 poules, le
      jour 15 passé et le calme écoulé.
 - `_thieves_come()` :
+  - le chien a mangé la veille (`dog_kept_watch()`) → `thieves_chased`,
+    `DayLog.dog_chased_thieves` ;
   - poulailler sûr → `thieves_foiled`, `DayLog.thieves_foiled` ;
   - sinon une poule tirée au hasard est retirée de `state.animals` : `animal_removed`,
     `chicken_stolen`, `DayLog.chicken_stolen`.
@@ -60,7 +67,8 @@ Côté game design :
   cadenas.
 
 **Lien avec le jeu : `ChickenThiefManager`** (`systems/animal/`, `Gameplay/ChickenThiefManager`)
-- Les notifications du matin (rumeur, vol, vol déjoué) et celle de la pose du cadenas.
+- Les notifications du matin (rumeur, vol, vol déjoué, chien qui a aboyé) et celle de la
+  pose du cadenas.
 - Sur le poulailler de la zone (`Coop.GROUP`), près de la porte :
   - `CoopPadlock` (`structures/chicken_coop/coop_padlock.gd`), dessiné en code, tant que le
     cadenas est posé et que le poulailler n'est pas en briques ;
@@ -92,7 +100,6 @@ barre d'outils).
 - **Une fois protégé**, le joueur n'entend plus que la rumeur et les vols déjoués. C'est
   voulu : la menace apprend à prendre soin de sa ferme, puis s'efface.
 - **Pistes** :
-  - **le chien (*alika*)** qui aboie la nuit : une autre protection, en récompense de quête ;
   - les **dahalo** (voleurs de zébus) : un événement d'histoire avec la veillée du fokonolona,
     et le parc à zébus amélioré comme protection ;
   - retrouver la poule volée au tsena du bourg (une petite quête).

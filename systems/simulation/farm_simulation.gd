@@ -93,6 +93,12 @@ signal chicken_stolen(animal_id: String)
 signal thieves_foiled
 ## The padlock is on the coop's door (bought: put straight on).
 signal coop_secured
+## Overnight, the dog barked the chicken thieves away.
+signal thieves_chased
+## The family's dog came (a side quest's reward: Rakoto's puppy).
+signal dog_adopted
+## The dog's name, bowl, petting...
+signal dog_changed
 
 const COOP_COST := 6000
 ## Chance of a rainy day, per season: Asara is the rainy season. A rainy day
@@ -1205,6 +1211,10 @@ func _thieves_come() -> void:
 	if hens.size() < THIEF_MIN_HENS:
 		return
 	state.thief_alert_until = state.day - 1
+	if dog_kept_watch():
+		day_log.dog_chased_thieves = true
+		thieves_chased.emit()
+		return
 	if is_coop_safe():
 		day_log.thieves_foiled = true
 		thieves_foiled.emit()
@@ -1221,6 +1231,102 @@ func _thieves_come() -> void:
 func _secure_coop() -> void:
 	state.coop_padlock = true
 	coop_secured.emit()
+
+# --- The dog (alika) ------------------------------------------------------------------------
+
+## The puppy's name until the player gives it one.
+const DOG_NAMES := ["Tsiky", "Bobaka", "Kintana", "Kely", "Soa", "Tsara", "Mavo", "Rary"]
+const DOG_NAME_MAX_LENGTH := 14
+## Coats (Dog.COATS).
+const DOG_COATS := 4
+## A puppy grows into a dog in this many days.
+const DOG_GROWN_DAYS := 14
+## Days petted, for a heart; and the most there is.
+const DOG_BOND_PER_HEART := 4
+const DOG_MAX_HEARTS := 5
+
+func has_dog() -> bool:
+	return not state.dog.is_empty()
+
+## The puppy comes to the farm. False if there's one already.
+func adopt_dog(coat := -1) -> bool:
+	if has_dog():
+		return false
+	state.dog = {
+		"name": DOG_NAMES[randi() % DOG_NAMES.size()],
+		"coat": coat if coat >= 0 else randi() % DOG_COATS,
+		"since": state.day,
+		"fed_day": 0,
+		"petted_day": 0,
+		"bond": 0,
+	}
+	dog_adopted.emit()
+	dog_changed.emit()
+	return true
+
+func get_dog_name() -> String:
+	return str(state.dog.get("name", ""))
+
+## Named by the player: trimmed, DOG_NAME_MAX_LENGTH at most. False for an
+## empty name.
+func rename_dog(dog_name: String) -> bool:
+	var clean := dog_name.strip_edges().left(DOG_NAME_MAX_LENGTH).strip_edges()
+	if not has_dog() or clean.is_empty():
+		return false
+	state.dog["name"] = clean
+	dog_changed.emit()
+	return true
+
+func get_dog_coat() -> int:
+	return int(state.dog.get("coat", 0))
+
+## 0 (a puppy, the day it came) to 1 (grown, after DOG_GROWN_DAYS).
+func get_dog_growth() -> float:
+	if not has_dog():
+		return 1.0
+	return clampf(float(state.day - int(state.dog["since"])) / DOG_GROWN_DAYS, 0.0, 1.0)
+
+## Its bowl filled today: tonight it stays at the farm and keeps watch. The
+## family's leftover rice - nothing to buy, a daily care like the zebus'
+## trough.
+func feed_dog() -> bool:
+	if not has_dog() or is_dog_fed():
+		return false
+	state.dog["fed_day"] = state.day
+	dog_changed.emit()
+	return true
+
+func is_dog_fed() -> bool:
+	return has_dog() and int(state.dog["fed_day"]) == state.day
+
+## Last night (asked in the morning, from advance_day): it had eaten, so it
+## stayed and kept watch. Not fed, it went looking for food in the village.
+func dog_kept_watch() -> bool:
+	return has_dog() and int(state.dog["fed_day"]) == state.day - 1
+
+## Petted: the first time in a day, it grows fonder of the player (true).
+func pet_dog() -> bool:
+	if not has_dog() or is_dog_petted():
+		return false
+	state.dog["petted_day"] = state.day
+	state.dog["bond"] = mini(int(state.dog["bond"]) + 1, DOG_BOND_PER_HEART * DOG_MAX_HEARTS)
+	dog_changed.emit()
+	return true
+
+func is_dog_petted() -> bool:
+	return has_dog() and int(state.dog["petted_day"]) == state.day
+
+## How fond of the player it is: 0 to DOG_MAX_HEARTS.
+func get_dog_hearts() -> int:
+	return int(state.dog.get("bond", 0)) / DOG_BOND_PER_HEART
+
+## What a quest's reward_unlock gives the farm.
+func _unlock(what: String) -> void:
+	match what:
+		"dog":
+			adopt_dog()
+		_:
+			push_warning("FarmSimulation: unknown quest unlock '%s'." % what)
 
 # --- Side quests (fangatahana) ------------------------------------------------------------
 
@@ -1390,6 +1496,8 @@ func _do_quest_step(quest_id: String) -> void:
 		add_friendship(quest.giver, quest.reward_friendship)
 	quest_changed.emit(quest_id)
 	quest_completed.emit(quest_id)
+	if not quest.reward_unlock.is_empty():
+		_unlock(quest.reward_unlock)
 
 # --- Fara's school fees -----------------------------------------------------------------
 

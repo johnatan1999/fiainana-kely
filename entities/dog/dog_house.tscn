@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://uy6p2oj8pkoa"]
+
+[ext_resource type="Script" path="res://entities/dog/dog_house.gd" id="1_w6lt4"]
+[ext_resource type="Texture2D" uid="uid://dlkc36gcb71lm" path="res://assets/sprites/props/dog_props.png" id="2_nk6lm"]
+[ext_resource type="PackedScene" uid="uid://b2ppi6fyhgp1c" path="res://components/interaction/interactable_component.tscn" id="3_8hfln"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_33iju"]
+size = Vector2(56, 14)
+
+[node name="DogHouse" type="Node2D"]
+script = ExtResource("1_w6lt4")
+
+[node name="House" type="Sprite2D" parent="."]
+texture_filter = 4
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_nk6lm")
+region_enabled = true
+region_rect = Rect2(0, 0, 192, 192)
+
+[node name="Bowl" type="Sprite2D" parent="."]
+texture_filter = 4
+position = Vector2(-52, 10)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_nk6lm")
+region_enabled = true
+region_rect = Rect2(192, 0, 192, 192)
+
+[node name="Base" type="StaticBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Base"]
+position = Vector2(0, -7)
+shape = SubResource("RectangleShape2D_33iju")
+
+[node name="Bed" type="Marker2D" parent="."]
+position = Vector2(-2, 20)
+
+[node name="InteractableComponent" parent="." instance=ExtResource("3_8hfln")]
+position = Vector2(-52, -8)

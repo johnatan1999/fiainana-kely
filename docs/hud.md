@@ -15,7 +15,8 @@
   dessous les rappels à date (`show_reminders()` : l'écolage de Fara, voir `school.md`), puis
   les quêtes en cours avec leur prochaine étape (`show_quests()`, voir `quests.md`).
 - **L'inventaire (`InventoryUI`, touche I)** : un livre avec 5 onglets (Cultures, Élevage,
-  Outils, Nourriture, **Villageois**), la grille de l'onglet choisi et une fiche détaillée. Dans
+  Outils, Nourriture, **Villageois**), la grille de l'onglet choisi et une fiche détaillée.
+  L'onglet Élevage montre aussi les poules, les zébus et le chien (voir `dog.md`). Dans
   l'onglet Villageois, la grille montre le portrait de chacun, et la fiche son rôle, sa maison,
   son prochain cadeau, son amitié, son prix d'ami, sa commande et l'endroit où il est en ce
   moment (voir `friendship.md`).

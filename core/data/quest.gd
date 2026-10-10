@@ -39,6 +39,10 @@ const ALL_SEASONS := 3
 ## Friendship points with the giver (FarmSimulation.FRIENDSHIP_PER_HEART: a
 ## heart).
 @export var reward_friendship := 0
+## Something it gives the farm, beyond items: "dog" (FarmSimulation's
+## _unlock). And how the reward says it ("un chiot").
+@export var reward_unlock := ""
+@export var reward_unlock_label := ""
 ## Told at dinner, the evening it's finished, by `evening_speaker` (a
 ## family id: "father", "mother", "fara"). Empty: nothing.
 @export var evening_speaker := "father"
