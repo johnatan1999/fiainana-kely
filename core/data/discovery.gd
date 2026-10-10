@@ -11,6 +11,11 @@ extends Resource
 ## only then (WildAnimal), a plant only grows then (ForageSpot).
 
 enum Category { FAUNA, FLORA, PLACE }
+## The animals' and plants' drawings (tools/placeholder_art/gen_forest.gd):
+## cells of SHEET_CELL, a row per category (animals, then plants).
+const SHEET := preload("res://assets/sprites/props/forest.png")
+const SHEET_CELL := 128
+const DIR := "res://data/discoveries/"
 ## Seasons, as bits (GameClock.Season): both, Asara only, Asotry only.
 const ALL_SEASONS := 3
 
@@ -38,17 +43,24 @@ const ALL_SEASONS := 3
 @export var item_id := ""
 @export var quantity := 1
 @export var regrow_days := 3
+## Its drawing on SHEET: the column of its first cell, on its category's
+## row - an animal's two frames, a plant ready then gathered. -1: none (a
+## place).
+@export var sheet_column := -1
 
 ## Every entry: id (the file's name) -> Discovery, by name.
 static func load_all() -> Dictionary:
-	var all := {}
-	var files := Array(DirAccess.get_files_at("res://data/discoveries/")).filter(func(file): return file.ends_with(".tres"))
-	files.sort()
-	for file: String in files:
-		var data := load("res://data/discoveries/" + file) as Discovery
-		if data != null:
-			all[file.get_basename()] = data
-	return all
+	return ResourceDir.load_all(DIR, Discovery)
+
+## Its drawing, `cell` cells on from its first (an animal's second frame,
+## a plant gathered) - null without one.
+func get_drawing(cell := 0) -> AtlasTexture:
+	if sheet_column < 0:
+		return null
+	var drawing := AtlasTexture.new()
+	drawing.atlas = SHEET
+	drawing.region = Rect2((sheet_column + cell) * SHEET_CELL, category * SHEET_CELL, SHEET_CELL, SHEET_CELL)
+	return drawing
 
 func is_in_season(season: int) -> bool:
 	return seasons & (1 << season) != 0

@@ -2314,6 +2314,8 @@ func test_quest_data_is_sound() -> void:
 		for item_id: String in quest.reward_items:
 			if db.get_item(item_id) == null and db.get_crop(item_id) == null:
 				problems.append("%s: reward %s" % [quest_id, item_id])
+		if not quest.reward_unlock.is_empty() and not FarmSimulation.QUEST_UNLOCKS.has(quest.reward_unlock):
+			problems.append("%s: unlock %s" % [quest_id, quest.reward_unlock])
 		for step: QuestStep in quest.steps:
 			if step.objective.is_empty():
 				problems.append("%s: a step without objective" % quest_id)
@@ -2328,7 +2330,7 @@ func test_quest_data_is_sound() -> void:
 	if not problems.is_empty():
 		print("  quest data: ", problems)
 	_check(not quests.is_empty() and problems.is_empty(),
-		"quests: every quest in data/quests/ names real villagers, items, pages and earlier quests")
+		"quests: every quest in data/quests/ names real villagers, items, pages, earlier quests and unlocks")
 
 func test_koto_and_neny_soa_quests() -> void:
 	var sim := _make_sim_for_quests()
@@ -2459,7 +2461,7 @@ func test_dog_bowl_petting_and_name() -> void:
 	var none := not sim.feed_dog() and not sim.pet_dog() and not sim.rename_dog("Tsiky")
 	sim.adopt_dog(0)
 	var fed := sim.feed_dog() and sim.is_dog_fed() and not sim.feed_dog()
-	var petted: bool = sim.pet_dog() and not sim.pet_dog() and sim.state.dog["bond"] == 1
+	var petted: bool = sim.pet_dog() and not sim.pet_dog() and sim.state.dog.bond == 1
 	sim.advance_day()
 	var next_day := not sim.is_dog_fed() and sim.dog_kept_watch() and not sim.is_dog_petted()
 	sim.advance_day()

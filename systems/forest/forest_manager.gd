@@ -40,6 +40,12 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 	_animals.clear()
 	_plants.clear()
 	for node in zone.find_children("*", "", true, false):
+		if node is WildAnimal or node is ForageSpot:
+			var discovery := simulation.get_discovery(node.discovery_id)
+			if discovery == null:
+				push_warning("ForestManager: %s names no notebook entry '%s'." % [node.name, node.discovery_id])
+				continue
+			node.set_discovery(discovery)
 		if node is WildAnimal:
 			_animals.append(node)
 			node.observed.connect(_on_observed.bind(node))

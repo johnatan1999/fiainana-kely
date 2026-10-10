@@ -33,14 +33,7 @@ const DIR := "res://data/villagers/"
 
 ## Every villager: id (the file's name) -> VillagerData, by name.
 static func load_all() -> Dictionary:
-	var all := {}
-	var files := Array(DirAccess.get_files_at(DIR)).filter(func(file): return file.ends_with(".tres"))
-	files.sort()
-	for file: String in files:
-		var data := load(DIR + file) as VillagerData
-		if data != null:
-			all[file.get_basename()] = data
-	return all
+	return ResourceDir.load_all(DIR, VillagerData)
 
 ## The step under way at `minute_of_day` on `weekday` (GameClock.Weekday),
 ## with today's story `conditions` (FarmSimulation.get_conditions()), or

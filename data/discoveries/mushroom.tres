@@ -14,3 +14,4 @@ item_id = "mushroom"
 quantity = 2
 regrow_days = 3
 seasons = 1
+sheet_column = 6

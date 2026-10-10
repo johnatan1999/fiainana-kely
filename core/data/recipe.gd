@@ -18,11 +18,4 @@ const DIR := "res://data/recipes/"
 
 ## Every recipe: id (the file's name) -> Recipe, by name.
 static func load_all() -> Dictionary:
-	var all := {}
-	var files := Array(DirAccess.get_files_at(DIR)).filter(func(file): return file.ends_with(".tres"))
-	files.sort()
-	for file: String in files:
-		var data := load(DIR + file) as Recipe
-		if data != null:
-			all[file.get_basename()] = data
-	return all
+	return ResourceDir.load_all(DIR, Recipe)

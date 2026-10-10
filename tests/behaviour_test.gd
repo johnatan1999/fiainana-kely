@@ -1322,7 +1322,7 @@ func _test_dog() -> void:
 	var state := _sim.state
 	var dogs: DogManager = _world.get_node("Gameplay/DogManager")
 	var panel: DogNamePanel = _world.get_node("UI/DogNamePanel")
-	state.dog = {}
+	state.dog = null
 	_set_time(10 * 60)
 	await _go_to_zone("farm")
 	var house: DogHouse = _zone().get_node("DogHouse")
@@ -1351,7 +1351,7 @@ func _test_dog() -> void:
 		"dog: it follows the player at their heels, then sits by them, wagging")
 
 	dog.get_node("InteractableComponent").interact()
-	var petted: bool = _sim.is_dog_petted() and state.dog["bond"] == 1 and dog._happy > 0.0
+	var petted: bool = _sim.is_dog_petted() and state.dog.bond == 1 and dog._happy > 0.0
 	house.get_node("InteractableComponent").interact()
 	await _frames(2)
 	_check(petted and _sim.is_dog_fed() and house.is_bowl_full()
@@ -1373,20 +1373,22 @@ func _test_dog() -> void:
 	_set_time(10 * 60)
 	await _go_to_zone("village")
 	var in_village := dogs.get_dog() != null and dogs.get_dog().is_following() 		and dogs.get_dog().global_position.distance_to(_player.global_position) < 100.0
-	var leaving := dogs.get_dog()
+	# A weak reference: the dog is freed once gone (a lambda can't hold it).
+	var leaving: WeakRef = weakref(dogs.get_dog())
 	_set_time(20 * 60)
 	await _frames(2)
-	var gone := await _wait_for(func() -> bool: return not is_instance_valid(leaving), 3.0)
+	var gone := await _wait_for(func() -> bool: return leaving.get_ref() == null, 3.0)
 	await _go_to_zone("player_house")
 	var not_indoors := dogs.get_dog() == null
-	state.dog["fed_day"] = 0
+	state.dog.since -= 1 # not the day it came: then the family talks of the puppy itself
+	state.dog.fed_day = 0
 	var evening: EveningManager = _world.get_node("Gameplay/EveningManager")
 	var reminded := evening.get_lines().any(func(line: Dictionary) -> bool:
 		return "gamelle de Kintana" in line["text"])
 	_check(in_village and gone and dogs.get_dog() == null and not_indoors and reminded,
 		"dog: it follows the player to the village, trots home at nightfall, waits outside the house - and Fara minds its bowl")
 
-	state.dog = {}
+	state.dog = null
 	_sim.dog_changed.emit()
 	_set_time(10 * 60)
 	await _go_to_zone("village")

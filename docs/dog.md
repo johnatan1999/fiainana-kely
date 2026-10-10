@@ -56,9 +56,11 @@ Côté game design :
 
 ## Détails techniques
 **Règles : `FarmSimulation`** (testables, sauvegardées)
-- `FarmState.dog` : vide tant qu'il n'y a pas de chien, sinon `name`, `coat`, `since` (le jour
-  de son arrivée), `fed_day`, `petted_day`, `bond` (le nombre de jours où il a été caressé).
-  C'est une clé optionnelle : une ancienne sauvegarde n'a pas de chien.
+- `FarmState.dog` : un `DogState` (`systems/simulation/dog_state.gd`), `null` tant qu'il n'y
+  a pas de chien. Il contient `name`, `coat`, `since` (le jour de son arrivée), `fed_day`,
+  `petted_day` et `bond` (le nombre de jours où il a été caressé), avec `to_dict()` et
+  `from_dict()`. C'est une clé optionnelle : une ancienne sauvegarde n'a pas de chien, et une
+  valeur manquante reprend celle d'un chiot neuf.
 - Constantes :
   - `DOG_NAMES` (les noms proposés), `DOG_NAME_MAX_LENGTH` (14) ;
   - `DOG_COATS` (4, voir `Dog.COATS`), `DOG_GROWN_DAYS` (14) ;
@@ -67,7 +69,8 @@ Côté game design :
   - `has_dog()` ;
   - `adopt_dog(coat = -1)` (un seul chien ; le nom et la robe sont tirés au hasard) ;
   - `get_dog_name()`, `rename_dog(name)` (le nom est nettoyé, refusé s'il est vide) ;
-  - `get_dog_coat()`, `get_dog_growth()` (de 0 à 1) ;
+  - `get_dog_coat()`, `get_dog_days()` (depuis son arrivée), `get_dog_growth()` (de 0
+    à 1) ;
   - `feed_dog()` (une fois par jour), `is_dog_fed()` ;
   - `pet_dog()` (vrai à la première caresse du jour), `is_dog_petted()`, `get_dog_hearts()`.
 - `dog_kept_watch()` : demandé au matin, dans `advance_day`. Il est vrai si le chien a mangé
@@ -76,7 +79,9 @@ Côté game design :
 - Signaux : `dog_adopted`, `dog_changed`, `thieves_chased`.
 - **Arrivée par une quête** : `Quest.reward_unlock = "dog"` (et `reward_unlock_label`, qui
   donne le texte de la récompense, « un chiot »). À la fin de la quête,
-  `FarmSimulation._unlock()` appelle `adopt_dog()`.
+  `FarmSimulation._unlock()` appelle `adopt_dog()`, avant que `quest_completed` ne soit
+  émis. Les valeurs possibles sont dans `QUEST_UNLOCKS`, vérifiées par le test de cohérence
+  des quêtes.
 
 **Lien avec le jeu : `DogManager`** (`systems/animal/dog_manager.gd`, `Gameplay/DogManager`)
 - Il ne décide rien. Ce qu'il fait, selon l'heure (`time_changed`) et la zone
@@ -97,6 +102,8 @@ Côté game design :
 - `get_dog()`, `get_dog_house()` : pour les tests.
 
 **Le chien : `entities/dog/dog.tscn`** (`Dog`, un `Node2D` sans physique)
+- `setup(joueur, robe, croissance, nom)` d'abord, puis `follow()`, `guard(niche)` ou
+  `leave()`.
 - Il comprend un `Sprite2D` (planche `assets/sprites/animals/dog.png`, 4×3 cases, robe
   claire teintée par `COATS`, échelle `SPRITE_SCALE` multipliée par la croissance depuis
   `PUPPY_SCALE`) et un `InteractableComponent` (`PET_AREA`, réglé dans le script).
@@ -140,7 +147,8 @@ une chute rapide).
 - `ChickenThiefManager` : la notification du matin quand le chien a chassé les voleurs. La
   rumeur rappelle la gamelle, et le vol rappelle que le chien avait faim.
 - `EveningManager` : `_thief_lines()` (le chien qui a chassé les voleurs, ou qui avait faim
-  la nuit du vol) et `_dog_lines()` (Fara, si la gamelle est restée vide).
+  la nuit du vol) et `_dog_lines()` (Fara, si la gamelle est restée vide, sauf le jour de
+  son arrivée).
 - `InventoryCatalog.describe_dog()` et `dog_icon()` : la fiche de l'onglet Élevage.
 
 **Outils**

@@ -81,7 +81,7 @@ var mode := Mode.FOLLOW
 ## Thieves about tonight (FarmSimulation.is_thief_alert): it barks more.
 var restless := false
 
-var _player: Node2D
+var _player: PlayerController
 var _trail: Array[Vector2] = []
 var _bed := Vector2.ZERO
 var _idle := 0.0
@@ -99,8 +99,10 @@ func _ready() -> void:
 	(_interactable.get_node("InteractableCollision2D") as CollisionShape2D).shape = box
 	_night_bark = randf_range(NIGHT_BARK_CALM.x, NIGHT_BARK_CALM.y) / 3.0
 
-## Its coat (index in COATS), how grown it is (0 to 1), its name.
-func setup(coat: int, growth: float, dog_name: String) -> void:
+## Whose dog it is, its coat (index in COATS), how grown it is (0 to 1),
+## its name. Before anything else.
+func setup(player: PlayerController, coat: int, growth: float, dog_name: String) -> void:
+	_player = player
 	_sprite.self_modulate = COATS[clampi(coat, 0, COATS.size() - 1)]
 	_sprite.scale = Vector2.ONE * SPRITE_SCALE * lerpf(PUPPY_SCALE, 1.0, growth)
 	set_dog_name(dog_name)
@@ -109,9 +111,8 @@ func set_dog_name(dog_name: String) -> void:
 	_interactable.prompt_message = tr("Caresser %s") % dog_name
 
 ## At the player's heels from now on.
-func follow(player: Node2D) -> void:
+func follow() -> void:
 	mode = Mode.FOLLOW
-	_player = player
 	_trail.clear()
 	_idle = 0.0
 
@@ -124,9 +125,8 @@ func guard(bed: Vector2, at_once := false) -> void:
 		_sprite.frame = FRAME_SLEEP
 
 ## Trots off and fades out, then it's gone.
-func leave(player: Node2D) -> void:
+func leave() -> void:
 	mode = Mode.LEAVE
-	_player = player
 	_interactable.set_interactable(false)
 
 ## `count` barks, a breath apart.
@@ -152,8 +152,7 @@ func get_frame() -> int:
 func _on_interacted() -> void:
 	_happy = HAPPY_TIME
 	_idle = 0.0
-	if _player != null:
-		_sprite.flip_h = _player.global_position.x < global_position.x
+	_sprite.flip_h = _player.global_position.x < global_position.x
 	petted.emit()
 
 func _physics_process(delta: float) -> void:
@@ -173,8 +172,6 @@ func _physics_process(delta: float) -> void:
 # --- following ----------------------------------------------------------------------------
 
 func _follow(delta: float) -> void:
-	if _player == null:
-		return
 	var target := _player.global_position
 	if global_position.distance_to(target) > LOST_BEYOND:
 		put_near_player()
@@ -193,10 +190,7 @@ func _follow(delta: float) -> void:
 
 ## Back at the player's heels, behind them.
 func put_near_player() -> void:
-	if _player == null:
-		return
-	var facing: Vector2 = _player.get("last_facing_direction") if _player.get("last_facing_direction") != null else Vector2.RIGHT
-	global_position = _player.global_position - facing.normalized() * FOLLOW_DISTANCE
+	global_position = _player.global_position - _player.last_facing_direction.normalized() * FOLLOW_DISTANCE
 	_trail.clear()
 
 ## How far it still is from the player, along their trail.
@@ -265,23 +259,17 @@ func _guard(delta: float) -> void:
 	if _happy > 0.0:
 		_sprite.frame = FRAME_PETTED
 		return
-	var player := _find_player()
-	if player != null and player.global_position.distance_to(global_position) < NOTICE_DISTANCE:
+	if _player.global_position.distance_to(global_position) < NOTICE_DISTANCE:
 		_sprite.frame = FRAME_LIE
-		_sprite.flip_h = player.global_position.x < global_position.x
+		_sprite.flip_h = _player.global_position.x < global_position.x
 	else:
 		_sprite.frame = FRAME_SLEEP
-
-func _find_player() -> Node2D:
-	if _player == null and is_inside_tree():
-		_player = get_tree().get_first_node_in_group("player") as Node2D
-	return _player
 
 # --- leaving, barking ----------------------------------------------------------------------
 
 func _leave(delta: float) -> void:
 	var away := Vector2.RIGHT
-	if _player != null and _player.global_position.distance_to(global_position) > 1.0:
+	if _player.global_position.distance_to(global_position) > 1.0:
 		away = (global_position - _player.global_position).normalized()
 	var before := global_position
 	global_position += away * WALK_SPEED * delta
@@ -297,8 +285,7 @@ func _bark_step(delta: float) -> void:
 	_bark_timer -= delta
 	if _bark_timer > 0.0:
 		return
-	var player := _find_player()
-	var distance := player.global_position.distance_to(global_position) if player != null else 0.0
+	var distance := _player.global_position.distance_to(global_position)
 	AudioManager.play_dog_bark_sfx(maxf(-distance * BARK_DB_PER_PX, BARK_MIN_DB))
 	_barks_left -= 1
 	_bark_timer = BARK_GAP

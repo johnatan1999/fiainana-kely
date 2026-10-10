@@ -14,3 +14,4 @@ item_id = "ravintsara"
 quantity = 1
 regrow_days = 4
 seasons = 3
+sheet_column = 4

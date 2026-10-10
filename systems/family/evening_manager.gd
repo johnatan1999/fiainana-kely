@@ -148,7 +148,8 @@ func _thief_lines() -> Array:
 # --- The dog: its bowl, empty tonight ---------------------------------------------------------
 
 func _dog_lines() -> Array:
-	if not simulation.has_dog() or simulation.is_dog_fed() or simulation.day_log.quests_done.size() > 0:
+	# Not the day it came: the family talks of the puppy itself (its quest).
+	if not simulation.has_dog() or simulation.is_dog_fed() or simulation.get_dog_days() == 0:
 		return []
 	return [[SISTER_ID, tr("La gamelle de %s est restée vide aujourd'hui... Il est parti chercher à manger chez les voisins.") % simulation.get_dog_name()]]
 

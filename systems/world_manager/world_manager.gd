@@ -80,23 +80,18 @@ func has_zone(zone_id: String) -> bool:
 
 func _load_zone_registry() -> void:
 	_zones.clear()
-	var dir := DirAccess.open(ZONES_DIR)
-	if dir == null:
-		push_error("WorldManager: cannot open zones directory %s" % ZONES_DIR)
+	var paths := ResourceDir.list(ZONES_DIR)
+	if paths.is_empty():
+		push_error("WorldManager: no zones in %s" % ZONES_DIR)
 		return
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while file_name != "":
-		if file_name.ends_with(".tres"):
-			var zone_data: ZoneData = load(ZONES_DIR + file_name)
-			if zone_data == null or zone_data.id.is_empty():
-				push_warning("WorldManager: %s has no valid ZoneData.id - skipped." % file_name)
-			elif _zones.has(zone_data.id):
-				push_warning("WorldManager: duplicate zone id '%s' (%s) - keeping the first one found." % [zone_data.id, file_name])
-			else:
-				_zones[zone_data.id] = zone_data
-		file_name = dir.get_next()
-	dir.list_dir_end()
+	for path in paths:
+		var zone_data := load(path) as ZoneData
+		if zone_data == null or zone_data.id.is_empty():
+			push_warning("WorldManager: %s has no valid ZoneData.id - skipped." % path)
+		elif _zones.has(zone_data.id):
+			push_warning("WorldManager: duplicate zone id '%s' (%s) - keeping the first one found." % [zone_data.id, path])
+		else:
+			_zones[zone_data.id] = zone_data
 
 ## ZoneTransition/SleepSpot fire from inside Area2D signals during the physics
 ## step, which forbids reparenting/freeing physics nodes right away - defer it.

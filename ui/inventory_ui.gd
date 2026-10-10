@@ -110,7 +110,9 @@ func _add_notebook_tab() -> void:
 	var tab: InventoryCategoryTab = TabScene.instantiate()
 	tab.name = "NotebookTab"
 	tab.category = InventoryCatalog.Category.NOTEBOOK
-	tab.icon = InventoryCatalog._forest_icon("sifaka", Discovery.Category.FAUNA)
+	# From its file: the notebook's entries aren't registered yet (ForestManager).
+	var sifaka := load(Discovery.DIR + "sifaka.tres") as Discovery
+	tab.icon = sifaka.get_drawing() if sifaka != null else null
 	category_list.add_child(tab)
 
 func _style_scrollbar() -> void:

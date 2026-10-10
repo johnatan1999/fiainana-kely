@@ -10,6 +10,7 @@ extends Resource
 ## accepted, its steps follow one another; after the last, the reward.
 
 const ALL_SEASONS := 3
+const DIR := "res://data/quests/"
 
 @export var title := ""
 ## Who asks (a villager id: "rakoto"...).
@@ -49,14 +50,7 @@ const ALL_SEASONS := 3
 @export_multiline var evening_line := ""
 
 static func load_all() -> Dictionary:
-	var all := {}
-	var files := Array(DirAccess.get_files_at("res://data/quests/")).filter(func(file): return file.ends_with(".tres"))
-	files.sort()
-	for file: String in files:
-		var data := load("res://data/quests/" + file) as Quest
-		if data != null:
-			all[file.get_basename()] = data
-	return all
+	return ResourceDir.load_all(DIR, Quest)
 
 func is_in_season(season: int) -> bool:
 	return seasons & (1 << season) != 0

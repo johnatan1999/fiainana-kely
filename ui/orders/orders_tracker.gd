@@ -14,7 +14,7 @@ const BORDER_COLOR := Color(0.45, 0.28, 0.15)
 const TEXT_COLOR := Color(0.27, 0.17, 0.09)
 const READY_COLOR := Color(0.2, 0.5, 0.15)
 const URGENT_COLOR := Color(0.7, 0.2, 0.1)
-const QUEST_COLOR := Color(0.13, 0.4, 0.43)
+const QUEST_COLOR := QuestPanel.QUEST_COLOR
 ## A quest's next step wraps past this width.
 const QUEST_WIDTH := 300.0
 const ICON_SIZE := 22.0
@@ -25,6 +25,7 @@ var _title: Label
 var _rows: VBoxContainer
 var _reminders: VBoxContainer
 var _quests: VBoxContainer
+var _shown_quests: Array = []
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -99,6 +100,10 @@ func show_reminders(reminders: Array) -> void:
 
 ## `quests`: [{"title", "objective", "ready" (can be done now: in green)}].
 func show_quests(quests: Array) -> void:
+	# Asked often (the bag changes): rebuilt only when something shows differently.
+	if quests == _shown_quests:
+		return
+	_shown_quests = quests.duplicate(true)
 	_clear(_quests)
 	for quest: Dictionary in quests:
 		var title := Label.new()

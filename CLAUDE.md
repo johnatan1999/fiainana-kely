@@ -56,6 +56,10 @@ Scène principale : `res://ui/home/home_screen.tscn` (écran d'accueil : nuit au
   `.godot/uid_cache.bin` et `.godot/editor/filesystem_cache*` et relancer
   `<godot> --headless --editor --path . --quit`. Sinon le cache garde les anciens chemins
   (ressources introuvables, plantages intermittents à la fermeture).
+- Dossiers de données (`data/quests/`, `data/discoveries/`, les zones...) : les lister avec
+  `ResourceDir.list()` / `ResourceDir.load_all()` (`core/util/resource_dir.gd`), jamais en
+  cherchant les `.tres` avec `DirAccess` : dans le jeu exporté, ils deviennent
+  `.tres.remap` et le dossier semblerait vide.
 - Son : tout passe par `AudioManager`. Un son arrêté n'est libéré qu'au passage suivant du
   thread audio. À la fermeture, `AudioManager._exit_tree()` arrête tous les lecteurs et
   laisse 120 ms au thread pour les libérer. Sans ça, des sons restent en attente (surtout en

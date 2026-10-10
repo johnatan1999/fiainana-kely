@@ -129,7 +129,7 @@ func _update(arriving := false) -> void:
 			dog.restless = simulation.is_thief_alert()
 		elif dog != null and dog.is_following() and nightfall:
 			# Away from the farm, or not fed: off it goes, for the night.
-			dog.leave(player)
+			dog.leave()
 			_dog = null
 			UIEvents.notify(tr("%s rentre garder la ferme pour la nuit.") % simulation.get_dog_name()
 				if simulation.is_dog_fed() else
@@ -141,15 +141,15 @@ func _update(arriving := false) -> void:
 		if _house != null and _greeted_day != simulation.state.day:
 			# The first time at the farm today: it comes running.
 			dog = _spawn(_house.get_bed_position())
-			dog.follow(player)
+			dog.follow()
 			dog.bark(2)
 		else:
 			dog = _spawn(player.global_position)
-			dog.follow(player)
+			dog.follow()
 			dog.put_near_player()
 		_greeted_day = simulation.state.day
 	elif not dog.is_following():
-		dog.follow(player)
+		dog.follow()
 		dog.bark(2)
 		_greeted_day = simulation.state.day
 
@@ -158,7 +158,7 @@ func _spawn(at: Vector2) -> Dog:
 	_dog.name = "PlayerDog"
 	_zone.add_child(_dog)
 	_dog.global_position = at
-	_dog.setup(simulation.get_dog_coat(), simulation.get_dog_growth(), simulation.get_dog_name())
+	_dog.setup(player, simulation.get_dog_coat(), simulation.get_dog_growth(), simulation.get_dog_name())
 	_dog.petted.connect(_on_petted)
 	return _dog
 

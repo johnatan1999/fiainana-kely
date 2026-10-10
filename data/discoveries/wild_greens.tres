@@ -14,3 +14,4 @@ item_id = "wild_greens"
 quantity = 2
 regrow_days = 2
 seasons = 3
+sheet_column = 0

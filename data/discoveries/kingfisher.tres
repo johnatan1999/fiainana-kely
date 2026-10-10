@@ -14,3 +14,4 @@ active_from = 420
 active_to = 660
 seasons = 3
 shy_of_rain = true
+sheet_column = 8

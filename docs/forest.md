@@ -62,6 +62,10 @@ Côté game design :
 - Animaux et plantes : `active_from` / `active_to` (minutes, après 1440 = après minuit ;
   égaux = toute la journée), `seasons` (bits de `GameClock.Season`), `shy_of_rain`.
 - Plantes : `item_id`, `quantity`, `regrow_days`.
+- Le dessin : `sheet_column`, la colonne de sa première case sur `SHEET` (`forest.png`), sur
+  la rangée de sa catégorie (-1 : aucun, pour un lieu). `get_drawing(case)` donne l'image
+  (`case` 1 : la seconde image de l'animal, la plante cueillie). C'est aussi l'icône du
+  carnet.
 - `is_active(minute, saison, pluie)`, `is_in_season(saison)`, `load_all()`.
 - Les objets cueillis : `data/items/wild_greens.tres`, `honey`, `ravintsara`, `mushroom`
   (catégorie FOOD, vente seulement), dans `ItemDatabase.ITEM_PATHS`.
@@ -86,6 +90,8 @@ Côté game design :
   pour observer.
 - `ForageSpot` (`entities/forest/forage_spot.gd`, `discovery_id` ; l'id du spot est le nom
   du nœud) : le dessin prête à cueillir, ou cueillie, `show_state()`.
+- Les deux prennent leurs images dans leur `Discovery` : `ForestManager` la leur donne au
+  chargement de la zone (`set_discovery()`), et signale un `discovery_id` inconnu.
 - `DiscoveryPlace` (`entities/forest/discovery_place.gd`, `Area2D`, `discovery_id`,
   `size`) : y entrer émet `reached`.
 - Les dessins : `assets/sprites/props/forest.png` (`tools/placeholder_art/gen_forest.gd`).
@@ -128,7 +134,8 @@ page.
 ## À savoir
 - **Ajouter une entrée** : un `.tres` dans `data/discoveries/`, puis l'animal, la plante ou
   le lieu dans la table de `tools/build_forest.gd` (ou à la main dans l'éditeur), et son
-  dessin dans `gen_forest.gd` (`WildAnimal.FRAMES`, `ForageSpot.CELLS`).
+  dessin dans `gen_forest.gd`, dont la colonne va dans `sheet_column`. Aucun code à
+  toucher.
 - **Dessins provisoires** : les animaux et les plantes sont dessinés en code. Les lieux et
   les plats n'ont pas encore d'icône dans le carnet (une couleur à la place). Le grand
   amontana est un manguier agrandi en attendant son dessin.

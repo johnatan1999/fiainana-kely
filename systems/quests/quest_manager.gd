@@ -28,6 +28,7 @@ var _tracker: OrdersTracker
 var _names: Dictionary = {} # villager_id -> display name
 ## The quests available last time it was looked: a new one is announced.
 var _available: Array[String] = []
+var _refresh_queued := false
 ## The quest shown in the panel.
 var _offering := ""
 
@@ -42,16 +43,16 @@ func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase, world_manager:
 		simulation.register_quest(quest_id, quests[quest_id])
 	_load_names()
 	_panel.accepted.connect(_on_accepted)
-	simulation.quest_changed.connect(func(_quest_id: String): _refresh())
+	simulation.quest_changed.connect(func(_quest_id: String): _queue_refresh())
 	simulation.quest_completed.connect(_on_completed)
-	simulation.inventory_changed.connect(func(_item: String, _amount: int): _refresh())
-	simulation.friendship_changed.connect(func(_villager: String, _hearts: int): _refresh())
-	simulation.discovery_made.connect(func(_page: String): _refresh())
+	simulation.inventory_changed.connect(func(_item: String, _amount: int): _queue_refresh())
+	simulation.friendship_changed.connect(func(_villager: String, _hearts: int): _queue_refresh())
+	simulation.discovery_made.connect(func(_page: String): _queue_refresh())
 	simulation.state_loaded.connect(func():
 		_available.clear()
-		_refresh.call_deferred())
+		_queue_refresh())
 	world_manager.zone_loaded.connect(_on_zone_loaded)
-	_refresh.call_deferred()
+	_queue_refresh()
 
 func _load_names() -> void:
 	var villagers := VillagerData.load_all()
@@ -135,10 +136,21 @@ func _on_completed(quest_id: String) -> void:
 
 # --- marks, prompts, targets, tracker, conditions -----------------------------------------
 
+## Many changes in one frame (a harvest's items, a step and its reward):
+## one refresh of the marks, targets and tracker, at the end of it. A quest
+## newly offered is said at once, though: in its place among the day's
+## notifications (before "Bonne nuit !", not over it).
+func _queue_refresh() -> void:
+	if simulation != null:
+		_announce_new()
+	if not _refresh_queued:
+		_refresh_queued = true
+		_refresh.call_deferred()
+
 func _refresh() -> void:
+	_refresh_queued = false
 	if simulation == null or not is_inside_tree():
 		return
-	_announce_new()
 	var conditions := simulation.get_conditions()
 	for villager: Villager in get_tree().get_nodes_in_group(Villager.GROUP):
 		var villager_id := villager.get_villager_id()

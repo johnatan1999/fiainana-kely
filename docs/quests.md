@@ -135,6 +135,11 @@ Côté game design :
   nom est remplacée. On peut aussi les poser à la main dans l'éditeur.
 
 **Lien avec le jeu : `QuestManager`** (`systems/quests/`, `Gameplay/QuestManager`)
+- **Un seul rafraîchissement par image** (`_queue_refresh`) : l'inventaire change souvent (une
+  récolte, une étape et sa récompense), et chaque changement redessinait les marques, les
+  cibles et le suivi. Une quête nouvellement proposée est annoncée tout de suite, pour
+  garder sa place parmi les notifications (avant « Bonne nuit ! », pas par-dessus). Le
+  suivi (`OrdersTracker.show_quests`) ne se reconstruit que si ce qu'il affiche change.
 - Enregistre les quêtes (`Quest.load_all()`).
 - Parler à un villageois :
   - une étape l'attend : il la fait (`quest_talk`) et dit sa `line`, ou rappelle ce qu'il
@@ -177,8 +182,8 @@ la journée, en tête de la conversation.
 2. Si une étape a lieu dans le monde (`REACH`, `INTERACT`) : ajouter une ligne à
    `TARGETS` dans `tools/place_quest_targets.gd` et le relancer. Ou poser un `QuestTarget`
    à la main.
-3. Lancer `run_tests.gd` : le test de cohérence signale un villageois, un objet ou une page
-   mal nommés.
+3. Lancer `run_tests.gd` : le test de cohérence signale un villageois, un objet, une page ou
+   un `reward_unlock` mal nommés.
 
 Aucun code à écrire tant que les étapes rentrent dans les cinq types.
 

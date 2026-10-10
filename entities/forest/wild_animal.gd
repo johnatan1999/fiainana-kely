@@ -5,18 +5,14 @@ extends Node2D
 ## notebook), at its spot: there only in its hours and seasons (ForestManager
 ## says so - set_present), breathing and moving now and then between its two
 ## frames, and something to watch: "Observer le sifaka". Decor and
-## interaction only; the rules are FarmSimulation's. Built in code from
-## SHEET (tools/placeholder_art/gen_forest.gd); its origin is where it stands.
-## Group "wild_animals".
+## interaction only; the rules are FarmSimulation's. Built in code; its two
+## frames are its Discovery's drawing (set_discovery). Its origin is where
+## it stands. Group "wild_animals".
 
 signal observed
 
 const GROUP := "wild_animals"
-const SHEET := preload("res://assets/sprites/props/forest.png")
 const INTERACTABLE := preload("res://components/interaction/interactable_component.tscn")
-const CELL := 128
-## Row 0 of SHEET: the first of each animal's two frames.
-const FRAMES := {"sifaka": 0, "maki": 2, "chameleon": 4, "tenrec": 6, "kingfisher": 8}
 const FRAME_EVERY := Vector2(1.2, 3.5)
 const FADE_TIME := 0.6
 
@@ -25,6 +21,7 @@ const FADE_TIME := 0.6
 
 var _sprite: Sprite2D
 var _interactable: InteractableComponent
+var _frames: Array[Texture2D] = []
 var _frame := 0
 var _next_frame := 0.0
 var _t := 0.0
@@ -34,10 +31,8 @@ var _fade: Tween
 func _ready() -> void:
 	add_to_group(GROUP)
 	_sprite = Sprite2D.new()
-	_sprite.texture = AtlasTexture.new()
-	(_sprite.texture as AtlasTexture).atlas = SHEET
 	_sprite.scale = Vector2(0.5, 0.5)
-	_sprite.offset = Vector2(0, -CELL / 2.0 + 8)
+	_sprite.offset = Vector2(0, -Discovery.SHEET_CELL / 2.0 + 8)
 	add_child(_sprite)
 	_interactable = INTERACTABLE.instantiate()
 	add_child(_interactable)
@@ -52,6 +47,11 @@ func _ready() -> void:
 	visible = false
 	modulate.a = 0.0
 	_interactable.set_interactable(false)
+
+## What it is: its two frames.
+func set_discovery(discovery: Discovery) -> void:
+	_frames = [discovery.get_drawing(0), discovery.get_drawing(1)]
+	_set_frame(_frame)
 
 ## There or not (its hours, its season, the weather) - fading in or out.
 func set_present(present: bool, instant := false) -> void:
@@ -91,5 +91,5 @@ func _process(delta: float) -> void:
 func _set_frame(frame: int) -> void:
 	_frame = frame
 	_next_frame = randf_range(FRAME_EVERY.x, FRAME_EVERY.y) * (0.5 if frame == 1 else 1.0)
-	var column: int = FRAMES.get(discovery_id, 0) + frame
-	(_sprite.texture as AtlasTexture).region = Rect2(column * CELL, 0, CELL, CELL)
+	if frame < _frames.size():
+		_sprite.texture = _frames[frame]

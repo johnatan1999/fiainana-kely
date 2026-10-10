@@ -22,7 +22,6 @@ const CATEGORY_NAMES := {
 const NOTEBOOK_PAGES := ["Faune", "Flore", "Lieux", "Cuisine"]
 const NOTEBOOK_COLORS := [Color(0.55, 0.45, 0.3), Color(0.35, 0.55, 0.3), Color(0.4, 0.5, 0.65), Color(0.75, 0.5, 0.2)]
 const UNKNOWN_COLOR := Color(0.35, 0.3, 0.27)
-const FOREST_SHEET := preload("res://assets/sprites/props/forest.png")
 
 ## Where a villager is, by the spot of their current step (VillagerRoads
 ## markers) - "En ce moment : au marché". A spot missing here reads as
@@ -307,7 +306,7 @@ static func describe_discovery(db: ItemDatabase, simulation: FarmSimulation, dis
 		text = _t(discovery.description)
 		hint = _t(discovery.hint)
 		fara = _t(discovery.fara_line)
-		icon = _forest_icon(discovery_id, page)
+		icon = discovery.get_drawing()
 	var details: Array = [[_t("Page"), _t(NOTEBOOK_PAGES[page])]]
 	if not found:
 		return {
@@ -322,22 +321,6 @@ static func describe_discovery(db: ItemDatabase, simulation: FarmSimulation, dis
 		"description": text + "\n\n" + _t("Dessin de Fara : « %s »") % fara,
 		"details": details, "meta": _t(NOTEBOOK_PAGES[page]), "sort_group": page,
 	}
-
-## The animal's or the plant's drawing (forest.png), none for a place.
-static func _forest_icon(discovery_id: String, page: int) -> Texture2D:
-	var column := -1
-	var row := 0
-	if page == Discovery.Category.FAUNA:
-		column = WildAnimal.FRAMES.get(discovery_id, -1)
-	elif page == Discovery.Category.FLORA:
-		column = ForageSpot.CELLS.get(discovery_id, -1)
-		row = 1
-	if column < 0:
-		return null
-	var icon := AtlasTexture.new()
-	icon.atlas = FOREST_SHEET
-	icon.region = Rect2(column * 128, row * 128, 128, 128)
-	return icon
 
 ## The player's family: who they are and where they are now - no
 ## friendship or orders with them.

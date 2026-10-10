@@ -14,3 +14,4 @@ item_id = "honey"
 quantity = 1
 regrow_days = 6
 seasons = 2
+sheet_column = 2
