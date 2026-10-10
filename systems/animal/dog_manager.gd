@@ -74,37 +74,37 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 
 func _on_adopted() -> void:
 	AudioManager.play_dog_bark_sfx()
-	_panel.open.call_deferred(simulation.get_dog_name(), _giver_name)
+	_panel.open.call_deferred(simulation.dog.get_dog_name(), _giver_name)
 
 func _on_named(dog_name: String) -> void:
 	# An empty name keeps the one it had.
-	simulation.rename_dog(dog_name)
-	UIEvents.notify(tr("%s fait partie de la famille ! Remplis sa gamelle, devant sa niche près de la maison.") % simulation.get_dog_name())
+	simulation.dog.rename_dog(dog_name)
+	UIEvents.notify(tr("%s fait partie de la famille ! Remplis sa gamelle, devant sa niche près de la maison.") % simulation.dog.get_dog_name())
 
 func _on_dog_changed() -> void:
 	_refresh_house()
 	if get_dog() != null:
-		_dog.set_dog_name(simulation.get_dog_name())
+		_dog.set_dog_name(simulation.dog.get_dog_name())
 	_update()
 
 func _refresh_house() -> void:
 	if _house == null:
 		return
-	_house.set_owned(simulation.has_dog())
-	if simulation.has_dog():
-		_house.show_bowl(simulation.is_dog_fed())
+	_house.set_owned(simulation.dog.has_dog())
+	if simulation.dog.has_dog():
+		_house.show_bowl(simulation.dog.is_dog_fed())
 
 func _on_bowl_interacted() -> void:
-	if simulation.feed_dog():
-		UIEvents.notify(tr("Gamelle remplie : %s gardera la ferme cette nuit.") % simulation.get_dog_name())
+	if simulation.dog.feed_dog():
+		UIEvents.notify(tr("Gamelle remplie : %s gardera la ferme cette nuit.") % simulation.dog.get_dog_name())
 
 func _on_petted() -> void:
-	var hearts := simulation.get_dog_hearts()
-	if not simulation.pet_dog():
+	var hearts := simulation.dog.get_dog_hearts()
+	if not simulation.dog.pet_dog():
 		return
-	if simulation.get_dog_hearts() > hearts:
-		UIEvents.notify(tr("%s s'attache à toi : %d/%d.") % [simulation.get_dog_name(),
-			simulation.get_dog_hearts(), FarmSimulation.DOG_MAX_HEARTS])
+	if simulation.dog.get_dog_hearts() > hearts:
+		UIEvents.notify(tr("%s s'attache à toi : %d/%d.") % [simulation.dog.get_dog_name(),
+			simulation.dog.get_dog_hearts(), DogRules.DOG_MAX_HEARTS])
 
 ## Where the dog should be, now: nowhere, at the player's heels, or at its
 ## doghouse. `arriving`: the zone just loaded.
@@ -116,24 +116,24 @@ func _update(arriving := false) -> void:
 	var nightfall := night and not _night
 	_night = night
 	var dog := get_dog()
-	if not simulation.has_dog() or _zone.indoor:
+	if not simulation.dog.has_dog() or _zone.indoor:
 		_remove_dog()
 		return
 	if night:
-		if _house != null and simulation.is_dog_fed():
+		if _house != null and simulation.dog.is_dog_fed():
 			if dog == null:
 				dog = _spawn(_house.get_bed_position())
 				dog.guard(_house.get_bed_position(), true)
 			elif not dog.is_guarding():
 				dog.guard(_house.get_bed_position())
-			dog.restless = simulation.is_thief_alert()
+			dog.restless = simulation.thieves.is_thief_alert()
 		elif dog != null and dog.is_following() and nightfall:
 			# Away from the farm, or not fed: off it goes, for the night.
 			dog.leave()
 			_dog = null
-			UIEvents.notify(tr("%s rentre garder la ferme pour la nuit.") % simulation.get_dog_name()
-				if simulation.is_dog_fed() else
-				tr("%s a faim : il part chercher à manger chez les voisins.") % simulation.get_dog_name())
+			UIEvents.notify(tr("%s rentre garder la ferme pour la nuit.") % simulation.dog.get_dog_name()
+				if simulation.dog.is_dog_fed() else
+				tr("%s a faim : il part chercher à manger chez les voisins.") % simulation.dog.get_dog_name())
 		elif dog != null and not dog.is_following():
 			_remove_dog()
 		return
@@ -158,7 +158,7 @@ func _spawn(at: Vector2) -> Dog:
 	_dog.name = "PlayerDog"
 	_zone.add_child(_dog)
 	_dog.global_position = at
-	_dog.setup(player, simulation.get_dog_coat(), simulation.get_dog_growth(), simulation.get_dog_name())
+	_dog.setup(player, simulation.dog.get_dog_coat(), simulation.dog.get_dog_growth(), simulation.dog.get_dog_name())
 	_dog.petted.connect(_on_petted)
 	return _dog
 

@@ -124,7 +124,7 @@ func _rebuild_item_grid() -> void:
 		child.queue_free()
 	for item: ItemData in _catalog.get(_selected_category, []):
 		# Not for now (the padlock, once the coop is safe).
-		if not _simulation.is_item_on_sale(item.id):
+		if not _simulation.market.is_item_on_sale(item.id):
 			continue
 		var card: ItemCard = ItemCardScene.instantiate()
 		item_grid.add_child(card)
@@ -139,14 +139,14 @@ func _rebuild_item_grid() -> void:
 func _is_locked(item: ItemData) -> bool:
 	if item.category != ItemData.Category.SEEDS:
 		return false
-	var crop_data := _simulation.get_crop_data(item.crop_id)
+	var crop_data := _simulation.fields.get_crop_data(item.crop_id)
 	return crop_data != null and _simulation.state.day < crop_data.unlock_day
 
 func _on_add_requested(item: ItemData, quantity: int) -> void:
 	cart_panel.add_item(item, quantity)
 
 ## Selling is instant (no cart step) - symmetric to the old per-crop "Vendre"
-## button, just generalized to any category via FarmSimulation.sell_item().
+## button, just generalized to any category via MarketRules.sell_item().
 func _on_sell_requested(item: ItemData, quantity: int) -> void:
 	if item.category == ItemData.Category.SEEDS:
 		_shop_controller.sell(item.crop_id, quantity, _profile.sell_multiplier)

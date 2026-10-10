@@ -212,7 +212,7 @@ func _wire_zone_content(zone: ZoneRoot) -> void:
 func _spawn_decorative_chickens(coop_building: Node2D, container: Node2D) -> void:
 	if container == null:
 		return
-	var count: int = min(simulation.get_all_animal_ids().size(), MAX_DECORATIVE_CHICKENS)
+	var count: int = min(simulation.animals.get_all_animal_ids().size(), MAX_DECORATIVE_CHICKENS)
 	var chicken_scene: PackedScene = load(CHICKEN_SCENE_PATH)
 	for i in range(count):
 		var chicken: Chicken = chicken_scene.instantiate()

@@ -32,7 +32,7 @@ const WEEKEND := ["SATURDAY", "SUNDAY"]
 const MARKET := ["FRIDAY"]
 const NOT_MARKET := ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "SATURDAY", "SUNDAY"]
 ## The Sunday cockfight tournament in the market town
-## (FarmSimulation.COCKFIGHT_DAY), and the other days.
+## (CockfightRules.COCKFIGHT_DAY), and the other days.
 const SUNDAY := ["SUNDAY"]
 const NOT_SUNDAY := ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"]
 

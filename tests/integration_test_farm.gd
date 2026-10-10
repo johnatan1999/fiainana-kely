@@ -58,15 +58,15 @@ func _run_flow() -> void:
 
 	simulation.state.money = 100000
 	simulation.state.has_coop = false
-	simulation.state.coop_capacity = max(simulation.state.coop_capacity, simulation.get_all_animal_ids().size() + 1)
-	var built = simulation.build_coop()
+	simulation.state.coop_capacity = max(simulation.state.coop_capacity, simulation.animals.get_all_animal_ids().size() + 1)
+	var built = simulation.animals.build_coop()
 	_check(built, "build_coop() succeeds with enough money")
 
-	var bought = simulation.buy_chicken(1)
+	var bought = simulation.animals.buy_chicken(1)
 	_check(bought, "buy_chicken() succeeds")
 
 	var count_before_placing = animal_container.get_child_count()
-	var animal_id = simulation.place_chicken()
+	var animal_id = simulation.animals.place_chicken()
 	_check(animal_id != "", "place_chicken() succeeds once the coop exists")
 	_check(
 		animal_container.get_child_count() == count_before_placing + 1,
@@ -74,10 +74,10 @@ func _run_flow() -> void:
 	)
 
 	var egg_count_before := _count_eggs(animal_container)
-	var chicken_data = simulation.get_animal_data(0) # AnimalData.Species.CHICKEN
+	var chicken_data = simulation.animals.get_animal_data(0) # AnimalData.Species.CHICKEN
 	for i in chicken_data.product_cycle_days:
-		simulation.feed_animal(animal_id)
-		simulation.water_animal(animal_id)
+		simulation.animals.feed_animal(animal_id)
+		simulation.animals.water_animal(animal_id)
 		simulation.advance_day()
 	# ">=" not "==": any other pre-existing chicken from a loaded save could
 	# also complete its own cycle during these same days.
@@ -109,7 +109,7 @@ func _run_zone_manager_checks() -> void:
 		"FarmLandManager registered both zones and the progressive field with their painted cells"
 	)
 	_check(
-		simulation.get_plot_id_at(0, 0, "farm") != -1 and simulation.get_plot_id_at(3, 3, "farm") != -1,
+		simulation.fields.get_plot_id_at(0, 0, "farm") != -1 and simulation.fields.get_plot_id_at(3, 3, "farm") != -1,
 		"the starter field's cells are owned plots"
 	)
 
@@ -117,7 +117,7 @@ func _run_zone_manager_checks() -> void:
 	simulation.state.unlocked_zone_ids.erase("zone_east")
 	var ok = shop_controller.buy_zone("zone_east")
 	_check(
-		ok and simulation.get_plot_id_at(8, 9, "farm") != -1 and simulation.get_plot_id_at(11, 14, "farm") != -1,
+		ok and simulation.fields.get_plot_id_at(8, 9, "farm") != -1 and simulation.fields.get_plot_id_at(11, 14, "farm") != -1,
 		"buying a zone through ShopController turns its field's cells into plots"
 	)
 

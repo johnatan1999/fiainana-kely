@@ -55,7 +55,7 @@ Côté game design :
   où rôdent les voleurs.
 
 ## Détails techniques
-**Règles : `FarmSimulation`** (testables, sauvegardées)
+**Règles : `DogRules` (`simulation.dog`, voir `simulation.md`)** (testables, sauvegardées)
 - `FarmState.dog` : un `DogState` (`systems/simulation/dog_state.gd`), `null` tant qu'il n'y
   a pas de chien. Il contient `name`, `coat`, `since` (le jour de son arrivée), `fed_day`,
   `petted_day` et `bond` (le nombre de jours où il a été caressé), avec `to_dict()` et
@@ -79,7 +79,7 @@ Côté game design :
 - Signaux : `dog_adopted`, `dog_changed`, `thieves_chased`.
 - **Arrivée par une quête** : `Quest.reward_unlock = "dog"` (et `reward_unlock_label`, qui
   donne le texte de la récompense, « un chiot »). À la fin de la quête,
-  `FarmSimulation._unlock()` appelle `adopt_dog()`, avant que `quest_completed` ne soit
+  `QuestRules._unlock()` appelle `adopt_dog()`, avant que `quest_completed` ne soit
   émis. Les valeurs possibles sont dans `QUEST_UNLOCKS`, vérifiées par le test de cohérence
   des quêtes.
 
@@ -182,7 +182,7 @@ une chute rapide).
 - **L'aboiement généré** reste un son provisoire : un vrai enregistrement dans
   `sfx_dog_bark` (sur `audio_manager.tscn`) sera bien meilleur.
 - **Une seule quête donne un chien** (`reward_unlock`). D'autres déblocages peuvent passer
-  par `FarmSimulation._unlock()`.
+  par `QuestRules._unlock()`.
 - **Pistes** :
   - l'attachement qui débloque des choses : il déniche des champignons ou du miel en forêt,
     il ramène une poule égarée ;

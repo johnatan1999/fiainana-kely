@@ -19,6 +19,10 @@ var _pass_count := 0
 var _fail_count := 0
 
 func _ready() -> void:
+	# The GameSettings autoload applies the player's saved language (user://
+	# settings.cfg) at startup - pin French, the source language the text
+	# checks are written against, so results never depend on it. Not saved.
+	TranslationServer.set_locale("fr")
 	_world = load("res://world/world.tscn").instantiate()
 	add_child(_world)
 	await _frames(3)
@@ -217,14 +221,14 @@ func _test_lanterns() -> void:
 
 func _test_harvest_popup() -> void:
 	await _go_to_zone("farm")
-	var plot_id := _sim.get_plot_id_at(0, 1, "farm")
-	var plot := _sim.get_plot(plot_id)
+	var plot_id := _sim.fields.get_plot_id_at(0, 1, "farm")
+	var plot := _sim.fields.get_plot(plot_id)
 	plot.crop = null
-	_sim.till(plot_id)
+	_sim.fields.till(plot_id)
 	_sim.state.add_inventory("corn_seed", 1)
-	_sim.plant(plot_id, "corn")
+	_sim.fields.plant(plot_id, "corn")
 	plot.crop.age = plot.crop.growth_days
-	_sim.harvest(plot_id)
+	_sim.fields.harvest(plot_id)
 	await _frames(2)
 	var popups := _zone().find_children("*", "HarvestPopup", true, false)
 	var texts: Array = []
@@ -242,15 +246,15 @@ func _test_rain() -> void:
 	var weather: WeatherController = _world.get_node("Gameplay/WeatherController")
 	var dn: DayNightController = _world.get_node("Gameplay/DayNightController")
 	var life: AmbientLife = _zone().get_node("AmbientLife")
-	var plot_id := _sim.get_plot_id_at(1, 1, "farm")
-	_sim.till(plot_id)
-	_sim.get_plot(plot_id).watered = false
+	var plot_id := _sim.fields.get_plot_id_at(1, 1, "farm")
+	_sim.fields.till(plot_id)
+	_sim.fields.get_plot(plot_id).watered = false
 	_sim.set_weather(FarmState.Weather.RAIN)
 	await _frames(150) # the sky clouds over in 2 s
 	var rain: Node2D = weather.get_node("Rain")
 	_check(rain.visible and weather._streaks.emitting and dn.get_overcast() > 0.95,
 		"rain: falls outdoors under an overcast sky")
-	_check(_sim.get_plot(plot_id).watered, "rain: the tilled plots are watered")
+	_check(_sim.fields.get_plot(plot_id).watered, "rain: the tilled plots are watered")
 	_check(life._butterflies.all(func(b): return not b.visible), "rain: the butterflies take cover")
 	_wm.change_zone("player_house", "SpawnDefault")
 	await _frames(3)
@@ -549,7 +553,7 @@ func _test_orders() -> void:
 		"orders: talking to her opens the order (2 corn), the game paused")
 	panel._accept.pressed.emit()
 	await _frames(2)
-	_check(not panel.is_open() and not get_tree().paused and _sim.is_order_active("ravao") and tracker.visible
+	_check(not panel.is_open() and not get_tree().paused and _sim.orders.is_order_active("ravao") and tracker.visible
 			and not mark.visible,
 		"orders: accepted - the panel closes, the order shows in the tracker, the '!' goes")
 	_sim.state.inventory.erase("corn")
@@ -561,7 +565,7 @@ func _test_orders() -> void:
 	ravao.interacted.emit()
 	await _frames(2)
 	_check(_sim.state.money == money + 3400 and _sim.state.get_inventory_count("corn") == 0
-			and not _sim.is_order_active("ravao") and not mark.visible and ravao.get_node("Bubble").visible
+			and not _sim.orders.is_order_active("ravao") and not mark.visible and ravao.get_node("Bubble").visible
 			and not tracker.visible,
 		"orders: talking to her again delivers - 3 400 Ar, a thank-you, the tracker empties")
 	_sim.state.order_cooldowns.clear()
@@ -583,7 +587,7 @@ func _test_friendship() -> void:
 	ravao.interacted.emit()
 	await _frames(3)
 	var hearts: HeartsDisplay = ravao.get_node("Hearts")
-	_check(hearts.visible and hearts.hearts == 2 and _sim.get_hearts("ravao") == 2,
+	_check(hearts.visible and hearts.hearts == 2 and _sim.friendship.get_hearts("ravao") == 2,
 		"friendship: talking to her shows the hearts over her head - now 2")
 	_check(_sim.state.get_inventory_count("tomato_seed") == seeds + 5 and ravao.get_node("Bubble").visible,
 		"friendship: at 2 hearts she gives the player tomato seeds, with a word")
@@ -616,10 +620,10 @@ func _test_tilling_repaints_one_field() -> void:
 	var farm_view: FarmView = _world.get_node("Gameplay/FarmingController").farm_view
 	var plot_id := -1
 	for id in _sim.state.plots:
-		if _sim.can_till(id):
+		if _sim.fields.can_till(id):
 			plot_id = id
 			break
-	_sim.till(plot_id)
+	_sim.fields.till(plot_id)
 	var dirty := farm_view._dirty_fields.size()
 	await _frames(2)
 	var shop: ShopUI = _world.get_node("UI/ShopUI")
@@ -666,11 +670,11 @@ func _test_family() -> void:
 	_check(not mother.is_inside() and mother.get_spot_name() == "Mortar" and father.get_spot_name() == "Orchard"
 			and sister.is_inside(),
 		"family: at 8:00 the mother pounds rice, the father works the orchard, the sister is off to school")
-	var points := _sim.get_friendship("mother")
+	var points := _sim.friendship.get_friendship("mother")
 	mother.interacted.emit()
 	await _frames(3)
 	_check(mother.get_node("Bubble").visible and not mother.get_node("Hearts").visible
-			and _sim.get_friendship("mother") == points,
+			and _sim.friendship.get_friendship("mother") == points,
 		"family: talking to the mother gives a tip - no friendship hearts with family")
 	_set_time(9 * 60)
 	await _go_to_zone("farm")
@@ -690,7 +694,7 @@ func _test_school_fees() -> void:
 	var today := _set_weekday(GameClock.Weekday.WEDNESDAY)
 	var state := _sim.state
 	var money := state.money
-	state.school_debt = FarmSimulation.SCHOOL_FEE
+	state.school_debt = SchoolRules.SCHOOL_FEE
 	state.school_due_day = state.day - 1
 	_sim.school_fees_changed.emit()
 	await _go_to_zone("village")
@@ -709,13 +713,13 @@ func _test_school_fees() -> void:
 	_player.global_position = Vector2(950, 700)
 	var teacher := _villager("Hanta")
 	var panel: SchoolPanel = _world.get_node("UI/SchoolPanel")
-	state.money = FarmSimulation.SCHOOL_FEE + 500
+	state.money = SchoolRules.SCHOOL_FEE + 500
 	teacher.interacted.emit()
 	await _frames(3)
 	var opened := panel.visible and not teacher.is_inside() and teacher.get_spot_name() == "School" 		and teacher.talk_prompt == tr("Payer l'écolage de Fara")
 	panel.pay_money_requested.emit()
 	await _frames(3)
-	var paid := not _sim.is_school_fee_due() and state.money == 500 and panel.visible
+	var paid := not _sim.school.is_school_fee_due() and state.money == 500 and panel.visible
 	panel.close()
 	await _frames(3)
 	teacher.interacted.emit()
@@ -752,7 +756,7 @@ func _test_cockfight() -> void:
 	var offered := rakoto.talk_prompt == tr("Écouter Rakoto") and rakoto.call_out == tr(CockfightManager.GIFT_CALL)
 	rakoto.interacted.emit()
 	await _frames(3)
-	_check(offered and _sim.has_rooster() and rakoto.call_out.is_empty() and rakoto.get_node("Bubble").visible,
+	_check(offered and _sim.cockfight.has_rooster() and rakoto.call_out.is_empty() and rakoto.get_node("Bubble").visible,
 		"cockfight: Rakoto calls out to the player, and gives them a young fighting rooster")
 
 	await _go_to_zone("farm")
@@ -770,7 +774,7 @@ func _test_cockfight() -> void:
 	panel.feed_requested.emit("corn")
 	panel.train_requested.emit()
 	await _frames(3)
-	var cared := _sim.is_rooster_fed_today() and _sim.is_rooster_trained_today() and panel.visible \
+	var cared := _sim.cockfight.is_rooster_fed_today() and _sim.cockfight.is_rooster_trained_today() and panel.visible \
 		and not rooster._bubble.visible
 	panel.close()
 	_check(tethered and opened and cared,
@@ -795,8 +799,8 @@ func _test_cockfight() -> void:
 	var done := func() -> bool: return not fight.is_playing()
 	var finished := await _wait_for(done, 10.0)
 	_check(crowd and show_on and playing and finished and fight._summary.visible
-			and _sim.get_cockfight_points("player") >= FarmSimulation.COCKFIGHT_BOUTS
-			and state.money == money + FarmSimulation.COCKFIGHT_ENTRY_PRIZE,
+			and _sim.cockfight.get_cockfight_points("player") >= CockfightRules.COCKFIGHT_BOUTS
+			and state.money == money + CockfightRules.COCKFIGHT_ENTRY_PRIZE,
 		"cockfight: on Sunday afternoon the amateurs gather at the ring - the player's rooster fights 3 bouts, played out")
 	fight.close()
 	await _frames(3)
@@ -951,14 +955,14 @@ func _test_family_projects() -> void:
 	var opened := panel.visible and father.talk_prompt == tr("Parler des projets de la famille")
 	panel.start_requested.emit("coop_2")
 	await _frames(3)
-	var started := _sim.get_project_state("coop_2") == FarmSimulation.ProjectState.BUILDING \
+	var started := _sim.projects.get_project_state("coop_2") == ProjectRules.ProjectState.BUILDING \
 		and _zone().get_node_or_null("ConstructionSite") != null and state.money == 200000 - 15000
 	panel.close()
 	_check(opened and started,
 		"family projects: Dada shows the family's projects - starting one puts up a building site at the coop")
 	# The work done; on the farm again, the buildings at their new level.
 	state.construction["done_day"] = state.day
-	_sim._advance_projects()
+	_sim.projects.advance_projects()
 	state.building_levels["zebu_pen"] = 2
 	var granary_before: HouseAnnex = _zone().get_node("Granary")
 	var unbuilt := not granary_before.is_built() and not granary_before._sprite.visible
@@ -969,7 +973,7 @@ func _test_family_projects() -> void:
 	await _frames(3)
 	var coop: Coop = _zone().get_node("ChickenCoopBuilding")
 	var pen: ZebuPen = _zone().get_node("ZebuPen")
-	_check(_sim.get_building_level("coop") == 2 and state.coop_capacity == 8 and coop._level_sprite != null
+	_check(_sim.projects.get_building_level("coop") == 2 and state.coop_capacity == 8 and coop._level_sprite != null
 			and coop._level_sprite.visible and not coop.get_node("WallSprite").visible
 			and pen.scene_file_path.ends_with("zebu_pen_2.tscn") and pen.get_node("Spots").get_child_count() == 6
 			and _zone().get_node_or_null("ConstructionSite") == null,
@@ -1004,9 +1008,9 @@ func _test_family_projects() -> void:
 	await _go_to_zone("farm")
 	state.building_levels.clear()
 	state.construction = {}
-	state.coop_capacity = FarmSimulation.COOP_CAPACITY_BY_LEVEL[1]
+	state.coop_capacity = ProjectRules.COOP_CAPACITY_BY_LEVEL[1]
 	state.has_coop = had_coop
-	CoopInterior.level = _sim.get_building_level("coop")
+	CoopInterior.level = _sim.projects.get_building_level("coop")
 	state.money = money
 	await _go_to_zone("village")
 
@@ -1036,18 +1040,18 @@ func _test_forest() -> void:
 	var night := not sifaka.is_present() and tenrec.is_present()
 	_set_time(7 * 60 + 30)
 	await _frames(3)
-	var pages := _sim.get_notebook_progress().x
+	var pages := _sim.notebook.get_notebook_progress().x
 	sifaka.observed.emit()
 	var greens: ForageSpot = _zone().get_node("WildPlants/Greens_2")
 	var bag := state.get_inventory_count("wild_greens")
 	greens.gathered.emit()
 	await _frames(3)
-	_check(dawn and night and _sim.is_discovered("sifaka") and state.get_inventory_count("wild_greens") > bag
-			and _sim.is_discovered("wild_greens") and not greens._interactable.is_interactable
-			and _sim.get_notebook_progress().x == pages + 2,
+	_check(dawn and night and _sim.notebook.is_discovered("sifaka") and state.get_inventory_count("wild_greens") > bag
+			and _sim.notebook.is_discovered("wild_greens") and not greens._interactable.is_interactable
+			and _sim.notebook.get_notebook_progress().x == pages + 2,
 		"forest: the sifaka at dawn, the tenrec at night - watching one, gathering greens: new pages in the notebook")
 	_player.global_position = Vector2(840, 700)
-	var clearing := func() -> bool: return _sim.is_discovered("clearing")
+	var clearing := func() -> bool: return _sim.notebook.is_discovered("clearing")
 	_check(await _wait_for(clearing, 2.0), "forest: walking into the clearing finds it")
 	var inventory: InventoryUI = _world.get_node("UI/InventoryUI")
 	inventory.open()
@@ -1058,7 +1062,7 @@ func _test_forest() -> void:
 	var named: Array = notebook.map(func(entry): return entry.info["name"])
 	inventory.close()
 	await _frames(20)
-	_check(notebook.size() == _sim.get_notebook_progress().y and named.has("Sifaka · Simpona") and named.has("???"),
+	_check(notebook.size() == _sim.notebook.get_notebook_progress().y and named.has("Sifaka · Simpona") and named.has("???"),
 		"notebook: the inventory's Carnet tab - every page, the found ones drawn, the others still '???'")
 	for id in ["sifaka", "wild_greens", "clearing"]:
 		state.discoveries.erase(id)
@@ -1073,7 +1077,7 @@ func _test_quests() -> void:
 	_sim.set_weather(FarmState.Weather.CLEAR)
 	var state := _sim.state
 	var money := state.money
-	var friendship := _sim.get_friendship("rakoto")
+	var friendship := _sim.friendship.get_friendship("rakoto")
 	var greens := state.get_inventory_count("wild_greens")
 	var today := _set_weekday(GameClock.Weekday.TUESDAY)
 	state.clock.current_day = maxi(state.clock.current_day, 3)
@@ -1093,7 +1097,7 @@ func _test_quests() -> void:
 	panel._accept.pressed.emit()
 	await _frames(2)
 	var tracker: OrdersTracker = _world.get_node("UI/OrdersTracker")
-	_check(offered and panel_open and not get_tree().paused and _sim.is_quest_active("rakoto_lost_zebu")
+	_check(offered and panel_open and not get_tree().paused and _sim.quests.is_quest_active("rakoto_lost_zebu")
 			and tracker._quests.get_child_count() == 2 and tracker.visible
 			# His quest mark gone (an order's gold "!" may show again).
 			and not (rakoto._mark.visible and rakoto._mark.label_settings.font_color == QuestManager.MARK_COLOR),
@@ -1105,7 +1109,7 @@ func _test_quests() -> void:
 	var zebu: QuestTarget = _zone().get_node("QuestTargets/LostZebu")
 	var first := tracks.visible and not zebu.visible
 	_player.global_position = tracks.global_position
-	var at_tracks := func() -> bool: return _sim.get_quest_step_index("rakoto_lost_zebu") == 1
+	var at_tracks := func() -> bool: return _sim.quests.get_quest_step_index("rakoto_lost_zebu") == 1
 	var followed := await _wait_for(at_tracks, 2.0)
 	await _frames(2)
 	_check(first and followed and zebu.visible and not tracks.visible,
@@ -1115,12 +1119,12 @@ func _test_quests() -> void:
 	await _frames(2)
 	zebu.triggered.emit() # no greens yet
 	await _frames(2)
-	var waiting := _sim.get_quest_step_index("rakoto_lost_zebu") == 2
+	var waiting := _sim.quests.get_quest_step_index("rakoto_lost_zebu") == 2
 	state.add_inventory("wild_greens", 2)
 	_sim.inventory_changed.emit("wild_greens", 2)
 	zebu.triggered.emit()
 	await _frames(2)
-	_check(waiting and _sim.get_quest_step_index("rakoto_lost_zebu") == 3 and not zebu.visible
+	_check(waiting and _sim.quests.get_quest_step_index("rakoto_lost_zebu") == 3 and not zebu.visible
 			and state.get_inventory_count("wild_greens") == 0,
 		"quests: the zebu shies away until it's given 2 wild greens - then it goes home")
 
@@ -1133,7 +1137,7 @@ func _test_quests() -> void:
 	await _frames(2)
 	var evening: EveningManager = _world.get_node("Gameplay/EveningManager")
 	var told := evening.get_lines().any(func(line: Dictionary) -> bool: return "Volamena" in line["text"])
-	_check(ready and _sim.is_quest_done("rakoto_lost_zebu") and state.money == money + 10000
+	_check(ready and _sim.quests.is_quest_done("rakoto_lost_zebu") and state.money == money + 10000
 			and rakoto._bubble.visible and tracker._quests.get_child_count() == 0 and told,
 		"quests: back to Rakoto ('?'): 10 000 Ar, his thanks - and Dada tells it at dinner")
 	await _go_to_zone("village")
@@ -1156,9 +1160,9 @@ func _test_quests() -> void:
 func _test_more_quests() -> void:
 	_sim.set_weather(FarmState.Weather.CLEAR)
 	var state := _sim.state
-	var friendship := _sim.get_friendship("neny_soa")
-	var koto_friendship := _sim.get_friendship("koto")
-	var had_sifaka := _sim.is_discovered("sifaka")
+	var friendship := _sim.friendship.get_friendship("neny_soa")
+	var koto_friendship := _sim.friendship.get_friendship("koto")
+	var had_sifaka := _sim.notebook.is_discovered("sifaka")
 	var today := _set_weekday(GameClock.Weekday.SATURDAY)
 	state.clock.current_day = maxi(state.clock.current_day, 6)
 	state.friendship["neny_soa"] = maxi(friendship, 100)
@@ -1179,7 +1183,7 @@ func _test_more_quests() -> void:
 	var told := panel.is_open() and panel._title.text == "La tisane de Neny Soa"
 	panel._accept.pressed.emit()
 	await _frames(2)
-	_check(marks and told and _sim.is_quest_active("neny_soa_remedy"),
+	_check(marks and told and _sim.quests.is_quest_active("neny_soa_remedy"),
 		"quests: Neny Soa (a heart of friendship) and Koto each have a quest - Neny Soa tells hers: her remedy")
 
 	await _go_to_zone("forest")
@@ -1189,7 +1193,7 @@ func _test_more_quests() -> void:
 	var there := jar.visible and not base.disabled
 	jar.triggered.emit()
 	await _frames(3)
-	_check(there and not jar.visible and base.disabled and _sim.get_quest_waiting_on("neny_soa") == "neny_soa_remedy",
+	_check(there and not jar.visible and base.disabled and _sim.quests.get_quest_waiting_on("neny_soa") == "neny_soa_remedy",
 		"quests: Neny Soa's jar by the forest spring - filled, it's gone, and its base no longer in the way")
 
 	await _go_to_zone("village")
@@ -1199,18 +1203,18 @@ func _test_more_quests() -> void:
 	state.inventory.erase("ravintsara")
 	grandmother.interacted.emit()
 	await _frames(2)
-	var waiting := _sim.is_quest_active("neny_soa_remedy") and grandmother._bubble.visible
+	var waiting := _sim.quests.is_quest_active("neny_soa_remedy") and grandmother._bubble.visible
 	state.add_inventory("ravintsara", 1)
 	_sim.inventory_changed.emit("ravintsara", 1)
 	await _frames(2)
 	var ready := grandmother._mark.text == "?"
 	grandmother.interacted.emit()
 	await _frames(2)
-	_check(waiting and ready and _sim.is_quest_done("neny_soa_remedy") and state.get_inventory_count("food_mofo_gasy") >= 3,
+	_check(waiting and ready and _sim.quests.is_quest_done("neny_soa_remedy") and state.get_inventory_count("food_mofo_gasy") >= 3,
 		"quests: without a ravintsara leaf she waits for one - with it ('?'), the remedy's made: 3 mofo gasy")
 
-	_sim.discover("sifaka")
-	_sim.start_quest("koto_dancing_sifaka")
+	_sim.notebook.discover("sifaka")
+	_sim.quests.start_quest("koto_dancing_sifaka")
 	await _go_to_zone("farm")
 	await _frames(3)
 	_player.global_position = Vector2(300, 300)
@@ -1224,7 +1228,7 @@ func _test_more_quests() -> void:
 	var to_koto := koto._mark.text == "?"
 	koto.interacted.emit()
 	await _frames(2)
-	_check(asked and to_koto and _sim.is_quest_done("koto_dancing_sifaka") and koto._bubble.visible,
+	_check(asked and to_koto and _sim.quests.is_quest_done("koto_dancing_sifaka") and koto._bubble.visible,
 		"quests: Koto's sifaka seen - Fara draws it for him ('?' over her at the farm), Koto gets the drawing")
 
 	for quest_id in ["neny_soa_remedy", "koto_dancing_sifaka"]:
@@ -1256,24 +1260,24 @@ func _test_chicken_thieves() -> void:
 		state.animals[hen_id] = AnimalState.new(hen_id, AnimalData.Species.CHICKEN)
 	state.clock.current_day = maxi(day, 20)
 	state.thief_next_alert_day = 0
-	_sim.thief_alert_chance = 1.0
-	_sim.thief_night_chance = 1.0
+	_sim.thieves.thief_alert_chance = 1.0
+	_sim.thieves.thief_night_chance = 1.0
 	_set_time(10 * 60)
 	await _go_to_zone("farm")
 	await _frames(3)
 	_sim.day_log = DayLog.new()
-	_sim._advance_thieves() # the morning's rumour
+	_sim.thieves.advance_thieves() # the morning's rumour
 	var evening: EveningManager = _world.get_node("Gameplay/EveningManager")
-	var warned := _sim.is_thief_alert() and evening.get_lines().any(
+	var warned := _sim.thieves.is_thief_alert() and evening.get_lines().any(
 		func(line: Dictionary) -> bool: return "cadenas" in line["text"])
 	state.clock.current_day += 1
 	_sim.day_log = DayLog.new()
-	_sim._advance_thieves() # the night
+	_sim.thieves.advance_thieves() # the night
 	_sim.day_changed.emit(state.clock.current_day)
 	await _frames(3)
 	var coop: Coop = get_tree().get_first_node_in_group(Coop.GROUP)
 	var told := evening.get_lines().any(func(line: Dictionary) -> bool: return "voleur" in line["text"])
-	_check(warned and _sim.get_hen_ids().size() == 2 and coop.get_node_or_null("Feathers") is ScatteredFeathers and told,
+	_check(warned and _sim.thieves.get_hen_ids().size() == 2 and coop.get_node_or_null("Feathers") is ScatteredFeathers and told,
 		"chicken thieves: a rumour (Neny talks of a padlock at dinner) - the night after, a hen gone, feathers by the coop, Dada tells it")
 
 	var shop: ShopUI = _world.get_node("UI/ShopUI")
@@ -1282,26 +1286,26 @@ func _test_chicken_thieves() -> void:
 	await _frames(1)
 	var on_shelf := func() -> bool:
 		return shop.item_grid.get_children().any(func(card) -> bool:
-			return not card.is_queued_for_deletion() and card._item.id == FarmSimulation.PADLOCK_ITEM)
+			return not card.is_queued_for_deletion() and card._item.id == ThiefRules.PADLOCK_ITEM)
 	var offered: bool = on_shelf.call()
 	state.money = maxi(state.money, 10000)
-	_world.get_node("Gameplay/ShopController").buy_item(FarmSimulation.PADLOCK_ITEM, 5000)
+	_world.get_node("Gameplay/ShopController").buy_item(ThiefRules.PADLOCK_ITEM, 5000)
 	await _frames(2)
 	_check(offered and not on_shelf.call() and coop.get_node_or_null("Padlock") is CoopPadlock,
 		"chicken thieves: a padlock on the market's shelf - bought, it's on the coop's door and off the shelf")
 
 	state.thief_next_alert_day = 0
-	_sim._advance_thieves()
+	_sim.thieves.advance_thieves()
 	state.clock.current_day += 1
 	_sim.day_log = DayLog.new()
-	_sim._advance_thieves()
+	_sim.thieves.advance_thieves()
 	_sim.day_changed.emit(state.clock.current_day)
 	await _frames(3)
-	_check(_sim.get_hen_ids().size() == 2 and _sim.day_log.thieves_foiled and coop.get_node_or_null("Feathers") == null,
+	_check(_sim.thieves.get_hen_ids().size() == 2 and _sim.day_log.thieves_foiled and coop.get_node_or_null("Feathers") == null,
 		"chicken thieves: they come back - the padlock holds, no hen lost")
 
-	_sim.thief_alert_chance = FarmSimulation.THIEF_ALERT_CHANCE
-	_sim.thief_night_chance = FarmSimulation.THIEF_NIGHT_CHANCE
+	_sim.thieves.thief_alert_chance = ThiefRules.THIEF_ALERT_CHANCE
+	_sim.thieves.thief_night_chance = ThiefRules.THIEF_NIGHT_CHANCE
 	state.animals = animals
 	state.has_coop = had_coop
 	state.coop_padlock = false
@@ -1328,14 +1332,14 @@ func _test_dog() -> void:
 	var house: DogHouse = _zone().get_node("DogHouse")
 	var no_dog := not house.visible and dogs.get_dog() == null
 	_player.global_position = Vector2(900, 600)
-	_sim.adopt_dog(0)
+	_sim.dog.adopt_dog(0)
 	await _frames(2)
-	var asked := panel.is_open() and FarmSimulation.DOG_NAMES.has(panel.get_typed_name())
+	var asked := panel.is_open() and DogRules.DOG_NAMES.has(panel.get_typed_name())
 	panel._line.text = "Kintana"
 	panel.confirm()
 	await _frames(2)
 	var dog := dogs.get_dog()
-	_check(no_dog and asked and not panel.is_open() and _sim.get_dog_name() == "Kintana" and dog != null
+	_check(no_dog and asked and not panel.is_open() and _sim.dog.get_dog_name() == "Kintana" and dog != null
 			and dog.is_following() and house.visible and not house.is_bowl_full()
 			and house.get_node("InteractableComponent").get_prompt() == "Remplir la gamelle",
 		"dog: no doghouse before - the puppy comes, the player names it, it's at the farm with its doghouse and an empty bowl")
@@ -1351,10 +1355,10 @@ func _test_dog() -> void:
 		"dog: it follows the player at their heels, then sits by them, wagging")
 
 	dog.get_node("InteractableComponent").interact()
-	var petted: bool = _sim.is_dog_petted() and state.dog.bond == 1 and dog._happy > 0.0
+	var petted: bool = _sim.dog.is_dog_petted() and state.dog.bond == 1 and dog._happy > 0.0
 	house.get_node("InteractableComponent").interact()
 	await _frames(2)
-	_check(petted and _sim.is_dog_fed() and house.is_bowl_full()
+	_check(petted and _sim.dog.is_dog_fed() and house.is_bowl_full()
 			and not house.get_node("InteractableComponent").is_interactable,
 		"dog: petted (a heart, fonder), its bowl filled at the doghouse")
 
@@ -1488,7 +1492,7 @@ func _test_market_town() -> void:
 	var money := _sim.state.money
 	var corn_seed: ItemData = seeds.filter(func(item: ItemData) -> bool: return item.crop_id == "corn")[0]
 	shop_ui._on_sell_requested(corn_seed, 2)
-	_check(_sim.state.money - money == 2 * roundi(_sim.get_crop_data("corn").sell_price * 1.25),
+	_check(_sim.state.money - money == 2 * roundi(_sim.fields.get_crop_data("corn").sell_price * 1.25),
 		"weekly market: harvests sell for 25 % more")
 	shop_ui.close()
 	await _frames(20)
@@ -1539,8 +1543,8 @@ func _test_zebu_market() -> void:
 	var opened := panel.visible
 	panel.buy_requested.emit()
 	await _frames(3)
-	var ids := _sim.get_zebu_ids()
-	_check(opened and ids.size() == 1 and _sim.state.money == 100000 - FarmSimulation.ZEBU_PRICE,
+	var ids := _sim.zebus.get_zebu_ids()
+	_check(opened and ids.size() == 1 and _sim.state.money == 100000 - ZebuRules.ZEBU_PRICE,
 		"zebu market: the stand opens the market, and a young zebu is bought")
 	panel.close()
 	await _frames(3)
@@ -1550,12 +1554,12 @@ func _test_zebu_market() -> void:
 	var zebus: Node2D = _zone().get_node("PlayerZebus")
 	var trough: ZebuTrough = _zone().get_node("ZebuTrough")
 	var mine: GrazingZebu = zebus.get_child(0) if zebus.get_child_count() > 0 else null
-	_check(zebus.get_child_count() == 1 and mine.coat == _sim.get_zebu(ids[0])["coat"]
+	_check(zebus.get_child_count() == 1 and mine.coat == _sim.zebus.get_zebu(ids[0])["coat"]
 			and not trough.is_full() and trough.get_node("InteractableComponent").is_interactable,
 		"farm: the bought zebu grazes on the farm, its trough waiting to be filled")
 	trough.interacted.emit()
 	await _frames(3)
-	_check(_sim.is_zebu_trough_full() and trough.is_full()
+	_check(_sim.zebus.is_zebu_trough_full() and trough.is_full()
 			and not trough.get_node("InteractableComponent").is_interactable,
 		"farm: filling the trough shows it full, once for the day")
 	_set_time(20 * 60)
@@ -1569,10 +1573,10 @@ func _test_zebu_market() -> void:
 	await _go_to_zone("market_town")
 	await _frames(3)
 	var money := _sim.state.money
-	var value := _sim.get_zebu_value(ids[0])
+	var value := _sim.zebus.get_zebu_value(ids[0])
 	panel.sell_requested.emit(ids[0])
 	await _frames(3)
-	_check(_sim.get_zebu_ids().is_empty() and _sim.state.money == money + value,
+	_check(_sim.zebus.get_zebu_ids().is_empty() and _sim.state.money == money + value,
 		"zebu market: a zebu sells back at its worth")
 	if panel.visible:
 		panel.close()
@@ -1591,14 +1595,14 @@ func _test_zebu_plough() -> void:
 	hotbar.select(7)
 	# Four fallow plots in a row, west to east.
 	var first := -1
-	for plot_id: int in _sim.get_all_plot_ids():
-		if _sim.get_plot_zone(plot_id) != "farm":
+	for plot_id: int in _sim.fields.get_all_plot_ids():
+		if _sim.fields.get_plot_zone(plot_id) != "farm":
 			continue
-		var cell := _sim.get_plot_position(plot_id)
+		var cell := _sim.fields.get_plot_position(plot_id)
 		var row_ok := true
 		for dx in 4:
-			var other := _sim.get_plot_id_at(cell.x + dx, cell.y, "farm")
-			row_ok = row_ok and other != -1 and _sim.is_ploughable(other)
+			var other := _sim.fields.get_plot_id_at(cell.x + dx, cell.y, "farm")
+			row_ok = row_ok and other != -1 and _sim.zebus.is_ploughable(other)
 		if row_ok:
 			first = plot_id
 			break
@@ -1610,12 +1614,12 @@ func _test_zebu_plough() -> void:
 	# Without a team: refused.
 	controller._on_use_item_requested()
 	await _frames(3)
-	_check(first != -1 and not controller.is_ploughing() and not _sim.get_plot(first).tilled,
+	_check(first != -1 and not controller.is_ploughing() and not _sim.fields.get_plot(first).tilled,
 		"plough: refused without a pair of strong zebus")
 	_sim.state.money = 100000
 	for coat in [0, 3]:
-		var zebu_id := _sim.buy_zebu(coat)
-		_sim.state.zebus[zebu_id]["grown_days"] = FarmSimulation.ZEBU_WORK_MIN_DAYS
+		var zebu_id := _sim.zebus.buy_zebu(coat)
+		_sim.state.zebus[zebu_id]["grown_days"] = ZebuRules.ZEBU_WORK_MIN_DAYS
 	_player.global_position = Vector2(rect.position.x - 20, rect.get_center().y + 10)
 	_player.last_facing_direction = Vector2.RIGHT
 	await _frames(2)
@@ -1625,17 +1629,17 @@ func _test_zebu_plough() -> void:
 	var started := controller.is_ploughing() and team != null
 	var done := func() -> bool: return not controller.is_ploughing()
 	await _wait_for(done, 15.0)
-	var cell := _sim.get_plot_position(first)
+	var cell := _sim.fields.get_plot_position(first)
 	var tilled := 0
 	for dx in 4:
-		if _sim.get_plot(_sim.get_plot_id_at(cell.x + dx, cell.y, "farm")).tilled:
+		if _sim.fields.get_plot(_sim.fields.get_plot_id_at(cell.x + dx, cell.y, "farm")).tilled:
 			tilled += 1
 	await _frames(40)
 	_check(started and tilled == 4 and _sim.state.plough_cells_today == 4
 			and _zone().get_node_or_null("PloughTeam") == null and _player.input_enabled,
 		"plough: the zebu team tills four plots in a row, the player following, then leaves")
-	for zebu_id: String in _sim.get_zebu_ids():
-		_sim.sell_zebu(zebu_id)
+	for zebu_id: String in _sim.zebus.get_zebu_ids():
+		_sim.zebus.sell_zebu(zebu_id)
 	hotbar.select(0)
 
 func _test_zebu_manure() -> void:
@@ -1646,30 +1650,30 @@ func _test_zebu_manure() -> void:
 	var heap: ManureHeap = _zone().get_node("ManureHeap")
 	var empty_at_first: bool = heap.get_amount() == 0 and not heap.get_node("Sprite2D").visible
 	_sim.state.money = 100000
-	_sim.buy_zebu(0)
-	_sim.buy_zebu(4)
-	_sim.fill_zebu_trough()
+	_sim.zebus.buy_zebu(0)
+	_sim.zebus.buy_zebu(4)
+	_sim.zebus.fill_zebu_trough()
 	_sim.advance_day()
 	_set_time(9 * 60)
 	await _frames(3)
 	_check(empty_at_first and heap.get_amount() == 2 and heap.get_node("Sprite2D").visible
 			and heap.get_node("InteractableComponent").is_interactable,
 		"manure: the cared-for zebus leave a heap by the pen overnight")
-	var before := _sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM)
+	var before := _sim.state.get_inventory_count(ZebuRules.MANURE_ITEM)
 	heap.interacted.emit()
 	await _frames(3)
-	_check(_sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM) == before + 2 and heap.get_amount() == 0
+	_check(_sim.state.get_inventory_count(ZebuRules.MANURE_ITEM) == before + 2 and heap.get_amount() == 0
 			and not heap.get_node("Sprite2D").visible,
 		"manure: picking up the heap takes it all")
 	# Spread on a tilled plot, from the hotbar.
 	var controller: FarmingController = _world.get_node("Gameplay/FarmingController")
 	var hotbar: Hotbar = _world.get_node("Gameplay/Hotbar")
-	hotbar.assign(FarmSimulation.MANURE_ITEM, 6)
+	hotbar.assign(ZebuRules.MANURE_ITEM, 6)
 	hotbar.select(6)
 	var target := -1
-	for plot_id: int in _sim.get_all_plot_ids():
-		var plot := _sim.get_plot(plot_id)
-		if _sim.get_plot_zone(plot_id) == "farm" and plot.tilled and plot.crop == null and not plot.fertilized:
+	for plot_id: int in _sim.fields.get_all_plot_ids():
+		var plot := _sim.fields.get_plot(plot_id)
+		if _sim.fields.get_plot_zone(plot_id) == "farm" and plot.tilled and plot.crop == null and not plot.fertilized:
 			target = plot_id
 			break
 	var view := controller.farm_view
@@ -1680,11 +1684,11 @@ func _test_zebu_manure() -> void:
 	controller._on_use_item_requested()
 	await _frames(20)
 	var plot_view: PlotView = view._plot_views[target]
-	_check(_sim.get_plot(target).fertilized and plot_view.is_manure_shown()
-			and _sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM) == before + 1,
+	_check(_sim.fields.get_plot(target).fertilized and plot_view.is_manure_shown()
+			and _sim.state.get_inventory_count(ZebuRules.MANURE_ITEM) == before + 1,
 		"manure: spread on a tilled plot, it shows on the soil")
-	for zebu_id: String in _sim.get_zebu_ids():
-		_sim.sell_zebu(zebu_id)
+	for zebu_id: String in _sim.zebus.get_zebu_ids():
+		_sim.zebus.sell_zebu(zebu_id)
 	hotbar.select(0)
 
 # --- tall grass ----------------------------------------------------------------

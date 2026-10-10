@@ -25,7 +25,7 @@ func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase, world_manager:
 	item_db = p_item_db
 	var discoveries := Discovery.load_all()
 	for discovery_id: String in discoveries:
-		simulation.register_discovery(discovery_id, discoveries[discovery_id])
+		simulation.notebook.register_discovery(discovery_id, discoveries[discovery_id])
 	simulation.discovery_made.connect(_on_discovery_made)
 	simulation.time_changed.connect(func(_minute: int): _refresh_animals())
 	simulation.weather_changed.connect(func(_weather): _refresh_animals())
@@ -41,7 +41,7 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 	_plants.clear()
 	for node in zone.find_children("*", "", true, false):
 		if node is WildAnimal or node is ForageSpot:
-			var discovery := simulation.get_discovery(node.discovery_id)
+			var discovery := simulation.notebook.get_discovery(node.discovery_id)
 			if discovery == null:
 				push_warning("ForestManager: %s names no notebook entry '%s'." % [node.name, node.discovery_id])
 				continue
@@ -55,38 +55,38 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 			node.gathered.connect(_on_gathered.bind(node))
 		elif node is DiscoveryPlace:
 			var place_id: String = node.discovery_id
-			node.reached.connect(func(): simulation.discover(place_id))
+			node.reached.connect(func(): simulation.notebook.discover(place_id))
 	_refresh_animals(true)
 	_refresh_plants()
 
 func _name(discovery_id: String) -> String:
-	var discovery := simulation.get_discovery(discovery_id)
+	var discovery := simulation.notebook.get_discovery(discovery_id)
 	return tr(discovery.display_name).to_lower() if discovery != null else discovery_id
 
 func _refresh_animals(instant := false) -> void:
 	for animal in _animals:
 		if is_instance_valid(animal):
-			animal.set_present(simulation.is_wildlife_active(animal.discovery_id), instant)
+			animal.set_present(simulation.notebook.is_wildlife_active(animal.discovery_id), instant)
 
 func _refresh_plants() -> void:
 	for plant in _plants:
 		if not is_instance_valid(plant):
 			continue
-		var ready := simulation.can_forage(plant.get_spot_id(), plant.discovery_id)
+		var ready := simulation.notebook.can_forage(plant.get_spot_id(), plant.discovery_id)
 		plant.show_state(ready, tr("Cueillir : %s") % _name(plant.discovery_id) if ready else "")
 
 func _on_observed(animal: WildAnimal) -> void:
-	var known := simulation.is_discovered(animal.discovery_id)
+	var known := simulation.notebook.is_discovered(animal.discovery_id)
 	# A first time: the new page says it (_on_discovery_made).
-	if not simulation.observe(animal.discovery_id) or not known:
+	if not simulation.notebook.observe(animal.discovery_id) or not known:
 		return
 	UIEvents.notify(tr("Tu observes le %s un moment. Il est déjà dans ton carnet.") % _name(animal.discovery_id))
 
 func _on_gathered(plant: ForageSpot) -> void:
-	var quantity := simulation.forage(plant.get_spot_id(), plant.discovery_id)
+	var quantity := simulation.notebook.forage(plant.get_spot_id(), plant.discovery_id)
 	if quantity <= 0:
 		return
-	var discovery := simulation.get_discovery(plant.discovery_id)
+	var discovery := simulation.notebook.get_discovery(plant.discovery_id)
 	AudioManager.play_harvest_sfx()
 	HarvestPopup.spawn(plant, plant.global_position + Vector2(0, -60), item_db.get_icon(discovery.item_id),
 		"+%d %s" % [quantity, item_db.get_display_name(discovery.item_id)])
@@ -95,18 +95,18 @@ func _on_gathered(plant: ForageSpot) -> void:
 func _on_discovery_made(discovery_id: String) -> void:
 	var title := ""
 	var line := ""
-	if discovery_id.begins_with(FarmSimulation.CUISINE_PREFIX):
-		var recipe := simulation.get_recipe(discovery_id.trim_prefix(FarmSimulation.CUISINE_PREFIX))
+	if discovery_id.begins_with(NotebookRules.CUISINE_PREFIX):
+		var recipe := simulation.kitchen.get_recipe(discovery_id.trim_prefix(NotebookRules.CUISINE_PREFIX))
 		if recipe == null:
 			return
 		title = tr(recipe.display_name)
 		line = tr("Miam, ça a l'air bon !")
 	else:
-		var discovery := simulation.get_discovery(discovery_id)
+		var discovery := simulation.notebook.get_discovery(discovery_id)
 		if discovery == null:
 			return
 		title = "%s (%s)" % [tr(discovery.display_name), discovery.malagasy_name]
 		line = tr(discovery.fara_line)
-	var progress := simulation.get_notebook_progress()
+	var progress := simulation.notebook.get_notebook_progress()
 	UIEvents.notify(tr("Nouvelle page dans ton carnet : %s - Fara l'a dessinée : « %s » (%d/%d)")
 		% [title, line, progress.x, progress.y])

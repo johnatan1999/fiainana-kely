@@ -68,7 +68,7 @@ Côté game design :
 - `display_name`, `owner_id` (id d'un villageois), `base_power`, `power_per_week`, `color`
   (teinte du dessin). `load_all()`.
 
-**Règles : `FarmSimulation`** (testables, sauvegardées)
+**Règles : `CockfightRules` (`simulation.cockfight`, voir `simulation.md`)** (testables, sauvegardées)
 - Le coq :
   - `ROOSTER_NAME`, `ROOSTER_START_STAT` (20), `ROOSTER_MAX_STAT` (100) ;
   - `ROOSTER_FEED_ITEMS` (`corn`, `rice`), `ROOSTER_FED_ENDURANCE`,
@@ -76,7 +76,7 @@ Côté game design :
   - `adopt_rooster()`, `has_rooster()`, `get_rooster()`, `get_rooster_power()` ;
   - `can_feed_rooster` / `feed_rooster(item_id)`, `can_train_rooster` /
     `train_rooster()`, `is_rooster_fed_today()`, `is_rooster_trained_today()` ;
-  - `_advance_rooster()` en fin de journée.
+  - `advance_rooster()` en fin de journée.
 - Le tournoi :
   - `COCKFIGHT_DAY`, `COCKFIGHT_HOURS`, `COCKFIGHT_BOUTS`, `COCKFIGHT_WIN_POINTS`,
     `COCKFIGHT_LOSS_POINTS`, `COCKFIGHT_ENTRY_PRIZE`, `COCKFIGHT_POWER_SCALE`,
@@ -90,9 +90,9 @@ Côté game design :
     `COCKFIGHT_HITS_TO_WIN`, dont le dernier ;
   - un combat se tire d'une **sigmoïde** de l'écart de puissance : un écart de 20 donne
     environ 73 % de chances de gagner ;
-  - le dimanche soir (`_play_villagers_bouts()`), chaque coq de villageois livre le reste
+  - le dimanche soir (`play_villagers_bouts()`), chaque coq de villageois livre le reste
     de ses 3 combats contre les autres. Seul son propre résultat compte ;
-  - au changement de saison (`_end_cockfight_season()`), le premier devient
+  - au changement de saison (`end_cockfight_season()`), le premier devient
     `cockfight_champion`, puis les points repartent de zéro. Ça émet
     `cockfight_season_ended` ;
   - `get_cockfight_ranking()` (points, puis puissance), `get_cockfight_rank()`,
@@ -166,7 +166,7 @@ Côté game design :
   - le renommer ;
   - un deuxième coq élevé à partir d'un poussin du poulailler ;
   - une blessure légère après une défaite (une journée de repos), sans perte définitive.
-- **Équilibrage** : tout passe par les constantes de `FarmSimulation` et les `.tres` de
+- **Équilibrage** : tout passe par les constantes de `CockfightRules` et les `.tres` de
   `data/roosters/`. Le 50/50 est à puissance égale ; `COCKFIGHT_POWER_SCALE` règle la part
   du hasard.
 - **Pistes** :

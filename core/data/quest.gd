@@ -37,7 +37,7 @@ const DIR := "res://data/quests/"
 @export var reward_money := 0
 ## item id -> quantity.
 @export var reward_items: Dictionary = {}
-## Friendship points with the giver (FarmSimulation.FRIENDSHIP_PER_HEART: a
+## Friendship points with the giver (FriendshipRules.FRIENDSHIP_PER_HEART: a
 ## heart).
 @export var reward_friendship := 0
 ## Something it gives the farm, beyond items: "dog" (FarmSimulation's

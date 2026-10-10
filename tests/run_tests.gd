@@ -225,65 +225,65 @@ func _run_all() -> void:
 
 func test_till_plot() -> void:
 	var sim := _make_sim()
-	var ok := sim.till(0)
-	_check(ok and sim.get_plot(0).tilled, "till() marks the plot as tilled")
+	var ok := sim.fields.till(0)
+	_check(ok and sim.fields.get_plot(0).tilled, "till() marks the plot as tilled")
 
 func test_plant_on_tilled_plot() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	var ok := sim.plant(0, "corn")
-	_check(ok and sim.get_plot(0).crop != null, "plant() succeeds on a tilled plot")
+	var ok := sim.fields.plant(0, "corn")
+	_check(ok and sim.fields.get_plot(0).crop != null, "plant() succeeds on a tilled plot")
 
 func test_crop_progresses_on_day_advance() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
-	sim.water(0)
+	sim.fields.plant(0, "corn")
+	sim.fields.water(0)
 	sim.advance_day()
-	_check(sim.get_plot(0).crop.age == 1, "advance_day() ages a watered crop")
+	_check(sim.fields.get_plot(0).crop.age == 1, "advance_day() ages a watered crop")
 
 func test_no_progress_without_watering() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
+	sim.fields.plant(0, "corn")
 	sim.advance_day() # not watered
-	_check(sim.get_plot(0).crop.age == 0, "advance_day() does not age an unwatered crop")
+	_check(sim.fields.get_plot(0).crop.age == 0, "advance_day() does not age an unwatered crop")
 
 func test_watering_is_consumed_each_day() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
-	sim.water(0)
+	sim.fields.plant(0, "corn")
+	sim.fields.water(0)
 	sim.advance_day()
 	sim.advance_day() # second day, not re-watered
-	_check(sim.get_plot(0).crop.age == 1, "watering only carries the crop through a single day")
+	_check(sim.fields.get_plot(0).crop.age == 1, "watering only carries the crop through a single day")
 
 func test_harvest_mature_crop() -> void:
 	var sim := _make_sim()
-	var corn := sim.get_crop_data("corn")
-	sim.till(0)
+	var corn := sim.fields.get_crop_data("corn")
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
+	sim.fields.plant(0, "corn")
 	for i in range(corn.growth_days):
-		sim.water(0)
+		sim.fields.water(0)
 		sim.advance_day()
-	var ok := sim.harvest(0)
-	_check(ok and sim.get_plot(0).crop == null, "harvest() succeeds once the crop is mature")
+	var ok := sim.fields.harvest(0)
+	_check(ok and sim.fields.get_plot(0).crop == null, "harvest() succeeds once the crop is mature")
 
 func test_harvest_quantity_within_yield_range() -> void:
 	var sim := _make_sim()
-	var corn := sim.get_crop_data("corn")
-	sim.till(0)
+	var corn := sim.fields.get_crop_data("corn")
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
+	sim.fields.plant(0, "corn")
 	for i in range(corn.growth_days):
-		sim.water(0)
+		sim.fields.water(0)
 		sim.advance_day()
-	sim.harvest(0)
+	sim.fields.harvest(0)
 	var quantity := sim.state.get_inventory_count("corn")
 	_check(
 		quantity >= corn.yield_min and quantity <= corn.yield_max,
@@ -292,19 +292,19 @@ func test_harvest_quantity_within_yield_range() -> void:
 
 func test_low_watering_caps_harvest_below_max_yield() -> void:
 	var sim := _make_sim()
-	var corn := sim.get_crop_data("corn")
-	sim.till(0)
+	var corn := sim.fields.get_crop_data("corn")
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
+	sim.fields.plant(0, "corn")
 	# Water every other day: reaches maturity (growth_days waterings) but at a
 	# watered_ratio of 0.5, below corn's 0.75 quality threshold.
 	var days_elapsed := 0
-	while not sim.get_plot(0).crop.is_mature():
+	while not sim.fields.get_plot(0).crop.is_mature():
 		if days_elapsed % 2 == 0:
-			sim.water(0)
+			sim.fields.water(0)
 		sim.advance_day()
 		days_elapsed += 1
-	sim.harvest(0)
+	sim.fields.harvest(0)
 	var quantity := sim.state.get_inventory_count("corn")
 	_check(
 		quantity >= 1 and quantity < corn.yield_max,
@@ -316,41 +316,41 @@ func test_sell_increases_money() -> void:
 	var sim := _make_sim()
 	sim.state.add_inventory("corn", 1)
 	var money_before := sim.state.money
-	var ok := sim.sell("corn", 1)
+	var ok := sim.market.sell("corn", 1)
 	_check(ok and sim.state.money == money_before + corn.sell_price, "sell() increases money by the sell price")
 
 func test_buy_decreases_money() -> void:
 	var corn: CropData = load("res://data/crops/corn.tres")
 	var sim := _make_sim()
 	var money_before := sim.state.money
-	var ok := sim.buy_seed("corn", 1)
+	var ok := sim.market.buy_seed("corn", 1)
 	_check(ok and sim.state.money == money_before - corn.seed_price, "buy_seed() decreases money by the seed price")
 
 func test_cannot_plant_untilled_plot() -> void:
 	var sim := _make_sim()
 	sim.state.add_inventory("corn_seed", 1)
-	var ok := sim.plant(0, "corn")
-	_check(not ok and sim.get_plot(0).crop == null, "plant() fails on a non-tilled plot")
+	var ok := sim.fields.plant(0, "corn")
+	_check(not ok and sim.fields.get_plot(0).crop == null, "plant() fails on a non-tilled plot")
 
 func test_cannot_harvest_immature_crop() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
-	var ok := sim.harvest(0)
-	_check(not ok and sim.get_plot(0).crop != null, "harvest() fails on an immature crop")
+	sim.fields.plant(0, "corn")
+	var ok := sim.fields.harvest(0)
+	_check(not ok and sim.fields.get_plot(0).crop != null, "harvest() fails on an immature crop")
 
 func test_cannot_buy_without_enough_money() -> void:
 	var sim := _make_sim()
 	sim.state.money = 3
-	var ok := sim.buy_seed("corn", 1)
+	var ok := sim.market.buy_seed("corn", 1)
 	_check(not ok and sim.state.money == 3, "buy_seed() fails when money is insufficient")
 
 func test_cannot_buy_locked_crop() -> void:
 	var rice: CropData = load("res://data/crops/rice.tres")
 	var sim := FarmSimulation.new(4, 4, {"corn": load("res://data/crops/corn.tres"), "rice": rice})
 	sim.state.money = 100000
-	var ok := sim.buy_seed("rice", 1)
+	var ok := sim.market.buy_seed("rice", 1)
 	_check(
 		not ok and sim.state.get_inventory_count("rice_seed") == 0,
 		"buy_seed() fails before the crop's unlock_day even with enough money"
@@ -358,12 +358,12 @@ func test_cannot_buy_locked_crop() -> void:
 
 func test_save_load_roundtrip() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
-	sim.water(0)
+	sim.fields.plant(0, "corn")
+	sim.fields.water(0)
 	sim.advance_day()
-	sim.buy_seed("corn", 1)
+	sim.market.buy_seed("corn", 1)
 
 	var data := sim.to_save_data()
 	# JSON round-trip, exactly like the real save file on disk.
@@ -372,7 +372,7 @@ func test_save_load_roundtrip() -> void:
 	var fresh_sim := _make_sim()
 	fresh_sim.load_save_data(data)
 
-	var plot := fresh_sim.get_plot(0)
+	var plot := fresh_sim.fields.get_plot(0)
 	_check(
 		fresh_sim.state.money == sim.state.money
 		and fresh_sim.state.day == sim.state.day
@@ -403,71 +403,71 @@ func test_season_boundaries() -> void:
 func test_build_coop_deducts_money() -> void:
 	var sim := _make_sim_with_chicken()
 	var money_before := sim.state.money
-	var ok := sim.build_coop()
+	var ok := sim.animals.build_coop()
 	_check(
-		ok and sim.state.money == money_before - FarmSimulation.COOP_COST and sim.state.has_coop,
+		ok and sim.state.money == money_before - AnimalRules.COOP_COST and sim.state.has_coop,
 		"build_coop() succeeds and deducts money"
 	)
 
 func test_cannot_build_coop_twice() -> void:
 	var sim := _make_sim_with_chicken()
-	sim.build_coop()
+	sim.animals.build_coop()
 	var money_after_first := sim.state.money
-	var ok := sim.build_coop()
+	var ok := sim.animals.build_coop()
 	_check(not ok and sim.state.money == money_after_first, "build_coop() fails once a coop already exists")
 
 func test_buy_chicken_adds_pending_animal() -> void:
 	var sim := _make_sim_with_chicken()
 	var money_before := sim.state.money
-	var chicken_data := sim.get_animal_data(AnimalData.Species.CHICKEN)
-	var ok := sim.buy_chicken(1)
+	var chicken_data := sim.animals.get_animal_data(AnimalData.Species.CHICKEN)
+	var ok := sim.animals.buy_chicken(1)
 	_check(
 		ok and sim.state.money == money_before - chicken_data.purchase_price
-		and sim.get_pending_count(AnimalData.Species.CHICKEN) == 1
+		and sim.animals.get_pending_count(AnimalData.Species.CHICKEN) == 1
 		and sim.state.get_inventory_count("chicken_unplaced") == 0,
 		"buy_chicken() deducts money and adds a chicken waiting to be settled (not an inventory item)"
 	)
 
 func test_cannot_place_chicken_without_coop() -> void:
 	var sim := _make_sim_with_chicken()
-	sim.buy_chicken(1)
-	var id := sim.place_chicken()
-	_check(id == "" and sim.get_all_animal_ids().is_empty(), "place_chicken() fails without a coop")
+	sim.animals.buy_chicken(1)
+	var id := sim.animals.place_chicken()
+	_check(id == "" and sim.animals.get_all_animal_ids().is_empty(), "place_chicken() fails without a coop")
 
 func test_place_chicken_creates_animal() -> void:
 	var sim := _make_sim_with_chicken()
-	sim.build_coop()
-	sim.buy_chicken(1)
-	var id := sim.place_chicken()
+	sim.animals.build_coop()
+	sim.animals.buy_chicken(1)
+	var id := sim.animals.place_chicken()
 	_check(
-		id != "" and sim.get_animal(id) != null and sim.get_animal(id).species == AnimalData.Species.CHICKEN
-		and sim.get_pending_count(AnimalData.Species.CHICKEN) == 0,
+		id != "" and sim.animals.get_animal(id) != null and sim.animals.get_animal(id).species == AnimalData.Species.CHICKEN
+		and sim.animals.get_pending_count(AnimalData.Species.CHICKEN) == 0,
 		"place_chicken() settles a waiting chicken as a real animal"
 	)
 
 func test_place_chicken_respects_coop_capacity() -> void:
 	var sim := _make_sim_with_chicken()
-	sim.build_coop()
+	sim.animals.build_coop()
 	sim.state.coop_capacity = 1
 	sim.state.money = 100000
-	sim.buy_chicken(2)
-	var first_id := sim.place_chicken()
-	var second_id := sim.place_chicken()
+	sim.animals.buy_chicken(2)
+	var first_id := sim.animals.place_chicken()
+	var second_id := sim.animals.place_chicken()
 	_check(
-		first_id != "" and second_id == "" and sim.get_all_animal_ids().size() == 1,
+		first_id != "" and second_id == "" and sim.animals.get_all_animal_ids().size() == 1,
 		"place_chicken() refuses once the coop is at capacity"
 	)
 
 func test_feed_and_water_reset_hunger_and_thirst() -> void:
 	var sim := _make_sim_with_chicken()
-	sim.build_coop()
-	sim.buy_chicken(1)
-	var id := sim.place_chicken()
-	sim.get_animal(id).hunger = 10.0
-	sim.get_animal(id).thirst = 10.0
-	sim.feed_animal(id)
-	sim.water_animal(id)
-	var animal := sim.get_animal(id)
+	sim.animals.build_coop()
+	sim.animals.buy_chicken(1)
+	var id := sim.animals.place_chicken()
+	sim.animals.get_animal(id).hunger = 10.0
+	sim.animals.get_animal(id).thirst = 10.0
+	sim.animals.feed_animal(id)
+	sim.animals.water_animal(id)
+	var animal := sim.animals.get_animal(id)
 	_check(
 		animal.hunger == 100.0 and animal.thirst == 100.0 and animal.fed_today and animal.watered_today,
 		"feed_animal()/water_animal() reset hunger/thirst and mark the day as cared-for"
@@ -475,37 +475,37 @@ func test_feed_and_water_reset_hunger_and_thirst() -> void:
 
 func test_unfed_animal_loses_hunger_on_advance_day() -> void:
 	var sim := _make_sim_with_chicken()
-	sim.build_coop()
-	sim.buy_chicken(1)
-	var id := sim.place_chicken()
-	var chicken_data := sim.get_animal_data(AnimalData.Species.CHICKEN)
+	sim.animals.build_coop()
+	sim.animals.buy_chicken(1)
+	var id := sim.animals.place_chicken()
+	var chicken_data := sim.animals.get_animal_data(AnimalData.Species.CHICKEN)
 	sim.advance_day() # not fed/watered today
 	_check(
-		sim.get_animal(id).hunger == 100.0 - chicken_data.hunger_decay_per_day,
+		sim.animals.get_animal(id).hunger == 100.0 - chicken_data.hunger_decay_per_day,
 		"advance_day() decays hunger for an animal that wasn't fed"
 	)
 
 func test_fed_animal_keeps_care_streak() -> void:
 	var sim := _make_sim_with_chicken()
-	sim.build_coop()
-	sim.buy_chicken(1)
-	var id := sim.place_chicken()
-	sim.feed_animal(id)
-	sim.water_animal(id)
+	sim.animals.build_coop()
+	sim.animals.buy_chicken(1)
+	var id := sim.animals.place_chicken()
+	sim.animals.feed_animal(id)
+	sim.animals.water_animal(id)
 	sim.advance_day()
-	_check(sim.get_animal(id).days_well_cared == 1, "advance_day() extends the well-cared streak when fed and watered")
+	_check(sim.animals.get_animal(id).days_well_cared == 1, "advance_day() extends the well-cared streak when fed and watered")
 
 func test_product_ready_signal_fires_after_cycle() -> void:
 	var sim := _make_sim_with_chicken()
-	sim.build_coop()
-	sim.buy_chicken(1)
-	var id := sim.place_chicken()
-	var chicken_data := sim.get_animal_data(AnimalData.Species.CHICKEN)
+	sim.animals.build_coop()
+	sim.animals.buy_chicken(1)
+	var id := sim.animals.place_chicken()
+	var chicken_data := sim.animals.get_animal_data(AnimalData.Species.CHICKEN)
 	var received: Array = []
 	sim.product_ready.connect(func(animal_id, product_id): received.append([animal_id, product_id]))
 	for i in chicken_data.product_cycle_days:
-		sim.feed_animal(id)
-		sim.water_animal(id)
+		sim.animals.feed_animal(id)
+		sim.animals.water_animal(id)
 		sim.advance_day()
 	_check(
 		received.size() == 1 and received[0][0] == id and received[0][1] == "egg",
@@ -514,39 +514,39 @@ func test_product_ready_signal_fires_after_cycle() -> void:
 
 func test_breeding_creates_offspring_when_guaranteed() -> void:
 	var sim := _make_sim_with_chicken(1.0) # force the roll to always succeed
-	sim.build_coop()
+	sim.animals.build_coop()
 	sim.state.money = 100000
-	sim.buy_chicken(2)
-	sim.place_chicken()
-	sim.place_chicken()
-	var chicken_data := sim.get_animal_data(AnimalData.Species.CHICKEN)
+	sim.animals.buy_chicken(2)
+	sim.animals.place_chicken()
+	sim.animals.place_chicken()
+	var chicken_data := sim.animals.get_animal_data(AnimalData.Species.CHICKEN)
 	for i in chicken_data.breeding_days_required:
-		for id in sim.get_all_animal_ids():
-			sim.feed_animal(id)
-			sim.water_animal(id)
+		for id in sim.animals.get_all_animal_ids():
+			sim.animals.feed_animal(id)
+			sim.animals.water_animal(id)
 		sim.advance_day()
-	_check(sim.get_all_animal_ids().size() == 3, "two well-cared adults breed a third chicken when the roll always succeeds")
+	_check(sim.animals.get_all_animal_ids().size() == 3, "two well-cared adults breed a third chicken when the roll always succeeds")
 
 func test_no_breeding_when_chance_is_zero() -> void:
 	var sim := _make_sim_with_chicken(0.0)
-	sim.build_coop()
+	sim.animals.build_coop()
 	sim.state.money = 100000
-	sim.buy_chicken(2)
-	sim.place_chicken()
-	sim.place_chicken()
-	var chicken_data := sim.get_animal_data(AnimalData.Species.CHICKEN)
+	sim.animals.buy_chicken(2)
+	sim.animals.place_chicken()
+	sim.animals.place_chicken()
+	var chicken_data := sim.animals.get_animal_data(AnimalData.Species.CHICKEN)
 	for i in chicken_data.breeding_days_required:
-		for id in sim.get_all_animal_ids():
-			sim.feed_animal(id)
-			sim.water_animal(id)
+		for id in sim.animals.get_all_animal_ids():
+			sim.animals.feed_animal(id)
+			sim.animals.water_animal(id)
 		sim.advance_day()
-	_check(sim.get_all_animal_ids().size() == 2, "no breeding happens when breeding_chance is 0")
+	_check(sim.animals.get_all_animal_ids().size() == 2, "no breeding happens when breeding_chance is 0")
 
 func test_sell_item_generic_path() -> void:
 	var sim := _make_sim_with_chicken()
 	sim.state.add_inventory("egg", 3)
 	var money_before := sim.state.money
-	var ok := sim.sell_item("egg", 6, 2)
+	var ok := sim.market.sell_item("egg", 6, 2)
 	_check(
 		ok and sim.state.money == money_before + 12 and sim.state.get_inventory_count("egg") == 1,
 		"sell_item() sells a non-crop product at the given unit price"
@@ -554,10 +554,10 @@ func test_sell_item_generic_path() -> void:
 
 func test_animal_save_load_roundtrip() -> void:
 	var sim := _make_sim_with_chicken()
-	sim.build_coop()
-	sim.buy_chicken(1)
-	var id := sim.place_chicken()
-	sim.feed_animal(id)
+	sim.animals.build_coop()
+	sim.animals.buy_chicken(1)
+	var id := sim.animals.place_chicken()
+	sim.animals.feed_animal(id)
 	sim.advance_day()
 
 	var data := sim.to_save_data()
@@ -566,7 +566,7 @@ func test_animal_save_load_roundtrip() -> void:
 	var fresh_sim := _make_sim_with_chicken()
 	fresh_sim.load_save_data(data)
 
-	var animal := fresh_sim.get_animal(id)
+	var animal := fresh_sim.animals.get_animal(id)
 	_check(
 		fresh_sim.state.has_coop
 		and animal != null
@@ -577,19 +577,19 @@ func test_animal_save_load_roundtrip() -> void:
 
 func test_expand_grid_adds_new_plots() -> void:
 	var sim := _make_sim() # starts at 4x4 = 16 plots
-	sim.expand_grid(6, 4)
+	sim.fields.expand_grid(6, 4)
 	_check(
-		sim.grid_width == 6 and sim.grid_height == 4 and sim.get_all_plot_ids().size() == 24,
+		sim.fields.grid_width == 6 and sim.fields.grid_height == 4 and sim.fields.get_all_plot_ids().size() == 24,
 		"expand_grid() grows the grid and adds exactly the missing plots"
 	)
 
 func test_expand_grid_keeps_existing_plots_intact() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
-	sim.expand_grid(6, 6)
-	var plot := sim.get_plot(0)
+	sim.fields.plant(0, "corn")
+	sim.fields.expand_grid(6, 6)
+	var plot := sim.fields.get_plot(0)
 	_check(
 		plot.tilled and plot.crop != null and plot.crop.crop_id == "corn",
 		"expand_grid() never touches plots that already existed"
@@ -597,41 +597,41 @@ func test_expand_grid_keeps_existing_plots_intact() -> void:
 
 func test_add_tile_creates_a_plot() -> void:
 	var sim := _make_sim()
-	var plot_id := sim.add_tile(10, 10)
+	var plot_id := sim.fields.add_tile(10, 10)
 	_check(
-		plot_id != -1 and sim.get_plot_id_at(10, 10) == plot_id and sim.get_plot_position(plot_id) == Vector2i(10, 10),
+		plot_id != -1 and sim.fields.get_plot_id_at(10, 10) == plot_id and sim.fields.get_plot_position(plot_id) == Vector2i(10, 10),
 		"add_tile() creates a plot at an arbitrary position, independent of grid_width"
 	)
 
 func test_add_tile_is_noop_if_already_occupied() -> void:
 	var sim := _make_sim()
-	var second_attempt := sim.add_tile(0, 0) # (0,0) already exists from the initial 4x4 grid
+	var second_attempt := sim.fields.add_tile(0, 0) # (0,0) already exists from the initial 4x4 grid
 	_check(second_attempt == -1, "add_tile() refuses to overwrite an existing plot")
 
 func test_remove_tile_deletes_the_plot() -> void:
 	var sim := _make_sim()
-	var ok := sim.remove_tile(0, 0)
+	var ok := sim.fields.remove_tile(0, 0)
 	_check(
-		ok and sim.get_plot_id_at(0, 0) == -1 and sim.get_all_plot_ids().size() == 15,
+		ok and sim.fields.get_plot_id_at(0, 0) == -1 and sim.fields.get_all_plot_ids().size() == 15,
 		"remove_tile() deletes the plot at that position"
 	)
 
 func test_remove_tile_discards_growing_crop() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
-	var ok := sim.remove_tile(0, 0)
-	_check(ok and sim.get_plot(0) == null, "remove_tile() removes the plot even if a crop is growing on it")
+	sim.fields.plant(0, "corn")
+	var ok := sim.fields.remove_tile(0, 0)
+	_check(ok and sim.fields.get_plot(0) == null, "remove_tile() removes the plot even if a crop is growing on it")
 
 func test_clear_tile_resets_without_removing() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
-	var ok := sim.clear_tile(0, 0)
+	sim.fields.plant(0, "corn")
+	var ok := sim.fields.clear_tile(0, 0)
 	_check(
-		ok and sim.get_plot(0) != null and not sim.get_plot(0).tilled and sim.get_plot(0).crop == null,
+		ok and sim.fields.get_plot(0) != null and not sim.fields.get_plot(0).tilled and sim.fields.get_plot(0).crop == null,
 		"clear_tile() resets a plot to empty without removing it from the grid"
 	)
 
@@ -642,8 +642,8 @@ func test_plot_added_and_removed_signals_fire() -> void:
 	sim.plot_added.connect(func(plot_id): added_ids.append(plot_id))
 	sim.plot_removed.connect(func(plot_id): removed_ids.append(plot_id))
 
-	var new_id := sim.add_tile(20, 20)
-	sim.remove_tile(0, 0)
+	var new_id := sim.fields.add_tile(20, 20)
+	sim.fields.remove_tile(0, 0)
 
 	_check(
 		added_ids == [new_id] and removed_ids.size() == 1,
@@ -656,9 +656,9 @@ func test_plot_added_and_removed_signals_fire() -> void:
 ## position re-derived from a width that may have changed.
 func test_grid_survives_resize_and_save_load_roundtrip() -> void:
 	var sim := _make_sim()
-	sim.expand_grid(6, 4) # 4x4 -> 6x4, adds a new column (valid x: 0-5)
-	sim.remove_tile(1, 1) # punch a hole
-	var far_plot_id := sim.add_tile(6, 0) # one column beyond the expanded grid
+	sim.fields.expand_grid(6, 4) # 4x4 -> 6x4, adds a new column (valid x: 0-5)
+	sim.fields.remove_tile(1, 1) # punch a hole
+	var far_plot_id := sim.fields.add_tile(6, 0) # one column beyond the expanded grid
 
 	var data := sim.to_save_data()
 	data = JSON.parse_string(JSON.stringify(data))
@@ -667,9 +667,9 @@ func test_grid_survives_resize_and_save_load_roundtrip() -> void:
 	fresh_sim.load_save_data(data)
 
 	_check(
-		fresh_sim.get_plot_id_at(1, 1) == -1
-		and fresh_sim.get_plot_position(far_plot_id) == Vector2i(6, 0)
-		and fresh_sim.get_all_plot_ids().size() == sim.get_all_plot_ids().size(),
+		fresh_sim.fields.get_plot_id_at(1, 1) == -1
+		and fresh_sim.fields.get_plot_position(far_plot_id) == Vector2i(6, 0)
+		and fresh_sim.fields.get_all_plot_ids().size() == sim.fields.get_all_plot_ids().size(),
 		"a resized grid with a hole in it round-trips through save/load at the correct positions"
 	)
 
@@ -681,7 +681,7 @@ func test_buy_zone_unlocks_all_its_tiles() -> void:
 
 	var all_present := true
 	for coordinates: Vector2i in farm_land_manager.get_zone_cells("zone_east"):
-		if sim.get_plot_id_at(coordinates.x, coordinates.y) == -1:
+		if sim.fields.get_plot_id_at(coordinates.x, coordinates.y) == -1:
 			all_present = false
 			break
 	_check(
@@ -740,9 +740,9 @@ func test_buy_progressive_patch_unlocks_next_tiles_in_order() -> void:
 	# The field is 8 wide, so the 9th tile (index 8) wraps into row y=10.
 	_check(
 		ok and farm_land_manager.get_progressive_unlocked_count() == 9
-		and sim.get_plot_id_at(7, 9) != -1
-		and sim.get_plot_id_at(0, 10) != -1
-		and sim.get_plot_id_at(1, 10) == -1,
+		and sim.fields.get_plot_id_at(7, 9) != -1
+		and sim.fields.get_plot_id_at(0, 10) != -1
+		and sim.fields.get_plot_id_at(1, 10) == -1,
 		"buy_progressive_patch() unlocks exactly patch_size tiles from the cursor, wrapping rows in fixed order"
 	)
 
@@ -756,8 +756,8 @@ func test_buy_progressive_patch_second_purchase_continues_the_sequence() -> void
 
 	_check(
 		farm_land_manager.get_progressive_unlocked_count() == 2
-		and sim.get_plot_id_at(0, 9) != -1
-		and sim.get_plot_id_at(1, 9) != -1,
+		and sim.fields.get_plot_id_at(0, 9) != -1
+		and sim.fields.get_plot_id_at(1, 9) != -1,
 		"buying two single tiles unlocks the next two in sequence, never re-unlocking the same one"
 	)
 
@@ -803,19 +803,19 @@ func test_zone_state_save_load_roundtrip() -> void:
 	_check(
 		fresh_farm_land_manager.is_zone_unlocked("zone_east")
 		and fresh_farm_land_manager.get_progressive_unlocked_count() == 9
-		and fresh_sim.get_plot_id_at(0, 9) != -1,
+		and fresh_sim.fields.get_plot_id_at(0, 9) != -1,
 		"zone unlock state and progressive tile count survive a save/load roundtrip"
 	)
 
 func test_starter_field_registration_adds_its_plots() -> void:
 	var sim := _make_sim()
 	var farm_land_manager := _make_farm_land_manager(sim)
-	var plots_before := sim.get_all_plot_ids().size()
+	var plots_before := sim.fields.get_all_plot_ids().size()
 
 	farm_land_manager.register_field(FarmField.Kind.STARTER, _rect_cells(Vector2i(20, 20), Vector2i(2, 2)))
 
 	_check(
-		sim.get_all_plot_ids().size() == plots_before + 4 and sim.get_plot_id_at(21, 21) != -1,
+		sim.fields.get_all_plot_ids().size() == plots_before + 4 and sim.fields.get_plot_id_at(21, 21) != -1,
 		"registering a STARTER field gives the player all its cells, no purchase needed"
 	)
 
@@ -826,19 +826,19 @@ func test_registering_an_owned_zone_restores_missing_plots() -> void:
 	_make_farm_land_manager(sim)
 
 	_check(
-		sim.get_plot_id_at(EAST_ORIGIN.x, EAST_ORIGIN.y) != -1
-		and sim.get_plot_id_at(EAST_ORIGIN.x + EAST_SIZE.x - 1, EAST_ORIGIN.y + EAST_SIZE.y - 1) != -1,
+		sim.fields.get_plot_id_at(EAST_ORIGIN.x, EAST_ORIGIN.y) != -1
+		and sim.fields.get_plot_id_at(EAST_ORIGIN.x + EAST_SIZE.x - 1, EAST_ORIGIN.y + EAST_SIZE.y - 1) != -1,
 		"registering an already-bought zone adds any of its cells that have no plot yet"
 	)
 
 func test_registering_a_locked_zone_adds_nothing() -> void:
 	var sim := _make_sim()
-	var plots_before := sim.get_all_plot_ids().size()
+	var plots_before := sim.fields.get_all_plot_ids().size()
 
 	_make_farm_land_manager(sim)
 
 	_check(
-		sim.get_all_plot_ids().size() == plots_before and sim.get_plot_id_at(EAST_ORIGIN.x, EAST_ORIGIN.y) == -1,
+		sim.fields.get_all_plot_ids().size() == plots_before and sim.fields.get_plot_id_at(EAST_ORIGIN.x, EAST_ORIGIN.y) == -1,
 		"registering zones that aren't bought yet creates no plot"
 	)
 
@@ -849,92 +849,92 @@ func test_progressive_registration_restores_bought_cells_only() -> void:
 	_make_farm_land_manager(sim)
 
 	_check(
-		sim.get_plot_id_at(2, 9) != -1 and sim.get_plot_id_at(3, 9) == -1,
+		sim.fields.get_plot_id_at(2, 9) != -1 and sim.fields.get_plot_id_at(3, 9) == -1,
 		"registering the progressive field restores exactly its first bought cells, row by row"
 	)
 
 func test_tree_discovered_in_season_starts_ripe() -> void:
 	var sim := _make_sim_with_mango() # day 1: Asara
-	sim.register_tree(MANGO_TREE_ID, "mango_tree")
-	_check(sim.can_harvest_tree(MANGO_TREE_ID), "a mango tree first seen in Asara starts with ripe fruit")
+	sim.trees.register_tree(MANGO_TREE_ID, "mango_tree")
+	_check(sim.trees.can_harvest_tree(MANGO_TREE_ID), "a mango tree first seen in Asara starts with ripe fruit")
 
 func test_tree_discovered_out_of_season_starts_bare() -> void:
 	var sim := _make_sim_with_mango()
 	sim.state.clock.current_day = 31 # Asotry
-	sim.register_tree(MANGO_TREE_ID, "mango_tree")
+	sim.trees.register_tree(MANGO_TREE_ID, "mango_tree")
 	_check(
-		not sim.can_harvest_tree(MANGO_TREE_ID) and sim.get_tree_days_until_fruit(MANGO_TREE_ID) == -1,
+		not sim.trees.can_harvest_tree(MANGO_TREE_ID) and sim.trees.get_tree_days_until_fruit(MANGO_TREE_ID) == -1,
 		"a mango tree first seen in Asotry has no fruit and none coming this season"
 	)
 
 func test_harvest_tree_adds_fruit_and_resets() -> void:
 	var sim := _make_sim_with_mango()
-	sim.register_tree(MANGO_TREE_ID, "mango_tree")
-	var quantity := sim.harvest_tree(MANGO_TREE_ID)
+	sim.trees.register_tree(MANGO_TREE_ID, "mango_tree")
+	var quantity := sim.trees.harvest_tree(MANGO_TREE_ID)
 	_check(
 		quantity >= 2 and quantity <= 4
 		and sim.state.get_inventory_count("mango") == quantity
-		and not sim.can_harvest_tree(MANGO_TREE_ID)
-		and sim.harvest_tree(MANGO_TREE_ID) == 0,
+		and not sim.trees.can_harvest_tree(MANGO_TREE_ID)
+		and sim.trees.harvest_tree(MANGO_TREE_ID) == 0,
 		"picking a ripe tree adds 2-4 mangoes, then it's bare until the next batch"
 	)
 
 func test_tree_ripens_after_its_cycle_in_season() -> void:
 	var sim := _make_sim_with_mango()
-	sim.register_tree(MANGO_TREE_ID, "mango_tree")
-	sim.harvest_tree(MANGO_TREE_ID)
+	sim.trees.register_tree(MANGO_TREE_ID, "mango_tree")
+	sim.trees.harvest_tree(MANGO_TREE_ID)
 	for i in 3:
 		sim.advance_day()
-	var ripe_after_3 := sim.can_harvest_tree(MANGO_TREE_ID)
-	var days_left := sim.get_tree_days_until_fruit(MANGO_TREE_ID)
+	var ripe_after_3 := sim.trees.can_harvest_tree(MANGO_TREE_ID)
+	var days_left := sim.trees.get_tree_days_until_fruit(MANGO_TREE_ID)
 	sim.advance_day()
 	_check(
-		not ripe_after_3 and days_left == 1 and sim.can_harvest_tree(MANGO_TREE_ID),
+		not ripe_after_3 and days_left == 1 and sim.trees.can_harvest_tree(MANGO_TREE_ID),
 		"a picked mango tree is ripe again exactly fruit_cycle_days (4) days later"
 	)
 
 func test_tree_fruit_rots_at_season_end_and_waits_for_next_season() -> void:
 	var sim := _make_sim_with_mango()
 	sim.state.clock.current_day = 29
-	sim.register_tree(MANGO_TREE_ID, "mango_tree") # ripe, not picked
+	sim.trees.register_tree(MANGO_TREE_ID, "mango_tree") # ripe, not picked
 	sim.advance_day() # -> day 30, last day of Asara
-	var still_ripe_on_last_day := sim.can_harvest_tree(MANGO_TREE_ID)
+	var still_ripe_on_last_day := sim.trees.can_harvest_tree(MANGO_TREE_ID)
 	sim.advance_day() # -> day 31, Asotry
-	var rotted := not sim.can_harvest_tree(MANGO_TREE_ID)
+	var rotted := not sim.trees.can_harvest_tree(MANGO_TREE_ID)
 	for i in 30:
 		sim.advance_day() # all of Asotry -> day 61, Asara again
-	var bare_at_season_start := not sim.can_harvest_tree(MANGO_TREE_ID)
+	var bare_at_season_start := not sim.trees.can_harvest_tree(MANGO_TREE_ID)
 	for i in 4:
 		sim.advance_day()
 	_check(
-		still_ripe_on_last_day and rotted and bare_at_season_start and sim.can_harvest_tree(MANGO_TREE_ID),
+		still_ripe_on_last_day and rotted and bare_at_season_start and sim.trees.can_harvest_tree(MANGO_TREE_ID),
 		"unpicked mangoes rot when Asara ends, nothing grows in Asotry, a new batch ripens 4 days into the next Asara"
 	)
 
 func test_decorative_or_unknown_trees_are_not_registered() -> void:
 	var sim := _make_sim_with_mango()
 	_check(
-		not sim.register_tree("village:Decor", "decor_tree")
-		and not sim.register_tree("village:Unknown", "baobab")
+		not sim.trees.register_tree("village:Decor", "decor_tree")
+		and not sim.trees.register_tree("village:Unknown", "baobab")
 		and sim.state.trees.is_empty(),
 		"fruitless or unregistered species are never tracked by the simulation"
 	)
 
 func test_tree_save_load_roundtrip() -> void:
 	var sim := _make_sim_with_mango()
-	sim.register_tree(MANGO_TREE_ID, "mango_tree")
-	sim.harvest_tree(MANGO_TREE_ID)
+	sim.trees.register_tree(MANGO_TREE_ID, "mango_tree")
+	sim.trees.harvest_tree(MANGO_TREE_ID)
 	sim.advance_day()
 	var data := sim.to_save_data()
 	data = JSON.parse_string(JSON.stringify(data))
 
 	var fresh_sim := _make_sim_with_mango()
 	fresh_sim.load_save_data(data)
-	var tree := fresh_sim.get_tree_state(MANGO_TREE_ID)
+	var tree := fresh_sim.trees.get_tree_state(MANGO_TREE_ID)
 	# Registering again (the zone loads after the save) must keep the saved state.
-	fresh_sim.register_tree(MANGO_TREE_ID, "mango_tree")
+	fresh_sim.trees.register_tree(MANGO_TREE_ID, "mango_tree")
 	_check(
-		tree != null and tree == fresh_sim.get_tree_state(MANGO_TREE_ID)
+		tree != null and tree == fresh_sim.trees.get_tree_state(MANGO_TREE_ID)
 		and not tree.fruit_ready and tree.days_growing == 1,
 		"tree ripeness survives a save/load, and re-registering on zone load keeps it"
 	)
@@ -944,37 +944,37 @@ func _make_sim_with_paddy() -> FarmSimulation:
 	var corn: CropData = load("res://data/crops/corn.tres")
 	var rice: CropData = load("res://data/crops/rice.tres")
 	var sim := FarmSimulation.new(4, 4, {"corn": corn, "rice": rice})
-	sim.set_tile_flooded(0, 0, true)
+	sim.fields.set_tile_flooded(0, 0, true)
 	sim.rain_chance = {} # deterministic: no surprise rain
 	return sim
 
 func test_paddy_plots_grow_without_watering() -> void:
 	var sim := _make_sim_with_paddy()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("rice_seed", 1)
-	sim.plant(0, "rice")
+	sim.fields.plant(0, "rice")
 	sim.advance_day()
 	sim.advance_day()
-	var crop := sim.get_plot(0).crop
+	var crop := sim.fields.get_plot(0).crop
 	_check(crop.age == 2 and crop.days_watered == 2, "a paddy crop grows every day without the watering can")
 
 func test_paddy_only_takes_paddy_crops() -> void:
 	var sim := _make_sim_with_paddy()
-	sim.till(0)
-	sim.till(1)
+	sim.fields.till(0)
+	sim.fields.till(1)
 	sim.state.add_inventory("corn_seed", 1)
 	sim.state.add_inventory("rice_seed", 1)
 	_check(
-		not sim.can_plant(0, "corn") and sim.can_plant(0, "rice") and sim.can_plant(1, "rice") and sim.can_plant(1, "corn"),
+		not sim.fields.can_plant(0, "corn") and sim.fields.can_plant(0, "rice") and sim.fields.can_plant(1, "rice") and sim.fields.can_plant(1, "corn"),
 		"a paddy only takes rice; dry land takes rice (upland rice) and everything else"
 	)
 
 func test_paddy_cannot_be_watered() -> void:
 	var sim := _make_sim_with_paddy()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("rice_seed", 1)
-	sim.plant(0, "rice")
-	_check(not sim.can_water(0) and not sim.water(0), "the watering can does nothing on a paddy")
+	sim.fields.plant(0, "rice")
+	_check(not sim.fields.can_water(0) and not sim.fields.water(0), "the watering can does nothing on a paddy")
 
 func test_paddy_flag_set_on_purchase_and_saved() -> void:
 	var sim := _make_sim()
@@ -984,13 +984,13 @@ func test_paddy_flag_set_on_purchase_and_saved() -> void:
 	farm_land_manager.register_field(FarmField.Kind.ZONE, cells, load("res://data/zones/upper_paddy.tres"), true)
 	sim.state.money = 1000000
 	farm_land_manager.buy_zone("upper_paddy")
-	var plot_id := sim.get_plot_id_at(100, 5)
+	var plot_id := sim.fields.get_plot_id_at(100, 5)
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var fresh_sim := _make_sim()
 	fresh_sim.load_save_data(data)
 	_check(
-		sim.get_plot(plot_id).flooded and fresh_sim.get_plot(fresh_sim.get_plot_id_at(100, 5)).flooded
-		and not fresh_sim.get_plot(fresh_sim.get_plot_id_at(0, 0)).flooded,
+		sim.fields.get_plot(plot_id).flooded and fresh_sim.fields.get_plot(fresh_sim.fields.get_plot_id_at(100, 5)).flooded
+		and not fresh_sim.fields.get_plot(fresh_sim.fields.get_plot_id_at(0, 0)).flooded,
 		"plots of a bought paddy field are flooded, and stay so after a save/load"
 	)
 	farm_land_manager.free()
@@ -1038,27 +1038,27 @@ func test_time_of_day_save_load_roundtrip() -> void:
 
 func test_zones_have_separate_plot_grids() -> void:
 	var sim := _make_sim()
-	var village := sim.add_tile(20, 20, "village")
-	var rice := sim.add_tile(20, 20, "rice_fields")
-	sim.till(rice)
+	var village := sim.fields.add_tile(20, 20, "village")
+	var rice := sim.fields.add_tile(20, 20, "rice_fields")
+	sim.fields.till(rice)
 	_check(
 		village != -1 and rice != -1 and village != rice
-		and sim.get_plot_id_at(20, 20, "village") == village
-		and sim.get_plot_id_at(20, 20, "rice_fields") == rice
-		and sim.get_plot_id_at(20, 20) == -1
-		and sim.get_plot_zone(rice) == "rice_fields"
-		and not sim.get_plot(village).tilled,
+		and sim.fields.get_plot_id_at(20, 20, "village") == village
+		and sim.fields.get_plot_id_at(20, 20, "rice_fields") == rice
+		and sim.fields.get_plot_id_at(20, 20) == -1
+		and sim.fields.get_plot_zone(rice) == "rice_fields"
+		and not sim.fields.get_plot(village).tilled,
 		"the same cell in two zones is two different plots"
 	)
 
 func test_zone_plots_save_load_roundtrip() -> void:
 	var sim := _make_sim()
-	sim.add_tile(2, 3, "rice_fields")
+	sim.fields.add_tile(2, 3, "rice_fields")
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var fresh_sim := _make_sim()
 	fresh_sim.load_save_data(data)
-	var plot_id := fresh_sim.get_plot_id_at(2, 3, "rice_fields")
-	_check(plot_id != -1 and fresh_sim.get_plot_zone(plot_id) == "rice_fields", "a plot's zone survives a save/load")
+	var plot_id := fresh_sim.fields.get_plot_id_at(2, 3, "rice_fields")
+	_check(plot_id != -1 and fresh_sim.fields.get_plot_zone(plot_id) == "rice_fields", "a plot's zone survives a save/load")
 
 func test_v5_save_migrates_plots_to_their_zone() -> void:
 	# A v5 save: one grid, the rice fields at x >= 100 (their old grid_offset).
@@ -1072,12 +1072,12 @@ func test_v5_save_migrates_plots_to_their_zone() -> void:
 	var sim := _make_sim()
 	sim.load_save_data(data)
 	# v6 put it in the village, v7 moved the village's fields to the farm.
-	var farm_plot := sim.get_plot_id_at(3, 4, "farm")
-	var rice_plot := sim.get_plot_id_at(4, 6, "rice_fields")
+	var farm_plot := sim.fields.get_plot_id_at(3, 4, "farm")
+	var rice_plot := sim.fields.get_plot_id_at(4, 6, "rice_fields")
 	_check(
-		farm_plot != -1 and sim.get_plot(farm_plot).tilled
-		and rice_plot != -1 and sim.get_plot(rice_plot).flooded
-		and sim.get_plot_id_at(104, 6, "rice_fields") == -1,
+		farm_plot != -1 and sim.fields.get_plot(farm_plot).tilled
+		and rice_plot != -1 and sim.fields.get_plot(rice_plot).flooded
+		and sim.fields.get_plot_id_at(104, 6, "rice_fields") == -1,
 		"migrating a v5 save puts each plot in its zone, the rice fields shifted back by their old offset"
 	)
 
@@ -1137,10 +1137,10 @@ func test_v7_save_moves_ids_to_english() -> void:
 
 func test_harvest_reports_quantity_and_penalties() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
-	sim.plant(0, "corn")
-	var crop := sim.get_plot(0).crop
+	sim.fields.plant(0, "corn")
+	var crop := sim.fields.get_plot(0).crop
 	crop.age = crop.growth_days
 	crop.days_total = crop.growth_days
 	crop.days_watered = 0 # never watered
@@ -1148,7 +1148,7 @@ func test_harvest_reports_quantity_and_penalties() -> void:
 	# Filled, not reassigned: a lambda can't reassign a local of its caller.
 	sim.crop_harvested.connect(func(plot_id, crop_id, quantity, under_watered, off_season): reported.append_array([plot_id, crop_id, quantity, under_watered, off_season]))
 	var before := sim.state.get_inventory_count("corn")
-	sim.harvest(0)
+	sim.fields.harvest(0)
 	_check(
 		reported.size() == 5 and reported[0] == 0 and reported[1] == "corn"
 		and reported[2] == sim.state.get_inventory_count("corn") - before
@@ -1158,19 +1158,19 @@ func test_harvest_reports_quantity_and_penalties() -> void:
 
 func test_rain_waters_tilled_plots_only() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.set_weather(FarmState.Weather.RAIN)
-	_check(sim.get_plot(0).watered and not sim.get_plot(1).watered and sim.is_raining(),
+	_check(sim.fields.get_plot(0).watered and not sim.fields.get_plot(1).watered and sim.is_raining(),
 		"rain waters tilled plots, and leaves fallow ones dry")
 
 func test_crops_grow_on_a_rainy_day_without_watering() -> void:
 	var sim := _make_sim()
-	sim.till(0)
+	sim.fields.till(0)
 	sim.state.add_inventory("corn_seed", 1)
 	sim.set_weather(FarmState.Weather.RAIN) # woke up to rain...
-	sim.plant(0, "corn") # ...and planted afterwards
+	sim.fields.plant(0, "corn") # ...and planted afterwards
 	sim.advance_day()
-	_check(sim.get_plot(0).crop.age == 1, "a crop planted on a rainy day grows without the watering can")
+	_check(sim.fields.get_plot(0).crop.age == 1, "a crop planted on a rainy day grows without the watering can")
 
 func test_weather_save_load_roundtrip() -> void:
 	var sim := _make_sim()
@@ -1233,151 +1233,151 @@ func test_villager_weekday_steps() -> void:
 func test_zebus_bought_grow_and_sell() -> void:
 	var sim := _make_sim()
 	sim.state.money = 100000
-	var zebu_id := sim.buy_zebu(0)
-	_check(zebu_id != "" and sim.state.money == 100000 - FarmSimulation.ZEBU_PRICE
-			and sim.get_zebu(zebu_id)["name"] == "Mena"
-			and sim.get_zebu_value(zebu_id) == FarmSimulation.ZEBU_CALF_VALUE,
+	var zebu_id := sim.zebus.buy_zebu(0)
+	_check(zebu_id != "" and sim.state.money == 100000 - ZebuRules.ZEBU_PRICE
+			and sim.zebus.get_zebu(zebu_id)["name"] == "Mena"
+			and sim.zebus.get_zebu_value(zebu_id) == ZebuRules.ZEBU_CALF_VALUE,
 		"a young zebu costs ZEBU_PRICE, is named after its coat, and is worth less than its price at first")
 	sim.advance_day() # trough empty: no growth
-	_check(sim.get_zebu(zebu_id)["grown_days"] == 0, "a zebu doesn't grow on a day its trough stayed empty")
-	_check(sim.fill_zebu_trough() and not sim.fill_zebu_trough(), "the trough is filled once a day")
+	_check(sim.zebus.get_zebu(zebu_id)["grown_days"] == 0, "a zebu doesn't grow on a day its trough stayed empty")
+	_check(sim.zebus.fill_zebu_trough() and not sim.zebus.fill_zebu_trough(), "the trough is filled once a day")
 	sim.advance_day()
-	_check(sim.get_zebu(zebu_id)["grown_days"] == 1 and not sim.is_zebu_trough_full(),
+	_check(sim.zebus.get_zebu(zebu_id)["grown_days"] == 1 and not sim.zebus.is_zebu_trough_full(),
 		"a full trough: a day of growth, and it's empty again the next morning")
 	sim.set_weather(FarmState.Weather.RAIN)
-	_check(sim.is_zebu_trough_full(), "the rain fills the trough")
-	for i in FarmSimulation.ZEBU_GROW_DAYS + 5:
-		sim.fill_zebu_trough()
+	_check(sim.zebus.is_zebu_trough_full(), "the rain fills the trough")
+	for i in ZebuRules.ZEBU_GROW_DAYS + 5:
+		sim.zebus.fill_zebu_trough()
 		sim.advance_day()
-	_check(sim.is_zebu_grown(zebu_id) and sim.get_zebu_value(zebu_id) == FarmSimulation.ZEBU_ADULT_VALUE,
+	_check(sim.zebus.is_zebu_grown(zebu_id) and sim.zebus.get_zebu_value(zebu_id) == ZebuRules.ZEBU_ADULT_VALUE,
 		"after ZEBU_GROW_DAYS days of care, a grown zebu is worth ZEBU_ADULT_VALUE")
 	var money := sim.state.money
-	_check(sim.sell_zebu(zebu_id) == FarmSimulation.ZEBU_ADULT_VALUE
-			and sim.state.money == money + FarmSimulation.ZEBU_ADULT_VALUE and sim.get_zebu_ids().is_empty(),
+	_check(sim.zebus.sell_zebu(zebu_id) == ZebuRules.ZEBU_ADULT_VALUE
+			and sim.state.money == money + ZebuRules.ZEBU_ADULT_VALUE and sim.zebus.get_zebu_ids().is_empty(),
 		"selling a zebu pays its worth and takes it out of the herd")
 
 func test_zebu_pen_capacity_and_money() -> void:
 	var sim := _make_sim()
-	sim.state.money = FarmSimulation.ZEBU_PRICE - 1
-	_check(sim.buy_zebu() == "", "no zebu without the money")
+	sim.state.money = ZebuRules.ZEBU_PRICE - 1
+	_check(sim.zebus.buy_zebu() == "", "no zebu without the money")
 	sim.state.money = 1000000
-	for i in sim.get_zebu_capacity():
-		sim.buy_zebu(0)
-	var names := sim.get_zebu_ids().map(func(zebu_id: String) -> String: return sim.get_zebu(zebu_id)["name"])
-	_check(sim.buy_zebu() == "" and sim.get_zebu_ids().size() == sim.get_zebu_capacity()
+	for i in sim.zebus.get_zebu_capacity():
+		sim.zebus.buy_zebu(0)
+	var names := sim.zebus.get_zebu_ids().map(func(zebu_id: String) -> String: return sim.zebus.get_zebu(zebu_id)["name"])
+	_check(sim.zebus.buy_zebu() == "" and sim.zebus.get_zebu_ids().size() == sim.zebus.get_zebu_capacity()
 			and names == ["Mena", "Mena 2", "Mena 3", "Mena 4"],
 		"the pen holds its capacity of zebus; same coats get numbered names")
-	_check(not _make_sim().fill_zebu_trough(), "no trough to fill without zebus")
+	_check(not _make_sim().zebus.fill_zebu_trough(), "no trough to fill without zebus")
 
 func test_zebus_save_load() -> void:
 	var sim := _make_sim()
 	sim.state.money = 100000
-	var zebu_id := sim.buy_zebu(3)
-	sim.fill_zebu_trough()
+	var zebu_id := sim.zebus.buy_zebu(3)
+	sim.zebus.fill_zebu_trough()
 	sim.advance_day()
-	sim.fill_zebu_trough()
+	sim.zebus.fill_zebu_trough()
 	var data: Dictionary = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var other := _make_sim()
 	other.load_save_data(data)
-	_check(other.get_zebu(zebu_id) == {"name": "Mainty", "coat": 3, "grown_days": 1}
-			and other.is_zebu_trough_full() and other.buy_zebu(3) == "zebu_1",
+	_check(other.zebus.get_zebu(zebu_id) == {"name": "Mainty", "coat": 3, "grown_days": 1}
+			and other.zebus.is_zebu_trough_full() and other.zebus.buy_zebu(3) == "zebu_1",
 		"zebus, their growth and today's trough survive a save/load")
 
 func test_ploughing_needs_a_strong_team() -> void:
 	var sim := _make_sim()
 	sim.state.money = 1000000
-	var plot_id: int = sim.get_all_plot_ids()[0]
-	sim.buy_zebu(0)
-	_check(sim.check_plough() == FarmSimulation.PloughCheck.NO_TEAM and not sim.plough(plot_id),
+	var plot_id: int = sim.fields.get_all_plot_ids()[0]
+	sim.zebus.buy_zebu(0)
+	_check(sim.zebus.check_plough() == ZebuRules.PloughCheck.NO_TEAM and not sim.zebus.plough(plot_id),
 		"no ploughing with a single zebu")
-	sim.buy_zebu(1)
-	_check(sim.check_plough() == FarmSimulation.PloughCheck.NO_TEAM,
+	sim.zebus.buy_zebu(1)
+	_check(sim.zebus.check_plough() == ZebuRules.PloughCheck.NO_TEAM,
 		"no ploughing with two calves: they must be strong enough")
-	for zebu_id: String in sim.get_zebu_ids():
-		sim.state.zebus[zebu_id]["grown_days"] = FarmSimulation.ZEBU_WORK_MIN_DAYS
-	_check(sim.check_plough() == FarmSimulation.PloughCheck.OK and sim.plough(plot_id)
-			and sim.get_plot(plot_id).tilled and sim.state.plough_cells_today == 1,
+	for zebu_id: String in sim.zebus.get_zebu_ids():
+		sim.state.zebus[zebu_id]["grown_days"] = ZebuRules.ZEBU_WORK_MIN_DAYS
+	_check(sim.zebus.check_plough() == ZebuRules.PloughCheck.OK and sim.zebus.plough(plot_id)
+			and sim.fields.get_plot(plot_id).tilled and sim.state.plough_cells_today == 1,
 		"two zebus of ZEBU_WORK_MIN_DAYS plough a plot")
-	_check(not sim.plough(plot_id), "an already tilled plot isn't ploughed again")
+	_check(not sim.zebus.plough(plot_id), "an already tilled plot isn't ploughed again")
 
 func test_ploughing_tires_the_team() -> void:
 	var sim := _make_sim()
 	sim.state.money = 1000000
 	for coat in 2:
-		var zebu_id := sim.buy_zebu(coat)
-		sim.state.zebus[zebu_id]["grown_days"] = FarmSimulation.ZEBU_GROW_DAYS
-	sim.state.plough_cells_today = FarmSimulation.PLOUGH_CELLS_PER_DAY
-	var plot_id: int = sim.get_all_plot_ids()[0]
-	_check(sim.check_plough() == FarmSimulation.PloughCheck.TIRED and not sim.plough(plot_id)
-			and sim.get_plough_cells_left() == 0,
+		var zebu_id := sim.zebus.buy_zebu(coat)
+		sim.state.zebus[zebu_id]["grown_days"] = ZebuRules.ZEBU_GROW_DAYS
+	sim.state.plough_cells_today = ZebuRules.PLOUGH_CELLS_PER_DAY
+	var plot_id: int = sim.fields.get_all_plot_ids()[0]
+	_check(sim.zebus.check_plough() == ZebuRules.PloughCheck.TIRED and not sim.zebus.plough(plot_id)
+			and sim.zebus.get_plough_cells_left() == 0,
 		"after PLOUGH_CELLS_PER_DAY plots the team is tired")
 	var data: Dictionary = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var other := _make_sim()
 	other.load_save_data(data)
-	_check(other.state.plough_cells_today == FarmSimulation.PLOUGH_CELLS_PER_DAY,
+	_check(other.state.plough_cells_today == ZebuRules.PLOUGH_CELLS_PER_DAY,
 		"the team's tiredness survives a save/load")
 	sim.advance_day()
-	_check(sim.check_plough() == FarmSimulation.PloughCheck.OK and sim.plough(plot_id),
+	_check(sim.zebus.check_plough() == ZebuRules.PloughCheck.OK and sim.zebus.plough(plot_id),
 		"rested the next morning")
 
 func test_zebus_make_manure() -> void:
 	var sim := _make_sim()
 	sim.state.money = 1000000
-	sim.buy_zebu(0)
-	sim.buy_zebu(1)
+	sim.zebus.buy_zebu(0)
+	sim.zebus.buy_zebu(1)
 	sim.advance_day() # trough empty
-	_check(sim.get_manure_pile() == 0, "no manure from zebus left without water and hay")
-	sim.fill_zebu_trough()
+	_check(sim.zebus.get_manure_pile() == 0, "no manure from zebus left without water and hay")
+	sim.zebus.fill_zebu_trough()
 	sim.advance_day()
-	_check(sim.get_manure_pile() == 2 * FarmSimulation.MANURE_PER_ZEBU,
+	_check(sim.zebus.get_manure_pile() == 2 * ZebuRules.MANURE_PER_ZEBU,
 		"each zebu cared for leaves its manure on the heap")
 	for i in 20:
-		sim.fill_zebu_trough()
+		sim.zebus.fill_zebu_trough()
 		sim.advance_day()
-	_check(sim.get_manure_pile() == sim.get_manure_max(), "the heap stops growing at its maximum")
+	_check(sim.zebus.get_manure_pile() == sim.zebus.get_manure_max(), "the heap stops growing at its maximum")
 	var data: Dictionary = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var other := _make_sim()
 	other.load_save_data(data)
-	_check(other.get_manure_pile() == sim.get_manure_max(), "the heap survives a save/load")
-	_check(sim.collect_manure() == sim.get_manure_max() and sim.get_manure_pile() == 0
-			and sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM) == sim.get_manure_max(),
+	_check(other.zebus.get_manure_pile() == sim.zebus.get_manure_max(), "the heap survives a save/load")
+	_check(sim.zebus.collect_manure() == sim.zebus.get_manure_max() and sim.zebus.get_manure_pile() == 0
+			and sim.state.get_inventory_count(ZebuRules.MANURE_ITEM) == sim.zebus.get_manure_max(),
 		"picking up the heap puts it all in the inventory")
 
 func test_manure_grows_a_bigger_harvest() -> void:
 	var sim := _make_sim()
-	var corn: CropData = sim.get_crop_data("corn")
-	var plain: int = sim.get_all_plot_ids()[0]
-	var manured: int = sim.get_all_plot_ids()[1]
-	_check(not sim.can_fertilize(manured), "no fertilizing without manure")
-	sim.state.add_inventory(FarmSimulation.MANURE_ITEM, 2)
-	_check(not sim.fertilize(manured), "fallow ground isn't fertilized: till it first")
-	sim.till(plain)
-	sim.till(manured)
-	_check(sim.fertilize(manured) and not sim.fertilize(manured)
-			and sim.state.get_inventory_count(FarmSimulation.MANURE_ITEM) == 1,
+	var corn: CropData = sim.fields.get_crop_data("corn")
+	var plain: int = sim.fields.get_all_plot_ids()[0]
+	var manured: int = sim.fields.get_all_plot_ids()[1]
+	_check(not sim.fields.can_fertilize(manured), "no fertilizing without manure")
+	sim.state.add_inventory(ZebuRules.MANURE_ITEM, 2)
+	_check(not sim.fields.fertilize(manured), "fallow ground isn't fertilized: till it first")
+	sim.fields.till(plain)
+	sim.fields.till(manured)
+	_check(sim.fields.fertilize(manured) and not sim.fields.fertilize(manured)
+			and sim.state.get_inventory_count(ZebuRules.MANURE_ITEM) == 1,
 		"a tilled plot takes manure once")
 	for plot_id in [plain, manured]:
 		sim.state.add_inventory("corn_seed", 1)
-		sim.plant(plot_id, "corn")
+		sim.fields.plant(plot_id, "corn")
 	for i in corn.growth_days:
-		sim.water(plain)
-		sim.water(manured)
+		sim.fields.water(plain)
+		sim.fields.water(manured)
 		sim.advance_day()
 	seed(7)
-	sim.harvest(plain)
+	sim.fields.harvest(plain)
 	var plain_yield := sim.state.get_inventory_count("corn")
 	seed(7)
-	sim.harvest(manured)
+	sim.fields.harvest(manured)
 	var manured_yield := sim.state.get_inventory_count("corn") - plain_yield
 	var data: Dictionary = JSON.parse_string(JSON.stringify(sim.to_save_data()))
-	_check(manured_yield == ceili(plain_yield * FarmSimulation.MANURE_YIELD_MULTIPLIER)
-			and not sim.get_plot(manured).fertilized,
+	_check(manured_yield == ceili(plain_yield * ZebuRules.MANURE_YIELD_MULTIPLIER)
+			and not sim.fields.get_plot(manured).fertilized,
 		"a fertilized plot's harvest is MANURE_YIELD_MULTIPLIER bigger, and uses the manure up")
-	sim.fertilize(plain)
+	sim.fields.fertilize(plain)
 	data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var other := _make_sim()
 	other.load_save_data(data)
-	_check(other.get_plot(plain).fertilized, "a plot's manure survives a save/load")
+	_check(other.fields.get_plot(plain).fertilized, "a plot's manure survives a save/load")
 
 func test_weekday_calendar() -> void:
 	var clock := GameClock.new()
@@ -1395,24 +1395,24 @@ func test_weekday_calendar() -> void:
 
 func _make_sim_with_neighbour_paddy() -> FarmSimulation:
 	var sim := _make_sim()
-	sim.register_neighbour_paddy("rice_fields:Paddy1", Vector2i(5, 4))
+	sim.neighbours.register_neighbour_paddy("rice_fields:Paddy1", Vector2i(5, 4))
 	return sim
 
 func test_neighbour_harvest_follows_the_calendar() -> void:
 	var sim := _make_sim_with_neighbour_paddy()
 	var clock := sim.state.clock
 	clock.current_day = 5
-	var young := sim.get_neighbour_rice_stage()
+	var young := sim.neighbours.get_neighbour_rice_stage()
 	clock.current_day = 24
-	var ripe := sim.get_neighbour_rice_stage()
-	var before := sim.get_neighbour_harvest_progress()
+	var ripe := sim.neighbours.get_neighbour_rice_stage()
+	var before := sim.neighbours.get_neighbour_harvest_progress()
 	clock.current_day = 27
 	clock.minute_of_day = 6 * 60 + 30
-	var mid := sim.get_neighbour_harvest_progress()
+	var mid := sim.neighbours.get_neighbour_harvest_progress()
 	clock.current_day = 29
-	var done := sim.get_neighbour_harvest_progress()
+	var done := sim.neighbours.get_neighbour_harvest_progress()
 	_check(young == 1 and ripe == 3 and before == 0.0 and absf(mid - 1.0 / 3.0) < 0.01 and done == 1.0
-			and not sim.is_neighbour_harvest_on(),
+			and not sim.neighbours.is_neighbour_harvest_on(),
 		"the neighbours' rice: planted out, ripe late in the season, cut over the harvest days")
 
 func test_helping_the_neighbours_harvest() -> void:
@@ -1420,30 +1420,30 @@ func test_helping_the_neighbours_harvest() -> void:
 	var paddy := "rice_fields:Paddy1"
 	var clock := sim.state.clock
 	clock.current_day = 20
-	var too_early := sim.help_neighbour_harvest(paddy, Vector2i(4, 3))
+	var too_early := sim.neighbours.help_neighbour_harvest(paddy, Vector2i(4, 3))
 	clock.current_day = 27
 	clock.minute_of_day = 6 * 60 + 30 # the farmers have cut the first third
-	var by_farmers := sim.help_neighbour_harvest(paddy, Vector2i(0, 0))
+	var by_farmers := sim.neighbours.help_neighbour_harvest(paddy, Vector2i(0, 0))
 	var seeds := sim.state.get_inventory_count("rice_seed")
-	var helped := sim.help_neighbour_harvest(paddy, Vector2i(4, 3))
-	var twice := sim.help_neighbour_harvest(paddy, Vector2i(4, 3))
-	var outside := sim.help_neighbour_harvest(paddy, Vector2i(9, 9))
+	var helped := sim.neighbours.help_neighbour_harvest(paddy, Vector2i(4, 3))
+	var twice := sim.neighbours.help_neighbour_harvest(paddy, Vector2i(4, 3))
+	var outside := sim.neighbours.help_neighbour_harvest(paddy, Vector2i(9, 9))
 	_check(too_early == 0 and by_farmers == 0 and helped == 1 and twice == 0 and outside == 0
 			and sim.state.get_inventory_count("rice_seed") == seeds + 1
-			and sim.is_neighbour_tuft_cut(paddy, Vector2i(4, 3)) and not sim.is_neighbour_tuft_cut(paddy, Vector2i(4, 2)),
+			and sim.neighbours.is_neighbour_tuft_cut(paddy, Vector2i(4, 3)) and not sim.neighbours.is_neighbour_tuft_cut(paddy, Vector2i(4, 2)),
 		"helping the neighbours: a standing tuft cut at harvest time earns seed rice, once")
 
 func test_neighbour_harvest_save_load_and_new_season() -> void:
 	var sim := _make_sim_with_neighbour_paddy()
 	var paddy := "rice_fields:Paddy1"
 	sim.state.clock.current_day = 26
-	sim.help_neighbour_harvest(paddy, Vector2i(4, 3))
+	sim.neighbours.help_neighbour_harvest(paddy, Vector2i(4, 3))
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var loaded := _make_sim_with_neighbour_paddy()
 	loaded.load_save_data(data)
-	var kept := loaded.is_neighbour_tuft_cut(paddy, Vector2i(4, 3))
+	var kept := loaded.neighbours.is_neighbour_tuft_cut(paddy, Vector2i(4, 3))
 	loaded.state.clock.current_day = 31 # the next season: replanted
-	_check(kept and not loaded.is_neighbour_tuft_cut(paddy, Vector2i(4, 3)) and loaded.get_neighbour_tufts_helped(paddy) == 0,
+	_check(kept and not loaded.neighbours.is_neighbour_tuft_cut(paddy, Vector2i(4, 3)) and loaded.neighbours.get_neighbour_tufts_helped(paddy) == 0,
 		"the tufts the player cut survive a save/load, and the next season starts afresh")
 
 ## A sim with corn (Asara), sweet potato (Asotry), cassava (all year) and
@@ -1454,7 +1454,7 @@ func _make_sim_for_orders() -> FarmSimulation:
 		crops[crop_id] = load("res://data/crops/%s.tres" % crop_id)
 	var sim := FarmSimulation.new(4, 4, crops)
 	sim.rain_chance = {}
-	sim.order_offer_chance = 1.0
+	sim.orders.order_offer_chance = 1.0
 	return sim
 
 func _order(item_id: String, quantity: int, unit_reward: int, days: int) -> OrderTemplate:
@@ -1472,80 +1472,80 @@ func test_orders_only_what_the_player_can_get() -> void:
 	var no_hens: Array[OrderTemplate] = [_order("egg", 2, 1000, 4)]
 	var too_slow: Array[OrderTemplate] = [_order("cassava", 4, 1500, 5)] # grows in 8 days
 	var fine: Array[OrderTemplate] = [_order("corn", 4, 1700, 7)]
-	sim.register_order_giver("a", dry_season_crop)
-	sim.register_order_giver("b", needs_paddy)
-	sim.register_order_giver("c", no_hens)
-	sim.register_order_giver("d", too_slow)
-	sim.register_order_giver("e", fine)
-	sim.refresh_order_offers()
-	_check(sim.is_order_offered("e") and not sim.is_order_offered("a") and not sim.is_order_offered("b")
-			and not sim.is_order_offered("c") and not sim.is_order_offered("d"),
+	sim.orders.register_order_giver("a", dry_season_crop)
+	sim.orders.register_order_giver("b", needs_paddy)
+	sim.orders.register_order_giver("c", no_hens)
+	sim.orders.register_order_giver("d", too_slow)
+	sim.orders.register_order_giver("e", fine)
+	sim.orders.refresh_order_offers()
+	_check(sim.orders.is_order_offered("e") and not sim.orders.is_order_offered("a") and not sim.orders.is_order_offered("b")
+			and not sim.orders.is_order_offered("c") and not sim.orders.is_order_offered("d"),
 		"orders: only offered when the player can get the items in time (in season, a paddy for rice, hens for eggs, time to grow)")
 
 func test_order_accept_and_deliver() -> void:
 	var sim := _make_sim_for_orders()
 	var templates: Array[OrderTemplate] = [_order("corn", 4, 1700, 7)]
-	sim.register_order_giver("ravao", templates)
-	sim.refresh_order_offers()
+	sim.orders.register_order_giver("ravao", templates)
+	sim.orders.refresh_order_offers()
 	var money := sim.state.money
-	var accepted := sim.accept_order("ravao")
-	var deadline: int = sim.get_order("ravao")["deadline"]
-	var early := sim.deliver_order("ravao") # nothing to give yet
+	var accepted := sim.orders.accept_order("ravao")
+	var deadline: int = sim.orders.get_order("ravao")["deadline"]
+	var early := sim.orders.deliver_order("ravao") # nothing to give yet
 	sim.state.add_inventory("corn", 5)
-	var paid := sim.deliver_order("ravao")
+	var paid := sim.orders.deliver_order("ravao")
 	_check(accepted and deadline == 7 and early == 0 and paid == 4 * 1700 and sim.state.money == money + paid
-			and sim.state.get_inventory_count("corn") == 1 and sim.get_order("ravao").is_empty()
-			and sim.state.order_cooldowns["ravao"] == 1 + FarmSimulation.ORDER_COOLDOWN_DAYS,
+			and sim.state.get_inventory_count("corn") == 1 and sim.orders.get_order("ravao").is_empty()
+			and sim.state.order_cooldowns["ravao"] == 1 + OrderRules.ORDER_COOLDOWN_DAYS,
 		"orders: accepted with 7 days to deliver, paid 1700 Ar a corn once the 4 are brought, then a pause")
 
 func test_orders_run_out_without_penalty() -> void:
 	var sim := _make_sim_for_orders()
 	var templates: Array[OrderTemplate] = [_order("corn", 4, 1700, 5)]
-	sim.register_order_giver("koto", templates)
-	sim.register_order_giver("mother", templates.duplicate())
-	sim.refresh_order_offers()
-	sim.accept_order("koto") # deadline: day 5
+	sim.orders.register_order_giver("koto", templates)
+	sim.orders.register_order_giver("mother", templates.duplicate())
+	sim.orders.refresh_order_offers()
+	sim.orders.accept_order("koto") # deadline: day 5
 	var expired := []
 	sim.order_expired.connect(func(id: String): expired.append(id))
 	var money := sim.state.money
 	sim.advance_day()
 	sim.advance_day() # day 3
-	var offer_gone := not sim.is_order_offered("mother") # offered day 1, not taken in 2 days
+	var offer_gone := not sim.orders.is_order_offered("mother") # offered day 1, not taken in 2 days
 	sim.advance_day()
 	sim.advance_day() # day 5: the last day
-	var still_on := sim.is_order_active("koto")
+	var still_on := sim.orders.is_order_active("koto")
 	sim.advance_day() # day 6
-	_check(still_on and offer_gone and not sim.is_order_active("koto") and expired == ["koto"] and sim.state.money == money,
+	_check(still_on and offer_gone and not sim.orders.is_order_active("koto") and expired == ["koto"] and sim.state.money == money,
 		"orders: an offer not taken goes after 2 days; an accepted one runs out after its last day, with nothing lost")
 
 func test_orders_at_most_three_at_once() -> void:
 	var sim := _make_sim_for_orders()
 	for id in ["a", "b", "c", "d"]:
 		var templates: Array[OrderTemplate] = [_order("corn", 2, 1700, 7)]
-		sim.register_order_giver(id, templates)
+		sim.orders.register_order_giver(id, templates)
 	var accepted := 0
 	for day in 3:
-		sim.refresh_order_offers()
+		sim.orders.refresh_order_offers()
 		for id in ["a", "b", "c", "d"]:
-			if sim.accept_order(id):
+			if sim.orders.accept_order(id):
 				accepted += 1
 		sim.state.order_roll_day = 0 # offer again
-	_check(accepted == FarmSimulation.ORDER_MAX_ACTIVE and sim.get_active_orders().size() == 3,
+	_check(accepted == OrderRules.ORDER_MAX_ACTIVE and sim.orders.get_active_orders().size() == 3,
 		"orders: at most 3 accepted at once")
 
 func test_orders_save_load() -> void:
 	var sim := _make_sim_for_orders()
 	var templates: Array[OrderTemplate] = [_order("corn", 4, 1700, 7)]
-	sim.register_order_giver("ravao", templates)
-	sim.refresh_order_offers()
-	sim.accept_order("ravao")
+	sim.orders.register_order_giver("ravao", templates)
+	sim.orders.refresh_order_offers()
+	sim.orders.accept_order("ravao")
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var loaded := _make_sim_for_orders()
-	loaded.register_order_giver("ravao", templates)
+	loaded.orders.register_order_giver("ravao", templates)
 	loaded.load_save_data(data)
-	var order := loaded.get_order("ravao")
-	_check(loaded.is_order_active("ravao") and order["quantity"] == 4 and order["reward"] == 6800
-			and loaded.get_order_template("ravao") == templates[0],
+	var order := loaded.orders.get_order("ravao")
+	_check(loaded.orders.is_order_active("ravao") and order["quantity"] == 4 and order["reward"] == 6800
+			and loaded.orders.get_order_template("ravao") == templates[0],
 		"orders: an accepted order survives a save/load")
 
 func _gift(hearts: int, item_id: String, quantity: int) -> FriendshipReward:
@@ -1557,51 +1557,51 @@ func _gift(hearts: int, item_id: String, quantity: int) -> FriendshipReward:
 
 func test_friendship_talking_counts_once_a_day() -> void:
 	var sim := _make_sim_for_orders()
-	var first := sim.talk_to("ravao")
-	var again := sim.talk_to("ravao")
-	var points_today := sim.get_friendship("ravao")
+	var first := sim.friendship.talk_to("ravao")
+	var again := sim.friendship.talk_to("ravao")
+	var points_today := sim.friendship.get_friendship("ravao")
 	sim.advance_day()
-	var tomorrow := sim.talk_to("ravao")
-	_check(first and not again and points_today == FarmSimulation.FRIENDSHIP_TALK and tomorrow
-			and sim.get_friendship("ravao") == 2 * FarmSimulation.FRIENDSHIP_TALK,
+	var tomorrow := sim.friendship.talk_to("ravao")
+	_check(first and not again and points_today == FriendshipRules.FRIENDSHIP_TALK and tomorrow
+			and sim.friendship.get_friendship("ravao") == 2 * FriendshipRules.FRIENDSHIP_TALK,
 		"friendship: talking to a villager counts once a day")
 
 func test_friendship_hearts_and_gifts() -> void:
 	var sim := _make_sim_for_orders()
 	var gifts: Array[FriendshipReward] = [_gift(2, "tomato_seed", 5)]
-	sim.register_friend("ravao", gifts)
+	sim.friendship.register_friend("ravao", gifts)
 	var levels := []
 	sim.friendship_level_up.connect(func(_id: String, hearts: int, reward: FriendshipReward): levels.append([hearts, reward != null]))
-	sim.add_friendship("ravao", 250) # 2 hearts at once
+	sim.friendship.add_friendship("ravao", 250) # 2 hearts at once
 	var seeds := sim.state.get_inventory_count("tomato_seed")
-	sim.add_friendship("ravao", 10000)
-	_check(levels.slice(0, 2) == [[1, false], [2, true]] and seeds == 5 and sim.get_hearts("ravao") == 5
-			and sim.get_friendship("ravao") == 500 and sim.get_heart_progress("ravao") == 1.0,
+	sim.friendship.add_friendship("ravao", 10000)
+	_check(levels.slice(0, 2) == [[1, false], [2, true]] and seeds == 5 and sim.friendship.get_hearts("ravao") == 5
+			and sim.friendship.get_friendship("ravao") == 500 and sim.friendship.get_heart_progress("ravao") == 1.0,
 		"friendship: a heart every 100 points up to 5, each heart reached once, its gift handed over")
 
 func test_friendship_better_order_price() -> void:
 	var sim := _make_sim_for_orders()
 	var templates: Array[OrderTemplate] = [_order("corn", 4, 1700, 7)]
-	sim.register_order_giver("ravao", templates)
-	sim.refresh_order_offers()
-	sim.accept_order("ravao")
+	sim.orders.register_order_giver("ravao", templates)
+	sim.orders.refresh_order_offers()
+	sim.orders.accept_order("ravao")
 	sim.state.add_inventory("corn", 4)
-	sim.add_friendship("ravao", 200) # 2 hearts: +10 %
-	var payment := sim.get_order_payment("ravao")
-	var before := sim.get_friendship("ravao")
-	var paid := sim.deliver_order("ravao")
+	sim.friendship.add_friendship("ravao", 200) # 2 hearts: +10 %
+	var payment := sim.orders.get_order_payment("ravao")
+	var before := sim.friendship.get_friendship("ravao")
+	var paid := sim.orders.deliver_order("ravao")
 	_check(payment == 6800 + 700 and paid == payment
-			and sim.get_friendship("ravao") == before + FarmSimulation.FRIENDSHIP_ORDER,
+			and sim.friendship.get_friendship("ravao") == before + FriendshipRules.FRIENDSHIP_ORDER,
 		"friendship: 5 % more on a friend's order per heart, and a delivered order brings you closer")
 
 func test_friendship_save_load() -> void:
 	var sim := _make_sim_for_orders()
-	sim.add_friendship("koto", 130)
-	sim.talk_to("neny_soa")
+	sim.friendship.add_friendship("koto", 130)
+	sim.friendship.talk_to("neny_soa")
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var loaded := _make_sim_for_orders()
 	loaded.load_save_data(data)
-	_check(loaded.get_friendship("koto") == 130 and loaded.get_hearts("koto") == 1 and not loaded.talk_to("neny_soa"),
+	_check(loaded.friendship.get_friendship("koto") == 130 and loaded.friendship.get_hearts("koto") == 1 and not loaded.friendship.talk_to("neny_soa"),
 		"friendship: points and today's talk survive a save/load")
 
 # --- Fara's school fees -------------------------------------------------------------
@@ -1611,7 +1611,7 @@ func _make_sim_for_school() -> FarmSimulation:
 	var rice: CropData = load("res://data/crops/rice.tres")
 	var sim: FarmSimulation = FarmSimulation.new(4, 4, {"corn": corn, "rice": rice})
 	sim.rain_chance = {}
-	sim.order_offer_chance = 0.0
+	sim.orders.order_offer_chance = 0.0
 	return sim
 
 func _advance_to_day(sim: FarmSimulation, day: int) -> void:
@@ -1623,70 +1623,70 @@ func test_school_fees_billed_a_week_before_the_season() -> void:
 	var billed := [0]
 	sim.school_fees_changed.connect(func(): billed[0] += 1)
 	_advance_to_day(sim, 23)
-	var before := sim.get_school_debt()
+	var before := sim.school.get_school_debt()
 	_advance_to_day(sim, 24)
-	_check(before == 0 and sim.get_school_debt() == FarmSimulation.SCHOOL_FEE and billed[0] == 1
-			and sim.get_school_days_left() == 14 and not sim.is_school_fees_overdue(),
+	_check(before == 0 and sim.school.get_school_debt() == SchoolRules.SCHOOL_FEE and billed[0] == 1
+			and sim.school.get_school_days_left() == 14 and not sim.school.is_school_fees_overdue(),
 		"school: the first season is paid; the next one's fees come a week before it starts, due a week into it")
 
 func test_school_fees_overdue_sends_fara_home() -> void:
 	var sim := _make_sim_for_school()
 	_advance_to_day(sim, 37)
-	var last_day := sim.get_school_days_left() == 1 and sim.get_conditions().is_empty()
+	var last_day := sim.school.get_school_days_left() == 1 and sim.get_conditions().is_empty()
 	_advance_to_day(sim, 38)
-	var overdue := sim.is_school_fees_overdue() 		and sim.get_conditions().has(FarmSimulation.CONDITION_SCHOOL_FEES_OVERDUE)
-	sim.state.money = FarmSimulation.SCHOOL_FEE
-	sim.pay_school_fees(FarmSimulation.SCHOOL_FEE)
-	_check(last_day and overdue and not sim.is_school_fees_overdue() and sim.get_conditions().is_empty(),
+	var overdue := sim.school.is_school_fees_overdue() 		and sim.get_conditions().has(SchoolRules.CONDITION_SCHOOL_FEES_OVERDUE)
+	sim.state.money = SchoolRules.SCHOOL_FEE
+	sim.school.pay_school_fees(SchoolRules.SCHOOL_FEE)
+	_check(last_day and overdue and not sim.school.is_school_fees_overdue() and sim.get_conditions().is_empty(),
 		"school: unpaid past the due day, Fara stays home - paying sends her back")
 
 func test_school_fees_paid_in_part() -> void:
 	var sim := _make_sim_for_school()
 	_advance_to_day(sim, 24)
 	sim.state.money = 3000
-	var paid := sim.pay_school_fees(FarmSimulation.SCHOOL_FEE)
-	var nothing_left := sim.pay_school_fees(FarmSimulation.SCHOOL_FEE)
+	var paid := sim.school.pay_school_fees(SchoolRules.SCHOOL_FEE)
+	var nothing_left := sim.school.pay_school_fees(SchoolRules.SCHOOL_FEE)
 	sim.state.money = 50000
-	var rest := sim.pay_school_fees(50000)
-	_check(paid == 3000 and nothing_left == 0 and rest == FarmSimulation.SCHOOL_FEE - 3000
-			and sim.state.money == 50000 - rest and not sim.is_school_fee_due(),
+	var rest := sim.school.pay_school_fees(50000)
+	_check(paid == 3000 and nothing_left == 0 and rest == SchoolRules.SCHOOL_FEE - 3000
+			and sim.state.money == 50000 - rest and not sim.school.is_school_fee_due(),
 		"school: fees can be paid in part, never more than owned or owed")
 
 func test_school_fees_paid_in_rice() -> void:
 	var sim := _make_sim_for_school()
 	_advance_to_day(sim, 24)
-	var price := sim.get_school_rice_price()
+	var price := sim.school.get_school_rice_price()
 	sim.state.add_inventory("rice", 5)
-	var given := sim.pay_school_fees_in_rice(10)
-	var full := given == 2 and sim.state.get_inventory_count("rice") == 3 and not sim.is_school_fee_due()
+	var given := sim.school.pay_school_fees_in_rice(10)
+	var full := given == 2 and sim.state.get_inventory_count("rice") == 3 and not sim.school.is_school_fee_due()
 	# Owing 7 000 Ar: two rice (10 000 Ar), 3 000 Ar back.
 	var other := _make_sim_for_school()
 	_advance_to_day(other, 24)
 	other.state.money = 3000
-	other.pay_school_fees(3000)
+	other.school.pay_school_fees(3000)
 	other.state.add_inventory("rice", 2)
 	var money_before := other.state.money
-	var given_other := other.pay_school_fees_in_rice(2)
-	_check(price == 5000 and full and given_other == 2 and not other.is_school_fee_due()
-			and other.state.money == money_before + 2 * price - (FarmSimulation.SCHOOL_FEE - 3000),
+	var given_other := other.school.pay_school_fees_in_rice(2)
+	_check(price == 5000 and full and given_other == 2 and not other.school.is_school_fee_due()
+			and other.state.money == money_before + 2 * price - (SchoolRules.SCHOOL_FEE - 3000),
 		"school: rice is taken at the weekly market's price, only what's needed, the change given back")
 
 func test_school_debt_adds_up_and_keeps_its_due_day() -> void:
 	var sim := _make_sim_for_school()
 	_advance_to_day(sim, 54)
-	_check(sim.get_school_debt() == 2 * FarmSimulation.SCHOOL_FEE and sim.state.school_due_day == 37
-			and sim.is_school_fees_overdue(),
+	_check(sim.school.get_school_debt() == 2 * SchoolRules.SCHOOL_FEE and sim.state.school_due_day == 37
+			and sim.school.is_school_fees_overdue(),
 		"school: an unpaid bill adds up with the next one, and keeps its due day")
 
 func test_school_fees_save_load() -> void:
 	var sim := _make_sim_for_school()
 	_advance_to_day(sim, 24)
 	sim.state.money = 4000
-	sim.pay_school_fees(4000)
+	sim.school.pay_school_fees(4000)
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var loaded := _make_sim_for_school()
 	loaded.load_save_data(data)
-	var same := loaded.get_school_debt() == FarmSimulation.SCHOOL_FEE - 4000 and loaded.state.school_due_day == 37 		and loaded.state.school_billed_season == 1
+	var same := loaded.school.get_school_debt() == SchoolRules.SCHOOL_FEE - 4000 and loaded.state.school_due_day == 37 		and loaded.state.school_billed_season == 1
 	# A save from before school fees, in the middle of the second season:
 	# that season counts as paid, the next bill comes as usual.
 	var old: Dictionary = data.duplicate(true)
@@ -1696,9 +1696,9 @@ func test_school_fees_save_load() -> void:
 	var from_old := _make_sim_for_school()
 	from_old.load_save_data(old)
 	from_old.advance_day()
-	var quiet := not from_old.is_school_fee_due()
+	var quiet := not from_old.school.is_school_fee_due()
 	_advance_to_day(from_old, 54)
-	_check(same and quiet and from_old.get_school_debt() == FarmSimulation.SCHOOL_FEE and not from_old.is_school_fees_overdue(),
+	_check(same and quiet and from_old.school.get_school_debt() == SchoolRules.SCHOOL_FEE and not from_old.school.is_school_fees_overdue(),
 		"school: the fees survive a save/load; an older save starts with this season paid")
 
 func test_villager_steps_on_conditions() -> void:
@@ -1722,7 +1722,7 @@ func _make_sim_for_cockfight() -> FarmSimulation:
 	var sim := _make_sim_for_school()
 	var roosters := FightingRoosterData.load_all()
 	for rooster_id: String in roosters:
-		sim.register_fighting_rooster(rooster_id, roosters[rooster_id])
+		sim.cockfight.register_fighting_rooster(rooster_id, roosters[rooster_id])
 	return sim
 
 ## Moves to the next Sunday (from a weekday), at `minute`.
@@ -1733,123 +1733,123 @@ func _to_sunday(sim: FarmSimulation, minute: int) -> void:
 
 func test_rooster_given_once() -> void:
 	var sim := _make_sim_for_cockfight()
-	var first := sim.adopt_rooster()
-	var second := sim.adopt_rooster("Autre")
-	_check(first and not second and sim.get_rooster()["name"] == FarmSimulation.ROOSTER_NAME
-			and sim.get_rooster_power() == 2 * FarmSimulation.ROOSTER_START_STAT,
+	var first := sim.cockfight.adopt_rooster()
+	var second := sim.cockfight.adopt_rooster("Autre")
+	_check(first and not second and sim.cockfight.get_rooster()["name"] == CockfightRules.ROOSTER_NAME
+			and sim.cockfight.get_rooster_power() == 2 * CockfightRules.ROOSTER_START_STAT,
 		"rooster: Rakoto's gift, one rooster at a time")
 
 func test_rooster_grows_with_care() -> void:
 	var sim := _make_sim_for_cockfight()
-	sim.adopt_rooster()
+	sim.cockfight.adopt_rooster()
 	sim.state.add_inventory("corn", 5)
 	sim.state.add_inventory("tomato", 5)
-	var refused := not sim.feed_rooster("tomato") and not sim.can_feed_rooster("rice")
-	sim.feed_rooster("corn")
-	sim.train_rooster()
-	var once := not sim.feed_rooster("corn") and not sim.train_rooster()
+	var refused := not sim.cockfight.feed_rooster("tomato") and not sim.cockfight.can_feed_rooster("rice")
+	sim.cockfight.feed_rooster("corn")
+	sim.cockfight.train_rooster()
+	var once := not sim.cockfight.feed_rooster("corn") and not sim.cockfight.train_rooster()
 	sim.advance_day() # fed and trained: force +2, endurance +2
-	var day1 := [sim.get_rooster()["force"], sim.get_rooster()["endurance"]]
-	sim.feed_rooster("corn")
+	var day1 := [sim.cockfight.get_rooster()["force"], sim.cockfight.get_rooster()["endurance"]]
+	sim.cockfight.feed_rooster("corn")
 	sim.advance_day() # fed only: endurance +1
-	sim.train_rooster()
+	sim.cockfight.train_rooster()
 	sim.advance_day() # trained but hungry: nothing
 	sim.advance_day() # forgotten: nothing lost
-	sim.state.rooster["force"] = FarmSimulation.ROOSTER_MAX_STAT - 1
-	sim.feed_rooster("corn")
-	sim.train_rooster()
+	sim.state.rooster["force"] = CockfightRules.ROOSTER_MAX_STAT - 1
+	sim.cockfight.feed_rooster("corn")
+	sim.cockfight.train_rooster()
 	sim.advance_day()
-	_check(refused and once and day1 == [22, 22] and sim.get_rooster()["endurance"] == 25
-			and sim.get_rooster()["force"] == FarmSimulation.ROOSTER_MAX_STAT
+	_check(refused and once and day1 == [22, 22] and sim.cockfight.get_rooster()["endurance"] == 25
+			and sim.cockfight.get_rooster()["force"] == CockfightRules.ROOSTER_MAX_STAT
 			and sim.state.get_inventory_count("corn") == 2,
 		"rooster: a grain a day grows its endurance, training too its force - never lost, capped")
 
 func test_cockfight_on_sunday_afternoon_only() -> void:
 	var sim := _make_sim_for_cockfight()
-	var no_rooster := sim.check_cockfight() == FarmSimulation.CockfightCheck.NO_ROOSTER
-	sim.adopt_rooster()
-	_to_sunday(sim, FarmSimulation.COCKFIGHT_HOURS.x - 1)
-	var closed := sim.check_cockfight() == FarmSimulation.CockfightCheck.CLOSED
-	sim.state.clock.minute_of_day = FarmSimulation.COCKFIGHT_HOURS.x
+	var no_rooster := sim.cockfight.check_cockfight() == CockfightRules.CockfightCheck.NO_ROOSTER
+	sim.cockfight.adopt_rooster()
+	_to_sunday(sim, CockfightRules.COCKFIGHT_HOURS.x - 1)
+	var closed := sim.cockfight.check_cockfight() == CockfightRules.CockfightCheck.CLOSED
+	sim.state.clock.minute_of_day = CockfightRules.COCKFIGHT_HOURS.x
 	var money := sim.state.money
-	var bouts := sim.enter_cockfight()
-	var powers := bouts.map(func(bout): return sim.get_cockfight_power(bout["opponent"]))
+	var bouts := sim.cockfight.enter_cockfight()
+	var powers := bouts.map(func(bout): return sim.cockfight.get_cockfight_power(bout["opponent"]))
 	var sorted_powers := powers.duplicate()
 	sorted_powers.sort()
-	var owners_closer := bouts.all(func(bout): return sim.get_friendship(
-		sim.get_fighting_rooster(bout["opponent"]).owner_id) == FarmSimulation.FRIENDSHIP_COCKFIGHT)
+	var owners_closer := bouts.all(func(bout): return sim.friendship.get_friendship(
+		sim.cockfight.get_fighting_rooster(bout["opponent"]).owner_id) == FriendshipRules.FRIENDSHIP_COCKFIGHT)
 	var wins := bouts.filter(func(bout): return bout["won"]).size()
-	_check(no_rooster and closed and bouts.size() == FarmSimulation.COCKFIGHT_BOUTS and powers == sorted_powers
-			and sim.state.money == money + FarmSimulation.COCKFIGHT_ENTRY_PRIZE and owners_closer
-			and sim.get_cockfight_points("player") == wins * 3 + (3 - wins) * 1
-			and sim.check_cockfight() == FarmSimulation.CockfightCheck.ALREADY_ENTERED,
+	_check(no_rooster and closed and bouts.size() == CockfightRules.COCKFIGHT_BOUTS and powers == sorted_powers
+			and sim.state.money == money + CockfightRules.COCKFIGHT_ENTRY_PRIZE and owners_closer
+			and sim.cockfight.get_cockfight_points("player") == wins * 3 + (3 - wins) * 1
+			and sim.cockfight.check_cockfight() == CockfightRules.CockfightCheck.ALREADY_ENTERED,
 		"cockfight: Sunday afternoons, once - 3 bouts weakest first, a prize, the owners closer, points")
 
 func test_cockfight_bouts_follow_the_powers() -> void:
 	var sim := _make_sim_for_cockfight()
-	sim.adopt_rooster()
+	sim.cockfight.adopt_rooster()
 	seed(7)
 	var strong_wins := 0
 	var shapes_ok := true
 	for i in 200:
 		sim.state.rooster["force"] = 100
 		sim.state.rooster["endurance"] = 100
-		var bout := sim._bout("player", "kely")
+		var bout := sim.cockfight._bout("player", "kely")
 		if bout["won"]:
 			strong_wins += 1
 		var hits: Array = bout["hits"]
 		var winner_hits := hits.filter(func(hit): return hit == bout["won"]).size()
-		shapes_ok = shapes_ok and hits.back() == bout["won"] and winner_hits == FarmSimulation.COCKFIGHT_HITS_TO_WIN \
-			and hits.size() - winner_hits < FarmSimulation.COCKFIGHT_HITS_TO_WIN
+		shapes_ok = shapes_ok and hits.back() == bout["won"] and winner_hits == CockfightRules.COCKFIGHT_HITS_TO_WIN \
+			and hits.size() - winner_hits < CockfightRules.COCKFIGHT_HITS_TO_WIN
 	var even_wins := 0
 	for i in 400:
 		sim.state.rooster["force"] = 30
 		sim.state.rooster["endurance"] = 15 # 45, Kely's power in week 1
-		if sim._bout("player", "kely")["won"]:
+		if sim.cockfight._bout("player", "kely")["won"]:
 			even_wins += 1
 	_check(strong_wins >= 195 and even_wins > 160 and even_wins < 240 and shapes_ok,
 		"cockfight: a much stronger rooster almost always wins, an even bout is a coin toss (%d/200, %d/400)" % [strong_wins, even_wins])
 
 func test_cockfight_villagers_fight_their_bouts() -> void:
 	var sim := _make_sim_for_cockfight()
-	sim.adopt_rooster()
-	_to_sunday(sim, FarmSimulation.COCKFIGHT_HOURS.x)
-	sim.enter_cockfight()
+	sim.cockfight.adopt_rooster()
+	_to_sunday(sim, CockfightRules.COCKFIGHT_HOURS.x)
+	sim.cockfight.enter_cockfight()
 	sim.advance_day()
 	var roosters := FightingRoosterData.load_all().keys()
-	var all_fought := roosters.all(func(id): return sim.get_cockfight_points(id) >= 3 and sim.get_cockfight_points(id) <= 9)
-	var ranking := sim.get_cockfight_ranking()
+	var all_fought := roosters.all(func(id): return sim.cockfight.get_cockfight_points(id) >= 3 and sim.cockfight.get_cockfight_points(id) <= 9)
+	var ranking := sim.cockfight.get_cockfight_ranking()
 	_check(all_fought and sim.state.cockfight_week_bouts.is_empty() and ranking.size() == roosters.size() + 1
 			and ranking[0]["points"] >= ranking[-1]["points"],
 		"cockfight: on Sunday, every villager's rooster fights 3 bouts too - the ranking follows the points")
 
 func test_cockfight_season_champion() -> void:
 	var sim := _make_sim_for_cockfight()
-	sim.adopt_rooster()
+	sim.cockfight.adopt_rooster()
 	var champions := []
 	sim.cockfight_season_ended.connect(func(id): champions.append(id))
 	_advance_to_day(sim, 29)
 	sim.state.cockfight_points["player"] = 100
 	_advance_to_day(sim, 31)
-	_check(champions == ["player"] and sim.get_cockfight_champion() == "player"
-			and sim.state.cockfight_points.is_empty() and sim.get_friendship("rakoto") == FarmSimulation.FRIENDSHIP_CHAMPION,
+	_check(champions == ["player"] and sim.cockfight.get_cockfight_champion() == "player"
+			and sim.state.cockfight_points.is_empty() and sim.friendship.get_friendship("rakoto") == FriendshipRules.FRIENDSHIP_CHAMPION,
 		"cockfight: the season's top rooster is the village's best - its owner befriends the amateurs, points start again")
 
 func test_rooster_and_cockfight_save_load() -> void:
 	var sim := _make_sim_for_cockfight()
-	sim.adopt_rooster()
+	sim.cockfight.adopt_rooster()
 	sim.state.add_inventory("corn", 1)
-	sim.feed_rooster("corn")
-	_to_sunday(sim, FarmSimulation.COCKFIGHT_HOURS.x)
-	sim.enter_cockfight()
+	sim.cockfight.feed_rooster("corn")
+	_to_sunday(sim, CockfightRules.COCKFIGHT_HOURS.x)
+	sim.cockfight.enter_cockfight()
 	sim.state.cockfight_champion = "mahery"
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var loaded := _make_sim_for_cockfight()
 	loaded.load_save_data(data)
-	_check(loaded.get_rooster() == sim.get_rooster() and loaded.state.cockfight_points == sim.state.cockfight_points
+	_check(loaded.cockfight.get_rooster() == sim.cockfight.get_rooster() and loaded.state.cockfight_points == sim.state.cockfight_points
 			and loaded.state.cockfight_week_bouts == sim.state.cockfight_week_bouts
-			and loaded.check_cockfight() == FarmSimulation.CockfightCheck.ALREADY_ENTERED
-			and loaded.get_cockfight_champion() == "mahery",
+			and loaded.cockfight.check_cockfight() == CockfightRules.CockfightCheck.ALREADY_ENTERED
+			and loaded.cockfight.get_cockfight_champion() == "mahery",
 		"rooster: the rooster, the points and today's entry survive a save/load")
 
 # --- Save slots ---------------------------------------------------------------------------
@@ -1929,16 +1929,16 @@ func test_save_slots_migrate_the_old_save() -> void:
 
 func test_day_log_counts_the_day() -> void:
 	var sim := _make_sim_for_school()
-	sim.buy_seed("corn", 2) # -1 000 Ar
-	var plot := sim.get_plot(0)
+	sim.market.buy_seed("corn", 2) # -1 000 Ar
+	var plot := sim.fields.get_plot(0)
 	plot.tilled = true
 	plot.crop = CropState.new("corn", 4)
 	plot.crop.age = 4
-	sim.harvest(0)
+	sim.fields.harvest(0)
 	var harvested: int = sim.state.get_inventory_count("corn")
-	sim.sell("corn", 1) # +1 200 Ar
-	sim.collect_product("egg", 2)
-	sim.add_friendship("ravao", 120)
+	sim.market.sell("corn", 1) # +1 200 Ar
+	sim.animals.collect_product("egg", 2)
+	sim.friendship.add_friendship("ravao", 120)
 	var log := sim.day_log
 	_check(log.spent == 1000 and log.earned == 1200 and log.harvested == {"corn": harvested}
 			and log.products == {"egg": 2} and log.new_hearts == {"ravao": 1} and log.friendship["ravao"] == 120
@@ -1947,25 +1947,25 @@ func test_day_log_counts_the_day() -> void:
 
 func test_day_log_starts_afresh() -> void:
 	var sim := _make_sim_for_school()
-	sim.buy_seed("corn", 1)
+	sim.market.buy_seed("corn", 1)
 	sim.advance_day()
 	var morning := sim.day_log.is_quiet()
-	sim.buy_seed("corn", 1)
+	sim.market.buy_seed("corn", 1)
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	sim.load_save_data(data)
 	var loaded := sim.day_log.is_quiet()
-	sim.buy_seed("corn", 1)
+	sim.market.buy_seed("corn", 1)
 	_check(morning and loaded and sim.day_log.spent == 500,
 		"day log: empty each morning and after a load (the money as loaded isn't income)")
 
 func test_tomorrow_plans() -> void:
 	var sim := _make_sim_for_school()
-	var ripe := sim.get_plot(0)
+	var ripe := sim.fields.get_plot(0)
 	ripe.tilled = true
 	ripe.crop = CropState.new("corn", 4)
 	ripe.crop.age = 3
 	ripe.watered = true
-	var dry := sim.get_plot(1)
+	var dry := sim.fields.get_plot(1)
 	dry.tilled = true
 	dry.crop = CropState.new("corn", 4)
 	dry.crop.age = 3
@@ -1973,8 +1973,8 @@ func test_tomorrow_plans() -> void:
 		"since": 1, "deadline": sim.state.day + 1}
 	sim.state.orders["ravao"] = {"item": "corn", "quantity": 2, "reward": 3000, "template": -1,
 		"since": 1, "deadline": sim.state.day + 5}
-	_check(sim.get_ripening_tomorrow() == {"corn": 1} and sim.get_unwatered_plots() == 1
-			and sim.get_orders_due_tomorrow() == ["koto"],
+	_check(sim.fields.get_ripening_tomorrow() == {"corn": 1} and sim.fields.get_unwatered_plots() == 1
+			and sim.orders.get_orders_due_tomorrow() == ["koto"],
 		"tomorrow: the crops ripe in the morning, the plots left dry, the orders due")
 
 func test_evening_plurals() -> void:
@@ -1991,30 +1991,30 @@ func test_evening_plurals() -> void:
 func _register_projects(sim: FarmSimulation) -> void:
 	var projects := FamilyProject.load_all()
 	for project_id: String in projects:
-		sim.register_project(project_id, projects[project_id])
+		sim.projects.register_project(project_id, projects[project_id])
 
 func test_projects_follow_the_levels() -> void:
 	var sim := _make_sim_for_school()
 	_register_projects(sim)
 	var completed := []
 	sim.project_completed.connect(func(id): completed.append(id))
-	var ruin := sim.get_building_level("coop") == 0 and sim.get_project_state("coop_2") == FarmSimulation.ProjectState.LOCKED
+	var ruin := sim.projects.get_building_level("coop") == 0 and sim.projects.get_project_state("coop_2") == ProjectRules.ProjectState.LOCKED
 	sim.state.money = 100000
-	sim.build_coop()
-	var built := sim.get_building_level("coop") == 1 and sim.get_project_state("coop_2") == FarmSimulation.ProjectState.AVAILABLE \
-		and sim.get_project_state("coop_3") == FarmSimulation.ProjectState.LOCKED
+	sim.animals.build_coop()
+	var built := sim.projects.get_building_level("coop") == 1 and sim.projects.get_project_state("coop_2") == ProjectRules.ProjectState.AVAILABLE \
+		and sim.projects.get_project_state("coop_3") == ProjectRules.ProjectState.LOCKED
 	var money := sim.state.money
-	sim.start_project("coop_2")
-	var building: bool = sim.get_project_state("coop_2") == FarmSimulation.ProjectState.BUILDING \
-		and sim.get_project_state("zebu_pen_2") == FarmSimulation.ProjectState.BUSY and not sim.start_project("zebu_pen_2") \
-		and sim.state.money == money - 15000 and sim.get_construction()["done_day"] == sim.state.day + 3
+	sim.projects.start_project("coop_2")
+	var building: bool = sim.projects.get_project_state("coop_2") == ProjectRules.ProjectState.BUILDING \
+		and sim.projects.get_project_state("zebu_pen_2") == ProjectRules.ProjectState.BUSY and not sim.projects.start_project("zebu_pen_2") \
+		and sim.state.money == money - 15000 and sim.projects.get_construction()["done_day"] == sim.state.day + 3
 	sim.advance_day()
 	sim.advance_day()
-	var not_yet := sim.get_building_level("coop") == 1
+	var not_yet := sim.projects.get_building_level("coop") == 1
 	sim.advance_day()
-	_check(ruin and built and building and not_yet and sim.get_building_level("coop") == 2
-			and sim.state.coop_capacity == 8 and completed == ["coop_2"] and sim.get_construction().is_empty()
-			and sim.get_project_state("coop_3") == FarmSimulation.ProjectState.AVAILABLE,
+	_check(ruin and built and building and not_yet and sim.projects.get_building_level("coop") == 2
+			and sim.state.coop_capacity == 8 and completed == ["coop_2"] and sim.projects.get_construction().is_empty()
+			and sim.projects.get_project_state("coop_3") == ProjectRules.ProjectState.AVAILABLE,
 		"projects: a level after the other, one building site at a time, paid up front, done a few mornings later")
 
 func test_projects_friends_help_build() -> void:
@@ -2022,29 +2022,29 @@ func test_projects_friends_help_build() -> void:
 	_register_projects(sim)
 	sim.state.money = 100000
 	for villager_id in ["ravao", "koto", "naivo"]:
-		sim.add_friendship(villager_id, 250 if villager_id != "naivo" else 150)
-	var helpers := sim.get_project_helpers()
-	sim.start_project("zebu_pen_2")
+		sim.friendship.add_friendship(villager_id, 250 if villager_id != "naivo" else 150)
+	var helpers := sim.projects.get_project_helpers()
+	sim.projects.start_project("zebu_pen_2")
 	sim.advance_day()
-	_check(helpers.size() == 2 and not "naivo" in helpers and sim.get_project_days("zebu_pen_3") == 3
-			and sim.get_building_level("zebu_pen") == 2,
+	_check(helpers.size() == 2 and not "naivo" in helpers and sim.projects.get_project_days("zebu_pen_3") == 3
+			and sim.projects.get_building_level("zebu_pen") == 2,
 		"projects: friends (2 hearts and up, at most 2) come to help - a day less each, never under one")
 
 func test_projects_bigger_zebu_pen() -> void:
 	var sim := _make_sim_for_school()
 	sim.state.money = 1000000
-	var small := sim.get_zebu_capacity() == 4 and sim.get_manure_max() == 12
+	var small := sim.zebus.get_zebu_capacity() == 4 and sim.zebus.get_manure_max() == 12
 	sim.state.building_levels["zebu_pen"] = 2
-	var medium := sim.get_zebu_capacity() == 6 and sim.get_manure_max() == 18
+	var medium := sim.zebus.get_zebu_capacity() == 6 and sim.zebus.get_manure_max() == 18
 	for i in 6:
-		sim.buy_zebu()
-	var six := sim.get_zebu_ids().size() == 6 and not sim.can_buy_zebu()
+		sim.zebus.buy_zebu()
+	var six := sim.zebus.get_zebu_ids().size() == 6 and not sim.zebus.can_buy_zebu()
 	sim.state.building_levels["zebu_pen"] = 3
-	sim.fill_zebu_trough()
+	sim.zebus.fill_zebu_trough()
 	sim.advance_day()
-	var still_full := sim.is_zebu_trough_full()
+	var still_full := sim.zebus.is_zebu_trough_full()
 	sim.advance_day()
-	_check(small and medium and six and sim.get_zebu_capacity() == 8 and still_full and not sim.is_zebu_trough_full(),
+	_check(small and medium and six and sim.zebus.get_zebu_capacity() == 8 and still_full and not sim.zebus.is_zebu_trough_full(),
 		"projects: a bigger pen holds more zebus and manure - the big one's trough lasts two days")
 
 func test_projects_brick_coop_basket() -> void:
@@ -2057,8 +2057,8 @@ func test_projects_brick_coop_basket() -> void:
 	sim.product_ready.connect(func(_id, _product): spawned[0] += 1)
 	sim.basket_collected.connect(func(_item, quantity): basket[0] += quantity)
 	for i in 6:
-		sim.feed_animal("chicken_0")
-		sim.water_animal("chicken_0")
+		sim.animals.feed_animal("chicken_0")
+		sim.animals.water_animal("chicken_0")
 		sim.advance_day()
 	_check(spawned[0] == 0 and basket[0] > 0 and sim.state.get_inventory_count("egg") == basket[0],
 		"projects: in the brick coop, the eggs go straight into the bag")
@@ -2068,13 +2068,13 @@ func test_projects_save_load() -> void:
 	_register_projects(sim)
 	sim.state.money = 100000
 	sim.state.building_levels["zebu_pen"] = 2
-	sim.start_project("zebu_pen_3")
+	sim.projects.start_project("zebu_pen_3")
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var loaded := _make_sim_for_school()
 	_register_projects(loaded)
 	loaded.load_save_data(data)
-	_check(loaded.get_building_level("zebu_pen") == 2 and loaded.get_construction() == sim.get_construction()
-			and loaded.get_project_state("zebu_pen_3") == FarmSimulation.ProjectState.BUILDING,
+	_check(loaded.projects.get_building_level("zebu_pen") == 2 and loaded.projects.get_construction() == sim.projects.get_construction()
+			and loaded.projects.get_project_state("zebu_pen_3") == ProjectRules.ProjectState.BUILDING,
 		"projects: the buildings' levels and the building site survive a save/load")
 
 # --- The house's annexes: granary and kitchen ------------------------------------------------
@@ -2082,18 +2082,18 @@ func test_projects_save_load() -> void:
 func _register_recipes(sim: FarmSimulation) -> void:
 	var recipes := Recipe.load_all()
 	for recipe_id: String in recipes:
-		sim.register_recipe(recipe_id, recipes[recipe_id])
+		sim.kitchen.register_recipe(recipe_id, recipes[recipe_id])
 
 func test_annexes_start_unbuilt() -> void:
 	var sim := _make_sim_for_school()
 	_register_projects(sim)
 	sim.state.money = 100000
-	var unbuilt := sim.get_building_level("granary") == 0 and sim.get_building_level("kitchen") == 0 \
-		and sim.get_project_state("granary_1") == FarmSimulation.ProjectState.AVAILABLE
-	sim.start_project("kitchen_1")
+	var unbuilt := sim.projects.get_building_level("granary") == 0 and sim.projects.get_building_level("kitchen") == 0 \
+		and sim.projects.get_project_state("granary_1") == ProjectRules.ProjectState.AVAILABLE
+	sim.projects.start_project("kitchen_1")
 	for i in 3:
 		sim.advance_day()
-	_check(unbuilt and sim.has_kitchen() and sim.get_building_level("granary") == 0,
+	_check(unbuilt and sim.kitchen.has_kitchen() and sim.projects.get_building_level("granary") == 0,
 		"annexes: the granary and the kitchen aren't there at first - a family project builds them")
 
 func test_granary_keeps_more_rice() -> void:
@@ -2101,30 +2101,30 @@ func test_granary_keeps_more_rice() -> void:
 	var yields := []
 	for granary in [0, 1]:
 		sim.state.building_levels["granary"] = granary
-		var plot := sim.get_plot(granary)
+		var plot := sim.fields.get_plot(granary)
 		plot.tilled = true
 		plot.crop = CropState.new("rice", 10)
 		plot.crop.age = 10
 		plot.crop.days_watered = 10
 		plot.crop.days_total = 10
 		var before := sim.state.get_inventory_count("rice")
-		sim.harvest(granary)
+		sim.fields.harvest(granary)
 		yields.append(sim.state.get_inventory_count("rice") - before)
-	_check(yields[1] == ceili(yields[0] * FarmSimulation.GRANARY_RICE_MULTIPLIER) and yields[1] > yields[0],
+	_check(yields[1] == ceili(yields[0] * ProjectRules.GRANARY_RICE_MULTIPLIER) and yields[1] > yields[0],
 		"granary: no more rice for the rats - a quarter more at each rice harvest (%d -> %d)" % yields)
 
 func test_kitchen_cooks_dishes() -> void:
 	var sim := _make_sim_for_school()
 	_register_recipes(sim)
 	sim.state.add_inventory("corn", 7)
-	var no_kitchen := not sim.can_cook("grilled_corn") and not sim.cook("grilled_corn")
+	var no_kitchen := not sim.kitchen.can_cook("grilled_corn") and not sim.kitchen.cook("grilled_corn")
 	sim.state.building_levels["kitchen"] = 1
-	var count := sim.get_cookable_count("grilled_corn")
-	var cooked := sim.cook("grilled_corn") and sim.cook("grilled_corn")
-	var third := sim.cook("grilled_corn")
+	var count := sim.kitchen.get_cookable_count("grilled_corn")
+	var cooked := sim.kitchen.cook("grilled_corn") and sim.kitchen.cook("grilled_corn")
+	var third := sim.kitchen.cook("grilled_corn")
 	_check(no_kitchen and count == 2 and cooked and not third
 			and sim.state.get_inventory_count("corn") == 1 and sim.state.get_inventory_count("food_grilled_corn") == 2
-			and sim.day_log.cooked == {"grilled_corn": 2} and sim.get_cookable_count("mofo_gasy") == 0,
+			and sim.day_log.cooked == {"grilled_corn": 2} and sim.kitchen.get_cookable_count("mofo_gasy") == 0,
 		"kitchen: once built, harvests cooked into dishes - only what the bag holds")
 
 # --- The forest and the notebook -------------------------------------------------------------
@@ -2134,7 +2134,7 @@ func _make_sim_for_forest() -> FarmSimulation:
 	_register_recipes(sim)
 	var discoveries := Discovery.load_all()
 	for discovery_id: String in discoveries:
-		sim.register_discovery(discovery_id, discoveries[discovery_id])
+		sim.notebook.register_discovery(discovery_id, discoveries[discovery_id])
 	return sim
 
 func test_wildlife_keeps_its_hours() -> void:
@@ -2143,7 +2143,7 @@ func test_wildlife_keeps_its_hours() -> void:
 	var at := func(minute: int, day: int, id: String) -> bool:
 		clock.current_day = day
 		clock.minute_of_day = minute
-		return sim.is_wildlife_active(id)
+		return sim.notebook.is_wildlife_active(id)
 	# Day 1 is Asara (rainy), day 31 Asotry (dry).
 	var sifaka: bool = at.call(7 * 60, 1, "sifaka") and not at.call(12 * 60, 1, "sifaka")
 	var tenrec: bool = at.call(23 * 60, 1, "tenrec") and at.call(60, 1, "tenrec") and not at.call(23 * 60, 31, "tenrec")
@@ -2151,50 +2151,50 @@ func test_wildlife_keeps_its_hours() -> void:
 	clock.current_day = 1
 	clock.minute_of_day = 7 * 60
 	sim.set_weather(FarmState.Weather.RAIN)
-	var rain := not sim.is_wildlife_active("sifaka") and not sim.observe("sifaka")
+	var rain := not sim.notebook.is_wildlife_active("sifaka") and not sim.notebook.observe("sifaka")
 	sim.set_weather(FarmState.Weather.CLEAR)
-	_check(sifaka and tenrec and maki and rain and sim.observe("sifaka") and sim.is_discovered("sifaka"),
+	_check(sifaka and tenrec and maki and rain and sim.notebook.observe("sifaka") and sim.notebook.is_discovered("sifaka"),
 		"forest: each animal keeps its hours and seasons - the sifaka at dawn, the tenrec at night in Asara, not in the rain")
 
 func test_notebook_pages_once() -> void:
 	var sim := _make_sim_for_forest()
 	var pages := []
 	sim.discovery_made.connect(func(id): pages.append(id))
-	var total := sim.get_notebook_progress().y
-	sim.discover("clearing")
-	sim.discover("clearing")
-	var bogus := sim.discover("not_an_entry")
+	var total := sim.notebook.get_notebook_progress().y
+	sim.notebook.discover("clearing")
+	sim.notebook.discover("clearing")
+	var bogus := sim.notebook.discover("not_an_entry")
 	sim.state.building_levels["kitchen"] = 1
 	sim.state.add_inventory("corn", 3)
-	sim.cook("grilled_corn")
-	_check(pages == ["clearing", "cuisine:grilled_corn"] and not bogus and sim.get_notebook_progress() == Vector2i(2, total)
+	sim.kitchen.cook("grilled_corn")
+	_check(pages == ["clearing", "cuisine:grilled_corn"] and not bogus and sim.notebook.get_notebook_progress() == Vector2i(2, total)
 			and total == Discovery.load_all().size() + Recipe.load_all().size()
 			and sim.day_log.discoveries.size() == 2,
 		"notebook: a page once per discovery - places, animals, plants, and each dish the first time it's cooked")
 
 func test_forage_grows_back() -> void:
 	var sim := _make_sim_for_forest()
-	var first := sim.forage("Greens_1", "wild_greens")
-	var again := sim.forage("Greens_1", "wild_greens")
-	var other_spot := sim.forage("Greens_2", "wild_greens")
-	var dry_season_honey := sim.forage("Hive", "honey") # Asara: no honey yet
+	var first := sim.notebook.forage("Greens_1", "wild_greens")
+	var again := sim.notebook.forage("Greens_1", "wild_greens")
+	var other_spot := sim.notebook.forage("Greens_2", "wild_greens")
+	var dry_season_honey := sim.notebook.forage("Hive", "honey") # Asara: no honey yet
 	sim.advance_day()
-	var too_soon := sim.can_forage("Greens_1", "wild_greens")
+	var too_soon := sim.notebook.can_forage("Greens_1", "wild_greens")
 	sim.advance_day()
 	_check(first == 2 and again == 0 and other_spot == 2 and dry_season_honey == 0 and not too_soon
-			and sim.can_forage("Greens_1", "wild_greens") and sim.state.get_inventory_count("wild_greens") == 4
-			and sim.is_discovered("wild_greens") and not sim.is_discovered("honey"),
+			and sim.notebook.can_forage("Greens_1", "wild_greens") and sim.state.get_inventory_count("wild_greens") == 4
+			and sim.notebook.is_discovered("wild_greens") and not sim.notebook.is_discovered("honey"),
 		"forest: a wild plant gathered grows back in a few days, only in its season - and goes in the notebook")
 
 func test_notebook_save_load() -> void:
 	var sim := _make_sim_for_forest()
-	sim.discover("sacred_fig")
-	sim.forage("Spring_Ravintsara", "ravintsara")
+	sim.notebook.discover("sacred_fig")
+	sim.notebook.forage("Spring_Ravintsara", "ravintsara")
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var loaded := _make_sim_for_forest()
 	loaded.load_save_data(data)
-	_check(loaded.is_discovered("sacred_fig") and loaded.is_discovered("ravintsara")
-			and not loaded.can_forage("Spring_Ravintsara", "ravintsara"),
+	_check(loaded.notebook.is_discovered("sacred_fig") and loaded.notebook.is_discovered("ravintsara")
+			and not loaded.notebook.can_forage("Spring_Ravintsara", "ravintsara"),
 		"notebook: the pages and the plants growing back survive a save/load")
 
 # --- Side quests ---------------------------------------------------------------------------
@@ -2203,7 +2203,7 @@ func _make_sim_for_quests() -> FarmSimulation:
 	var sim := _make_sim_for_forest()
 	var quests := Quest.load_all()
 	for quest_id: String in quests:
-		sim.register_quest(quest_id, quests[quest_id])
+		sim.quests.register_quest(quest_id, quests[quest_id])
 	return sim
 
 func _quest_step(kind: QuestStep.Kind, fields: Dictionary) -> QuestStep:
@@ -2215,38 +2215,38 @@ func _quest_step(kind: QuestStep.Kind, fields: Dictionary) -> QuestStep:
 
 func test_quest_offered_when_its_time_comes() -> void:
 	var sim := _make_sim_for_quests()
-	var too_early := sim.get_quest_offered_by("rakoto").is_empty() and not sim.start_quest("rakoto_lost_zebu")
+	var too_early := sim.quests.get_quest_offered_by("rakoto").is_empty() and not sim.quests.start_quest("rakoto_lost_zebu")
 	_advance_to_day(sim, 3)
-	var offered := sim.get_quest_offered_by("rakoto") == "rakoto_lost_zebu" and sim.get_quest_offered_by("naivo").is_empty()
-	var started := sim.start_quest("rakoto_lost_zebu")
-	_check(too_early and offered and started and not sim.start_quest("rakoto_lost_zebu")
-			and sim.get_quest_offered_by("rakoto").is_empty() and sim.get_active_quests() == ["rakoto_lost_zebu"]
-			and sim.get_quest_step_index("rakoto_lost_zebu") == 0
-			and sim.get_conditions().has(FarmSimulation.QUEST_ACTIVE_PREFIX + "rakoto_lost_zebu"),
+	var offered := sim.quests.get_quest_offered_by("rakoto") == "rakoto_lost_zebu" and sim.quests.get_quest_offered_by("naivo").is_empty()
+	var started := sim.quests.start_quest("rakoto_lost_zebu")
+	_check(too_early and offered and started and not sim.quests.start_quest("rakoto_lost_zebu")
+			and sim.quests.get_quest_offered_by("rakoto").is_empty() and sim.quests.get_active_quests() == ["rakoto_lost_zebu"]
+			and sim.quests.get_quest_step_index("rakoto_lost_zebu") == 0
+			and sim.get_conditions().has(QuestRules.QUEST_ACTIVE_PREFIX + "rakoto_lost_zebu"),
 		"quests: Rakoto offers his lost zebu from day 3 - once accepted, it's under way (a story condition too)")
 
 func test_quest_steps_in_order() -> void:
 	var sim := _make_sim_for_quests()
 	_advance_to_day(sim, 3)
-	sim.start_quest("rakoto_lost_zebu")
+	sim.quests.start_quest("rakoto_lost_zebu")
 	var money := sim.state.money
-	var out_of_order := sim.quest_trigger("lost_zebu").is_empty() and sim.quest_talk("rakoto").is_empty()
-	var tracks := sim.quest_trigger("zebu_tracks") == "rakoto_lost_zebu"
-	var found := sim.quest_trigger("lost_zebu") == "rakoto_lost_zebu"
-	var waiting_on_rakoto := sim.get_quest_waiting_on("rakoto").is_empty()
-	var no_greens := sim.quest_trigger("lost_zebu").is_empty() and sim.get_quest_item_progress("rakoto_lost_zebu") == Vector2i(0, 2)
+	var out_of_order := sim.quests.quest_trigger("lost_zebu").is_empty() and sim.quests.quest_talk("rakoto").is_empty()
+	var tracks := sim.quests.quest_trigger("zebu_tracks") == "rakoto_lost_zebu"
+	var found := sim.quests.quest_trigger("lost_zebu") == "rakoto_lost_zebu"
+	var waiting_on_rakoto := sim.quests.get_quest_waiting_on("rakoto").is_empty()
+	var no_greens := sim.quests.quest_trigger("lost_zebu").is_empty() and sim.quests.get_quest_item_progress("rakoto_lost_zebu") == Vector2i(0, 2)
 	sim.state.add_inventory("wild_greens", 3)
-	var calmed := sim.quest_trigger("lost_zebu") == "rakoto_lost_zebu"
-	var tell := sim.get_quest_waiting_on("rakoto") == "rakoto_lost_zebu"
+	var calmed := sim.quests.quest_trigger("lost_zebu") == "rakoto_lost_zebu"
+	var tell := sim.quests.get_quest_waiting_on("rakoto") == "rakoto_lost_zebu"
 	var completed := []
 	sim.quest_completed.connect(func(id): completed.append(id))
-	var done := sim.quest_talk("rakoto") == "rakoto_lost_zebu"
+	var done := sim.quests.quest_talk("rakoto") == "rakoto_lost_zebu"
 	_check(out_of_order and tracks and found and waiting_on_rakoto and no_greens and calmed and tell and done
 			and completed == ["rakoto_lost_zebu"] and sim.state.get_inventory_count("wild_greens") == 1
-			and sim.state.money == money + 10000 and sim.get_friendship("rakoto") == 100
-			and sim.is_quest_done("rakoto_lost_zebu") and sim.get_active_quests().is_empty()
-			and not sim.is_quest_available("rakoto_lost_zebu") and sim.day_log.quests_done == ["rakoto_lost_zebu"]
-			and sim.get_conditions().has(FarmSimulation.QUEST_DONE_PREFIX + "rakoto_lost_zebu"),
+			and sim.state.money == money + 10000 and sim.friendship.get_friendship("rakoto") == 100
+			and sim.quests.is_quest_done("rakoto_lost_zebu") and sim.quests.get_active_quests().is_empty()
+			and not sim.quests.is_quest_available("rakoto_lost_zebu") and sim.day_log.quests_done == ["rakoto_lost_zebu"]
+			and sim.get_conditions().has(QuestRules.QUEST_DONE_PREFIX + "rakoto_lost_zebu"),
 		"quests: the lost zebu step by step - tracks, the zebu, 2 wild greens to calm it, back to Rakoto: 10 000 Ar and a heart")
 
 func test_quest_requirements_bring_and_discover() -> void:
@@ -2261,39 +2261,39 @@ func test_quest_requirements_bring_and_discover() -> void:
 		_quest_step(QuestStep.Kind.DISCOVER, {"discovery_id": "sifaka"}),
 		_quest_step(QuestStep.Kind.BRING, {"villager": "naivo", "item_id": "honey", "quantity": 1}),
 	]
-	sim.register_quest("test_quest", quest)
+	sim.quests.register_quest("test_quest", quest)
 	_advance_to_day(sim, 3)
-	sim.add_friendship("naivo", 100)
-	var before_rakoto := not sim.is_quest_available("test_quest")
+	sim.friendship.add_friendship("naivo", 100)
+	var before_rakoto := not sim.quests.is_quest_available("test_quest")
 	sim.state.quests_done["rakoto_lost_zebu"] = 3
-	sim.discover("clearing")
-	var started := sim.start_quest("test_quest")
+	sim.notebook.discover("clearing")
+	var started := sim.quests.start_quest("test_quest")
 	# The clearing already found: straight on to the sifaka.
-	var skipped := sim.get_quest_step_index("test_quest") == 1 and sim.get_quest_waiting_on("naivo").is_empty()
-	sim.discover("sifaka")
-	var bring := sim.get_quest_waiting_on("naivo") == "test_quest" and sim.quest_talk("naivo").is_empty()
+	var skipped := sim.quests.get_quest_step_index("test_quest") == 1 and sim.quests.get_quest_waiting_on("naivo").is_empty()
+	sim.notebook.discover("sifaka")
+	var bring := sim.quests.get_quest_waiting_on("naivo") == "test_quest" and sim.quests.quest_talk("naivo").is_empty()
 	sim.state.add_inventory("honey", 1)
-	var given := sim.quest_talk("naivo") == "test_quest"
-	_check(before_rakoto and started and skipped and bring and given and sim.is_quest_done("test_quest")
+	var given := sim.quests.quest_talk("naivo") == "test_quest"
+	_check(before_rakoto and started and skipped and bring and given and sim.quests.is_quest_done("test_quest")
 			and sim.state.get_inventory_count("honey") == 0 and sim.state.get_inventory_count("mango") == 2,
 		"quests: hearts and earlier quests before it's offered - a notebook page already found counts, items brought are given")
 
 func test_quest_save_load() -> void:
 	var sim := _make_sim_for_quests()
 	_advance_to_day(sim, 3)
-	sim.start_quest("rakoto_lost_zebu")
-	sim.quest_trigger("zebu_tracks")
+	sim.quests.start_quest("rakoto_lost_zebu")
+	sim.quests.quest_trigger("zebu_tracks")
 	var data = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	var loaded := _make_sim_for_quests()
 	loaded.load_save_data(data)
-	var mid := loaded.get_quest_step_index("rakoto_lost_zebu") == 1 and loaded.get_active_quests() == ["rakoto_lost_zebu"]
+	var mid := loaded.quests.get_quest_step_index("rakoto_lost_zebu") == 1 and loaded.quests.get_active_quests() == ["rakoto_lost_zebu"]
 	loaded.state.add_inventory("wild_greens", 2)
-	loaded.quest_trigger("lost_zebu")
-	loaded.quest_trigger("lost_zebu")
-	loaded.quest_talk("rakoto")
+	loaded.quests.quest_trigger("lost_zebu")
+	loaded.quests.quest_trigger("lost_zebu")
+	loaded.quests.quest_talk("rakoto")
 	var again := _make_sim_for_quests()
 	again.load_save_data(JSON.parse_string(JSON.stringify(loaded.to_save_data())))
-	_check(mid and again.is_quest_done("rakoto_lost_zebu") and not again.is_quest_active("rakoto_lost_zebu"),
+	_check(mid and again.quests.is_quest_done("rakoto_lost_zebu") and not again.quests.is_quest_active("rakoto_lost_zebu"),
 		"quests: a quest under way (its step) and the finished ones survive a save/load")
 
 func test_quest_data_is_sound() -> void:
@@ -2314,7 +2314,7 @@ func test_quest_data_is_sound() -> void:
 		for item_id: String in quest.reward_items:
 			if db.get_item(item_id) == null and db.get_crop(item_id) == null:
 				problems.append("%s: reward %s" % [quest_id, item_id])
-		if not quest.reward_unlock.is_empty() and not FarmSimulation.QUEST_UNLOCKS.has(quest.reward_unlock):
+		if not quest.reward_unlock.is_empty() and not QuestRules.QUEST_UNLOCKS.has(quest.reward_unlock):
 			problems.append("%s: unlock %s" % [quest_id, quest.reward_unlock])
 		for step: QuestStep in quest.steps:
 			if step.objective.is_empty():
@@ -2336,102 +2336,102 @@ func test_koto_and_neny_soa_quests() -> void:
 	var sim := _make_sim_for_quests()
 	_advance_to_day(sim, 6)
 	# Koto: the sifaka already in the notebook - straight on to Fara.
-	sim.discover("sifaka")
-	var koto := sim.start_quest("koto_dancing_sifaka") and sim.get_quest_waiting_on("fara") == "koto_dancing_sifaka"
-	var drawn := sim.quest_talk("koto").is_empty() and sim.quest_talk("fara") == "koto_dancing_sifaka" \
-		and sim.quest_talk("koto") == "koto_dancing_sifaka"
+	sim.notebook.discover("sifaka")
+	var koto := sim.quests.start_quest("koto_dancing_sifaka") and sim.quests.get_quest_waiting_on("fara") == "koto_dancing_sifaka"
+	var drawn := sim.quests.quest_talk("koto").is_empty() and sim.quests.quest_talk("fara") == "koto_dancing_sifaka" \
+		and sim.quests.quest_talk("koto") == "koto_dancing_sifaka"
 	# Neny Soa: not before a heart of friendship.
-	var shy := not sim.is_quest_available("neny_soa_remedy")
-	sim.add_friendship("neny_soa", 100)
-	var started := sim.start_quest("neny_soa_remedy")
-	var jar := sim.quest_trigger("spring_jar") == "neny_soa_remedy"
-	var no_leaf := sim.quest_talk("neny_soa").is_empty()
+	var shy := not sim.quests.is_quest_available("neny_soa_remedy")
+	sim.friendship.add_friendship("neny_soa", 100)
+	var started := sim.quests.start_quest("neny_soa_remedy")
+	var jar := sim.quests.quest_trigger("spring_jar") == "neny_soa_remedy"
+	var no_leaf := sim.quests.quest_talk("neny_soa").is_empty()
 	sim.state.add_inventory("ravintsara", 1)
-	var healed := sim.quest_talk("neny_soa") == "neny_soa_remedy"
-	_check(koto and drawn and sim.is_quest_done("koto_dancing_sifaka") and sim.state.get_inventory_count("mango") == 3
+	var healed := sim.quests.quest_talk("neny_soa") == "neny_soa_remedy"
+	_check(koto and drawn and sim.quests.is_quest_done("koto_dancing_sifaka") and sim.state.get_inventory_count("mango") == 3
 			and shy and started and jar and no_leaf and healed and sim.state.get_inventory_count("food_mofo_gasy") == 3
-			and sim.state.get_inventory_count("ravintsara") == 0 and sim.get_hearts("neny_soa") == 2,
+			and sim.state.get_inventory_count("ravintsara") == 0 and sim.friendship.get_hearts("neny_soa") == 2,
 		"quests: Koto's dancing sifaka (seen, Fara's drawing, to Koto) and Neny Soa's remedy (a heart first, spring water, a ravintsara leaf)")
 
 # --- Chicken thieves ----------------------------------------------------------------------------
 
 func _make_sim_for_thieves(hens: int) -> FarmSimulation:
 	var sim := _make_sim_with_chicken(0.0)
-	sim.build_coop()
+	sim.animals.build_coop()
 	sim.state.money = 100000
-	sim.buy_chicken(hens)
+	sim.animals.buy_chicken(hens)
 	for i in hens:
-		sim.place_chicken()
-	sim.thief_alert_chance = 0.0
-	sim.thief_night_chance = 0.0
+		sim.animals.place_chicken()
+	sim.thieves.thief_alert_chance = 0.0
+	sim.thieves.thief_night_chance = 0.0
 	sim.state.clock.current_day = 20
 	return sim
 
 func test_thieves_rumour_first() -> void:
 	var early := _make_sim_for_thieves(3)
 	early.state.clock.current_day = 5
-	early.thief_alert_chance = 1.0
+	early.thieves.thief_alert_chance = 1.0
 	early.advance_day()
 	var lone := _make_sim_for_thieves(1)
-	lone.thief_alert_chance = 1.0
+	lone.thieves.thief_alert_chance = 1.0
 	lone.advance_day()
 	var sim := _make_sim_for_thieves(3)
-	sim.thief_alert_chance = 1.0
+	sim.thieves.thief_alert_chance = 1.0
 	var rumours := []
 	sim.thief_alert_started.connect(func(id): rumours.append(id))
 	sim.advance_day()
-	var alert := sim.is_thief_alert() and sim.state.thief_alert_until == sim.state.day + FarmSimulation.THIEF_ALERT_NIGHTS - 1 \
-		and rumours.size() == 1 and FarmSimulation.THIEF_RUMOUR_NEIGHBOURS.has(rumours[0]) and sim.day_log.thief_rumour
-	for i in FarmSimulation.THIEF_ALERT_NIGHTS:
+	var alert := sim.thieves.is_thief_alert() and sim.state.thief_alert_until == sim.state.day + ThiefRules.THIEF_ALERT_NIGHTS - 1 \
+		and rumours.size() == 1 and ThiefRules.THIEF_RUMOUR_NEIGHBOURS.has(rumours[0]) and sim.day_log.thief_rumour
+	for i in ThiefRules.THIEF_ALERT_NIGHTS:
 		sim.advance_day()
-	_check(not early.is_thief_alert() and not lone.is_thief_alert() and alert and not sim.is_thief_alert()
-			and rumours.size() == 1 and sim.get_hen_ids().size() == 3,
+	_check(not early.thieves.is_thief_alert() and not lone.thieves.is_thief_alert() and alert and not sim.thieves.is_thief_alert()
+			and rumours.size() == 1 and sim.thieves.get_hen_ids().size() == 3,
 		"thieves: never in the first weeks nor for a lone hen - a rumour first, for 3 nights, then a quiet spell (no night visit: no loss)")
 
 func test_thief_takes_one_hen() -> void:
 	var sim := _make_sim_for_thieves(2)
-	sim.thief_alert_chance = 1.0
-	sim.thief_night_chance = 1.0
+	sim.thieves.thief_alert_chance = 1.0
+	sim.thieves.thief_night_chance = 1.0
 	var removed := []
 	sim.animal_removed.connect(func(id): removed.append(id))
 	sim.advance_day() # the rumour
 	sim.advance_day() # the night: a hen gone
-	var after_theft := sim.get_hen_ids().size() == 1 and removed.size() == 1 and sim.day_log.chicken_stolen \
-		and sim.state.thief_stolen_day == sim.state.day and not sim.is_thief_alert()
+	var after_theft := sim.thieves.get_hen_ids().size() == 1 and removed.size() == 1 and sim.day_log.chicken_stolen \
+		and sim.state.thief_stolen_day == sim.state.day and not sim.thieves.is_thief_alert()
 	for i in 20:
 		sim.advance_day()
-	_check(after_theft and sim.get_hen_ids().size() == 1 and removed.size() == 1,
+	_check(after_theft and sim.thieves.get_hen_ids().size() == 1 and removed.size() == 1,
 		"thieves: a night they come to an open coop, one hen is gone and they move on - never the last hen")
 
 func test_padlock_keeps_thieves_out() -> void:
 	var sim := _make_sim_for_thieves(3)
-	var on_sale := sim.is_item_on_sale(FarmSimulation.PADLOCK_ITEM)
+	var on_sale := sim.market.is_item_on_sale(ThiefRules.PADLOCK_ITEM)
 	var money := sim.state.money
-	var bought := sim.buy_item(FarmSimulation.PADLOCK_ITEM, 5000)
-	var put_on := sim.state.coop_padlock and sim.is_coop_safe() and sim.state.money == money - 5000 \
-		and sim.state.get_inventory_count(FarmSimulation.PADLOCK_ITEM) == 0
-	var twice := sim.buy_item(FarmSimulation.PADLOCK_ITEM, 5000)
-	sim.thief_alert_chance = 1.0
-	sim.thief_night_chance = 1.0
+	var bought := sim.market.buy_item(ThiefRules.PADLOCK_ITEM, 5000)
+	var put_on := sim.state.coop_padlock and sim.thieves.is_coop_safe() and sim.state.money == money - 5000 \
+		and sim.state.get_inventory_count(ThiefRules.PADLOCK_ITEM) == 0
+	var twice := sim.market.buy_item(ThiefRules.PADLOCK_ITEM, 5000)
+	sim.thieves.thief_alert_chance = 1.0
+	sim.thieves.thief_night_chance = 1.0
 	sim.advance_day()
 	sim.advance_day()
-	var held := sim.get_hen_ids().size() == 3 and sim.day_log.thieves_foiled and not sim.is_thief_alert()
+	var held := sim.thieves.get_hen_ids().size() == 3 and sim.day_log.thieves_foiled and not sim.thieves.is_thief_alert()
 	var brick := _make_sim_for_thieves(3)
 	brick.state.building_levels["coop"] = 3
 	var no_coop := _make_sim_with_chicken()
-	_check(on_sale and bought and put_on and not twice and not sim.is_item_on_sale(FarmSimulation.PADLOCK_ITEM)
-			and held and brick.is_coop_safe() and not brick.is_item_on_sale(FarmSimulation.PADLOCK_ITEM)
-			and not no_coop.is_item_on_sale(FarmSimulation.PADLOCK_ITEM),
+	_check(on_sale and bought and put_on and not twice and not sim.market.is_item_on_sale(ThiefRules.PADLOCK_ITEM)
+			and held and brick.thieves.is_coop_safe() and not brick.market.is_item_on_sale(ThiefRules.PADLOCK_ITEM)
+			and not no_coop.market.is_item_on_sale(ThiefRules.PADLOCK_ITEM),
 		"thieves: the padlock goes straight on the coop (sold once, not for a ruin or a brick coop) - and holds")
 
 func test_thieves_save_load() -> void:
 	var sim := _make_sim_for_thieves(3)
-	sim.thief_alert_chance = 1.0
+	sim.thieves.thief_alert_chance = 1.0
 	sim.advance_day()
-	sim.buy_item(FarmSimulation.PADLOCK_ITEM, 5000)
+	sim.market.buy_item(ThiefRules.PADLOCK_ITEM, 5000)
 	var loaded := _make_sim_for_thieves(3)
 	loaded.load_save_data(JSON.parse_string(JSON.stringify(sim.to_save_data())))
-	_check(loaded.is_thief_alert() and loaded.state.thief_rumour == sim.state.thief_rumour and loaded.state.coop_padlock
+	_check(loaded.thieves.is_thief_alert() and loaded.state.thief_rumour == sim.state.thief_rumour and loaded.state.coop_padlock
 			and loaded.state.thief_next_alert_day == sim.state.thief_next_alert_day,
 		"thieves: the rumour, the quiet spell and the padlock survive a save/load")
 
@@ -2440,72 +2440,72 @@ func test_thieves_save_load() -> void:
 func test_dog_comes_with_rakotos_puppy() -> void:
 	var sim := _make_sim_for_quests()
 	_advance_to_day(sim, 8)
-	var not_yet := sim.get_quest_offered_by("rakoto") == "rakoto_lost_zebu"
+	var not_yet := sim.quests.get_quest_offered_by("rakoto") == "rakoto_lost_zebu"
 	sim.state.quests_done["rakoto_lost_zebu"] = 5
-	var offered := sim.get_quest_offered_by("rakoto") == "rakoto_puppy"
-	sim.start_quest("rakoto_puppy")
+	var offered := sim.quests.get_quest_offered_by("rakoto") == "rakoto_puppy"
+	sim.quests.start_quest("rakoto_puppy")
 	var adopted := []
 	sim.dog_adopted.connect(func(): adopted.append(true))
-	var basket_first := sim.quest_trigger("puppy_basket").is_empty()
-	var asked := sim.quest_talk("mother") == "rakoto_puppy"
-	var no_dog_yet := not sim.has_dog()
-	var chosen := sim.quest_trigger("puppy_basket") == "rakoto_puppy"
-	_check(not_yet and offered and basket_first and asked and no_dog_yet and chosen and sim.has_dog()
-			and adopted.size() == 1 and sim.is_quest_done("rakoto_puppy")
-			and FarmSimulation.DOG_NAMES.has(sim.get_dog_name()) and sim.get_dog_growth() == 0.0
-			and sim.get_dog_coat() >= 0 and sim.get_dog_coat() < FarmSimulation.DOG_COATS and not sim.adopt_dog(),
+	var basket_first := sim.quests.quest_trigger("puppy_basket").is_empty()
+	var asked := sim.quests.quest_talk("mother") == "rakoto_puppy"
+	var no_dog_yet := not sim.dog.has_dog()
+	var chosen := sim.quests.quest_trigger("puppy_basket") == "rakoto_puppy"
+	_check(not_yet and offered and basket_first and asked and no_dog_yet and chosen and sim.dog.has_dog()
+			and adopted.size() == 1 and sim.quests.is_quest_done("rakoto_puppy")
+			and DogRules.DOG_NAMES.has(sim.dog.get_dog_name()) and sim.dog.get_dog_growth() == 0.0
+			and sim.dog.get_dog_coat() >= 0 and sim.dog.get_dog_coat() < DogRules.DOG_COATS and not sim.dog.adopt_dog(),
 		"dog: after the lost zebu, Rakoto offers a puppy - ask Neny, pick it from the basket: the family has a dog (one)")
 
 func test_dog_bowl_petting_and_name() -> void:
 	var sim := _make_sim()
-	var none := not sim.feed_dog() and not sim.pet_dog() and not sim.rename_dog("Tsiky")
-	sim.adopt_dog(0)
-	var fed := sim.feed_dog() and sim.is_dog_fed() and not sim.feed_dog()
-	var petted: bool = sim.pet_dog() and not sim.pet_dog() and sim.state.dog.bond == 1
+	var none := not sim.dog.feed_dog() and not sim.dog.pet_dog() and not sim.dog.rename_dog("Tsiky")
+	sim.dog.adopt_dog(0)
+	var fed := sim.dog.feed_dog() and sim.dog.is_dog_fed() and not sim.dog.feed_dog()
+	var petted: bool = sim.dog.pet_dog() and not sim.dog.pet_dog() and sim.state.dog.bond == 1
 	sim.advance_day()
-	var next_day := not sim.is_dog_fed() and sim.dog_kept_watch() and not sim.is_dog_petted()
+	var next_day := not sim.dog.is_dog_fed() and sim.dog.dog_kept_watch() and not sim.dog.is_dog_petted()
 	sim.advance_day()
-	var hungry_night := not sim.dog_kept_watch()
-	for i in FarmSimulation.DOG_BOND_PER_HEART * (FarmSimulation.DOG_MAX_HEARTS + 2):
-		sim.pet_dog()
+	var hungry_night := not sim.dog.dog_kept_watch()
+	for i in DogRules.DOG_BOND_PER_HEART * (DogRules.DOG_MAX_HEARTS + 2):
+		sim.dog.pet_dog()
 		sim.advance_day()
-	var named := sim.rename_dog("  Bobaka le Magnifique Chien  ") 		and sim.get_dog_name() == "Bobaka le Magn" 		and not sim.rename_dog("   ")
-	_check(none and fed and petted and next_day and hungry_night and sim.get_dog_hearts() == FarmSimulation.DOG_MAX_HEARTS
-			and sim.get_dog_growth() == 1.0 and named,
+	var named := sim.dog.rename_dog("  Bobaka le Magnifique Chien  ") 		and sim.dog.get_dog_name() == "Bobaka le Magn" 		and not sim.dog.rename_dog("   ")
+	_check(none and fed and petted and next_day and hungry_night and sim.dog.get_dog_hearts() == DogRules.DOG_MAX_HEARTS
+			and sim.dog.get_dog_growth() == 1.0 and named,
 		"dog: its bowl once a day (it keeps watch that night), petted once a day (fonder, up to 5), named by the player")
 
 func test_fed_dog_chases_thieves() -> void:
 	var sim := _make_sim_for_thieves(3)
-	sim.adopt_dog()
-	sim.thief_alert_chance = 1.0
-	sim.thief_night_chance = 1.0
+	sim.dog.adopt_dog()
+	sim.thieves.thief_alert_chance = 1.0
+	sim.thieves.thief_night_chance = 1.0
 	var chased := []
 	sim.thieves_chased.connect(func(): chased.append(true))
 	sim.advance_day() # the rumour
-	sim.feed_dog()
+	sim.dog.feed_dog()
 	sim.advance_day() # the night: the dog barks them away
-	var kept := sim.get_hen_ids().size() == 3 and chased.size() == 1 and sim.day_log.dog_chased_thieves 		and not sim.day_log.thieves_foiled and not sim.is_thief_alert()
+	var kept := sim.thieves.get_hen_ids().size() == 3 and chased.size() == 1 and sim.day_log.dog_chased_thieves 		and not sim.day_log.thieves_foiled and not sim.thieves.is_thief_alert()
 	var hungry := _make_sim_for_thieves(3)
-	hungry.adopt_dog()
-	hungry.thief_alert_chance = 1.0
-	hungry.thief_night_chance = 1.0
+	hungry.dog.adopt_dog()
+	hungry.thieves.thief_alert_chance = 1.0
+	hungry.thieves.thief_night_chance = 1.0
 	hungry.advance_day()
 	hungry.advance_day() # not fed: it went looking for food
-	_check(kept and hungry.get_hen_ids().size() == 2 and hungry.day_log.chicken_stolen,
+	_check(kept and hungry.thieves.get_hen_ids().size() == 2 and hungry.day_log.chicken_stolen,
 		"dog: fed, it keeps watch and barks the chicken thieves away - hungry, it's off and a hen is gone")
 
 func test_dog_save_load() -> void:
 	var sim := _make_sim()
-	sim.adopt_dog(2)
-	sim.rename_dog("Kintana")
-	sim.feed_dog()
-	sim.pet_dog()
+	sim.dog.adopt_dog(2)
+	sim.dog.rename_dog("Kintana")
+	sim.dog.feed_dog()
+	sim.dog.pet_dog()
 	var loaded := _make_sim()
 	loaded.load_save_data(JSON.parse_string(JSON.stringify(sim.to_save_data())))
 	var older := _make_sim()
 	var data: Dictionary = JSON.parse_string(JSON.stringify(sim.to_save_data()))
 	data.erase("dog")
 	older.load_save_data(data)
-	_check(loaded.has_dog() and loaded.get_dog_name() == "Kintana" and loaded.get_dog_coat() == 2
-			and loaded.is_dog_fed() and loaded.is_dog_petted() and not older.has_dog(),
+	_check(loaded.dog.has_dog() and loaded.dog.get_dog_name() == "Kintana" and loaded.dog.get_dog_coat() == 2
+			and loaded.dog.is_dog_fed() and loaded.dog.is_dog_petted() and not older.dog.has_dog(),
 		"dog: its name, coat, bowl and petting survive a save/load - an older save has no dog")

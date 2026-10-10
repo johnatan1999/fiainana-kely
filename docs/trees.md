@@ -76,9 +76,9 @@ d'UV. Pas de réaction au joueur : le shader n'utilise pas `player_position`.
   double (le deuxième arbre n'est pas enregistré).
 - `tests/zone_wiring_test.gd` vérifie que, dans chaque zone, tous les arbres ont un
   `tree_id` et qu'ils sont tous différents.
-- `FarmSimulation` : `register_tree`, `can_harvest_tree`, `harvest_tree`,
+- `TreeRules` (`simulation.trees`) : `register_tree`, `can_harvest_tree`, `harvest_tree`,
   `get_tree_days_until_fruit`, signal `tree_changed`. L'avancement se fait chaque jour dans
-  `_advance_trees()`.
+  `advance_trees()`, appelé par `FarmSimulation.advance_day()`.
 - `FarmState.trees` est sauvegardé (clé `"trees"`). État par arbre : `TreeState`
   (`fruit_ready`, `days_growing`).
 

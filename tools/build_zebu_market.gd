@@ -75,7 +75,7 @@ func _initialize() -> void:
 
 func _write_manure() -> void:
 	var item: ItemData = load(MANURE_ITEM) if ResourceLoader.exists(MANURE_ITEM) else ItemData.new()
-	item.id = FarmSimulation.MANURE_ITEM
+	item.id = ZebuRules.MANURE_ITEM
 	item.display_name = "Fumier de zébu"
 	item.malagasy_name = "Zezik'omby"
 	item.description = ("Ramassé au parc des zébus. Épandu sur une parcelle labourée ou plantée, "
@@ -97,7 +97,7 @@ func _write_plough() -> void:
 	item.malagasy_name = "Angadin'omby"
 	item.description = ("Tirée par une paire de zébus forts (%d jours de croissance), elle laboure "
 		+ "%d cases d'un coup. Les zébus se fatiguent après %d cases par jour.") \
-		% [FarmSimulation.ZEBU_WORK_MIN_DAYS, FarmSimulation.PLOUGH_REACH, FarmSimulation.PLOUGH_CELLS_PER_DAY]
+		% [ZebuRules.ZEBU_WORK_MIN_DAYS, ZebuRules.PLOUGH_REACH, ZebuRules.PLOUGH_CELLS_PER_DAY]
 	item.category = ItemData.Category.TOOLS
 	item.price = PLOUGH_PRICE
 	item.tool_action = FarmAction.Type.PLOUGH

@@ -20,6 +20,6 @@ func _on_body_entered(body: Node) -> void:
 	if _collected or not body is PlayerController:
 		return
 	_collected = true
-	_simulation.collect_product(_product_id)
+	_simulation.animals.collect_product(_product_id)
 	AudioManager.play_egg_pickup_sfx()
 	queue_free()

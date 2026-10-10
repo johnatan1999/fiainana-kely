@@ -99,7 +99,7 @@ Côté game design :
   (dite à la fin de l'étape : par le villageois pour `TALK`/`BRING`, sinon en
   notification), `waiting_line` (quand il manque les objets).
 
-**Règles : `FarmSimulation`** (testables, sauvegardées)
+**Règles : `QuestRules` (`simulation.quests`, voir `simulation.md`)** (testables, sauvegardées)
 - `register_quest`, `get_quest`, `get_quest_ids`.
 - `is_quest_available` (pas commencée, pas finie, conditions remplies),
   `get_quest_offered_by(villager)`, `start_quest`.

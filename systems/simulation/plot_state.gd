@@ -8,7 +8,7 @@ var crop: CropState = null
 ## watering - and only takes crops that grow in paddies (CropData.grows_in_paddy).
 ## A property of the land, not of what's growing: reset() keeps it.
 var flooded: bool = false
-## Zebu manure spread on it (FarmSimulation.fertilize): the next harvest
+## Zebu manure spread on it (FieldRules.fertilize): the next harvest
 ## here is bigger, and uses it up.
 var fertilized: bool = false
 
@@ -20,7 +20,7 @@ func is_empty() -> bool:
 	return crop == null
 
 ## Clears the plot back to empty/untilled without removing it from the grid -
-## used by FarmSimulation.clear_tile() when reorganizing without changing shape.
+## used by FieldRules.clear_tile() when reorganizing without changing shape.
 func reset() -> void:
 	tilled = false
 	watered = false

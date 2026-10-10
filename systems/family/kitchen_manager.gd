@@ -23,7 +23,7 @@ func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase, world_manager:
 	_panel = panel
 	var recipes := Recipe.load_all()
 	for recipe_id: String in recipes:
-		simulation.register_recipe(recipe_id, recipes[recipe_id])
+		simulation.kitchen.register_recipe(recipe_id, recipes[recipe_id])
 	_panel.cook_requested.connect(_on_cook_requested)
 	simulation.inventory_changed.connect(func(_item: String, _count: int):
 		if _panel.is_open():
@@ -42,15 +42,15 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 
 func _on_granary() -> void:
 	UIEvents.notify(tr("Le grenier garde le riz loin des rats : %d %% de riz en plus à chaque récolte de riz.")
-		% roundi((FarmSimulation.GRANARY_RICE_MULTIPLIER - 1.0) * 100.0))
+		% roundi((ProjectRules.GRANARY_RICE_MULTIPLIER - 1.0) * 100.0))
 
 func _show_panel() -> void:
-	if not simulation.has_kitchen():
+	if not simulation.kitchen.has_kitchen():
 		return
 	var recipes := []
 	var any := false
-	for recipe_id: String in simulation.get_recipe_ids():
-		var recipe := simulation.get_recipe(recipe_id)
+	for recipe_id: String in simulation.kitchen.get_recipe_ids():
+		var recipe := simulation.kitchen.get_recipe(recipe_id)
 		var parts := []
 		var missing := false
 		for item_id: String in recipe.ingredients:
@@ -59,7 +59,7 @@ func _show_panel() -> void:
 			missing = missing or have < need
 			parts.append(tr("%d %s (tu en as %d)") % [need,
 				EveningManager.plural(item_db.get_display_name(item_id).to_lower(), need), have])
-		var count := simulation.get_cookable_count(recipe_id)
+		var count := simulation.kitchen.get_cookable_count(recipe_id)
 		any = any or count > 0
 		recipes.append({
 			"id": recipe_id, "name": tr(recipe.display_name), "malagasy": recipe.malagasy_name,
@@ -78,10 +78,10 @@ func _sell_price(item_id: String) -> int:
 func _on_cook_requested(recipe_id: String, times: int) -> void:
 	var cooked := 0
 	for i in times:
-		if simulation.cook(recipe_id):
+		if simulation.kitchen.cook(recipe_id):
 			cooked += 1
 	if cooked > 0:
 		AudioManager.play_harvest_sfx()
-		var recipe := simulation.get_recipe(recipe_id)
+		var recipe := simulation.kitchen.get_recipe(recipe_id)
 		UIEvents.notify(tr("+%d %s") % [cooked * recipe.quantity, item_db.get_display_name(recipe.result)])
 	_show_panel()

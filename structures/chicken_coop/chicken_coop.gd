@@ -28,7 +28,7 @@ var _level_sprite: Sprite2D
 func _ready() -> void:
 	add_to_group(GROUP)
 
-## Shows the coop at `level` (FarmSimulation.get_building_level("coop")) -
+## Shows the coop at `level` (ProjectRules.get_building_level("coop")) -
 ## FamilyProjectManager sets it on the farm's coop.
 func set_level(level: int) -> void:
 	$WallSprite.visible = false
@@ -65,12 +65,12 @@ func refresh_visual() -> void:
 	var simulation := _animal_manager.simulation
 	var prompt := ""
 	if not simulation.state.has_coop:
-		prompt = tr("Construire le poulailler (%s)") % Currency.format(FarmSimulation.COOP_COST)
+		prompt = tr("Construire le poulailler (%s)") % Currency.format(AnimalRules.COOP_COST)
 	else:
-		match simulation.check_place_animal(AnimalData.Species.CHICKEN):
-			FarmSimulation.PlaceCheck.OK:
-				prompt = tr("Installer une poule (%d en attente)") % simulation.get_pending_count(AnimalData.Species.CHICKEN)
-			FarmSimulation.PlaceCheck.FULL:
+		match simulation.animals.check_place_animal(AnimalData.Species.CHICKEN):
+			AnimalRules.PlaceCheck.OK:
+				prompt = tr("Installer une poule (%d en attente)") % simulation.animals.get_pending_count(AnimalData.Species.CHICKEN)
+			AnimalRules.PlaceCheck.FULL:
 				# Hens waiting but no room: say so rather than promise a no-op.
 				prompt = tr("Poulailler plein (%s)") % _animal_manager.get_coop_occupancy()
 	interactable_component.prompt_message = prompt

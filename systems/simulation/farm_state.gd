@@ -30,7 +30,7 @@ var inventory: Dictionary = {} # item_id: String -> int
 
 var animals: Dictionary = {} # animal_id: String -> AnimalState
 ## Animals bought but not settled yet - the seller keeps them until the
-## player settles them in a pen of their choice (FarmSimulation.place_animal).
+## player settles them in a pen of their choice (AnimalRules.place_animal).
 ## Not inventory items: they're living animals, not things in the bag.
 var pending_animals: Dictionary = {} # AnimalData.Species -> count
 var has_coop: bool = false
@@ -48,7 +48,7 @@ var progressive_tiles_unlocked: int = 0
 var trees: Dictionary = {} # tree_id: String -> TreeState
 
 ## The tufts the player cut in the neighbours' paddies
-## (FarmSimulation.help_neighbour_harvest), per paddy ("<zone_id>:<node
+## (NeighbourRules.help_neighbour_harvest), per paddy ("<zone_id>:<node
 ## name>"): {"season": index of the season (0, 1, 2...), "cells": ["x,y"]}.
 ## A season's entry is ignored once the season is over.
 var neighbour_harvest: Dictionary = {}
@@ -66,7 +66,7 @@ var order_cooldowns: Dictionary = {}
 var order_roll_day: int = 0
 
 ## Friendship with each villager (FarmSimulation's friendship API), in
-## points: FarmSimulation.FRIENDSHIP_PER_HEART per heart.
+## points: FriendshipRules.FRIENDSHIP_PER_HEART per heart.
 var friendship: Dictionary = {} # villager_id -> points
 ## The last day the player talked to each villager (talking counts once a
 ## day).
@@ -81,7 +81,7 @@ var next_zebu_index: int = 0
 var zebu_trough_full: bool = false
 ## The big pen's trough holds tomorrow's too (FamilyProject zebu_pen 3).
 var zebu_trough_spare: bool = false
-## Plots the zebu team has ploughed today (FarmSimulation.plough).
+## Plots the zebu team has ploughed today (ZebuRules.plough).
 var plough_cells_today: int = 0
 ## Manure heaped by the farm pen, waiting to be picked up.
 var manure_pile: int = 0
@@ -136,7 +136,7 @@ const HOTBAR_SIZE := 8
 ## Item id in each hotbar slot ("" = empty), saved with the game. Only ever
 ## modified through FarmSimulation's hotbar methods, which keep it valid.
 ## Empty array = not initialized yet (new game, or a save from before the
-## hotbar) - see FarmSimulation.init_hotbar().
+## hotbar) - see HotbarRules.init_hotbar().
 var hotbar: Array = []
 
 ## Convenience read access - the clock is the single source of truth for the day.

@@ -70,7 +70,7 @@ Côté game design :
 - Les objets cueillis : `data/items/wild_greens.tres`, `honey`, `ravintsara`, `mushroom`
   (catégorie FOOD, vente seulement), dans `ItemDatabase.ITEM_PATHS`.
 
-**Règles : `FarmSimulation`** (testables, sauvegardées)
+**Règles : `NotebookRules` (`simulation.notebook`, voir `simulation.md`)** (testables, sauvegardées)
 - Le carnet :
   - `register_discovery()`, `get_discovery_ids()` (par page, puis une entrée
     `"cuisine:<recette>"` par recette) ;

@@ -2,7 +2,7 @@ class_name ZebuTrough
 extends Prop
 
 ## The farm pen's trough and hay rack: filling it is the zebus' daily care
-## (FarmSimulation.fill_zebu_trough) - ZebuManager decides, this only shows
+## (ZebuRules.fill_zebu_trough) - ZebuManager decides, this only shows
 ## it, empty or full, and passes the player's interaction on. A Prop: its
 ## Sprite2D's region is switched between the sheet's two cells.
 

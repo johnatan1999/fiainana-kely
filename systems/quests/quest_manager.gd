@@ -40,7 +40,7 @@ func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase, world_manager:
 	_tracker = tracker
 	var quests := Quest.load_all()
 	for quest_id: String in quests:
-		simulation.register_quest(quest_id, quests[quest_id])
+		simulation.quests.register_quest(quest_id, quests[quest_id])
 	_load_names()
 	_panel.accepted.connect(_on_accepted)
 	simulation.quest_changed.connect(func(_quest_id: String): _queue_refresh())
@@ -62,8 +62,8 @@ func _load_names() -> void:
 ## Whether a side quest has something to do with `villager_id` now: one to
 ## offer, or a step with them. OrderManager leaves them to QuestManager.
 static func has_quest_business(p_simulation: FarmSimulation, villager_id: String) -> bool:
-	return not p_simulation.get_quest_offered_by(villager_id).is_empty() \
-		or not p_simulation.get_quest_waiting_on(villager_id).is_empty()
+	return not p_simulation.quests.get_quest_offered_by(villager_id).is_empty() \
+		or not p_simulation.quests.get_quest_waiting_on(villager_id).is_empty()
 
 func _on_zone_loaded(zone: ZoneRoot) -> void:
 	# Connected after OrderManager's (world.gd sets QuestManager up later):
@@ -80,28 +80,28 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 
 func _on_villager_interacted(villager: Villager) -> void:
 	var villager_id := villager.get_villager_id()
-	var waiting := simulation.get_quest_waiting_on(villager_id)
+	var waiting := simulation.quests.get_quest_waiting_on(villager_id)
 	if not waiting.is_empty():
 		villager.turn_to_player()
-		var step := simulation.get_quest_step(waiting)
-		if simulation.quest_talk(villager_id).is_empty():
+		var step := simulation.quests.get_quest_step(waiting)
+		if simulation.quests.quest_talk(villager_id).is_empty():
 			villager.say(tr(step.waiting_line) if not step.waiting_line.is_empty()
 				else tr("Tu m'apportes %d %s ?") % [step.quantity, _item_name(step.item_id)])
 		elif not step.line.is_empty():
 			villager.say(tr(step.line))
 		return
-	var offered := simulation.get_quest_offered_by(villager_id)
+	var offered := simulation.quests.get_quest_offered_by(villager_id)
 	if offered.is_empty():
 		return
 	villager.turn_to_player()
-	var quest := simulation.get_quest(offered)
+	var quest := simulation.quests.get_quest(offered)
 	_offering = offered
 	_panel.open(tr(quest.title), _names.get(quest.giver, quest.giver), tr(quest.offer_line),
 		_objective(quest.steps[0]), _reward_text(quest))
 
 func _on_accepted() -> void:
-	var quest := simulation.get_quest(_offering)
-	if not simulation.start_quest(_offering):
+	var quest := simulation.quests.get_quest(_offering)
+	if not simulation.quests.start_quest(_offering):
 		return
 	_say(quest.giver, tr("Merci ! Je savais que je pouvais compter sur toi."))
 	UIEvents.notify(tr("Nouvelle quête : %s") % tr(quest.title))
@@ -109,11 +109,11 @@ func _on_accepted() -> void:
 # --- quest targets ----------------------------------------------------------------------
 
 func _on_target_triggered(target: QuestTarget) -> void:
-	var quest_id := simulation.get_quest_at_target(target.target_id)
+	var quest_id := simulation.quests.get_quest_at_target(target.target_id)
 	if quest_id.is_empty():
 		return
-	var step := simulation.get_quest_step(quest_id)
-	if simulation.quest_trigger(target.target_id).is_empty():
+	var step := simulation.quests.get_quest_step(quest_id)
+	if simulation.quests.quest_trigger(target.target_id).is_empty():
 		UIEvents.notify(tr(step.waiting_line) if not step.waiting_line.is_empty()
 			else tr("Il te faut %d %s.") % [step.quantity, _item_name(step.item_id)])
 		return
@@ -123,7 +123,7 @@ func _on_target_triggered(target: QuestTarget) -> void:
 # --- the end ----------------------------------------------------------------------------
 
 func _on_completed(quest_id: String) -> void:
-	var quest := simulation.get_quest(quest_id)
+	var quest := simulation.quests.get_quest(quest_id)
 	AudioManager.play_harvest_sfx()
 	var reward := _reward_text(quest)
 	UIEvents.notify(tr("Quête terminée : %s") % tr(quest.title)
@@ -156,44 +156,44 @@ func _refresh() -> void:
 		var villager_id := villager.get_villager_id()
 		villager.set_conditions(conditions)
 		var name: String = _names.get(villager_id, villager_id)
-		var waiting := simulation.get_quest_waiting_on(villager_id)
+		var waiting := simulation.quests.get_quest_waiting_on(villager_id)
 		if not waiting.is_empty():
-			var step := simulation.get_quest_step(waiting)
-			var ready := simulation.can_do_quest_step(waiting)
+			var step := simulation.quests.get_quest_step(waiting)
+			var ready := simulation.quests.can_do_quest_step(waiting)
 			villager.set_order_mark("?" if ready else "", MARK_COLOR)
 			villager.set_prompt(tr(step.prompt) if not step.prompt.is_empty()
 				else (tr("Donner %d %s à %s") % [step.quantity, _item_name(step.item_id), name] if step.kind == QuestStep.Kind.BRING
 				else tr("Parler à %s") % name))
-		elif not simulation.get_quest_offered_by(villager_id).is_empty():
+		elif not simulation.quests.get_quest_offered_by(villager_id).is_empty():
 			villager.set_order_mark("!", MARK_COLOR)
 			villager.set_prompt(tr("Écouter %s") % name)
 	for target: QuestTarget in get_tree().get_nodes_in_group(QuestTarget.GROUP):
 		if target.appears == QuestTarget.Show.AFTER_DONE:
-			target.set_shown(simulation.is_quest_done(target.quest_id))
+			target.set_shown(simulation.quests.is_quest_done(target.quest_id))
 			continue
-		var quest_id := simulation.get_quest_at_target(target.target_id)
-		var step := simulation.get_quest_step(quest_id) if not quest_id.is_empty() else null
+		var quest_id := simulation.quests.get_quest_at_target(target.target_id)
+		var step := simulation.quests.get_quest_step(quest_id) if not quest_id.is_empty() else null
 		target.set_shown(step != null, tr(step.prompt) if step != null and not step.prompt.is_empty() else tr("Regarder"))
 	var rows := []
-	for quest_id: String in simulation.get_active_quests():
-		var step := simulation.get_quest_step(quest_id)
-		var progress := simulation.get_quest_item_progress(quest_id)
+	for quest_id: String in simulation.quests.get_active_quests():
+		var step := simulation.quests.get_quest_step(quest_id)
+		var progress := simulation.quests.get_quest_item_progress(quest_id)
 		var objective := _objective(step)
 		if progress != Vector2i.ZERO:
 			objective += " (%d/%d)" % [mini(progress.x, progress.y), progress.y]
-		rows.append({"title": tr(simulation.get_quest(quest_id).title), "objective": objective,
-			"ready": step.needs_items() and simulation.can_do_quest_step(quest_id)})
+		rows.append({"title": tr(simulation.quests.get_quest(quest_id).title), "objective": objective,
+			"ready": step.needs_items() and simulation.quests.can_do_quest_step(quest_id)})
 	_tracker.show_quests(rows)
 
 ## A quest newly offered (a new day, a heart more, a quest finished): who
 ## has one - said once.
 func _announce_new() -> void:
 	var available: Array[String] = []
-	for quest_id: String in simulation.get_quest_ids():
-		if simulation.is_quest_available(quest_id):
+	for quest_id: String in simulation.quests.get_quest_ids():
+		if simulation.quests.is_quest_available(quest_id):
 			available.append(quest_id)
 			if not _available.has(quest_id):
-				var giver: String = simulation.get_quest(quest_id).giver
+				var giver: String = simulation.quests.get_quest(quest_id).giver
 				UIEvents.notify(tr("%s a besoin d'un coup de main.") % _names.get(giver, giver))
 	_available = available
 

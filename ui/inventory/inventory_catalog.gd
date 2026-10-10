@@ -182,13 +182,13 @@ static func describe_animal(db: ItemDatabase, animal: AnimalState) -> Dictionary
 ## One of the player's zebus (FarmSimulation's zebu API): its growth, its
 ## worth at the zebu market, today's trough.
 static func describe_zebu(simulation: FarmSimulation, zebu_id: String) -> Dictionary:
-	var zebu := simulation.get_zebu(zebu_id)
-	var grown := simulation.is_zebu_grown(zebu_id)
+	var zebu := simulation.zebus.get_zebu(zebu_id)
+	var grown := simulation.zebus.is_zebu_grown(zebu_id)
 	var details: Array = [
 		[_t("Croissance"), _t("Adulte") if grown
-			else "%d / %d" % [zebu["grown_days"], FarmSimulation.ZEBU_GROW_DAYS]],
-		[_t("Valeur au marché"), Currency.format(simulation.get_zebu_value(zebu_id))],
-		[_t("Abreuvoir"), _t("Plein aujourd'hui") if simulation.is_zebu_trough_full() else _t("À remplir")],
+			else "%d / %d" % [zebu["grown_days"], ZebuRules.ZEBU_GROW_DAYS]],
+		[_t("Valeur au marché"), Currency.format(simulation.zebus.get_zebu_value(zebu_id))],
+		[_t("Abreuvoir"), _t("Plein aujourd'hui") if simulation.zebus.is_zebu_trough_full() else _t("À remplir")],
 	]
 	var description := _t("Un zébu adulte, à vendre au tsena omby du bourg le zoma.") if grown \
 		else _t("Il grandit d'un jour chaque jour où l'abreuvoir du parc est rempli (ou qu'il pleut).")
@@ -201,14 +201,14 @@ static func describe_zebu(simulation: FarmSimulation, zebu_id: String) -> Dictio
 ## The family's dog (FarmSimulation's dog API): its bowl, its fondness for
 ## the player, tonight.
 static func describe_dog(simulation: FarmSimulation) -> Dictionary:
-	var fed := simulation.is_dog_fed()
+	var fed := simulation.dog.is_dog_fed()
 	var details: Array = [
 		[_t("Gamelle"), _t("Remplie aujourd'hui") if fed else _t("À remplir")],
-		[_t("Attachement"), "%d/%d" % [simulation.get_dog_hearts(), FarmSimulation.DOG_MAX_HEARTS]],
+		[_t("Attachement"), "%d/%d" % [simulation.dog.get_dog_hearts(), DogRules.DOG_MAX_HEARTS]],
 		[_t("Cette nuit"), _t("Il garde la ferme") if fed else _t("Il ira chercher à manger")],
 	]
 	var description := _t("Ton chien. Il te suit partout dehors. Caresse-le chaque jour, et remplis sa gamelle près de sa niche : un chien qui a mangé garde la ferme la nuit et chasse les voleurs de poules.")
-	var entry := _make("dog:family", simulation.get_dog_name(), dog_icon(), Category.ANIMALS,
+	var entry := _make("dog:family", simulation.dog.get_dog_name(), dog_icon(), Category.ANIMALS,
 		ItemData.Category.ANIMALS, description, details)
 	entry["meta"] = _t("À tes côtés")
 	entry["sort_group"] = 1
@@ -237,24 +237,24 @@ static func describe_villager(db: ItemDatabase, simulation: FarmSimulation, vill
 		data: VillagerData) -> Dictionary:
 	if data.family:
 		return _describe_family(villager_id, data, simulation)
-	var hearts := simulation.get_hearts(villager_id)
-	var max_hearts := FarmSimulation.FRIENDSHIP_MAX_HEARTS
+	var hearts := simulation.friendship.get_hearts(villager_id)
+	var max_hearts := FriendshipRules.FRIENDSHIP_MAX_HEARTS
 	# Short values (the card's right column is narrow); the longer texts go
 	# in the description, which wraps.
 	var details: Array = [[_t("Amitié"), _t("%d/%d cœurs") % [hearts, max_hearts]]]
 	if hearts < max_hearts:
-		details.append([_t("Prochain cœur"), "%d %%" % roundi(simulation.get_heart_progress(villager_id) * 100.0)])
+		details.append([_t("Prochain cœur"), "%d %%" % roundi(simulation.friendship.get_heart_progress(villager_id) * 100.0)])
 	if hearts > 0:
-		details.append([_t("Prix d'ami"), "+%d %%" % roundi(FarmSimulation.ORDER_BONUS_PER_HEART * 100.0 * hearts)])
-	var order := simulation.get_order(villager_id)
+		details.append([_t("Prix d'ami"), "+%d %%" % roundi(OrderRules.ORDER_BONUS_PER_HEART * 100.0 * hearts)])
+	var order := simulation.orders.get_order(villager_id)
 	if order.is_empty():
 		details.append([_t("Commande"), _t("Aucune")])
 	else:
 		details.append([_t("Commande"), "%d %s" % [order["quantity"], db.get_display_name(order["item"]).to_lower()]])
-		if simulation.is_order_offered(villager_id):
+		if simulation.orders.is_order_offered(villager_id):
 			details.append([_t("Délai"), _t("à voir")])
 		else:
-			details.append([_t("Délai"), _days(simulation.get_order_days_left(villager_id), "%d jour", "%d jours")])
+			details.append([_t("Délai"), _days(simulation.orders.get_order_days_left(villager_id), "%d jour", "%d jours")])
 	details.append([_t("En ce moment"), _place_text(simulation, data)])
 	var description := _t(data.role)
 	var home: String = HOME_PLACES.get(data.home, "")
@@ -281,7 +281,7 @@ static func describe_villager(db: ItemDatabase, simulation: FarmSimulation, vill
 ## `id`: a Discovery id, or "cuisine:<recipe>". The entry's id is
 ## "notebook:<id>"; sort_group keeps the pages in order.
 static func describe_discovery(db: ItemDatabase, simulation: FarmSimulation, discovery_id: String) -> Dictionary:
-	var found := simulation.is_discovered(discovery_id)
+	var found := simulation.notebook.is_discovered(discovery_id)
 	var page := 3
 	var title := ""
 	var malagasy := ""
@@ -289,8 +289,8 @@ static func describe_discovery(db: ItemDatabase, simulation: FarmSimulation, dis
 	var hint := ""
 	var fara := ""
 	var icon: Texture2D = null
-	if discovery_id.begins_with(FarmSimulation.CUISINE_PREFIX):
-		var recipe := simulation.get_recipe(discovery_id.trim_prefix(FarmSimulation.CUISINE_PREFIX))
+	if discovery_id.begins_with(NotebookRules.CUISINE_PREFIX):
+		var recipe := simulation.kitchen.get_recipe(discovery_id.trim_prefix(NotebookRules.CUISINE_PREFIX))
 		title = _t(recipe.display_name) if recipe != null else discovery_id
 		malagasy = recipe.malagasy_name if recipe != null else ""
 		text = _t("Cuisiné à la cuisine de la ferme.")
@@ -299,7 +299,7 @@ static func describe_discovery(db: ItemDatabase, simulation: FarmSimulation, dis
 		if recipe != null:
 			icon = db.get_icon(recipe.result)
 	else:
-		var discovery := simulation.get_discovery(discovery_id)
+		var discovery := simulation.notebook.get_discovery(discovery_id)
 		page = discovery.category
 		title = _t(discovery.display_name)
 		malagasy = discovery.malagasy_name

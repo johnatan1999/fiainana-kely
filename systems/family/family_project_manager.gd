@@ -46,7 +46,7 @@ func setup(p_simulation: FarmSimulation, world_manager: WorldManager, panel: Fam
 	_panel = panel
 	var projects := FamilyProject.load_all()
 	for project_id: String in projects:
-		simulation.register_project(project_id, projects[project_id])
+		simulation.projects.register_project(project_id, projects[project_id])
 	var villagers := VillagerData.load_all()
 	for villager_id: String in villagers:
 		_names[villager_id] = villagers[villager_id].display_name
@@ -89,13 +89,13 @@ func _dress_zone(fresh := false) -> void:
 		return
 	var coop := _zone.get_node_or_null(COOP_NODE) as Coop
 	if coop != null:
-		coop.set_level(simulation.get_building_level("coop"))
+		coop.set_level(simulation.projects.get_building_level("coop"))
 	if fresh and _zone.get_node_or_null("ZebuPasture") != null:
-		_size_pen(simulation.get_building_level("zebu_pen"))
+		_size_pen(simulation.projects.get_building_level("zebu_pen"))
 	for building: String in ANNEX_NODES:
 		var annex := _zone.get_node_or_null(ANNEX_NODES[building]) as HouseAnnex
 		if annex != null:
-			annex.set_level(simulation.get_building_level(building))
+			annex.set_level(simulation.projects.get_building_level(building))
 	_place_site()
 
 ## The farm's pen at `level`: its scene in place of the one there.
@@ -118,10 +118,10 @@ func _place_site() -> void:
 	if _site != null and is_instance_valid(_site):
 		_site.queue_free()
 	_site = null
-	var site := simulation.get_construction()
+	var site := simulation.projects.get_construction()
 	if site.is_empty() or _zone == null:
 		return
-	var project := simulation.get_project(site["project"])
+	var project := simulation.projects.get_project(site["project"])
 	if project == null:
 		return
 	var at := Vector2.ZERO
@@ -137,7 +137,7 @@ func _place_site() -> void:
 			var pen := _zone.get_node_or_null(PEN_NODE) as Node2D
 			if pen == null or _zone.get_node_or_null("ZebuPasture") == null:
 				return
-			var level := simulation.get_building_level("zebu_pen")
+			var level := simulation.projects.get_building_level("zebu_pen")
 			var size: Vector2 = PEN_LEVELS[level]["size"] if PEN_LEVELS.has(level) else PEN_SIZE
 			at = pen.position + Vector2(0, size.y)
 			area = Rect2(0, -70, size.x, 70)
@@ -162,81 +162,81 @@ func _on_father_interacted() -> void:
 
 func _show_panel() -> void:
 	var sections := []
-	for building: String in FarmSimulation.BUILDINGS:
-		var level := simulation.get_building_level(building)
+	for building: String in ProjectRules.BUILDINGS:
+		var level := simulation.projects.get_building_level(building)
 		var title := tr(BUILDING_NAMES[building])
 		if building in ANNEX_NODES:
 			title += " — " + (tr("à construire") if level == 0 else tr("construit"))
 		else:
 			title += " — " + (tr("en ruine") if level == 0 else tr("niveau %d") % level)
 		var projects := []
-		for project_id: String in simulation.get_project_ids():
-			var project := simulation.get_project(project_id)
+		for project_id: String in simulation.projects.get_project_ids():
+			var project := simulation.projects.get_project(project_id)
 			if project.building == building:
 				projects.append(_describe(project_id, project))
 		sections.append({"title": title, "projects": projects})
 	_panel.show_projects(_dada_line(), sections)
 
 func _describe(project_id: String, project: FamilyProject) -> Dictionary:
-	var state := simulation.get_project_state(project_id)
-	var helpers := simulation.get_project_helpers()
+	var state := simulation.projects.get_project_state(project_id)
+	var helpers := simulation.projects.get_project_helpers()
 	var entry := {
 		"id": project_id, "name": tr(project.display_name), "malagasy": project.malagasy_name,
 		"description": tr(project.description), "cost": project.cost, "days": project.build_days,
 		"helpers": "", "button": false, "can_start": false, "status": "", "status_color": FamilyProjectsPanel.MUTED_COLOR,
 	}
 	match state:
-		FarmSimulation.ProjectState.DONE:
+		ProjectRules.ProjectState.DONE:
 			entry["status"] = tr("Terminé ✓")
 			entry["status_color"] = FamilyProjectsPanel.DONE_COLOR
-		FarmSimulation.ProjectState.BUILDING:
-			var days := int(simulation.get_construction()["done_day"]) - simulation.state.day
+		ProjectRules.ProjectState.BUILDING:
+			var days := int(simulation.projects.get_construction()["done_day"]) - simulation.state.day
 			entry["status"] = tr("En chantier : prêt dans %d jour(s)") % days
 			entry["status_color"] = FamilyProjectsPanel.BUSY_COLOR
-		FarmSimulation.ProjectState.BUSY:
+		ProjectRules.ProjectState.BUSY:
 			entry["status"] = tr("Un chantier à la fois")
-		FarmSimulation.ProjectState.LOCKED:
+		ProjectRules.ProjectState.LOCKED:
 			entry["status"] = _locked_text(project)
-		FarmSimulation.ProjectState.AVAILABLE:
+		ProjectRules.ProjectState.AVAILABLE:
 			entry["button"] = true
-			entry["can_start"] = simulation.can_start_project(project_id)
+			entry["can_start"] = simulation.projects.can_start_project(project_id)
 			if not entry["can_start"]:
 				entry["status"] = tr("Il manque %s") % Currency.format(project.cost - simulation.state.money)
 				entry["status_color"] = FamilyProjectsPanel.BUSY_COLOR
 			if not helpers.is_empty():
 				entry["helpers"] = tr("%s viendront aider : %d jour(s) au lieu de %d.") % [_names_list(helpers),
-					simulation.get_project_days(project_id), project.build_days]
+					simulation.projects.get_project_days(project_id), project.build_days]
 	return entry
 
 func _locked_text(project: FamilyProject) -> String:
-	if project.building == "coop" and simulation.get_building_level("coop") == 0:
+	if project.building == "coop" and simulation.projects.get_building_level("coop") == 0:
 		return tr("Reconstruis d'abord le poulailler (dedans).")
-	for project_id: String in simulation.get_project_ids():
-		var before := simulation.get_project(project_id)
+	for project_id: String in simulation.projects.get_project_ids():
+		var before := simulation.projects.get_project(project_id)
 		if before.building == project.building and before.level == project.level - 1:
 			return tr("Après : %s") % tr(before.display_name)
 	return tr("Pas encore")
 
 func _dada_line() -> String:
-	var site := simulation.get_construction()
+	var site := simulation.projects.get_construction()
 	if not site.is_empty():
-		var project := simulation.get_project(site["project"])
+		var project := simulation.projects.get_project(site["project"])
 		return tr("Le chantier avance bien. On ne lance pas deux chantiers à la fois, ça coûte trop.") if project != null \
 			else tr("Le chantier avance.")
-	if simulation.get_project_helpers().is_empty():
+	if simulation.projects.get_project_helpers().is_empty():
 		return tr("On a des projets pour la ferme. Fais-toi des amis au village : ils viendront aider aux travaux.")
 	return tr("On a des projets pour la ferme. Tes amis du village sont prêts à venir aider.")
 
 func _on_start_requested(project_id: String) -> void:
-	if simulation.start_project(project_id):
+	if simulation.projects.start_project(project_id):
 		AudioManager.play_coop_build_sfx()
 		_show_panel()
 
 # --- the news ---------------------------------------------------------------------------------
 
 func _on_project_started(project_id: String) -> void:
-	var project := simulation.get_project(project_id)
-	var site := simulation.get_construction()
+	var project := simulation.projects.get_project(project_id)
+	var site := simulation.projects.get_construction()
 	var days := int(site["done_day"]) - simulation.state.day
 	var text := tr("Les travaux commencent : %s, prêt dans %d jour(s).") % [tr(project.display_name).to_lower(), days]
 	if not site["helpers"].is_empty():
@@ -247,12 +247,12 @@ func _on_project_started(project_id: String) -> void:
 ## The coop's inside is built from the coop's level when its zone loads -
 ## it reads CoopInterior.level; a room already there is rebuilt.
 func _sync_coop_interior() -> void:
-	CoopInterior.level = simulation.get_building_level("coop")
+	CoopInterior.level = simulation.projects.get_building_level("coop")
 	get_tree().call_group(CoopInterior.GROUP, "set_level", CoopInterior.level)
 
 func _on_project_completed(project_id: String) -> void:
 	_sync_coop_interior()
-	var project := simulation.get_project(project_id)
+	var project := simulation.projects.get_project(project_id)
 	UIEvents.notify(tr("C'est fini : %s ! %s") % [tr(project.display_name).to_lower(), tr(project.description)])
 	_dress_zone()
 

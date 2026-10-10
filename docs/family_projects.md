@@ -86,7 +86,7 @@ Côté game design :
 - `building` (`"coop"`, `"zebu_pen"`), `level` (le niveau atteint), `cost`, `build_days`.
 - `load_all()`.
 
-**Règles : `FarmSimulation`** (testables, sauvegardées)
+**Règles : `ProjectRules` (`simulation.projects`, voir `simulation.md`)** (testables, sauvegardées)
 - Constantes :
   - `BUILDINGS` (`coop`, `zebu_pen`, `granary`, `kitchen`), `BUILDING_START_LEVELS` (le parc
     à 1, les annexes à 0), `COOP_CAPACITY_BY_LEVEL` (0, 4, 8, 12), `ZEBU_CAPACITY_BY_LEVEL` (·, 4, 6,
@@ -102,7 +102,7 @@ Côté game design :
   `BUSY`).
 - `get_project_helpers()`, `get_project_days(id)`, `can_start_project`,
   `start_project(id)` : paie et ouvre le chantier `{"project", "done_day", "helpers"}`.
-- `_advance_projects()` (le matin) : le chantier fini fixe le niveau
+- `advance_projects()` (le matin) : le chantier fini fixe le niveau
   (`building_levels`) et la place au poulailler (`coop_capacity`).
 - Signaux `project_started`, `project_completed`, et `basket_collected(item, quantité)` :
   les œufs pondus dans le poulailler en briques vont dans le sac au lieu d'être posés au sol.
@@ -178,7 +178,7 @@ Côté game design :
 
 ## À savoir
 - **Ajouter un projet** : un `.tres` dans `data/projects/` (bâtiment, niveau, coût, jours).
-  Un nouveau **bâtiment** demande en plus son effet dans `FarmSimulation` et son visuel
+  Un nouveau **bâtiment** demande en plus son effet dans les règles (`ProjectRules` et le domaine concerné) et son visuel
   dans `FamilyProjectManager`.
 - **La maison familiale** : le grenier et la cuisine sont faits. La chambre de Fara et le toit
   en tôle sont les ajouts suivants.

@@ -2,7 +2,7 @@ class_name FarmLandManager
 extends Node
 
 ## Bridges on-site land purchase panels (FarmZoneSign/ModularFarmZoneSign) to
-## FarmSimulation's dynamic tile grid (FarmSimulation.add_tile). Land is
+## FarmSimulation's dynamic tile grid (FieldRules.add_tile). Land is
 ## bought by walking up to a physical panel in the world.
 ##
 ## The land itself is designed in the zone scenes, as FarmField nodes: each
@@ -66,7 +66,7 @@ func register_field(kind: FarmField.Kind, cells: Array[Vector2i], zone_data: Far
 			_flooded_cells[world_zone_id][cell] = true
 		else:
 			_flooded_cells[world_zone_id].erase(cell)
-		simulation.set_tile_flooded(cell.x, cell.y, flooded, world_zone_id) # no-op until owned
+		simulation.fields.set_tile_flooded(cell.x, cell.y, flooded, world_zone_id) # no-op until owned
 	match kind:
 		FarmField.Kind.STARTER:
 			_add_tiles(cells, world_zone_id)
@@ -92,9 +92,9 @@ func _row_by_row(cells: Array[Vector2i]) -> Array[Vector2i]:
 func _add_tiles(cells: Array, world_zone_id: String) -> void:
 	var flooded: Dictionary = _flooded_cells.get(world_zone_id, {})
 	for cell: Vector2i in cells:
-		simulation.add_tile(cell.x, cell.y, world_zone_id) # no-op if a plot is already there
+		simulation.fields.add_tile(cell.x, cell.y, world_zone_id) # no-op if a plot is already there
 		if flooded.has(cell):
-			simulation.set_tile_flooded(cell.x, cell.y, true, world_zone_id)
+			simulation.fields.set_tile_flooded(cell.x, cell.y, true, world_zone_id)
 
 func get_zone_data(zone_id: String) -> FarmZoneData:
 	return _zones.get(zone_id, {}).get("data")

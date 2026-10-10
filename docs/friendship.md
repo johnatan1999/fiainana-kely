@@ -39,7 +39,7 @@ essayées, et le prix d'ami récompense la fidélité à un villageois.
 - `tools/place_villagers.gd` les remplit depuis sa table (`"gifts"`), seulement si la fiche
   n'en a pas.
 
-**Règles : `FarmSimulation`** (testables, sauvegardées)
+**Règles : `FriendshipRules` (`simulation.friendship`, voir `simulation.md`)** (testables, sauvegardées)
 - Constantes :
   - `FRIENDSHIP_PER_HEART` (100 points) et `FRIENDSHIP_MAX_HEARTS` (5) ;
   - gains : `FRIENDSHIP_TALK` (10, une fois par jour), `FRIENDSHIP_ORDER` (60),

@@ -37,7 +37,7 @@ Côté game design :
   reste légère.
 
 ## Détails techniques
-**Règles : `FarmSimulation`** (testables, sauvegardées)
+**Règles : `ThiefRules` (`simulation.thieves`, voir `simulation.md`)** (testables, sauvegardées)
 - Constantes :
   - `THIEF_FROM_DAY` (15), `THIEF_ALERT_CHANCE` (0,12 par matin) ;
   - `THIEF_ALERT_NIGHTS` (3), `THIEF_NIGHT_CHANCE` (0,4 par nuit) ;
@@ -45,7 +45,7 @@ Côté game design :
   - `PADLOCK_ITEM` (`"coop_padlock"`), `THIEF_RUMOUR_NEIGHBOURS` (les voisins que nomme la
     rumeur).
 - `thief_alert_chance` et `thief_night_chance` : les tests les mettent à 0 ou 1.
-- `_advance_thieves()`, chaque matin dans `advance_day()` :
+- `advance_thieves()`, chaque matin dans `advance_day()` :
   1. si les voleurs rôdaient la nuit passée, ils viennent (avec la chance de la nuit) :
      `_thieves_come()` ;
   2. puis une nouvelle rumeur peut commencer, s'il y a un poulailler, au moins 2 poules, le

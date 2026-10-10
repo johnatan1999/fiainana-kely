@@ -1,7 +1,7 @@
 class_name ManureHeap
 extends Prop
 
-## The manure heap by the farm pen (FarmSimulation.manure_pile): small or big
+## The manure heap by the farm pen (ZebuRules.get_manure_pile()): small or big
 ## by how much is waiting, gone when there's none; the player picks it all
 ## up. ZebuManager decides - this only shows it and passes the interaction
 ## on. No collision: the zebus walk past it to the gate.

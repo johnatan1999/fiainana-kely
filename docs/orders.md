@@ -46,9 +46,9 @@
   modifient dans l'inspecteur. `tools/place_villagers.gd` les remplit depuis sa table
   `VILLAGERS`, seulement si la fiche n'en a pas.
 
-**Règles : `FarmSimulation`** (testables, sauvegardées)
+**Règles : `OrderRules` (`simulation.orders`, voir `simulation.md`)** (testables, sauvegardées)
 - `register_order_giver(id, templates)` : l'id est le nom du fichier de la fiche.
-- Chaque matin (`advance_day` → `_advance_orders`) :
+- Chaque matin (`advance_day` → `advance_orders`) :
   1. les commandes acceptées dont le délai est passé expirent (`order_expired`) ;
   2. les offres non acceptées depuis `ORDER_OFFER_DAYS` (2) disparaissent ;
   3. `refresh_order_offers()` (une fois par jour) : un villageois sans commande ni temps de

@@ -41,7 +41,7 @@ func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase) -> void:
 	_on_state_loaded()
 
 func get_item(index: int) -> String:
-	return simulation.get_hotbar_item(index)
+	return simulation.hotbar.get_hotbar_item(index)
 
 func get_selected_item() -> String:
 	return get_item(selected_index)
@@ -60,17 +60,17 @@ func get_count(index: int) -> int:
 	return simulation.state.get_inventory_count(item_id) if item_id != "" else 0
 
 func index_of(item_id: String) -> int:
-	return simulation.find_in_hotbar(item_id)
+	return simulation.hotbar.find_in_hotbar(item_id)
 
 ## Puts `item_id` in slot `index` (from the inventory book) - swaps if it was
 ## already in the bar. Items with no farm use are refused.
 func assign(item_id: String, index: int) -> void:
 	if item_db.is_hotbar_item(item_id):
-		simulation.place_in_hotbar(item_id, index)
+		simulation.hotbar.place_in_hotbar(item_id, index)
 
 ## Takes `item_id` out of the bar (it stays in the inventory).
 func remove(item_id: String) -> void:
-	simulation.remove_from_hotbar(item_id)
+	simulation.hotbar.remove_from_hotbar(item_id)
 
 func select(index: int) -> void:
 	index = clampi(index, 0, SIZE - 1)
@@ -107,11 +107,11 @@ func _unhandled_input(event: InputEvent) -> void:
 ## first, then seeds), and items with no farm use taken out - without
 ## auto-adding anything: a saved layout is respected as it was.
 func _on_state_loaded() -> void:
-	simulation.init_hotbar(item_db.get_tool_ids() + item_db.get_seed_ids())
+	simulation.hotbar.init_hotbar(item_db.get_tool_ids() + item_db.get_seed_ids())
 	for i in SIZE:
 		var item_id := get_item(i)
 		if item_id != "" and not item_db.is_hotbar_item(item_id):
-			simulation.remove_from_hotbar(item_id)
+			simulation.hotbar.remove_from_hotbar(item_id)
 	_known_counts = simulation.state.inventory.duplicate()
 
 func _on_inventory_changed(item_id: String, count: int) -> void:
@@ -121,6 +121,6 @@ func _on_inventory_changed(item_id: String, count: int) -> void:
 		return
 	for i in SIZE:
 		if get_item(i) == "":
-			simulation.place_in_hotbar(item_id, i)
+			simulation.hotbar.place_in_hotbar(item_id, i)
 			return
 	# Bar full: the item stays reachable from the inventory book.

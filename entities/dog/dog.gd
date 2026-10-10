@@ -19,7 +19,7 @@ signal petted
 
 enum Mode { FOLLOW, GUARD, LEAVE }
 
-## Coat tints over the light sheet (FarmSimulation.DOG_COATS of them): a
+## Coat tints over the light sheet (DogRules.DOG_COATS of them): a
 ## tan village dog, black, brown, cream.
 const COATS := [
 	Color(0.88, 0.63, 0.36),
@@ -37,7 +37,7 @@ const FRAME_SNIFF := 9
 const FRAME_HAPPY := 10
 const FRAME_PETTED := 11
 const SPRITE_SCALE := 0.62
-## A puppy's size, the day it comes (it grows over FarmSimulation.DOG_GROWN_DAYS).
+## A puppy's size, the day it comes (it grows over DogRules.DOG_GROWN_DAYS).
 const PUPPY_SCALE := 0.65
 
 ## How far behind the player it keeps, along their path.
@@ -78,7 +78,7 @@ const LEAVE_FADE := 1.2
 @onready var _interactable: InteractableComponent = $InteractableComponent
 
 var mode := Mode.FOLLOW
-## Thieves about tonight (FarmSimulation.is_thief_alert): it barks more.
+## Thieves about tonight (ThiefRules.is_thief_alert): it barks more.
 var restless := false
 
 var _player: PlayerController

@@ -5,7 +5,7 @@ extends Resource
 ## of `item_id`, to deliver within `days` once accepted, paid `unit_reward`
 ## each - set above the item's sell price, it's what makes an order worth
 ## more than the shop. FarmSimulation only offers it when the player can
-## actually get the items in time (see FarmSimulation.can_fulfil()).
+## actually get the items in time (see OrderRules.can_fulfil()).
 
 ## A crop id ("cassava"...) or an item id ("egg", "mango").
 @export var item_id := ""

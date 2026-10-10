@@ -89,7 +89,7 @@ func _build() -> void:
 	_intro.custom_minimum_size = Vector2(WIDTH - 36, 0)
 
 	_line = LineEdit.new()
-	_line.max_length = FarmSimulation.DOG_NAME_MAX_LENGTH
+	_line.max_length = DogRules.DOG_NAME_MAX_LENGTH
 	_line.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_line.add_theme_font_size_override("font_size", 20)
 	_line.text_submitted.connect(func(_text: String): confirm())
@@ -101,7 +101,7 @@ func _build() -> void:
 	box.add_child(buttons)
 	var other := _button(buttons, tr("Un autre nom"))
 	other.pressed.connect(func():
-		var names := FarmSimulation.DOG_NAMES.filter(func(dog_name: String) -> bool: return dog_name != _line.text)
+		var names := DogRules.DOG_NAMES.filter(func(dog_name: String) -> bool: return dog_name != _line.text)
 		_line.text = names[randi() % names.size()]
 		_line.grab_focus())
 	_ok = _button(buttons, tr("C'est son nom !"))

@@ -146,7 +146,7 @@ Six villageois vivent au village, chacun avec sa journée :
 - `Bubble` : un `Label` au-dessus de la tête.
 
 ### La rizière des voisins
-**Règles : `FarmSimulation`** (comme les arbres fruitiers)
+**Règles : `NeighbourRules` (`simulation.neighbours`, voir `simulation.md`)** (comme les arbres fruitiers)
 - Constantes :
   - `NEIGHBOUR_RICE_STAGES` : jour de la saison → stade du riz ;
   - `NEIGHBOUR_HARVEST_FROM_DAY` (26) et `NEIGHBOUR_HARVEST_DAYS` (3) : quand se fait la

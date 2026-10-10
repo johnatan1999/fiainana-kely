@@ -41,7 +41,7 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 		if _trees.has(tree_id):
 			push_error("TreeManager: two trees share the id '%s' (%s) - the second one won't bear fruit." % [tree_id, zone.get_path_to(tree)])
 			continue
-		if not simulation.register_tree(tree_id, tree.tree_data.id):
+		if not simulation.trees.register_tree(tree_id, tree.tree_data.id):
 			push_warning("TreeManager: species '%s' of %s isn't in World.TREE_RESOURCES - it won't bear fruit." % [tree.tree_data.id, tree_id])
 			continue
 		_trees[tree_id] = tree
@@ -49,7 +49,7 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 		_refresh(tree_id)
 
 func _on_tree_interacted(tree_id: String) -> void:
-	var quantity := simulation.harvest_tree(tree_id)
+	var quantity := simulation.trees.harvest_tree(tree_id)
 	if quantity > 0:
 		# harvest_tree() fires tree_changed -> _refresh(): the fruit disappears.
 		AudioManager.play_harvest_sfx()
@@ -69,7 +69,7 @@ func _refresh(tree_id: String) -> void:
 	var tree: WorldTree = _trees.get(tree_id)
 	if tree == null or not is_instance_valid(tree):
 		return
-	var ripe := simulation.can_harvest_tree(tree_id)
+	var ripe := simulation.trees.can_harvest_tree(tree_id)
 	var prompt := tr("Cueillir (%s)") % _fruit_name(tree_id) if ripe else _waiting_text(tree_id)
 	tree.show_state(prompt, ripe)
 
@@ -77,7 +77,7 @@ func _refresh(tree_id: String) -> void:
 func _waiting_text(tree_id: String) -> String:
 	var tree_data := _tree_data(tree_id)
 	var tree_name := tr(tree_data.display_name)
-	var days := simulation.get_tree_days_until_fruit(tree_id)
+	var days := simulation.trees.get_tree_days_until_fruit(tree_id)
 	if days < 0:
 		return tr("%s : fruits en %s") % [tree_name, tr(_season_name(tree_data.fruit_season))]
 	if days == 1:
@@ -90,7 +90,7 @@ func _fruit_name(tree_id: String) -> String:
 	return item.get_display_name() if item else fruit_id
 
 func _tree_data(tree_id: String) -> TreeData:
-	return simulation.get_tree_data(simulation.get_tree_state(tree_id).tree_type_id)
+	return simulation.trees.get_tree_data(simulation.trees.get_tree_state(tree_id).tree_type_id)
 
 static func _season_name(season: CropData.Season) -> String:
 	match season:

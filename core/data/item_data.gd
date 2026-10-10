@@ -31,12 +31,12 @@ const CATEGORY_COLORS := {
 @export var icon: Texture2D
 
 ## Only set for SEEDS: the real CropData id, so ShopUI can route the purchase
-## through FarmSimulation.buy_seed() (unlock_day gating, seed inventory key)
+## through MarketRules.buy_seed() (unlock_day gating, seed inventory key)
 ## instead of the generic buy_item() path used by every other category.
 @export var crop_id: String = ""
 
 ## Only meaningful for ANIMALS: routes the purchase through
-## FarmSimulation.buy_chicken() instead of the generic buy_item() path, since
+## AnimalRules.buy_chicken() instead of the generic buy_item() path, since
 ## buying livestock needs to become a real AnimalState once placed in a coop.
 @export var animal_species: AnimalData.Species = AnimalData.Species.CHICKEN
 

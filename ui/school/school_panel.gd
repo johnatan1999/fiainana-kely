@@ -36,7 +36,7 @@ func _ready() -> void:
 func is_open() -> bool:
 	return visible
 
-## `days_left`: as FarmSimulation.get_school_days_left() (0 or less = late).
+## `days_left`: as SchoolRules.get_school_days_left() (0 or less = late).
 ## `money_payment`: what the Ariary button pays (0 = greyed). `rice_count`
 ## and `rice_price`: the rice the rice button gives and what each is worth
 ## (count 0 = greyed). Opens the panel, or refreshes it if already open.

@@ -31,6 +31,10 @@ Scène principale : `res://ui/home/home_screen.tscn` (écran d'accueil : nuit au
 - Contenu data-driven (villages, zones, maisons) : un village aujourd'hui, jusqu'à 7 plus tard.
   La ferme du joueur est une zone à part (`farm`), reliée au village : les villages n'ont pas
   de champs du joueur.
+- Règles du jeu : dans la simulation, jamais dans les nœuds. `FarmSimulation` est le hub (état,
+  signaux, nuit, sauvegarde), et chaque domaine a son fichier de règles sous
+  `systems/simulation/rules/` (`simulation.zebus`, `simulation.quests`...). Voir
+  `docs/simulation.md`.
 - Grille : cases de 48 px. Les nœuds posés sur la carte (FarmView, champs…) doivent tomber sur
   la grille du sol (`GroundLayer` est à `(1, -1)`).
 

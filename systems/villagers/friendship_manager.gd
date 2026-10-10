@@ -28,7 +28,7 @@ func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase, world_manager:
 		if data.family:
 			_family[villager_id] = true
 			continue
-		simulation.register_friend(villager_id, data.friendship_rewards)
+		simulation.friendship.register_friend(villager_id, data.friendship_rewards)
 
 func _on_zone_loaded(_zone: ZoneRoot) -> void:
 	for villager: Villager in get_tree().get_nodes_in_group(Villager.GROUP):
@@ -40,7 +40,7 @@ func _on_talk(villager: Villager) -> void:
 	var villager_id := villager.get_villager_id()
 	if _family.has(villager_id):
 		return
-	simulation.talk_to(villager_id)
+	simulation.friendship.talk_to(villager_id)
 	_show_hearts(villager_id)
 
 func _on_friendship_changed(villager_id: String, _hearts: int) -> void:
@@ -66,8 +66,8 @@ func _show_hearts(villager_id: String) -> void:
 		return
 	var villager := _villager(villager_id)
 	if villager != null:
-		villager.show_hearts(simulation.get_hearts(villager_id), FarmSimulation.FRIENDSHIP_MAX_HEARTS,
-			simulation.get_heart_progress(villager_id))
+		villager.show_hearts(simulation.friendship.get_hearts(villager_id), FriendshipRules.FRIENDSHIP_MAX_HEARTS,
+			simulation.friendship.get_heart_progress(villager_id))
 
 ## The villager in the current zone, out of doors - or null.
 func _villager(villager_id: String) -> Villager:

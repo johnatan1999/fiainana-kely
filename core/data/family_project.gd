@@ -13,7 +13,7 @@ const DIR := "res://data/projects/"
 @export var display_name := ""
 @export var malagasy_name := ""
 @export_multiline var description := ""
-## The building it improves (FarmSimulation.BUILDINGS: "coop", "zebu_pen")
+## The building it improves (ProjectRules.BUILDINGS: "coop", "zebu_pen")
 ## and the level it takes it to; the level below must be reached first.
 @export var building := ""
 @export var level := 2

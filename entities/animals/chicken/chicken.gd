@@ -183,7 +183,7 @@ func _physics_process(delta: float) -> void:
 		_move()
 		return
 
-	var animal: AnimalState = _animal_manager.simulation.get_animal(_animal_id)
+	var animal: AnimalState = _animal_manager.simulation.animals.get_animal(_animal_id)
 	if animal == null:
 		queue_free() # sold/removed from the simulation
 		return

@@ -155,18 +155,18 @@ func _collect_items() -> Dictionary:
 	for species in _simulation.state.pending_animals:
 		var count: int = _simulation.state.pending_animals[species]
 		livestock.append({"info": InventoryCatalog.describe_pending(_item_db, species, count), "quantity": count})
-	for animal_id in _simulation.get_all_animal_ids():
-		livestock.append({"info": InventoryCatalog.describe_animal(_item_db, _simulation.get_animal(animal_id)), "quantity": 1})
-	for zebu_id: String in _simulation.get_zebu_ids():
+	for animal_id in _simulation.animals.get_all_animal_ids():
+		livestock.append({"info": InventoryCatalog.describe_animal(_item_db, _simulation.animals.get_animal(animal_id)), "quantity": 1})
+	for zebu_id: String in _simulation.zebus.get_zebu_ids():
 		livestock.append({"info": InventoryCatalog.describe_zebu(_simulation, zebu_id), "quantity": 1})
-	if _simulation.has_dog():
+	if _simulation.dog.has_dog():
 		livestock.append({"info": InventoryCatalog.describe_dog(_simulation), "quantity": 1})
 	for villager_id: String in _villagers:
 		by_category[InventoryCatalog.Category.VILLAGERS].append({
 			"info": InventoryCatalog.describe_villager(_item_db, _simulation, villager_id, _villagers[villager_id]),
 			"quantity": 1,
 		})
-	for discovery_id in _simulation.get_discovery_ids():
+	for discovery_id in _simulation.notebook.get_discovery_ids():
 		by_category[InventoryCatalog.Category.NOTEBOOK].append({
 			"info": InventoryCatalog.describe_discovery(_item_db, _simulation, discovery_id), "quantity": 1,
 		})
@@ -188,7 +188,7 @@ func _rebuild() -> void:
 	var by_category := _collect_items()
 	for tab in _tabs:
 		if tab.category == InventoryCatalog.Category.NOTEBOOK:
-			tab.set_count(_simulation.get_notebook_progress().x)
+			tab.set_count(_simulation.notebook.get_notebook_progress().x)
 		else:
 			tab.set_count(by_category[tab.category].size())
 		tab.set_selected(tab.category == _category)

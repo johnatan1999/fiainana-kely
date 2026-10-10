@@ -41,7 +41,7 @@ func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase, world_manager:
 	_fight_panel = fight_panel
 	var roosters := FightingRoosterData.load_all()
 	for rooster_id: String in roosters:
-		simulation.register_fighting_rooster(rooster_id, roosters[rooster_id])
+		simulation.cockfight.register_fighting_rooster(rooster_id, roosters[rooster_id])
 		_amateurs[roosters[rooster_id].owner_id] = true
 	var villagers := VillagerData.load_all()
 	for villager_id: String in villagers:
@@ -51,7 +51,7 @@ func setup(p_simulation: FarmSimulation, p_item_db: ItemDatabase, world_manager:
 	simulation.rooster_changed.connect(_refresh)
 	simulation.cockfight_changed.connect(_refresh)
 	simulation.inventory_changed.connect(func(item_id: String, _count: int):
-		if item_id in FarmSimulation.ROOSTER_FEED_ITEMS and _rooster_panel.is_open():
+		if item_id in CockfightRules.ROOSTER_FEED_ITEMS and _rooster_panel.is_open():
 			_show_rooster_panel())
 	simulation.day_changed.connect(func(_day: int): _on_morning())
 	simulation.cockfight_season_ended.connect(_on_season_ended)
@@ -73,16 +73,16 @@ func _on_zone_loaded(zone: ZoneRoot) -> void:
 
 ## The rooster at its stake, the prompts, who says what.
 func _refresh() -> void:
-	if _stake != null and simulation.has_rooster() and _rooster == null:
+	if _stake != null and simulation.cockfight.has_rooster() and _rooster == null:
 		_rooster = TetheredRooster.new()
 		_rooster.name = "PlayerRooster"
 		_rooster.position = _stake.position
 		_stake.get_parent().add_child(_rooster)
 		_rooster.interacted.connect(_show_rooster_panel)
 	if _rooster != null:
-		_rooster.show_state(tr("S'occuper de %s") % simulation.get_rooster()["name"],
-			not simulation.is_rooster_fed_today())
-	var entering := simulation.has_rooster() and simulation.check_cockfight() != FarmSimulation.CockfightCheck.ALREADY_ENTERED
+		_rooster.show_state(tr("S'occuper de %s") % simulation.cockfight.get_rooster()["name"],
+			not simulation.cockfight.is_rooster_fed_today())
+	var entering := simulation.cockfight.has_rooster() and simulation.cockfight.check_cockfight() != CockfightRules.CockfightCheck.ALREADY_ENTERED
 	for ring: CockfightRing in get_tree().get_nodes_in_group(CockfightRing.GROUP):
 		ring.set_prompts(tr("Inscrire ton coq au tournoi") if entering else tr("Voir le classement des coqs"),
 			tr("Voir le classement des coqs"))
@@ -92,7 +92,7 @@ func _refresh() -> void:
 		var villager_id := villager.get_villager_id()
 		if villager_id == GIFTER_ID:
 			villager.talk_prompt = tr("Écouter Rakoto") if gift_offered else ""
-			if not simulation.is_order_offered(GIFTER_ID) and not simulation.can_deliver_order(GIFTER_ID):
+			if not simulation.orders.is_order_offered(GIFTER_ID) and not simulation.orders.can_deliver_order(GIFTER_ID):
 				villager.set_prompt(villager.talk_prompt if gift_offered else tr("Parler à %s") % villager.data.display_name)
 			if gift_offered:
 				villager.call_out = tr(GIFT_CALL)
@@ -106,22 +106,22 @@ func _refresh() -> void:
 				villager.call_out = ""
 
 func _gift_offered() -> bool:
-	return not simulation.has_rooster() and simulation.state.day >= GIFT_FROM_DAY
+	return not simulation.cockfight.has_rooster() and simulation.state.day >= GIFT_FROM_DAY
 
 func _on_morning() -> void:
 	_refresh()
-	if simulation.has_rooster() and simulation.state.clock.get_weekday() == FarmSimulation.COCKFIGHT_DAY:
+	if simulation.cockfight.has_rooster() and simulation.state.clock.get_weekday() == CockfightRules.COCKFIGHT_DAY:
 		UIEvents.notify(tr("Alahady : tournoi de coqs au bourg, de %d:00 à %d:00.")
-			% [FarmSimulation.COCKFIGHT_HOURS.x / 60, FarmSimulation.COCKFIGHT_HOURS.y / 60])
+			% [CockfightRules.COCKFIGHT_HOURS.x / 60, CockfightRules.COCKFIGHT_HOURS.y / 60])
 
 # --- Rakoto's gift -----------------------------------------------------------------------
 
 func _on_gifter_interacted(villager: Villager) -> void:
 	# An order to offer or deliver comes first (OrderManager answers it).
-	if not _gift_offered() or simulation.is_order_offered(GIFTER_ID) or simulation.can_deliver_order(GIFTER_ID):
+	if not _gift_offered() or simulation.orders.is_order_offered(GIFTER_ID) or simulation.orders.can_deliver_order(GIFTER_ID):
 		return
-	simulation.adopt_rooster()
-	var rooster_name: String = simulation.get_rooster()["name"]
+	simulation.cockfight.adopt_rooster()
+	var rooster_name: String = simulation.cockfight.get_rooster()["name"]
 	villager.say.call_deferred(tr("Prends ce jeune coq, je l'appelle %s. Nourris-le, entraîne-le, et viens au bourg l'Alahady !") % rooster_name)
 	UIEvents.notify(tr("Rakoto t'a offert un jeune coq de combat, %s : il t'attend attaché devant la maison, à la ferme.") % rooster_name)
 	_refresh()
@@ -129,80 +129,80 @@ func _on_gifter_interacted(villager: Villager) -> void:
 # --- caring for the rooster ---------------------------------------------------------------
 
 func _show_rooster_panel(note := "") -> void:
-	if not simulation.has_rooster():
+	if not simulation.cockfight.has_rooster():
 		return
-	var rooster := simulation.get_rooster()
+	var rooster := simulation.cockfight.get_rooster()
 	var feeds := []
-	for item_id: String in FarmSimulation.ROOSTER_FEED_ITEMS:
+	for item_id: String in CockfightRules.ROOSTER_FEED_ITEMS:
 		feeds.append({"item_id": item_id, "name": item_db.get_display_name(item_id).to_lower(),
-			"count": simulation.state.get_inventory_count(item_id), "enabled": simulation.can_feed_rooster(item_id)})
+			"count": simulation.state.get_inventory_count(item_id), "enabled": simulation.cockfight.can_feed_rooster(item_id)})
 	if note.is_empty():
 		note = _next_tournament_text()
-		if not simulation.is_rooster_fed_today() and feeds.all(func(feed): return feed["count"] <= 0):
+		if not simulation.cockfight.is_rooster_fed_today() and feeds.all(func(feed): return feed["count"] <= 0):
 			note = tr("Il te faut du maïs ou du riz pour le nourrir.")
 	_rooster_panel.show_rooster({
 		"name": rooster["name"],
 		"portrait": CockfightPanel.FRAMES.get_frame_texture("idle_down", 0),
-		"force": rooster["force"], "endurance": rooster["endurance"], "max": FarmSimulation.ROOSTER_MAX_STAT,
-		"power": simulation.get_rooster_power(),
-		"fed": simulation.is_rooster_fed_today(), "trained": simulation.is_rooster_trained_today(),
-		"feeds": feeds, "can_train": simulation.can_train_rooster(),
+		"force": rooster["force"], "endurance": rooster["endurance"], "max": CockfightRules.ROOSTER_MAX_STAT,
+		"power": simulation.cockfight.get_rooster_power(),
+		"fed": simulation.cockfight.is_rooster_fed_today(), "trained": simulation.cockfight.is_rooster_trained_today(),
+		"feeds": feeds, "can_train": simulation.cockfight.can_train_rooster(),
 	}, _ranking_rows(), note)
 
 func _on_feed(item_id: String) -> void:
-	if simulation.feed_rooster(item_id):
+	if simulation.cockfight.feed_rooster(item_id):
 		AudioManager.play_chicken_sfx()
-		_show_rooster_panel(tr("%s picore son grain.") % simulation.get_rooster()["name"])
+		_show_rooster_panel(tr("%s picore son grain.") % simulation.cockfight.get_rooster()["name"])
 
 func _on_train() -> void:
-	if simulation.train_rooster():
+	if simulation.cockfight.train_rooster():
 		AudioManager.play_chicken_sfx()
-		var rooster_name: String = simulation.get_rooster()["name"]
+		var rooster_name: String = simulation.cockfight.get_rooster()["name"]
 		_show_rooster_panel(tr("%s court, saute et bat des ailes.") % rooster_name
-			+ ("" if simulation.is_rooster_fed_today() else " " + tr("Nourris-le aussi pour qu'il progresse.")))
+			+ ("" if simulation.cockfight.is_rooster_fed_today() else " " + tr("Nourris-le aussi pour qu'il progresse.")))
 
 # --- the tournament ------------------------------------------------------------------------
 
 func _on_ring_interacted() -> void:
-	match simulation.check_cockfight():
-		FarmSimulation.CockfightCheck.OK:
+	match simulation.cockfight.check_cockfight():
+		CockfightRules.CockfightCheck.OK:
 			_play_tournament()
-		FarmSimulation.CockfightCheck.NO_ROOSTER:
+		CockfightRules.CockfightCheck.NO_ROOSTER:
 			_fight_panel.show_ranking(tr("Il te faut un coq de combat pour participer. Rakoto, au village, est un grand amateur."), _ranking_rows())
-		FarmSimulation.CockfightCheck.ALREADY_ENTERED:
-			_fight_panel.show_ranking(tr("%s a déjà combattu aujourd'hui. Reviens l'Alahady prochain !") % simulation.get_rooster()["name"], _ranking_rows())
+		CockfightRules.CockfightCheck.ALREADY_ENTERED:
+			_fight_panel.show_ranking(tr("%s a déjà combattu aujourd'hui. Reviens l'Alahady prochain !") % simulation.cockfight.get_rooster()["name"], _ranking_rows())
 		_:
 			_fight_panel.show_ranking(_next_tournament_text(), _ranking_rows())
 
 func _play_tournament() -> void:
-	var rank_before := simulation.get_cockfight_rank(FarmSimulation.PLAYER_ROOSTER_ID)
-	var points_before := simulation.get_cockfight_points(FarmSimulation.PLAYER_ROOSTER_ID)
-	var bouts := simulation.enter_cockfight()
+	var rank_before := simulation.cockfight.get_cockfight_rank(CockfightRules.PLAYER_ROOSTER_ID)
+	var points_before := simulation.cockfight.get_cockfight_points(CockfightRules.PLAYER_ROOSTER_ID)
+	var bouts := simulation.cockfight.enter_cockfight()
 	if bouts.is_empty():
 		return
 	var shown := []
 	var wins := 0
 	for bout: Dictionary in bouts:
-		var data := simulation.get_fighting_rooster(bout["opponent"])
+		var data := simulation.cockfight.get_fighting_rooster(bout["opponent"])
 		shown.append({"opponent": data.display_name, "owner": _names.get(data.owner_id, data.owner_id),
 			"color": data.color, "won": bout["won"], "hits": bout["hits"]})
 		if bout["won"]:
 			wins += 1
-	var rank := simulation.get_cockfight_rank(FarmSimulation.PLAYER_ROOSTER_ID)
+	var rank := simulation.cockfight.get_cockfight_rank(CockfightRules.PLAYER_ROOSTER_ID)
 	var summary := tr("%d victoire(s), %d défaite(s) : +%d points, %de au classement.") % [wins, bouts.size() - wins,
-		simulation.get_cockfight_points(FarmSimulation.PLAYER_ROOSTER_ID) - points_before, rank]
+		simulation.cockfight.get_cockfight_points(CockfightRules.PLAYER_ROOSTER_ID) - points_before, rank]
 	if rank < rank_before and wins > 0:
 		summary += " " + tr("Tu gagnes des places !")
-	summary += "\n" + tr("Prime de participation : %s. Les amateurs ont apprécié le spectacle.") % Currency.format(FarmSimulation.COCKFIGHT_ENTRY_PRIZE)
-	_fight_panel.play_tournament(simulation.get_rooster()["name"], shown, summary, _ranking_rows())
+	summary += "\n" + tr("Prime de participation : %s. Les amateurs ont apprécié le spectacle.") % Currency.format(CockfightRules.COCKFIGHT_ENTRY_PRIZE)
+	_fight_panel.play_tournament(simulation.cockfight.get_rooster()["name"], shown, summary, _ranking_rows())
 
 func _on_season_ended(champion_id: String) -> void:
-	if champion_id == FarmSimulation.PLAYER_ROOSTER_ID:
+	if champion_id == CockfightRules.PLAYER_ROOSTER_ID:
 		_champion_day = simulation.state.day
-		UIEvents.notify(tr("%s est le meilleur coq du village ! Les amateurs te félicitent.") % simulation.get_rooster()["name"])
+		UIEvents.notify(tr("%s est le meilleur coq du village ! Les amateurs te félicitent.") % simulation.cockfight.get_rooster()["name"])
 	else:
-		var data := simulation.get_fighting_rooster(champion_id)
-		if data != null and simulation.has_rooster():
+		var data := simulation.cockfight.get_fighting_rooster(champion_id)
+		if data != null and simulation.cockfight.has_rooster():
 			UIEvents.notify(tr("Fin de saison : %s, le coq de %s, est le meilleur coq du village.")
 				% [data.display_name, _names.get(data.owner_id, data.owner_id)])
 	_refresh()
@@ -210,25 +210,25 @@ func _on_season_ended(champion_id: String) -> void:
 ## [{"rank", "name", "owner", "points", "is_player", "is_champion"}].
 func _ranking_rows() -> Array:
 	var rows := []
-	var ranking := simulation.get_cockfight_ranking()
+	var ranking := simulation.cockfight.get_cockfight_ranking()
 	for i in ranking.size():
 		var rooster_id: String = ranking[i]["id"]
-		var is_player := rooster_id == FarmSimulation.PLAYER_ROOSTER_ID
-		var data := simulation.get_fighting_rooster(rooster_id)
+		var is_player := rooster_id == CockfightRules.PLAYER_ROOSTER_ID
+		var data := simulation.cockfight.get_fighting_rooster(rooster_id)
 		rows.append({
 			"rank": i + 1,
-			"name": simulation.get_rooster()["name"] if is_player else data.display_name,
+			"name": simulation.cockfight.get_rooster()["name"] if is_player else data.display_name,
 			"owner": "" if is_player else _names.get(data.owner_id, data.owner_id),
 			"points": ranking[i]["points"],
 			"is_player": is_player,
-			"is_champion": rooster_id == simulation.get_cockfight_champion(),
+			"is_champion": rooster_id == simulation.cockfight.get_cockfight_champion(),
 		})
 	return rows
 
 func _next_tournament_text() -> String:
-	var days := posmod(FarmSimulation.COCKFIGHT_DAY - simulation.state.clock.get_weekday(), GameClock.WEEKDAY_NAMES.size())
-	var hours := "%d:00–%d:00" % [FarmSimulation.COCKFIGHT_HOURS.x / 60, FarmSimulation.COCKFIGHT_HOURS.y / 60]
-	if days == 0 and simulation.state.clock.minute_of_day < FarmSimulation.COCKFIGHT_HOURS.y:
+	var days := posmod(CockfightRules.COCKFIGHT_DAY - simulation.state.clock.get_weekday(), GameClock.WEEKDAY_NAMES.size())
+	var hours := "%d:00–%d:00" % [CockfightRules.COCKFIGHT_HOURS.x / 60, CockfightRules.COCKFIGHT_HOURS.y / 60]
+	if days == 0 and simulation.state.clock.minute_of_day < CockfightRules.COCKFIGHT_HOURS.y:
 		return tr("Tournoi aujourd'hui, au bourg, %s.") % hours
 	if days == 0:
 		days = GameClock.WEEKDAY_NAMES.size()

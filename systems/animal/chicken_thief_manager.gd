@@ -37,22 +37,22 @@ func setup(p_simulation: FarmSimulation, world_manager: WorldManager) -> void:
 func _say_rumour() -> void:
 	var neighbour: String = _names.get(simulation.state.thief_rumour, tr("des voisins"))
 	var text := tr("Mpangalatra akoho ! Des poules ont disparu chez %s cette nuit.") % neighbour
-	if simulation.is_coop_safe():
+	if simulation.thieves.is_coop_safe():
 		text += " " + tr("Ton poulailler, lui, ferme bien.")
-	elif simulation.has_dog():
-		text += " " + tr("%s veillera, si sa gamelle est remplie le soir.") % simulation.get_dog_name()
+	elif simulation.dog.has_dog():
+		text += " " + tr("%s veillera, si sa gamelle est remplie le soir.") % simulation.dog.get_dog_name()
 	else:
 		text += " " + tr("Un cadenas sur le poulailler, au marché, ne serait pas de trop.")
 	UIEvents.notify(text)
 
 func _say_theft() -> void:
 	var text := tr("Cette nuit, un voleur est entré dans le poulailler : il manque une poule.")
-	if simulation.has_dog():
-		text += " " + tr("%s, le ventre vide, était parti chercher à manger.") % simulation.get_dog_name()
+	if simulation.dog.has_dog():
+		text += " " + tr("%s, le ventre vide, était parti chercher à manger.") % simulation.dog.get_dog_name()
 	UIEvents.notify(text)
 
 func _say_chased() -> void:
-	UIEvents.notify(tr("Cette nuit, %s a aboyé à pleine voix : les voleurs de poules ont détalé !") % simulation.get_dog_name())
+	UIEvents.notify(tr("Cette nuit, %s a aboyé à pleine voix : les voleurs de poules ont détalé !") % simulation.dog.get_dog_name())
 
 func _say_foiled() -> void:
 	UIEvents.notify(tr("Cette nuit, des voleurs ont essayé d'ouvrir le poulailler : le cadenas a tenu !"))
@@ -68,7 +68,7 @@ func _refresh() -> void:
 	for coop: Coop in get_tree().get_nodes_in_group(Coop.GROUP):
 		var door := coop.to_local(coop.get_door_position())
 		var padlock := coop.get_node_or_null("Padlock")
-		var locked := simulation.state.coop_padlock and simulation.get_building_level("coop") < 3
+		var locked := simulation.state.coop_padlock and simulation.projects.get_building_level("coop") < 3
 		if locked and padlock == null:
 			padlock = CoopPadlock.new()
 			padlock.name = "Padlock"

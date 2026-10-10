@@ -80,7 +80,7 @@ func _on_zebus_changed() -> void:
 func _sync_herd() -> void:
 	if _herd == null:
 		return
-	var ids := simulation.get_zebu_ids()
+	var ids := simulation.zebus.get_zebu_ids()
 	for zebu_id: String in _nodes.keys():
 		if not zebu_id in ids:
 			(_nodes[zebu_id] as Node).queue_free()
@@ -91,10 +91,10 @@ func _sync_herd() -> void:
 			continue
 		var zebu: GrazingZebu = ZEBU_SCENE.instantiate()
 		zebu.name = "Zebu_" + zebu_id
-		zebu.coat = simulation.get_zebu(zebu_id)["coat"]
+		zebu.coat = simulation.zebus.get_zebu(zebu_id)["coat"]
 		zebu.wander_radius = WANDER_RADIUS
 		# Each its own place around the pasture, the same every time.
-		var angle := TAU * i / simulation.get_zebu_capacity() + 0.4
+		var angle := TAU * i / simulation.zebus.get_zebu_capacity() + 0.4
 		zebu.position = _herd.to_local(_pasture + Vector2.from_angle(angle) * SPREAD)
 		_herd.add_child(zebu)
 		# ZebuPen.nearest() only pairs a zebu with a pen of its own zone.
@@ -106,18 +106,18 @@ func get_zebu_node(zebu_id: String) -> GrazingZebu:
 
 func _refresh_trough() -> void:
 	if _heap != null:
-		_heap.show_amount(simulation.get_manure_pile())
+		_heap.show_amount(simulation.zebus.get_manure_pile())
 	if _trough == null:
 		return
-	var full := simulation.is_zebu_trough_full()
-	_trough.show_state(full, not full and not simulation.get_zebu_ids().is_empty())
+	var full := simulation.zebus.is_zebu_trough_full()
+	_trough.show_state(full, not full and not simulation.zebus.get_zebu_ids().is_empty())
 
 func _on_trough_interacted() -> void:
-	if simulation.fill_zebu_trough():
+	if simulation.zebus.fill_zebu_trough():
 		UIEvents.notify(tr("Abreuvoir rempli : les zébus grandiront aujourd'hui."))
 
 func _on_heap_interacted() -> void:
-	var amount := simulation.collect_manure()
+	var amount := simulation.zebus.collect_manure()
 	if amount > 0:
 		UIEvents.notify(tr("+%d Fumier de zébu : épands-le sur tes parcelles pour une plus grosse récolte.") % amount)
 
@@ -127,35 +127,35 @@ func _open_market(market: ZebuMarket) -> void:
 
 func _show_market() -> void:
 	var zebus := []
-	for zebu_id: String in simulation.get_zebu_ids():
-		var zebu := simulation.get_zebu(zebu_id)
+	for zebu_id: String in simulation.zebus.get_zebu_ids():
+		var zebu := simulation.zebus.get_zebu(zebu_id)
 		zebus.append({
 			"id": zebu_id,
 			"name": zebu["name"],
 			"coat": zebu["coat"],
-			"growth": tr("adulte") if simulation.is_zebu_grown(zebu_id)
-				else tr("%d/%d jours") % [zebu["grown_days"], FarmSimulation.ZEBU_GROW_DAYS],
-			"value": simulation.get_zebu_value(zebu_id),
+			"growth": tr("adulte") if simulation.zebus.is_zebu_grown(zebu_id)
+				else tr("%d/%d jours") % [zebu["grown_days"], ZebuRules.ZEBU_GROW_DAYS],
+			"value": simulation.zebus.get_zebu_value(zebu_id),
 		})
 	var note := ""
-	if zebus.size() >= simulation.get_zebu_capacity():
+	if zebus.size() >= simulation.zebus.get_zebu_capacity():
 		note = tr("Ton parc est plein.")
-	elif simulation.state.money < FarmSimulation.ZEBU_PRICE:
+	elif simulation.state.money < ZebuRules.ZEBU_PRICE:
 		note = tr("Pas assez d'argent.")
-	panel.show_market(_market_title, FarmSimulation.ZEBU_PRICE, simulation.can_buy_zebu(), note, zebus,
-		simulation.get_zebu_capacity())
+	panel.show_market(_market_title, ZebuRules.ZEBU_PRICE, simulation.zebus.can_buy_zebu(), note, zebus,
+		simulation.zebus.get_zebu_capacity())
 
 func _on_buy_requested() -> void:
-	var zebu_id := simulation.buy_zebu()
+	var zebu_id := simulation.zebus.buy_zebu()
 	if zebu_id.is_empty():
 		return
 	UIEvents.notify(tr("%s t'attend au parc de la ferme. Remplis son abreuvoir chaque jour !")
-		% simulation.get_zebu(zebu_id)["name"])
+		% simulation.zebus.get_zebu(zebu_id)["name"])
 	_show_market()
 
 func _on_sell_requested(zebu_id: String) -> void:
-	var zebu_name: String = simulation.get_zebu(zebu_id).get("name", "")
-	var paid := simulation.sell_zebu(zebu_id)
+	var zebu_name: String = simulation.zebus.get_zebu(zebu_id).get("name", "")
+	var paid := simulation.zebus.sell_zebu(zebu_id)
 	if paid > 0:
 		UIEvents.notify(tr("%s vendu %s.") % [zebu_name, Currency.format(paid)])
 	_show_market()

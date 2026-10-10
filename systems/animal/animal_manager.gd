@@ -82,7 +82,7 @@ func set_farm_area(p_zone: Node) -> void:
 	_animal_area = _find_animal_area(farm_area)
 	_coop.setup(self)
 
-	for animal_id in simulation.get_all_animal_ids():
+	for animal_id in simulation.animals.get_all_animal_ids():
 		_spawn_animal(animal_id)
 	_flush_pending_products()
 
@@ -90,24 +90,24 @@ func set_farm_area(p_zone: Node) -> void:
 ## so a press that does nothing always says why.
 func interact_with_coop(coop: Coop) -> void:
 	if not simulation.state.has_coop:
-		if simulation.build_coop():
+		if simulation.animals.build_coop():
 			AudioManager.play_coop_build_sfx()
 			coop.refresh_visual()
 			UIEvents.notify(tr("Poulailler construit !"))
 		else:
 			AudioManager.play_action_denied_sfx()
-			UIEvents.notify(tr("Il te faut %s pour construire le poulailler.") % Currency.format(FarmSimulation.COOP_COST))
+			UIEvents.notify(tr("Il te faut %s pour construire le poulailler.") % Currency.format(AnimalRules.COOP_COST))
 		return
-	match simulation.check_place_animal(AnimalData.Species.CHICKEN):
-		FarmSimulation.PlaceCheck.OK:
+	match simulation.animals.check_place_animal(AnimalData.Species.CHICKEN):
+		AnimalRules.PlaceCheck.OK:
 			# place_chicken() fires animal_added -> _spawn_animal().
-			simulation.place_chicken()
+			simulation.animals.place_chicken()
 			AudioManager.play_click_menu_sfx()
 			UIEvents.notify(tr("Poule installée ! (%s)") % get_coop_occupancy())
-		FarmSimulation.PlaceCheck.FULL:
+		AnimalRules.PlaceCheck.FULL:
 			AudioManager.play_action_denied_sfx()
 			UIEvents.notify(tr("Poulailler plein (%s)") % get_coop_occupancy())
-		FarmSimulation.PlaceCheck.NONE_WAITING:
+		AnimalRules.PlaceCheck.NONE_WAITING:
 			AudioManager.play_action_denied_sfx()
 			UIEvents.notify(tr("Aucune poule à installer : achètes-en au marché."))
 
@@ -116,11 +116,11 @@ func get_coop_occupancy() -> String:
 	return "%d/%d" % [simulation.state.animals.size(), simulation.state.coop_capacity]
 
 func feed_animal(animal_id: String) -> void:
-	if simulation.feed_animal(animal_id):
+	if simulation.animals.feed_animal(animal_id):
 		AudioManager.play_chicken_sfx()
 
 func water_animal(animal_id: String) -> void:
-	simulation.water_animal(animal_id)
+	simulation.animals.water_animal(animal_id)
 
 func get_feeding_bowl() -> FeedingBowl:
 	return _feeding_bowl
@@ -143,7 +143,7 @@ func _on_animal_removed(animal_id: String) -> void:
 func _spawn_animal(animal_id: String) -> void:
 	if _animal_nodes.has(animal_id):
 		return
-	var animal := simulation.get_animal(animal_id)
+	var animal := simulation.animals.get_animal(animal_id)
 	if animal == null:
 		return
 	var path: String = SPECIES_SCENE_PATHS.get(animal.species, "")

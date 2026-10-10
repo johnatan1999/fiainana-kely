@@ -2,7 +2,7 @@
 class_name CoopPadlock
 extends Node2D
 
-## The padlock on the coop's door (FarmSimulation.PADLOCK_ITEM), drawn in
+## The padlock on the coop's door (ThiefRules.PADLOCK_ITEM), drawn in
 ## code: an iron body and its shackle, a keyhole. Decor - ChickenThiefManager
 ## puts it on the farm's coop once bought.
 

@@ -3,7 +3,7 @@ class_name DogHouse
 extends Prop
 
 ## The dog's doghouse at the farm, and its bowl: filling the bowl is the
-## dog's daily care (FarmSimulation.feed_dog) - DogManager decides, this only
+## dog's daily care (DogRules.feed_dog) - DogManager decides, this only
 ## shows it (no dog yet: nothing at all; the bowl empty or full of rice) and
 ## passes the player's interaction on. The dog sleeps at `Bed`, in front of
 ## the door. Built by tools/build_dog.gd, placed by the same tool.

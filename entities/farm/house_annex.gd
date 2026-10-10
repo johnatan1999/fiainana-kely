@@ -19,7 +19,7 @@ const CELLS := {"granary": 0, "kitchen": 1}
 ## Its footprint on screen, from its origin.
 const AREA := Rect2(-64, -160, 128, 160)
 
-## Which annex: "granary" or "kitchen" (FarmSimulation.BUILDINGS).
+## Which annex: "granary" or "kitchen" (ProjectRules.BUILDINGS).
 @export var building := ""
 
 var _sprite: Sprite2D

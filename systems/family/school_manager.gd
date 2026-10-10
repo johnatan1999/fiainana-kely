@@ -54,48 +54,48 @@ func _on_zone_loaded(_zone: ZoneRoot) -> void:
 ## The day's news about the fees, once, in the morning.
 func _on_morning() -> void:
 	_refresh()
-	var debt := simulation.get_school_debt()
+	var debt := simulation.school.get_school_debt()
 	if simulation.state.school_billed_season > _announced_season:
 		_announced_season = simulation.state.school_billed_season
 		UIEvents.notify(tr("Écolage de Fara : %s à payer à %s, à l'école du village, d'ici %d jours.")
-			% [Currency.format(debt), _teacher_name, simulation.get_school_days_left()])
-	elif debt > 0 and simulation.get_school_days_left() == 1:
+			% [Currency.format(debt), _teacher_name, simulation.school.get_school_days_left()])
+	elif debt > 0 and simulation.school.get_school_days_left() == 1:
 		UIEvents.notify(tr("Dernier jour pour payer l'écolage de Fara (%s).") % Currency.format(debt))
-	elif debt > 0 and simulation.get_school_days_left() == 0:
+	elif debt > 0 and simulation.school.get_school_days_left() == 0:
 		UIEvents.notify(tr("L'écolage n'est pas payé : Fara est renvoyée à la maison jusqu'au paiement."))
 
 # --- paying, at the school -------------------------------------------------------------
 
 func _on_teacher_interacted(_teacher: Villager) -> void:
-	if simulation.is_school_fee_due():
+	if simulation.school.is_school_fee_due():
 		_show_panel(tr("Bonjour ! Tu viens pour l'écolage de Fara ?"))
 
 func _show_panel(line: String, note := "") -> void:
-	var debt := simulation.get_school_debt()
+	var debt := simulation.school.get_school_debt()
 	var money_payment := mini(debt, simulation.state.money)
-	var rice_count := mini(simulation.get_school_rice_needed(),
-		simulation.state.get_inventory_count(FarmSimulation.SCHOOL_RICE_ITEM))
+	var rice_count := mini(simulation.school.get_school_rice_needed(),
+		simulation.state.get_inventory_count(SchoolRules.SCHOOL_RICE_ITEM))
 	if note.is_empty() and debt > 0:
 		if money_payment <= 0 and rice_count <= 0:
 			note = tr("Tu n'as ni argent ni riz pour l'instant. Reviens vite !")
-		elif money_payment < debt and rice_count * simulation.get_school_rice_price() < debt:
+		elif money_payment < debt and rice_count * simulation.school.get_school_rice_price() < debt:
 			note = tr("Tu peux payer une partie maintenant, et le reste plus tard.")
-	_panel.show_fees(_teacher_name, line, debt, simulation.get_school_days_left(), money_payment,
-		rice_count, simulation.get_school_rice_price(), note)
+	_panel.show_fees(_teacher_name, line, debt, simulation.school.get_school_days_left(), money_payment,
+		rice_count, simulation.school.get_school_rice_price(), note)
 
 func _on_pay_money() -> void:
-	var paid := simulation.pay_school_fees(simulation.get_school_debt())
+	var paid := simulation.school.pay_school_fees(simulation.school.get_school_debt())
 	if paid > 0:
 		_after_payment(Currency.format(paid))
 
 func _on_pay_rice() -> void:
-	var given := simulation.pay_school_fees_in_rice(simulation.get_school_rice_needed())
+	var given := simulation.school.pay_school_fees_in_rice(simulation.school.get_school_rice_needed())
 	if given > 0:
-		_after_payment("%d %s" % [given, item_db.get_display_name(FarmSimulation.SCHOOL_RICE_ITEM).to_lower()])
+		_after_payment("%d %s" % [given, item_db.get_display_name(SchoolRules.SCHOOL_RICE_ITEM).to_lower()])
 
 func _after_payment(what: String) -> void:
 	AudioManager.play_harvest_sfx()
-	if simulation.is_school_fee_due():
+	if simulation.school.is_school_fee_due():
 		_show_panel(tr("Merci pour ces %s. Il reste encore un peu à payer.") % what)
 		return
 	_show_panel(tr("Merci ! Fara sera toujours la bienvenue à l'école."))
@@ -104,9 +104,9 @@ func _after_payment(what: String) -> void:
 # --- reminder, family talk, conditions ---------------------------------------------------
 
 func _refresh() -> void:
-	var debt := simulation.get_school_debt()
-	var overdue := simulation.is_school_fees_overdue()
-	var days_left := simulation.get_school_days_left()
+	var debt := simulation.school.get_school_debt()
+	var overdue := simulation.school.is_school_fees_overdue()
+	var days_left := simulation.school.get_school_days_left()
 	var reminders := []
 	if debt > 0:
 		var when := tr("en retard") if overdue else (tr("dernier jour") if days_left <= 1 else tr("%d j") % days_left)
@@ -119,7 +119,7 @@ func _refresh() -> void:
 		lines[MOTHER_ID] = tr("Fara n'a pas pu aller à l'école... Il faut payer %s.") % _teacher_name
 		lines[FATHER_ID] = tr("Une enfant doit être à l'école, pas au mortier.")
 		lines[SISTER_ID] = tr("La maîtresse m'a renvoyée tant que l'écolage n'est pas payé...")
-	elif debt > 0 and days_left <= FarmSimulation.SCHOOL_GRACE_DAYS:
+	elif debt > 0 and days_left <= SchoolRules.SCHOOL_GRACE_DAYS:
 		lines[MOTHER_ID] = tr("N'oublie pas l'écolage de Fara : %s, à porter à %s.") % [Currency.format(debt), _teacher_name]
 	if debt > 0:
 		lines[TEACHER_ID] = tr("Tu viens pour l'écolage de Fara ?")

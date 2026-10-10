@@ -40,13 +40,13 @@ Côté game design :
   qui pèse plus qu'une pénalité chiffrée.
 
 ## Détails techniques
-**Règles : `FarmSimulation`** (testables, sauvegardées)
+**Règles : `SchoolRules` (`simulation.school`, voir `simulation.md`)** (testables, sauvegardées)
 - Constantes :
   - `SCHOOL_FEE` (10 000), `SCHOOL_NOTICE_DAYS` (7, avance de la facture),
     `SCHOOL_GRACE_DAYS` (7, délai dans la saison) ;
   - `SCHOOL_RICE_ITEM` (`"rice"`), `SCHOOL_RICE_PRICE_MULTIPLIER` (1,25 = prix du zoma) ;
   - `CONDITION_SCHOOL_FEES_OVERDUE` (`"school_fees_overdue"`).
-- `_advance_school_fees()`, chaque matin dans `advance_day()` :
+- `advance_school_fees()`, chaque matin dans `advance_day()` :
   - facture la saison qui commence dans `SCHOOL_NOTICE_DAYS` jours si elle ne l'est pas
     encore ;
   - échéance : jour 1 de la saison + `SCHOOL_GRACE_DAYS` − 1, au moins une semaine après la

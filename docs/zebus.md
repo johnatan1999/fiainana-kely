@@ -86,7 +86,7 @@ semaine, ce qui oblige à prévoir.
 - À poser **sur la grille** (son origine est le coin d'une case de clôture), ouverture tournée
   vers le pré, sans obstacle entre le pré et `Gate`.
 
-**Les règles : `FarmSimulation`** (comme les poules)
+**Les règles : `ZebuRules` (`simulation.zebus`, voir `simulation.md`)** (comme les poules)
 - Constantes : `ZEBU_CAPACITY_BY_LEVEL` (4, 6, 8 selon le niveau du parc, voir
   `family_projects.md` ; `get_zebu_capacity()`), `ZEBU_PRICE` (25 000), `ZEBU_CALF_VALUE` (18 000),
   `ZEBU_ADULT_VALUE` (60 000), `ZEBU_GROW_DAYS` (30), `ZEBU_NAMES` (par robe).

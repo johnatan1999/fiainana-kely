@@ -5,7 +5,7 @@ extends Resource
 ## animal seen, a wild plant gathered, a place found. Fara draws each one in
 ## it while she lives at home. One .tres per entry in data/discoveries/; its
 ## id is the file's name. (Cooked dishes have their page too, from the
-## recipes - see FarmSimulation.get_notebook().)
+## recipes - see NotebookRules.get_discovery_ids().)
 ##
 ## Animals and plants keep their own hours and seasons: an animal shows
 ## only then (WildAnimal), a plant only grows then (ForageSpot).

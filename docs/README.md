@@ -12,6 +12,7 @@ la fiche concernée, ou en crée une nouvelle ajoutée à cet index.
 
 | Fiche | Contrôleur / système |
 |---|---|
+| [simulation.md](simulation.md) | `FarmSimulation` et ses domaines (`SimRules`, `systems/simulation/rules/`) : les règles du jeu, l'état, la nuit, comment ajouter un domaine |
 | [day_night.md](day_night.md) | `DayNightController` : heure, jours de la semaine, cycle jour/nuit, lanternes, HUD |
 | [farming.md](farming.md) | `FarmingController`, `FarmView`, `FarmLandManager` : champs, rizières, cultures |
 | [trees.md](trees.md) | `TreeManager` : arbres, arbres fruitiers, feuillage |

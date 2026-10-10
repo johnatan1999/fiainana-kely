@@ -4,7 +4,7 @@ extends Node2D
 
 ## The cockfight ring (kianja ady akoho) of the market town: a circle of
 ## trampled earth inside a cord on bamboo stakes, and its signboard. During
-## the Sunday tournament (FarmSimulation.COCKFIGHT_DAY and _HOURS), two
+## the Sunday tournament (CockfightRules.COCKFIGHT_DAY and _HOURS), two
 ## villagers' roosters square up in it, for the crowd. Only shows that and
 ## passes the player's interaction on - CockfightManager decides (the
 ## tournament, the ranking). Drawn in code; @tool: the ring shows in the
@@ -87,8 +87,8 @@ func set_weekday(weekday: int) -> void:
 	_refresh_show()
 
 func is_tournament_on() -> bool:
-	return _weekday == FarmSimulation.COCKFIGHT_DAY and _minute >= FarmSimulation.COCKFIGHT_HOURS.x \
-		and _minute < FarmSimulation.COCKFIGHT_HOURS.y
+	return _weekday == CockfightRules.COCKFIGHT_DAY and _minute >= CockfightRules.COCKFIGHT_HOURS.x \
+		and _minute < CockfightRules.COCKFIGHT_HOURS.y
 
 ## What interacting does ("[E] <prompt>", already translated): during the
 ## tournament, and the rest of the time.

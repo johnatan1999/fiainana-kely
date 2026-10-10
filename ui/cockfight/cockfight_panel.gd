@@ -5,7 +5,7 @@ extends Control
 ## between their rooster and a villager's, blow by blow - the attacker
 ## flies at the other, feathers fly, the struck one's vigour drops - until
 ## the beaten one runs off. Then the day's summary and the season's
-## ranking. The outcome is already decided (FarmSimulation.enter_cockfight):
+## ranking. The outcome is already decided (CockfightRules.enter_cockfight):
 ## this only plays it back. "Passer" jumps to the end. Also shows the
 ## ranking alone (outside the tournament). Pauses the game. Built in code.
 
@@ -157,7 +157,7 @@ func _play_bout(player_name: String, bout: Dictionary) -> void:
 	_log.text = tr("Les deux coqs se jaugent...")
 	await _wait(BETWEEN_BLOWS * 1.5)
 	var hits: Array = bout["hits"]
-	var damage := 100.0 / FarmSimulation.COCKFIGHT_HITS_TO_WIN
+	var damage := 100.0 / CockfightRules.COCKFIGHT_HITS_TO_WIN
 	for hit: bool in hits:
 		var attacker := 0 if hit else 1
 		var defender := 1 - attacker

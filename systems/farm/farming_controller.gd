@@ -69,7 +69,7 @@ func _process(_delta: float) -> void:
 		return
 	var plot_id := _get_target_plot_id()
 	var use_action := _item_action_for(plot_id) if plot_id != -1 else FarmAction.Type.NONE
-	var can_harvest := plot_id != -1 and simulation.can_harvest(plot_id)
+	var can_harvest := plot_id != -1 and simulation.fields.can_harvest(plot_id)
 	farm_view.show_highlight_for_plot(plot_id, use_action != FarmAction.Type.NONE, can_harvest)
 	var anchor := Vector2.ZERO
 	if plot_id != -1:
@@ -106,7 +106,7 @@ func _on_interact_requested() -> void:
 	var plot_id := _target_for_action()
 	if plot_id == -1:
 		return
-	if not simulation.can_harvest(plot_id):
+	if not simulation.fields.can_harvest(plot_id):
 		AudioManager.play_action_denied_sfx()
 		return
 	_perform(plot_id, FarmAction.Type.HARVEST, "")
@@ -119,7 +119,7 @@ func _on_use_item_requested() -> void:
 	var action := _item_action_for(plot_id)
 	if action == FarmAction.Type.NONE:
 		AudioManager.play_action_denied_sfx()
-		if hotbar.get_selected_action() == FarmAction.Type.PLOUGH and simulation.is_ploughable(plot_id):
+		if hotbar.get_selected_action() == FarmAction.Type.PLOUGH and simulation.zebus.is_ploughable(plot_id):
 			_explain_no_plough()
 		return
 	# Captured now: the player may change slot while stepping up to the plot.
@@ -142,24 +142,24 @@ func _perform(plot_id: int, action: FarmAction.Type, crop_id: String) -> void:
 		return
 	match action:
 		FarmAction.Type.TILL:
-			if simulation.till(plot_id):
+			if simulation.fields.till(plot_id):
 				AudioManager.play_till_sfx()
 				player.play_tool_animation(action)
 				farm_view.react_to_action(plot_id, action)
 		FarmAction.Type.PLOUGH:
 			await _plough_furrow(plot_id)
 		FarmAction.Type.FERTILIZE:
-			if simulation.fertilize(plot_id):
+			if simulation.fields.fertilize(plot_id):
 				AudioManager.play_plant_sfx()
 				player.play_tool_animation(FarmAction.Type.PLANT)
 				farm_view.react_to_action(plot_id, action)
 		FarmAction.Type.WATER:
-			if simulation.water(plot_id):
+			if simulation.fields.water(plot_id):
 				AudioManager.play_watering_sfx()
 				player.play_tool_animation(action)
 				farm_view.react_to_action(plot_id, action)
 		FarmAction.Type.PLANT:
-			if simulation.plant(plot_id, crop_id):
+			if simulation.fields.plant(plot_id, crop_id):
 				AudioManager.play_plant_sfx()
 				player.play_tool_animation(action)
 				farm_view.react_to_action(plot_id, action)
@@ -168,7 +168,7 @@ func _perform(plot_id: int, action: FarmAction.Type, crop_id: String) -> void:
 			# _on_action_animation_finished() instead of right here, so the
 			# crop sprite only disappears once the harvest swing animation
 			# actually completes, not the instant the button is pressed.
-			if simulation.can_harvest(plot_id):
+			if simulation.fields.can_harvest(plot_id):
 				_pending_harvest_plot_id = plot_id
 				player.play_tool_animation(action)
 
@@ -180,15 +180,15 @@ func _item_action_for(plot_id: int) -> FarmAction.Type:
 	var possible := false
 	match action:
 		FarmAction.Type.TILL:
-			possible = simulation.can_till(plot_id)
+			possible = simulation.fields.can_till(plot_id)
 		FarmAction.Type.PLOUGH:
-			possible = simulation.can_plough(plot_id)
+			possible = simulation.zebus.can_plough(plot_id)
 		FarmAction.Type.FERTILIZE:
-			possible = simulation.can_fertilize(plot_id)
+			possible = simulation.fields.can_fertilize(plot_id)
 		FarmAction.Type.WATER:
-			possible = simulation.can_water(plot_id)
+			possible = simulation.fields.can_water(plot_id)
 		FarmAction.Type.PLANT:
-			possible = simulation.can_plant(plot_id, hotbar.get_selected_seed_crop_id())
+			possible = simulation.fields.can_plant(plot_id, hotbar.get_selected_seed_crop_id())
 	return action if possible else FarmAction.Type.NONE
 
 # --- the zebu plough ---------------------------------------------------------------
@@ -197,12 +197,12 @@ func _item_action_for(plot_id: int) -> FarmAction.Type:
 ## the team can till in a row, up to PLOUGH_REACH and what's left of its day.
 func get_furrow(first_plot_id: int, step: Vector2i) -> Array[int]:
 	var furrow: Array[int] = []
-	var limit := mini(FarmSimulation.PLOUGH_REACH, simulation.get_plough_cells_left())
-	var zone_id := simulation.get_plot_zone(first_plot_id)
-	var cell := simulation.get_plot_position(first_plot_id)
+	var limit := mini(ZebuRules.PLOUGH_REACH, simulation.zebus.get_plough_cells_left())
+	var zone_id := simulation.fields.get_plot_zone(first_plot_id)
+	var cell := simulation.fields.get_plot_position(first_plot_id)
 	while furrow.size() < limit:
-		var plot_id := simulation.get_plot_id_at(cell.x, cell.y, zone_id)
-		if plot_id == -1 or not simulation.is_ploughable(plot_id):
+		var plot_id := simulation.fields.get_plot_id_at(cell.x, cell.y, zone_id)
+		if plot_id == -1 or not simulation.zebus.is_ploughable(plot_id):
 			break
 		furrow.append(plot_id)
 		cell += step
@@ -230,7 +230,7 @@ func _plough_furrow(first_plot_id: int) -> void:
 		player.auto_walk_to(share - Vector2(step) * PLOUGH_FOLLOW_DISTANCE, 3.0, Vector2(step))
 		team.walk_to(share)
 		await team.arrived
-		if farm_view != view or not simulation.plough(plot_id):
+		if farm_view != view or not simulation.zebus.plough(plot_id):
 			break
 		AudioManager.play_till_sfx()
 		view.react_to_action(plot_id, FarmAction.Type.PLOUGH)
@@ -245,18 +245,18 @@ func is_ploughing() -> bool:
 ## The coats of the team: the first zebus strong enough to pull.
 func _team_coats() -> Array:
 	var coats := []
-	for zebu_id: String in simulation.get_zebu_ids():
-		var zebu := simulation.get_zebu(zebu_id)
-		if int(zebu["grown_days"]) >= FarmSimulation.ZEBU_WORK_MIN_DAYS:
+	for zebu_id: String in simulation.zebus.get_zebu_ids():
+		var zebu := simulation.zebus.get_zebu(zebu_id)
+		if int(zebu["grown_days"]) >= ZebuRules.ZEBU_WORK_MIN_DAYS:
 			coats.append(zebu["coat"])
 	return coats if not coats.is_empty() else [0]
 
 func _explain_no_plough() -> void:
-	match simulation.check_plough():
-		FarmSimulation.PloughCheck.NO_TEAM:
+	match simulation.zebus.check_plough():
+		ZebuRules.PloughCheck.NO_TEAM:
 			UIEvents.notify(tr("Il faut deux zébus d'au moins %d jours de croissance pour tirer la charrue.")
-				% FarmSimulation.ZEBU_WORK_MIN_DAYS)
-		FarmSimulation.PloughCheck.TIRED:
+				% ZebuRules.ZEBU_WORK_MIN_DAYS)
+		ZebuRules.PloughCheck.TIRED:
 			UIEvents.notify(tr("Tes zébus sont fatigués : ils ont assez labouré pour aujourd'hui."))
 
 ## If the player stands at the far side of their own cell, walks them forward
@@ -285,7 +285,7 @@ func _on_action_animation_finished(action: FarmAction.Type) -> void:
 	var plot_id := _pending_harvest_plot_id
 	_pending_harvest_plot_id = -1
 	# Before harvest(): the crop must be plucked out, not just vanish.
-	if farm_view != null and simulation.can_harvest(plot_id):
+	if farm_view != null and simulation.fields.can_harvest(plot_id):
 		farm_view.react_to_action(plot_id, FarmAction.Type.HARVEST)
-	if simulation.harvest(plot_id):
+	if simulation.fields.harvest(plot_id):
 		AudioManager.play_harvest_sfx()

@@ -80,7 +80,7 @@ func get_dish() -> Array:
 		return FEAST_DISH
 	# Cooked in the farm's kitchen today: that's what's on the mat.
 	if not log.cooked.is_empty():
-		var recipe := simulation.get_recipe(log.cooked.keys()[0])
+		var recipe := simulation.kitchen.get_recipe(log.cooked.keys()[0])
 		if recipe != null:
 			return [recipe.malagasy_name.to_lower(), tr("%s, cuisiné par toi") % tr(recipe.display_name).to_lower()]
 	var main := log.get_main_harvest()
@@ -117,7 +117,7 @@ func _line(speaker: String, text: String) -> Dictionary:
 func _quest_lines() -> Array:
 	var lines := []
 	for quest_id: String in simulation.day_log.quests_done:
-		var quest := simulation.get_quest(quest_id)
+		var quest := simulation.quests.get_quest(quest_id)
 		if quest != null and not quest.evening_line.is_empty():
 			lines.append([quest.evening_speaker, tr(quest.evening_line)])
 	return lines
@@ -128,20 +128,20 @@ func _thief_lines() -> Array:
 	var log := simulation.day_log
 	if log.chicken_stolen:
 		var text := tr("Un voleur nous a pris une poule cette nuit...")
-		if simulation.has_dog():
-			text += " " + tr("Si %s avait eu à manger, il serait resté pour aboyer.") % simulation.get_dog_name()
-		elif not simulation.is_coop_safe():
+		if simulation.dog.has_dog():
+			text += " " + tr("Si %s avait eu à manger, il serait resté pour aboyer.") % simulation.dog.get_dog_name()
+		elif not simulation.thieves.is_coop_safe():
 			text += " " + tr("Un cadenas coûte moins cher que nos poules.")
 		return [[FATHER_ID, text]]
 	if log.dog_chased_thieves:
-		return [[FATHER_ID, tr("%s a aboyé toute la nuit, et les voleurs de poules ont détalé. Ce chien vaut bien son bol de riz !") % simulation.get_dog_name()]]
+		return [[FATHER_ID, tr("%s a aboyé toute la nuit, et les voleurs de poules ont détalé. Ce chien vaut bien son bol de riz !") % simulation.dog.get_dog_name()]]
 	if log.thieves_foiled:
 		return [[FATHER_ID, tr("Les voleurs ont essayé notre poulailler cette nuit. Le cadenas a tenu : ils sont repartis les mains vides !")]]
-	if simulation.is_thief_alert() and simulation.get_hen_ids().size() >= FarmSimulation.THIEF_MIN_HENS:
-		if simulation.is_coop_safe():
+	if simulation.thieves.is_thief_alert() and simulation.thieves.get_hen_ids().size() >= ThiefRules.THIEF_MIN_HENS:
+		if simulation.thieves.is_coop_safe():
 			return [[MOTHER_ID, tr("On parle de voleurs de poules au village. Heureusement, notre poulailler ferme bien.")]]
-		if simulation.has_dog():
-			return [[MOTHER_ID, tr("On parle de voleurs de poules au village. Pense à la gamelle de %s : un chien qui a mangé garde la maison.") % simulation.get_dog_name()]]
+		if simulation.dog.has_dog():
+			return [[MOTHER_ID, tr("On parle de voleurs de poules au village. Pense à la gamelle de %s : un chien qui a mangé garde la maison.") % simulation.dog.get_dog_name()]]
 		return [[MOTHER_ID, tr("On parle de voleurs de poules au village. Il faudrait un cadenas sur le poulailler, on en vend au marché.")]]
 	return []
 
@@ -149,9 +149,9 @@ func _thief_lines() -> Array:
 
 func _dog_lines() -> Array:
 	# Not the day it came: the family talks of the puppy itself (its quest).
-	if not simulation.has_dog() or simulation.is_dog_fed() or simulation.get_dog_days() == 0:
+	if not simulation.dog.has_dog() or simulation.dog.is_dog_fed() or simulation.dog.get_dog_days() == 0:
 		return []
-	return [[SISTER_ID, tr("La gamelle de %s est restée vide aujourd'hui... Il est parti chercher à manger chez les voisins.") % simulation.get_dog_name()]]
+	return [[SISTER_ID, tr("La gamelle de %s est restée vide aujourd'hui... Il est parti chercher à manger chez les voisins.") % simulation.dog.get_dog_name()]]
 
 # --- Dada: the fields and the money ---------------------------------------------------------
 
@@ -178,7 +178,7 @@ func _field_lines() -> Array:
 # --- Neny: the village, and the plots left dry ------------------------------------------------
 
 func _dry_lines() -> Array:
-	var dry := simulation.get_unwatered_plots()
+	var dry := simulation.fields.get_unwatered_plots()
 	if dry <= 0 or simulation.is_raining():
 		return []
 	return [[MOTHER_ID, tr("Tu as oublié d'arroser %d case(s)... Il est encore temps, avant de dormir.") % dry]]
@@ -199,7 +199,7 @@ func _village_lines() -> Array:
 		lines.append([MOTHER_ID, tr("Tu as pris le temps de parler aux voisins. C'est comme ça qu'on se fait des amis.")])
 	if not log.cooked.is_empty():
 		var dishes := log.cooked.keys().map(func(id: String) -> String:
-			var recipe := simulation.get_recipe(id)
+			var recipe := simulation.kitchen.get_recipe(id)
 			return tr(recipe.display_name).to_lower() if recipe != null else id)
 		var listed := ", ".join(dishes)
 		listed = listed.left(1).to_upper() + listed.substr(1)
@@ -214,24 +214,24 @@ func _sister_lines() -> Array:
 	var log := simulation.day_log
 	var lines := []
 	# What she drew in the notebook today (an animal, a plant, a place).
-	var drawn := log.discoveries.filter(func(id: String) -> bool: return simulation.get_discovery(id) != null)
+	var drawn := log.discoveries.filter(func(id: String) -> bool: return simulation.notebook.get_discovery(id) != null)
 	if not drawn.is_empty():
-		var discovery := simulation.get_discovery(drawn[0])
+		var discovery := simulation.notebook.get_discovery(drawn[0])
 		lines.append([SISTER_ID, tr("J'ai dessiné « %s » dans ton carnet ! Tu m'emmèneras en forêt, un jour ?")
 			% tr(discovery.display_name).to_lower()])
-	if simulation.is_school_fees_overdue():
+	if simulation.school.is_school_fees_overdue():
 		lines.append([SISTER_ID, tr("J'aimerais tellement retourner à l'école...")])
-	elif simulation.is_school_fee_due() and simulation.get_school_days_left() <= 3:
-		lines.append([SISTER_ID, tr("La maîtresse a rappelé l'écolage : encore %d jour(s).") % simulation.get_school_days_left()])
-	if not simulation.has_rooster():
+	elif simulation.school.is_school_fee_due() and simulation.school.get_school_days_left() <= 3:
+		lines.append([SISTER_ID, tr("La maîtresse a rappelé l'écolage : encore %d jour(s).") % simulation.school.get_school_days_left()])
+	if not simulation.cockfight.has_rooster():
 		pass
 	elif not log.cockfight.is_empty():
-		var rooster_name: String = simulation.get_rooster()["name"]
+		var rooster_name: String = simulation.cockfight.get_rooster()["name"]
 		lines.append([SISTER_ID, tr("%s a gagné %d combat(s) ! Tout le bourg l'a vu !") % [rooster_name, log.cockfight["wins"]]
 			if log.cockfight["wins"] > 0 else tr("%s n'a rien gagné, mais il s'est bien battu.") % rooster_name])
 	else:
-		var rooster_name: String = simulation.get_rooster()["name"]
-		lines.append([SISTER_ID, tr("J'ai vu %s picorer son grain !") % rooster_name if simulation.is_rooster_fed_today()
+		var rooster_name: String = simulation.cockfight.get_rooster()["name"]
+		lines.append([SISTER_ID, tr("J'ai vu %s picorer son grain !") % rooster_name if simulation.cockfight.is_rooster_fed_today()
 			else tr("%s n'a rien mangé aujourd'hui... Il a l'air triste.") % rooster_name])
 	if log.products.has("egg"):
 		lines.append([SISTER_ID, tr("J'ai compté %d œuf(s) dans le panier !") % log.products["egg"]])
@@ -246,18 +246,18 @@ func _tomorrow_lines() -> Array:
 	if clock.get_days_left_in_season() == 0:
 		var next: String = SEASON_NAMES[clock.get_season_on(clock.current_day + 1)]
 		lines.append([FATHER_ID, tr("Demain commence %s. Pense à ce que tu vas planter.") % next])
-	var site := simulation.get_construction()
+	var site := simulation.projects.get_construction()
 	if not site.is_empty() and int(site["done_day"]) == clock.current_day + 1:
-		var project := simulation.get_project(site["project"])
+		var project := simulation.projects.get_project(site["project"])
 		if project != null:
 			lines.append([FATHER_ID, tr("Demain matin, le chantier sera fini : %s !") % tr(project.display_name).to_lower()])
-	for villager_id in simulation.get_orders_due_tomorrow():
+	for villager_id in simulation.orders.get_orders_due_tomorrow():
 		lines.append([MOTHER_ID, tr("Demain, c'est le dernier jour pour la commande de %s.") % _names.get(villager_id, villager_id)])
-	var ripening := simulation.get_ripening_tomorrow()
+	var ripening := simulation.fields.get_ripening_tomorrow()
 	if not ripening.is_empty():
 		lines.append([FATHER_ID, tr("Demain matin, %s seront mûrs.") % _list(ripening, true)])
-	if tomorrow == FarmSimulation.COCKFIGHT_DAY and simulation.has_rooster():
-		lines.append([SISTER_ID, tr("Demain c'est l'Alahady ! %s va combattre au bourg !") % simulation.get_rooster()["name"]])
+	if tomorrow == CockfightRules.COCKFIGHT_DAY and simulation.cockfight.has_rooster():
+		lines.append([SISTER_ID, tr("Demain c'est l'Alahady ! %s va combattre au bourg !") % simulation.cockfight.get_rooster()["name"]])
 	elif tomorrow == GameClock.MARKET_DAY:
 		lines.append([MOTHER_ID, tr("Demain c'est le zoma : au tsena du bourg, tout se vend mieux.")])
 	return lines

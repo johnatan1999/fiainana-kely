@@ -46,7 +46,7 @@ tous les jours.
 - **`ShopUI`** (`ui/shop_ui.gd`, une seule fenêtre pour toutes les boutiques) :
   - `open(profile)` : filtre le catalogue (`ItemDatabase.get_shop_catalog()`) par le profil,
     met le titre, cache les onglets vides et vide le panier quand on change de boutique ;
-  - vente : `FarmSimulation.sell(crop_id, qty, price_multiplier)` pour les récoltes,
+  - vente : `MarketRules.sell(crop_id, qty, price_multiplier)` pour les récoltes,
     `sell_item(id, profile.sell_price(prix), qty)` pour le reste. Les achats ne changent pas de
     prix ;
   - `ItemCard.setup(..., sell_price)` affiche le prix de vente de la boutique.
@@ -56,7 +56,7 @@ tous les jours.
 ## À savoir
 - **Le cadenas du poulailler** (rayon outils, 5 000 Ar) ne va pas dans le sac : il se pose
   sur la porte du poulailler. Il n'est en vente que pour un poulailler construit et pas encore
-  sûr (`FarmSimulation.is_item_on_sale`), voir `chicken_thieves.md`.
+  sûr (`MarketRules.is_item_on_sale`), voir `chicken_thieves.md`.
 - **Les plats** (rayon « nourriture ») ne s'achètent pas : ils se cuisinent à la cuisine de
   la ferme (voir `family_projects.md`) et se **vendent** ici, comme les œufs (`price` 0).
 - Le prix d'achat est le même partout : seul le prix de vente change. Une remise d'achat le

@@ -12,7 +12,7 @@ const DIR := "res://data/roosters/"
 ## rooster brings the player closer to them.
 @export var owner_id := ""
 ## How strong it is in the first week (the player's rooster starts at
-## FarmSimulation.ROOSTER_START_STAT * 2), and what it gains each week -
+## CockfightRules.ROOSTER_START_STAT * 2), and what it gains each week -
 ## the villagers train theirs too.
 @export var base_power := 60
 @export var power_per_week := 3

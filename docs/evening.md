@@ -65,7 +65,7 @@ Côté game design :
   on sauvegarde au coucher, quand le jour qui commence est vide, et quitter en pleine
   journée ramène à ce matin vide.
 
-**Demain : `FarmSimulation`**
+**Demain** (`simulation.fields` et `simulation.orders`)
 - `get_ripening_tomorrow()` : cultures arrosées aujourd'hui (ou en rizière) à un jour de
   la maturité, `crop_id` → nombre de cases.
 - `get_unwatered_plots()` : cultures en pousse non arrosées (hors rizière).

@@ -46,8 +46,8 @@ func setup(simulation: FarmSimulation, zone_id := FarmState.DEFAULT_ZONE) -> voi
 	_simulation = simulation
 	_zone_id = zone_id
 	simulation.crop_harvested.connect(_on_crop_harvested)
-	grid_width = simulation.grid_width
-	grid_height = simulation.grid_height
+	grid_width = simulation.fields.grid_width
+	grid_height = simulation.fields.grid_height
 	_build_grid()
 	simulation.plot_changed.connect(_on_plot_changed)
 	simulation.plot_added.connect(_on_plot_added)
@@ -87,7 +87,7 @@ func show_highlight_for_plot(plot_id: int, can_use: bool, can_harvest: bool) -> 
 	if plot_id == -1:
 		_highlight.visible = false
 		return
-	var grid_pos: Vector2i = _simulation.get_plot_position(plot_id)
+	var grid_pos: Vector2i = _simulation.fields.get_plot_position(plot_id)
 	_highlight.position = Vector2(grid_pos.x, grid_pos.y) * CELL_SIZE
 	_highlight.can_act = can_use or can_harvest
 	_highlight.show_hand = can_harvest
@@ -96,9 +96,9 @@ func show_highlight_for_plot(plot_id: int, can_use: bool, can_harvest: bool) -> 
 ## "+3 Maïs" over the plot just harvested, with why it came out small if it
 ## did - the player sees the yield where it happened.
 func _on_crop_harvested(plot_id: int, crop_id: String, quantity: int, under_watered: bool, off_season: bool) -> void:
-	if _simulation.get_plot_zone(plot_id) != _zone_id:
+	if _simulation.fields.get_plot_zone(plot_id) != _zone_id:
 		return
-	var crop_data := _simulation.get_crop_data(crop_id)
+	var crop_data := _simulation.fields.get_crop_data(crop_id)
 	var notes: PackedStringArray = []
 	if under_watered:
 		notes.append(tr("peu arrosé"))
@@ -122,15 +122,15 @@ func hide_highlight() -> void:
 		_highlight.visible = false
 
 func _build_grid() -> void:
-	for plot_id in _simulation.get_all_plot_ids():
+	for plot_id in _simulation.fields.get_all_plot_ids():
 		_create_plot_view(plot_id)
 
 func _create_plot_view(plot_id: int) -> void:
 	if _plot_views.has(plot_id):
 		return
-	if _simulation.get_plot_zone(plot_id) != _zone_id:
+	if _simulation.fields.get_plot_zone(plot_id) != _zone_id:
 		return # another zone's plot
-	var pos := _simulation.get_plot_position(plot_id)
+	var pos := _simulation.fields.get_plot_position(plot_id)
 	var plot_view: PlotView = PlotViewScene.instantiate()
 	add_child(plot_view)
 	# PlotView's origin is its cell's bottom-center - see PlotView.CELL_TOP_LEFT.
@@ -145,8 +145,8 @@ func _on_plot_changed(plot_id: int) -> void:
 		_refresh_plot_view(plot_view, plot_id)
 
 func _refresh_plot_view(plot_view: PlotView, plot_id: int) -> void:
-	var plot := _simulation.get_plot(plot_id)
-	var crop_data: CropData = _simulation.get_crop_data(plot.crop.crop_id) if plot.crop != null else null
+	var plot := _simulation.fields.get_plot(plot_id)
+	var crop_data: CropData = _simulation.fields.get_crop_data(plot.crop.crop_id) if plot.crop != null else null
 	plot_view.update_view(plot, crop_data)
 	_queue_soil_redraw(plot_id)
 
@@ -187,7 +187,7 @@ func _redraw_soil() -> void:
 		var tilled: Array[Vector2i] = []
 		var wet: Array[Vector2i] = []
 		for cell in field.get_cells():
-			var plot := _simulation.get_plot(_simulation.get_plot_id_at(cell.x, cell.y, _zone_id))
+			var plot := _simulation.fields.get_plot(_simulation.fields.get_plot_id_at(cell.x, cell.y, _zone_id))
 			if plot == null:
 				continue
 			owned[cell] = true
@@ -200,8 +200,8 @@ func _redraw_soil() -> void:
 ## Fired for grid expansion (expand_grid()/add_tile()) and for every plot
 ## restored by a save load - either way, a PlotView needs to be created.
 func _on_plot_added(plot_id: int) -> void:
-	grid_width = _simulation.grid_width
-	grid_height = _simulation.grid_height
+	grid_width = _simulation.fields.grid_width
+	grid_height = _simulation.fields.grid_height
 	_create_plot_view(plot_id)
 
 func _on_plot_removed(plot_id: int) -> void:
@@ -227,7 +227,7 @@ func _on_plot_removed(plot_id: int) -> void:
 func get_plot_id_in_front_of(world_pos: Vector2, facing: Vector2) -> int:
 	var probe := world_pos + Vector2(facing_step(facing)) * CELL_SIZE * TARGET_REACH
 	var grid_pos := world_to_grid(probe)
-	return _simulation.get_plot_id_at(grid_pos.x, grid_pos.y, _zone_id)
+	return _simulation.fields.get_plot_id_at(grid_pos.x, grid_pos.y, _zone_id)
 
 ## `facing` snapped to one grid step: (±1, 0) or (0, ±1).
 static func facing_step(facing: Vector2) -> Vector2i:
@@ -237,7 +237,7 @@ static func facing_step(facing: Vector2) -> Vector2i:
 
 ## The plot's cell in world coordinates.
 func get_plot_global_rect(plot_id: int) -> Rect2:
-	var grid_pos := _simulation.get_plot_position(plot_id)
+	var grid_pos := _simulation.fields.get_plot_position(plot_id)
 	return Rect2(global_position + Vector2(grid_pos) * CELL_SIZE, Vector2.ONE * CELL_SIZE)
 
 func world_to_grid(world_pos: Vector2) -> Vector2i:

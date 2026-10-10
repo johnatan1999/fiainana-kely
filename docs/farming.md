@@ -77,8 +77,8 @@
   champ s'appelle « Rizière ».
 - `PlotState.flooded` est sauvegardé (clé `"flooded"`) et conservé par `reset()`.
 - `FarmLandManager.register_field(kind, cells, zone_data, flooded, world_zone_id)` marque les
-  cases, et `FarmSimulation.set_tile_flooded()` les applique.
-- Règles dans `FarmSimulation` :
+  cases, et `FieldRules.set_tile_flooded()` les applique.
+- Règles dans `FieldRules` (`simulation.fields`) :
   - `can_water()` renvoie faux sur une rizière ;
   - `can_plant()` exige `CropData.grows_in_paddy` sur une rizière ;
   - `advance_day()` compte une rizière comme arrosée.
@@ -99,7 +99,7 @@
 **Labour aux zébus**
 - `FarmAction.Type.PLOUGH` (5), outil `data/items/tool_plough.tres` (écrit par
   `tools/build_zebu_market.gd`, vendu à l'épicerie du village).
-- Règles (`FarmSimulation`) : `ZEBU_TEAM_SIZE` (2), `ZEBU_WORK_MIN_DAYS` (15), `PLOUGH_REACH`
+- Règles (`ZebuRules`, `simulation.zebus`) : `ZEBU_TEAM_SIZE` (2), `ZEBU_WORK_MIN_DAYS` (15), `PLOUGH_REACH`
   (4), `PLOUGH_CELLS_PER_DAY` (24) ; `check_plough()` → `PloughCheck` (`OK`, `NO_TEAM`,
   `TIRED`), `is_ploughable(plot)` (pas de culture, pas encore labourée),
   `can_plough(plot)`, `plough(plot)` (laboure une parcelle et compte dans le quota),
@@ -115,7 +115,7 @@
 
 **Fumure**
 - `FarmAction.Type.FERTILIZE` (6), objet `manure`. `PlotState.fertilized` (sauvegardé, clé
-  optionnelle `"fertilized"`) ; `FarmSimulation.harvest()` multiplie la quantité par
+  optionnelle `"fertilized"`) ; `FieldRules.harvest()` multiplie la quantité par
   `MANURE_YIELD_MULTIPLIER` (après les malus d'arrosage et de saison) et remet le drapeau à
   `false`.
 - `PlotView` montre les mottes (planche `manure.png`, case 3, à l'échelle d'une case,
